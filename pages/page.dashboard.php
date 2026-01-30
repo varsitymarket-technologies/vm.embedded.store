@@ -60,7 +60,8 @@
                 <h3><i class="fas fa-wallet"></i> Your Webstore</h3>
                 <div>
                     <iframe src="<?php echo __WEBSITE_URL__; ?>"
-                    style="height: 75vh; width: 100%; border: none; border-radius:10px; "
+                    style="height: 75vh; width: 100%; border: none; border-radius:10px; " <?php // sandbox="" ?> 
+                    frameborder="0"
                     ></iframe>
                 </div>
                 <br>

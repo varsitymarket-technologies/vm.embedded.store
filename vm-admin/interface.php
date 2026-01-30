@@ -54,7 +54,7 @@
                     <img src="/assets/favicon.png" style="height: 100%; margin: 1rem auto; display: block; width: 8rem;">
                 </div>
 
-                <a href="../home" class="group flex items-center rounded-lg bg-purple-600 px-4 py-2 text-white">
+                <a href="/../home/" class="group flex items-center rounded-lg bg-purple-600 px-4 py-2 text-white">
                     <i class="bi bi-grid-fill mr-3"></i>
                     <span>Dashboard</span>
                 </a>
