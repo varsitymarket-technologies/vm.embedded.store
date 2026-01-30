@@ -1,3 +1,12 @@
+<?php 
+#   TITLE   : Payment Pages   
+#   DESC    : The payment GUI page of the application page. 
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 1.0.1.1
+#   AUTHOR  : HARDY HASTINGS  
+#   RELEASE : 2026/01/30
+?>
+
 <div id="dashboard-container" class="container">
     <?php @include_once "header.php"; ?> 
 

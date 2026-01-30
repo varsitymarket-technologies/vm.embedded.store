@@ -1,3 +1,12 @@
+<?php 
+#   TITLE   : Admin Interface   
+#   DESC    : The Interface handling the Admin GUI 
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 1.0.1.1
+#   AUTHOR  : HARDY HASTINGS  
+#   RELEASE : 2026/01/30
+?>
+
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <head>
@@ -27,6 +36,8 @@
     </script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="admin.css">
+    <link href="/assets/favicon.png" rel="icon">
+    <link href="/assets/favicon.png" rel="apple-touch-icon">
 </head>
 <body class="bg-gray-900 text-white font-sans antialiased">
     <div class="flex h-screen overflow-hidden">
@@ -43,7 +54,7 @@
                     <img src="/assets/favicon.png" style="height: 100%; margin: 1rem auto; display: block; width: 8rem;">
                 </div>
 
-                <a href="#" class="group flex items-center rounded-lg bg-purple-600 px-4 py-2 text-white">
+                <a href="../home" class="group flex items-center rounded-lg bg-purple-600 px-4 py-2 text-white">
                     <i class="bi bi-grid-fill mr-3"></i>
                     <span>Dashboard</span>
                 </a>

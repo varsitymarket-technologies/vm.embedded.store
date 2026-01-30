@@ -1,16 +1,23 @@
 <?php
+#   TITLE   : Database Installation   
+#   DESC    : This script is required to handle the main database restoration function.  
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 1.0.1.1
+#   AUTHOR  : HARDY HASTINGS  
+#   RELEASE : 2026/01/30
+
 // Ensure the build directory exists as scripts.php expects it for the database file
-$buildDir = __DIR__ . '/build';
+$buildDir = dirname(__DIR__) . '/build';
 if (!is_dir($buildDir)) {
     mkdir($buildDir, 0777, true);
 }
 
-require_once 'scripts.php';
+require_once '../scripts.php';
 
 // Access the database object initialized in scripts.php
 $db = __DB_MODULE__;
 
-echo "Starting database installation...<br>";
+echo "Starting database installation...\n";
 
 // 1. Categories Table
 $sql_categories = "CREATE TABLE IF NOT EXISTS categories (
@@ -64,19 +71,19 @@ $sql_settings = "CREATE TABLE IF NOT EXISTS settings (
 // Execute creation queries
 // Assuming database_manager has a query() method
 $db->query($sql_categories);
-echo "Table 'categories' checked/created.<br>";
+echo "Table 'categories' checked/created.\n  ";
 
 $db->query($sql_products);
-echo "Table 'products' checked/created.<br>";
+echo "Table 'products' checked/created.\n";
 
 $db->query($sql_sales);
-echo "Table 'sales' checked/created.<br>";
+echo "Table 'sales' checked/created.\n";
 
 $db->query($sql_orders);
-echo "Table 'orders' checked/created.<br>";
+echo "Table 'orders' checked/created.\n";
 
 $db->query($sql_settings);
-echo "Table 'settings' checked/created.<br>";
+echo "Table 'settings' checked/created.\n";
 
 echo "Installation complete.";
 ?>

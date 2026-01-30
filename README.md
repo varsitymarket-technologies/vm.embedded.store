@@ -8,13 +8,13 @@ This solution is built to be hosted on a PHP server and embedded via `<iframe>` 
 
 ## Features
 
-### 🛍️ Shop Frontend
+### Shop Frontend
 *   **Responsive Design**: Built with Bootstrap 5 for compatibility across devices.
 *   **Single Page Experience**: Smooth navigation between Shop, Product Details, and Checkout views without page reloads.
 *   **Shopping Cart**: Client-side cart management with instant updates.
 *   **Embeddable**: Optimized for embedding within Google Sites containers.
 
-### ⚙️ Admin Control Panel
+### Admin Control Panel
 *   **Modern UI**: Dark-themed interface built with Tailwind CSS.
 *   **Dashboard**: Real-time overview of sales, users, and orders.
 *   **Responsive Sidebar**: Collapsible navigation for mobile management.
@@ -43,7 +43,7 @@ This solution is built to be hosted on a PHP server and embedded via `<iframe>` 
 
 ## Directory Structure
 
-*   `/sites/osmossis/`: Contains the public-facing shop template.
+*   `/sites/`: Contains the public-facing shop template.
 *   `/vm-admin/`: Contains the admin dashboard, styles, and logic.
 *   `/themes/`: Stores reusable theme templates (e.g., `exalt`).
 *   `scripts.php`: Core system logic and database initialization.
