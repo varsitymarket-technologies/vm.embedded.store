@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeStore Platform</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts for the Vibe -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- AUTH SECTION -->
+    <div id="auth-container" class="container center-content">
+        <div class="auth-card">
+            <h1>Welcome to <span class="text-purple">VibeStore</span></h1>
+            <p>Launch your free store. Monetize your passion.</p>
+            
+            <div class="auth-buttons">
+                <button class="btn btn-google" onclick="handleLogin('google')">
+                    <i class="fab fa-google"></i> Sign in with Google
+                </button>
+                <button class="btn btn-github" onclick="handleLogin('github')">
+                    <i class="fab fa-github"></i> Sign in with GitHub
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- DASHBOARD SECTION (Hidden by default) -->
+    <div id="dashboard-container" class="container hidden">
+        <header>
+            <div class="logo">Vibe<span class="text-purple">Store</span></div>
+            <div class="user-profile">
+                <span id="username-display">User</span>
+                <button class="btn-small" onclick="handleLogout()">Logout</button>
+            </div>
+        </header>
+
+        <main class="grid-layout">
+            <!-- Wallet Card -->
+            <div class="card wallet-card">
+                <h3><i class="fas fa-wallet"></i> Wallet Balance</h3>
+                <div class="balance">$<span id="wallet-balance">0.00</span></div>
+                <p class="subtext">Generated from store sales</p>
+            </div>
+
+            <!-- Store Status Card -->
+            <div class="card status-card">
+                <h3><i class="fas fa-store"></i> Store Status</h3>
+                <div id="store-status-indicator" class="status-badge active">Active</div>
+                <p id="days-since-sale">Last sale: 2 days ago</p>
+                <div id="suspension-warning" class="warning-box hidden">
+                    Warning: No sales in 30 days. Store suspended.
+                </div>
+            </div>
+
+            <!-- Payments Management -->
+            <div class="card withdraw-card">
+                <h3><i class="fas fa-money-bill-wave"></i> Withdraw Funds</h3>
+                <form id="withdraw-form">
+                    <div class="input-group">
+                        <label>Amount ($)</label>
+                        <input type="number" id="withdraw-amount" placeholder="0.00" min="1" step="0.01">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Request Withdrawal</button>
+                </form>
+                <div id="withdraw-message"></div>
+            </div>
+        </main>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
