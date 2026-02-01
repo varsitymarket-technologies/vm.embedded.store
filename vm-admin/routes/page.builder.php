@@ -1,40 +1,75 @@
 <?php
 $db = __DB_MODULE__;
 
-// Helper to get setting
-function get_setting($db, $key, $default = '') {
-    $result = $db->query("SELECT value FROM settings WHERE key = ?", [$key]);
-    return $result ? $result[0]['value'] : $default;
-}
+$configFile = "/home/hastings/vm.embedded-sites/sites/reiddrop.com/config.php"; 
 
 // Handle Save
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $settings = $_POST['settings'] ?? [];
-    foreach ($settings as $key => $value) {
-        $exists = $db->query("SELECT id FROM settings WHERE key = ?", [$key]);
-        if ($exists) {
-            $db->query("UPDATE settings SET value = ? WHERE key = ?", [$value, $key]);
-        } else {
-            $db->query("INSERT INTO settings (key, value) VALUES (?, ?)", [$key, $value]);
+    $e = $_POST;
+    $content = file_get_contents($configFile);
+    preg_match_all('/define\("([^"]+)",\s*"([^"]*)"\);/', $content, $matches);
+
+    $config = [];
+    if (!empty($matches[1])) {
+        foreach ($matches[1] as $index => $key) {
+            $config[$key] = $matches[2][$index];
         }
     }
+    $config_file = "<?php".PHP_EOL; 
+    foreach ($e as $set_key => $set_value) {
+        $search = str_ireplace('$_CONFIG_ANCHOR___','__',$set_key); 
+        if (isset($config[$search])){ 
+            $config[$search] = $set_value; 
+        }
+    }
+
+    foreach ($config as $key => $value) {
+        $config_file .= 'define("'.$key.'","'.$value.'");'.PHP_EOL; 
+    }
+    file_put_contents($configFile,$config_file); 
+
     echo "<script>window.location.href = window.location.href;</script>";
     exit;
 }
 
-// Load settings with defaults
-$defaults = [
-    'site_title' => 'Varsity Market',
-    'primary_color' => '#7a1aab',
-    'secondary_color' => '#1a1a1a',
-    'font_family' => 'Inter',
-    'show_hero' => '1'
-];
 
-$current_settings = [];
-foreach ($defaults as $key => $def) {
-    $current_settings[$key] = get_setting($db, $key, $def);
+$content = file_get_contents($configFile);
+preg_match_all('/define\("([^"]+)",\s*"([^"]*)"\);/', $content, $matches);
+
+$settings = [];
+if (!empty($matches[1])) {
+    foreach ($matches[1] as $index => $key) {
+        $settings[$key] = $matches[2][$index];
+    }
 }
+
+$shopItems = [];
+
+$siteItems = []; 
+
+$siteFonts = []; 
+
+$siteColor = []; 
+
+foreach ($settings as $key => $value) {
+    if (strpos($key, 'SITE') !== false) {
+        $siteItems[$key] = $value; 
+    }
+
+    if (strpos($key, 'SHOP') !== false) {
+        $shopItems[$key] = $value;
+    }
+
+    if (strpos($key, 'DESIGN_FONT') !== false) {
+        $siteFonts[$key] = $value;
+    }
+
+    if (strpos($key, 'DESIGN_COLOR') !== false) {
+        $siteColor[$key] = $value;
+    }
+
+}
+
 ?>
 
 <div class="flex flex-1 flex-col overflow-hidden h-full">
@@ -56,24 +91,50 @@ foreach ($defaults as $key => $def) {
     <div class="flex flex-1 overflow-hidden">
         <!-- Controls Sidebar -->
         <aside class="w-80 bg-gray-900 border-r border-white/10 overflow-y-auto custom-scrollbar z-10">
-            <form id="builderForm" method="POST" class="p-4 space-y-6">
+            <form id="builderForm" action="" method="POST" class="p-4 space-y-6">
                 
-                <!-- Branding Section -->
+                <!-- From Config -->
                 <div class="space-y-3">
-                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Branding</h3>
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-1">Site Title</label>
-                        <input type="text" name="settings[site_title]" value="<?php echo htmlspecialchars($current_settings['site_title']); ?>" class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:border-purple-500 focus:outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-gray-400 mb-1">Logo URL</label>
-                        <input type="text" name="settings[logo_url]" value="<?php echo htmlspecialchars(get_setting($db, 'logo_url')); ?>" class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:border-purple-500 focus:outline-none" placeholder="https://...">
-                    </div>
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Website Data</h3>
+                    <?php foreach ($siteItems as $key => $value): ?>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1"><?php echo ucwords (strtolower( str_replace('_', ' ', trim($key, '_')))  ); ?></label>
+                            <input type="text" name="$_CONFIG_ANCHOR_<?php echo $key; ?>" value="<?php echo htmlspecialchars($value); ?>" class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:border-purple-500 focus:outline-none">
+                        </div>
+                    <?php endforeach; ?>
+                    <hr class="border-white/10">
                 </div>
 
-                <hr class="border-white/10">
 
-                <!-- Colors Section -->
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Shop Branding</h3>
+                    <?php foreach ($shopItems as $key => $value): ?>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1"><?php echo ucwords (strtolower( str_replace('_', ' ', trim($key, '_')))  ); ?></label>
+                            <input type="text" name="$_CONFIG_ANCHOR_<?php echo $key; ?>" value="<?php echo htmlspecialchars($value); ?>" class="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:border-purple-500 focus:outline-none">
+                        </div>
+                    <?php endforeach; ?>
+                    <hr class="border-white/10">
+                </div>
+
+                <div class="space-y-3">
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Color Theme</h3>
+                    <?php foreach ($siteColor as $key => $value): ?>
+                        <div>
+                            <label class="block text-sm text-gray-400 mb-1"><?php echo ucwords (strtolower( str_replace('_', ' ', trim($key, '_')))  ); ?></label>
+                            <div class="flex gap-2">
+                                <input type="color" value="<?php echo htmlspecialchars($value); ?>"  class="h-9 w-9 rounded cursor-pointer bg-transparent border-0 p-0">
+                                <input type="text" name="$_CONFIG_ANCHOR_<?php echo $key; ?>" value="<?php echo htmlspecialchars($value); ?>"   class="flex-1 bg-gray-800 border border-gray-700 rounded px-3 py-2 text-sm text-white focus:border-purple-500 focus:outline-none uppercase" onchange="this.previousElementSibling.value = this.value">
+                            </div>
+                        </div>
+                        
+                    <?php endforeach; ?>
+                    <hr class="border-white/10">
+                </div>
+
+
+                
+                <!-- Colors Section 
                 <div class="space-y-3">
                     <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Colors</h3>
                     <div>
@@ -94,7 +155,7 @@ foreach ($defaults as $key => $def) {
 
                 <hr class="border-white/10">
 
-                <!-- Typography -->
+                Typography 
                 <div class="space-y-3">
                     <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Typography</h3>
                     <div>
@@ -109,7 +170,7 @@ foreach ($defaults as $key => $def) {
 
                 <hr class="border-white/10">
 
-                <!-- Layout -->
+                 Layout 
                 <div class="space-y-3">
                     <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider">Layout</h3>
                     <div class="flex items-center justify-between">
@@ -121,6 +182,7 @@ foreach ($defaults as $key => $def) {
                         </label>
                     </div>
                 </div>
+                -->
 
             </form>
         </aside>

@@ -12,8 +12,6 @@
             #Remove The Encoded File 
             unlink(dirname($saved_path)."/config.php"); 
             unlink(dirname($saved_path)."/encode.php"); 
-
-            file_put_contents('debug',dirname($saved_path)."/encode.php"); 
         }
 
         $path = dirname(dirname(__FILE__)).'/themes/*';
@@ -42,7 +40,7 @@
             $preview_image = '/themes/'.$theme_library[0]['name'].'/poster.png';
         }
         ?>
-    <main>
+    <main class="grid-layout">
 
         
         <div>

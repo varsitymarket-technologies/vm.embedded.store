@@ -6,6 +6,7 @@
 #   AUTHOR  : HARDY HASTINGS  
 #   RELEASE : 2026/01/30
 
+@include_once "../config.php";
 @include_once "../scripts.php";
 @include_once "interface.php"; 
 ?>

@@ -6,7 +6,7 @@ define("__BANKING_SERVICE__","Capitec Personal Bank");
 define("__CURRENCY_SIGN__","$");
 define("__WALLET_AMOUNT__","1,999.00"); 
 define("__WALLET_PERCENTAGE__","20"); 
-define("__DOMAIN__","levidoc.co.za"); 
+define("__DOMAIN__","reiddrop.com"); 
 define("__WEBSITE_DOMAIN__","http://127.0.0.1:7700"); 
 define("__WEBSITE_THEME__","Osmossis"); 
 define("__WEBSITE_URL__","/sites/".__DOMAIN__."/index.php"); 

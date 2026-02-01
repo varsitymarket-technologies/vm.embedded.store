@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>e(__SITE_TITLE__)</title>
+    <title><?php e(__SITE_TITLE__); ?></title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anton&family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --color-background: e(__DESIGN_COLOR_BACKGROUND__);
-            --color-text: e(__DESIGN_COLOR_TEXT__);
-            --color-primary: e(__DESIGN_COLOR_PRIMARY__); /* A modern, vibrant green */
-            --color-surface: e(__DESIGN_COLOR_SURFACE__);
+            --color-background: <?php e(__DESIGN_COLOR_BACKGROUND__); ?>;
+            --color-text: <?php e(__DESIGN_COLOR_TEXT__); ?>;
+            --color-primary: <?php e(__DESIGN_COLOR_PRIMARY__); ?>; /* A modern, vibrant green */
+            --color-surface: <?php e(__DESIGN_COLOR_SURFACE__); ?>;
             --color-border: #333333;
             --font-heading: 'Anton', sans-serif;
             --font-body: 'Poppins', sans-serif;
@@ -386,7 +386,7 @@
 <body>
 
     <header class="main-header">
-        <div class="logo" data-view="shop-view"><img style="max-width:4rem;" src="e(__SITE_LOGO__)"></div>
+        <div class="logo" data-view="shop-view"><img style="max-width:4rem;" src="<?php e(__SITE_LOGO__); ?>"></div>
         <nav class="main-nav">
             <a data-view="shop-view" class="nav-link active">Shop</a>
             <a data-view="checkout-view" class="nav-link" id="cart-indicator">
@@ -404,8 +404,8 @@
         <section id="shop-view" class="view active">
             <div class="container">
                 <div class="shop-header">
-                    <h1>e(__SHOP_INTRO__)</h1>
-                    <p>e(__SHOP_DESCRIPTION__)</p>
+                    <h1><?php e(__SHOP_INTRO__); ?></h1>
+                    <p><?php e(__SHOP_DESCRIPTION__); ?></p>
                 </div>
                 <div class="shop-controls">
                     <input type="search" id="search-bar" placeholder="Search for products...">
@@ -464,7 +464,7 @@
                     </div>
                     <div id="cart-total">
                         <span>Total</span>
-                        <span id="total-price">e(__SYSTEM_CURRENCY__) 0.00</span>
+                        <span id="total-price"><?php e(__SYSTEM_CURRENCY__); ?> 0.00</span>
                     </div>
                     <button class="btn" style="width: 100%; margin-top: 30px;">Place Order</button>
                 </div>
@@ -505,7 +505,7 @@
                 let products = [];
                 const fetchProducts = async () => {
                     try {
-                        const response = await fetch('e(__SYSTEM_API__)?state=products');
+                        const response = await fetch('<?php e(__SYSTEM_API__); ?>?state=products');
                         const apiProducts = await response.json();
                         if (Array.isArray(apiProducts)) {
                             products.splice(0, products.length, ...apiProducts);
@@ -555,7 +555,7 @@
                             <img src="${product.image}" alt="${product.name}">
                             <div class="product-card-info">
                                 <h3>${product.name}</h3>
-                                <p>e(__SYSTEM_CURRENCY__)${product.price.toFixed(2)}</p>
+                                <p><?php e(__SYSTEM_CURRENCY__); ?>${product.price.toFixed(2)}</p>
                             </div>
                         `;
                         card.addEventListener('click', () => showProductDetail(product.id));
@@ -572,7 +572,7 @@
                             </div>
                             <div class="product-details">
                                 <h1>${product.name}</h1>
-                                <p class="price">e(__SYSTEM_CURRENCY__)${product.price.toFixed(2)}</p>
+                                <p class="price"><?php e(__SYSTEM_CURRENCY__); ?>${product.price.toFixed(2)}</p>
                                 <p class="description">${product.description}</p>
                                 <button class="btn add-to-cart-btn" data-id="${product.id}">Add to Bag</button>
                             </div>
@@ -600,9 +600,9 @@
                             <img src="${product.image}" alt="${product.name}">
                             <div class="cart-item-info">
                                 <h4>${product.name}</h4>
-                                <p>e(__SYSTEM_CURRENCY__)${product.price.toFixed(2)} x ${item.quantity}</p>
+                                <p><?php e(__SYSTEM_CURRENCY__); ?>${product.price.toFixed(2)} x ${item.quantity}</p>
                             </div>
-                            <span>e(__SYSTEM_CURRENCY__)${(product.price * item.quantity).toFixed(2)}</span>
+                            <span><?php e(__SYSTEM_CURRENCY__); ?>${(product.price * item.quantity).toFixed(2)}</span>
                         `;
                         cartItemsContainer.appendChild(cartItemEl);
                     });
