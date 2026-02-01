@@ -90,7 +90,7 @@
                 </a>
                 <a href="builder" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-palette-fill mr-3"></i>
-                    <span>Builder</span>
+                    <span>Page Builder</span>
                 </a>
                 <a href="settings" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-gear-fill mr-3"></i>

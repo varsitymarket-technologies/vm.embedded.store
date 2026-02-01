@@ -1,5 +1,5 @@
 <?php
-$db = __DB_MODULE__;
+$db = __DB_WEBSITE__; 
 
 $configFile = "/home/hastings/vm.embedded-sites/sites/reiddrop.com/config.php"; 
 
@@ -79,7 +79,7 @@ foreach ($settings as $key => $value) {
             <button id="sidebarOpen" class="text-gray-400 hover:text-white md:hidden">
                 <i class="bi bi-list text-2xl"></i>
             </button>
-            <h2 class="text-lg font-semibold text-white">Visual Builder</h2>
+            <h2 class="text-lg font-semibold text-white">Page Builder</h2>
         </div>
         <div class="flex items-center gap-3">
              <button onclick="document.getElementById('builderForm').submit()" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors text-sm font-medium">

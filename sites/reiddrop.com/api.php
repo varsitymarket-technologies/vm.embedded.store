@@ -11,7 +11,7 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 
 @include_once dirname(dirname(dirname(__FILE__))). "/scripts.php"; 
-$db = __DB_MODULE__; 
+$db = __DB_WEBSITE__;  
 
 $request = $_GET['state'] ?? ''; 
 

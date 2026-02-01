@@ -30,11 +30,12 @@ $site_config = dirname(__FILE__)."/config.php";
 if (!file_exists($site_config)){
     $data_set = "<?php".PHP_EOL;
     foreach ($encode_node as $key => $value) {
-        @include_once dirname( dirname( dirname(__FILE__)))."config.php"; 
+        @include_once dirname( dirname( dirname(__FILE__)))."/config.php"; 
+        
         if ($value == "__SYSTEM_API__"){
             $data_set .= 'define("'.$value.'","api.php");'.PHP_EOL;
         }else if ($value == "__SYSTEM_CURRENCY__"){
-            $data_set .= 'define("'.$value.'","'.__CURRENCY__.'");'.PHP_EOL;
+            $data_set .= 'define("'.$value.'","'.__CURRENCY_SIGN__.'");'.PHP_EOL;
         }else{
             $data_set .= 'define("'.$value.'","");'.PHP_EOL;
         }

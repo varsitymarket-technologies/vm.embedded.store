@@ -7,6 +7,7 @@
 #   RELEASE : 2026/01/30
 
 define("__DB_MODULE__",initiate_database()); 
+@define("__DB_WEBSITE__",initiate_web_database()); 
 
 function ex($section = 1)
 {
@@ -17,6 +18,19 @@ function ex($section = 1)
     return $_xm[$section];
 }
 
+
+function initiate_web_database(){
+    if (!defined('__DOMAIN__')){
+        //trigger_error('Failed To Locate Defined Database');   
+        return null;  
+    }
+
+    $file = dirname(__FILE__)."/sites/".__DOMAIN__."/storage.data";
+    $db_file = dirname(__FILE__)."/module/database.php"; 
+    @include_once $db_file;  
+    $e = new database_manager($file); 
+    return $e; 
+}
 
 function initiate_database(){
     $file = dirname(__FILE__)."/build/vm.engine.sql";

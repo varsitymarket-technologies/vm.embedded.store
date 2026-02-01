@@ -1,5 +1,5 @@
 <?php
-$db = __DB_MODULE__;
+$db = __DB_WEBSITE__; 
 
 // Helper to get setting
 function get_setting($db, $key, $default = '') {

@@ -1,5 +1,5 @@
 <?php
-$db = __DB_MODULE__;
+$db = __DB_WEBSITE__; 
 
 // Handle Form Submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
