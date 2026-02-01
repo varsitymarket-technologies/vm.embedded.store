@@ -10,6 +10,7 @@ $data = [
     "auth" => "page.auth.php",
     "home" => "page.dashboard.php",
     "payments" => "page.payments.php",
+    "theme" => "page.theme.php",
 ]; 
 
 @$file = $data[ex(1)] ?? $data['auth']; 

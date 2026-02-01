@@ -7,17 +7,20 @@
 #   RELEASE : 2026/01/30
 
 // Ensure the build directory exists as scripts.php expects it for the database file
-$buildDir = dirname(__DIR__) . '/build';
+$anchor_sites = "reiddrop.com"; 
+$buildDir = dirname( dirname(__FILE__) ).'/sites/'.$anchor_sites; 
 if (!is_dir($buildDir)) {
     mkdir($buildDir, 0777, true);
 }
 
 require_once '../scripts.php';
 
+$buildFile = $buildDir."/storage.data"; 
 // Access the database object initialized in scripts.php
 $db = __DB_MODULE__;
+$db->override_connection($buildFile); 
 
-echo "Starting database installation...\n";
+echo "Starting database installation...\n\n";
 
 // 1. Categories Table
 $sql_categories = "CREATE TABLE IF NOT EXISTS categories (
@@ -71,7 +74,7 @@ $sql_settings = "CREATE TABLE IF NOT EXISTS settings (
 // Execute creation queries
 // Assuming database_manager has a query() method
 $db->query($sql_categories);
-echo "Table 'categories' checked/created.\n  ";
+echo "Table 'categories' checked/created.\n";
 
 $db->query($sql_products);
 echo "Table 'products' checked/created.\n";
@@ -85,5 +88,5 @@ echo "Table 'orders' checked/created.\n";
 $db->query($sql_settings);
 echo "Table 'settings' checked/created.\n";
 
-echo "Installation complete.";
+echo "\nInstallation complete.";
 ?>

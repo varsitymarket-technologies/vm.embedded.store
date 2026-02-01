@@ -4,7 +4,7 @@
 #   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
 #   VERSION : 1.0.1.1
 #   AUTHOR  : HARDY HASTINGS  
-#   RELEASE : 2026/01/30
+#   RELEASE : 2026/02/01
 
 
 header("Access-Control-Allow-Origin: *");
