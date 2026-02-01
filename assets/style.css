@@ -232,3 +232,12 @@ tr{
     border-width: 2px;
     border-style: solid;
 }
+
+select{
+    background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  padding: 0.8rem;
+  border-radius: 6px;
+  color: white;
+  font-size: 1rem;
+}
