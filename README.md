@@ -1,6 +1,10 @@
+<h1 align="center">
+    <a><img src="https://avatars.githubusercontent.com/u/219999828?s=400&u=2166fd2a4b7e592c0f1e9893a34aeb1105bc6bea&v=4" width="175px" alt="< VM.EMBEDDED SITES >"></a>
+</h1>
+
 # Varsity Market - Embedded Mini Store
 
-A lightweight, embedded e-commerce micro-service designed to act as a plugin for Google Sites and other platforms. This project provides a complete solution with a customer-facing shop and a comprehensive admin control panel.
+A lightweight, embedded e-commerce micro-service designed to act as a plugin for Google Sites, Cloudflare Pages and other platforms. This project provides a complete solution with a customer-facing shop and a comprehensive admin control panel.
 
 ## Overview
 
@@ -15,6 +19,10 @@ This solution is built to be hosted on a PHP server and embedded via `<iframe>` 
 *   **Embeddable**: Optimized for embedding within Google Sites containers.
 
 ### Admin Control Panel
+<h1 align="center">
+    <a><img src="https://raw.githubusercontent.com/varsitymarket-technologies/vm.embedded.store/refs/heads/master/assets/admin_ui.png" width="200px" alt="< VM.MAKHESA >"></a>
+</h1>
+
 *   **Modern UI**: Dark-themed interface built with Tailwind CSS.
 *   **Dashboard**: Real-time overview of sales, users, and orders.
 *   **Responsive Sidebar**: Collapsible navigation for mobile management.
