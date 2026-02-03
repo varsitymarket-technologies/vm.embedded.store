@@ -27,11 +27,12 @@ echo "Restoring Database...\n\n";
 
 $sql_account = "CREATE TABLE IF NOT EXISTS sys_account (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    email TEXT NOT NULL,
+    name TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE,
     image TEXT,
     hash_key TEXT,
-    auth TEXT,
+    auth TEXT UNIQUE,
+    data TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 )"; 
 
@@ -60,7 +61,7 @@ $sql_websites = "CREATE TABLE IF NOT EXISTS sys_websites (
     hash_key TEXT,
     account_index TEXT,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (account_index) REFERENCES sys_account(id)
+    FOREIGN KEY (account_index) REFERENCES sys_account(auth)
 )"; 
 
 

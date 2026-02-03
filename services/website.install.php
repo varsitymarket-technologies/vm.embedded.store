@@ -6,9 +6,19 @@
 #   AUTHOR  : HARDY HASTINGS  
 #   RELEASE : 2026/02/01
 
+if (!defined("__ANCHOR_SITE__")){
+    trigger_error("Missing Website Details"); 
+}
 
-$anchor_site = "reiddrop.com";
-$anchor_theme = "exalt"; 
+$anchor_site = __ANCHOR_SITE__; 
+
+
+if (!defined("__ANCHOR_THEME__")){
+    trigger_error("Missing Website Details"); 
+}
+
+$anchor_theme = __ANCHOR_THEME__; 
+
 
 $website_folder = dirname(dirname(__FILE__))."/sites/";
 
@@ -16,10 +26,6 @@ if (!is_dir($website_folder.$anchor_site)){
     #Make The Website Directory 
     mkdir($website_folder.$anchor_site,0777,true); 
 }
-
-
-#require_once '../scripts.php';
-
 
 # Copy Elements From The Skeleton Structure 
 

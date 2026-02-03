@@ -1,4 +1,5 @@
 <?php 
+define("__ACCOUNT_INDEX__",'58ceae8194429b4ef09a25e98e86a7e615be1a0327ff2d4a350f9aebfa0eafcc6981c9da7e500'); 
 define("__USERNAME__","hastings-dev"); 
 define("__BANKING_ACCOUNT_NUMBER__","22623463746783"); 
 define("__BANKING_ACCOUNT_TYPE__","savings"); 

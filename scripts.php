@@ -20,24 +20,59 @@ function ex($section = 1)
 
 function base_encryption($plaintext) {
     $key= create_enc_key(); 
+    $e = __encryption__($plaintext,$key); 
+    return $e; 
+}
+
+function base_decryption($ciphertext) {
+    $key= create_enc_key(); 
+    $e = __decryption__($ciphertext,$key); 
+    return $e; 
+}
+
+function __encryption__($data,$key){
+    $plaintext = $data; 
     $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length('aes-256-cbc'));
     $ciphertext = openssl_encrypt($plaintext, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
     return base64_encode($iv . $ciphertext);
 }
 
-
-function base_decryption($ciphertext) {
-    $key= create_enc_key(); 
+function __decryption__($data,$key) {
+    $ciphertext = $data; 
     $ciphertext = base64_decode($ciphertext ?? '');
     $iv = substr($ciphertext, 0, openssl_cipher_iv_length('aes-256-cbc'));
     $plaintext = openssl_decrypt(substr($ciphertext, openssl_cipher_iv_length('aes-256-cbc')), 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
     return $plaintext;
 }
 
+
+
 function create_enc_key(){
     $default = 'POIETRWQITHASURTO3985HD8JD7549DYH58FY'; 
     return $default; 
 }
+
+
+    function database_services($domain){
+        if (!defined('__ANCHOR_SITE__')){
+            define("__ANCHOR_SITE__",$domain); 
+        }
+        $service = dirname(__FILE__)."/services/database.install.php"; 
+        @include_once $service; 
+        return true; 
+    }
+
+    function website_services($domain,$theme){
+        if (!defined('__ANCHOR_SITE__')){
+            define("__ANCHOR_SITE__",$domain); 
+        }
+        if (!defined('__ANCHOR_THEME__')){
+            define("__ANCHOR_THEME__",$theme); 
+        }
+        $service = dirname(__FILE__)."/services/website.install.php"; 
+        @include_once $service; 
+        return true; 
+    }
 
 function initiate_web_database(){
     if (!defined('__DOMAIN__')){

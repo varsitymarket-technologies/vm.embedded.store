@@ -2,5 +2,7 @@
 *.sql
 # Ignore all .backup files
 *.backup
+
+*.debug
 # Ignore all files in any directory named build
 build/

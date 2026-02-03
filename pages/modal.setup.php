@@ -51,16 +51,16 @@
             <div class="step-dot" data-step="3"></div>
         </div>
 
-        <form id="multiStepForm">
+        <form method="POST" action="" id="multiStepForm">
             <div class="form-step active" id="step1">
                 <p class="subtext">Please Fill In Your Website Details </p> 
                 <div class="input-group">
                     <label>Website Name</label>
-                    <input type="text" placeholder="" required>
+                    <input name="wb_name" type="text" placeholder="" required>
                 </div>
                 <div class="input-group">
                     <label>Website Domain</label>
-                    <input type="text" placeholder="example.co.za" required>
+                    <input name="wb_domain" type="text" placeholder="example.co.za" required>
                 </div>
             </div>
 
@@ -68,35 +68,46 @@
                 <p class="subtext">Please Fill In Your Billing Information</p> 
                 <div class="input-group">
                     <label>Street Address</label>
-                    <input type="text" placeholder="">
+                    <input name="bstreet" type="text" placeholder="">
                 </div>
                 <div class="input-group">
                     <label>Zip Code</label>
-                    <input type="text" placeholder="">
+                    <input name="bzip" type="text" placeholder="">
+                </div>
+                <div class="input-group">
+                    <label>Province</label>
+                    <input name="bstate" type="text" placeholder="">
                 </div>
                 <div class="input-group">
                     <label>City</label>
-                    <input type="text" placeholder="">
+                    <input name="bcity" type="text" placeholder="">
                 </div>
                 <div class="input-group">
                     <label>Country</label>
-                    <input type="text" placeholder="">
+                    <input name="bcountry" type="text" placeholder="">
                 </div>
             </div>
 
             <div class="form-step" id="step3">
                 <p class="subtext">Please Fill In Your Payment Information</p>
                 <div class="input-group">
-                    <label>Account Number</label>
-                    <input type="text" placeholder="">
-                </div>
-                <div class="input-group">
                     <label>Select Bank</label>
-                    <input type="text" placeholder="">
+                    <input name="account_provider" type="text" placeholder="">
                 </div>
+
+                <div class="input-group">
+                    <label>Account Number</label>
+                    <input name="account_number" type="text" placeholder="" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Account Type</label>
+                    <input name="account_type" type="text" placeholder="">
+                </div>
+
                 <div class="input-group">
                     <label>Branch Code</label>
-                    <input type="text" placeholder="">
+                    <input name="account_branch" type="text" placeholder="">
                 </div>
             </div>
 
@@ -115,6 +126,7 @@
     const prevBtn = document.getElementById('prevBtn');
     const steps = document.querySelectorAll('.form-step');
     const dots = document.querySelectorAll('.step-dot');
+    const forms = document.getElementById('multiStepForm');
     
     let currentStep = 0;
 
@@ -144,6 +156,8 @@
             currentStep++;
             updateStep();
         } else {
+
+            forms.submit(); 
             alert('Website Created Successfully!');
             modal.classList.remove('active');
             // Logic to submit form data goes here
