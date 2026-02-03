@@ -1,4 +1,6 @@
 # Ignore all .sql files
 *.sql
+# Ignore all .backup files
+*.backup
 # Ignore all files in any directory named build
 build/

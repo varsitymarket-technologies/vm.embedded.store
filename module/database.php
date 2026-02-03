@@ -156,25 +156,4 @@ class database_manager
     }
 }
 
-
-
-/* 
-    * Example usage of the SQLiteManager class
-    * Uncomment the following lines to test the functionality
-    *
-$manager = new database_manager(__DATABASE_SOURCE__);
-#$manager->query(""); 
-print_r($manager->query("SELECT * FROM users")); 
-die(); 
-
-$manager->createTable('users', [
-    'id' => 'INTEGER PRIMARY KEY AUTOINCREMENT',
-    'name' => 'TEXT NOT NULL',
-    'email' => 'TEXT NOT NULL UNIQUE'
-]); 
-$manager->executeSql("INSERT INTO users (name, email) VALUES ('John Doe', ' example.stuck@why.com')");
-#$manager = new SQLiteManager(__DATABASE_SOURCE__);
-
-//*/
-
 ?>

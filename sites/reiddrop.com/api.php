@@ -24,4 +24,13 @@ if($request == "products"){
     }
     echo json_encode($data);
 }
+
+if ($request == "categories"){
+    $data = $db->query("SELECT * FROM categories"); 
+    foreach($data as $key => $value){
+        //$data[$key]['price'] = (float) $value['price'];
+        $data[$key]['id'] = (int) $value['id'];
+    }
+    echo json_encode($data);
+}
 ?>

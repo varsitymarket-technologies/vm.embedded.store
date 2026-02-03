@@ -58,6 +58,28 @@ This solution is built to be hosted on a PHP server and embedded via `<iframe>` 
 
 ## Configuration
 
+### System Database 
+
+#### Database Restoration
+To restart The System database use the following service scripts `/services/sys.database.php`. 
+```shell 
+php /services/sys.database.php
+```
+#### Database Rollback
+The system allows users to restore their database as a rollback feature incase of database damages. If you wish to restore the database run the following scripts `/services/sys.database.restore.php`. To execute the command run it as follows 
+```shell 
+php /services/sys.database.restore.php [backup_file]
+# e.g php /services/sys.database.restore.php /build/engine.backup
+```
+
+#### Database Backup
+To Make a manual backup of the database you can execute the following scripts to backup the current state of the database. ` php services/sys.database.backup.php`. To execute the command run it as follows:
+```shell 
+php /services/sys.database.backup.php
+```
+The system will then show where the backup file is stored. 
+
+
 Each site instance (e.g., inside `/sites/`) is configured via a `config.php` file. Key constants include:
 
 *   `__SITE_TITLE__`: The display title of the store.

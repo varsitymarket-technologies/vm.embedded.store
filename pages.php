@@ -11,6 +11,7 @@ $data = [
     "home" => "page.dashboard.php",
     "payments" => "page.payments.php",
     "theme" => "page.theme.php",
+    "setup" => "page.setup.php",
 ]; 
 
 @$file = $data[ex(1)] ?? $data['auth']; 

@@ -18,6 +18,26 @@ function ex($section = 1)
     return $_xm[$section];
 }
 
+function base_encryption($plaintext) {
+    $key= create_enc_key(); 
+    $iv = openssl_random_pseudo_bytes(openssl_cipher_iv_length('aes-256-cbc'));
+    $ciphertext = openssl_encrypt($plaintext, 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
+    return base64_encode($iv . $ciphertext);
+}
+
+
+function base_decryption($ciphertext) {
+    $key= create_enc_key(); 
+    $ciphertext = base64_decode($ciphertext ?? '');
+    $iv = substr($ciphertext, 0, openssl_cipher_iv_length('aes-256-cbc'));
+    $plaintext = openssl_decrypt(substr($ciphertext, openssl_cipher_iv_length('aes-256-cbc')), 'aes-256-cbc', $key, OPENSSL_RAW_DATA, $iv);
+    return $plaintext;
+}
+
+function create_enc_key(){
+    $default = 'POIETRWQITHASURTO3985HD8JD7549DYH58FY'; 
+    return $default; 
+}
 
 function initiate_web_database(){
     if (!defined('__DOMAIN__')){

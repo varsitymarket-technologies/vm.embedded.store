@@ -39,21 +39,6 @@
                 </div>
             </div>
 
-            <h3 class="grid-layout">More Controls</h3>
-            <div class="grid-layout">
-                <div class="card">
-                    <div class="balance">Paymenents</div>
-                    <p class="subtext">Manage Your Webstore payments</p>
-                    <button onclick="window.location='/payments/'" class="btn btn-primary">Manage Payments</button>
-                </div>
-
-                <div></div>
-
-                <div></div>
-
-            </div>
-
-
 
             <div style="margin:0 auto; display:block; padding:2rem; max-width: 1200px;">
                 <div class="card">
@@ -71,6 +56,21 @@
                 </div>
                 </div>
             </div>
+
+            <h3 class="grid-layout">More Controls</h3>
+            <div class="grid-layout">
+                <div class="card">
+                    <div class="balance">Paymenents</div>
+                    <p class="subtext">Manage Your Webstore payments</p>
+                    <button onclick="window.location='/payments/'" class="btn btn-primary">Manage Payments</button>
+                </div>
+
+                <div></div>
+
+                <div></div>
+
+            </div>
+
         </div>
 
     </main>
