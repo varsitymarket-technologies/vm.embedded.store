@@ -20,7 +20,7 @@ This solution is built to be hosted on a PHP server and embedded via `<iframe>` 
 
 ### Admin Control Panel
 <h1 align="center">
-    <a><img src="https://raw.githubusercontent.com/varsitymarket-technologies/vm.embedded.store/refs/heads/master/assets/admin_ui.png" width="200px" alt="< VM.MAKHESA >"></a>
+    <a><img src="https://raw.githubusercontent.com/varsitymarket-technologies/vm.embedded.store/refs/heads/master/assets/admin_ui.png" width="100%" alt="< VM.MAKHESA >"></a>
 </h1>
 
 *   **Modern UI**: Dark-themed interface built with Tailwind CSS.
