@@ -1,5 +1,5 @@
 <?php
-$db = __DB_WEBSITE__; 
+$db = initiate_web_database(); 
 
 // Handle Form Submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

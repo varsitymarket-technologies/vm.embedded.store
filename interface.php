@@ -7,7 +7,6 @@
 #   RELEASE : 2026/01/30
 ?>
 <?php @include_once "config.php"; ?>
-<?php @include_once "scripts.php"; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

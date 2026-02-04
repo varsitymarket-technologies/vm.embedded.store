@@ -7,7 +7,50 @@
 #   RELEASE : 2026/01/30
 
 define("__DB_MODULE__",initiate_database()); 
-@define("__DB_WEBSITE__",initiate_web_database()); 
+define("__DB_WEBSITE__",initiate_web_database()); 
+
+function account_data($index){
+    @include_once "config.php"; 
+    $AUTH = __ACCOUNT_INDEX__; 
+    $tbl_index = $index; 
+    $sql = "SELECT * FROM `sys_account` WHERE (`auth` = '{$AUTH}') LIMIT 1";
+    $e = __DB_MODULE__->query($sql); 
+    $result = $e[0][$tbl_index] ?? false;
+    return $result; 
+}
+
+function website_data($index){
+    @include_once "config.php"; 
+    $AUTH = __ACCOUNT_INDEX__; 
+    $tbl_index = $index; 
+    $sql = "SELECT * FROM `sys_websites` WHERE (`account_index` = '{$AUTH}') LIMIT 1";
+    $e = __DB_MODULE__->query($sql); 
+    $result = $e[0][$tbl_index] ?? false;
+    return $result; 
+}
+
+function banking_data($index){
+    @include_once "config.php";
+    $AUTH = __ACCOUNT_INDEX__; 
+    $tbl_index = $index; 
+    $sql = "SELECT * FROM `sys_banking` WHERE (`account_index` = '{$AUTH}') LIMIT 1";
+    $e = __DB_MODULE__->query($sql); 
+    
+    try {    
+        $signature_key = $e[0]['signature_key']; 
+        $result = $e[0]['data']; 
+        $output = __decryption__($result,$signature_key); 
+        $output = json_decode($output,JSON_PRETTY_PRINT); 
+        $output = $output[$index]; 
+        return $output;    
+    } catch (\Throwable $th) {
+        return false;
+    }
+}
+
+function admin_percentage(){
+    return 20; 
+}
 
 function ex($section = 1)
 {
@@ -75,16 +118,22 @@ function create_enc_key(){
     }
 
 function initiate_web_database(){
+    @include_once "config.php"; 
     if (!defined('__DOMAIN__')){
-        //trigger_error('Failed To Locate Defined Database');   
+        trigger_error('Failed To Locate Defined Database');   
         return null;  
     }
 
     $file = dirname(__FILE__)."/sites/".__DOMAIN__."/storage.data";
+    debug($file); 
     $db_file = dirname(__FILE__)."/module/database.php"; 
     @include_once $db_file;  
     $e = new database_manager($file); 
     return $e; 
+}
+
+function debug($output){
+    file_put_contents('raw.debug',$output); 
 }
 
 function initiate_database(){

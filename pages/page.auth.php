@@ -4,7 +4,8 @@
     <!-- AUTH SECTION -->
     <div id="auth-container" class="container center-content">
         <div class="auth-card">
-
+            <img src="/assets/favicon.png">
+             
             <?php if (defined("SYSTEM_ERROR")){?>
             
             <div style="color:white; border-radius:10px; padding:10px; background-color: #9b1818e8;">

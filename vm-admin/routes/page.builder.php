@@ -1,7 +1,7 @@
 <?php
-$db = __DB_WEBSITE__; 
+$db = initiate_web_database(); 
 
-$configFile = "/home/hastings/vm.embedded-sites/sites/reiddrop.com/config.php"; 
+$configFile = dirname(dirname(dirname(__FILE__))). "/sites/".__DOMAIN__."/config.php"; 
 
 // Handle Save
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {

@@ -1,0 +1,11 @@
+<?php
+define("__SITE_TITLE__","");
+define("__DESIGN_COLOR_BACKGROUND__","");
+define("__DESIGN_COLOR_TEXT__","");
+define("__DESIGN_COLOR_PRIMARY__","");
+define("__DESIGN_COLOR_SURFACE__","");
+define("__SITE_LOGO__","");
+define("__SHOP_INTRO__","");
+define("__SHOP_DESCRIPTION__","");
+define("__SYSTEM_CURRENCY__","R");
+define("__SYSTEM_API__","api.php");

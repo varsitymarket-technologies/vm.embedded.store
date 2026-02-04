@@ -10,7 +10,8 @@
 
 <?php 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $db = __DB_MODULE__; 
+    $file = dirname(dirname(__FILE__))."/build/vm.engine.sql";
+    $dbm = new database_manager($file);
 
     #Recieve THe Data From The Forms 
     $website_name = $_POST['wb_name']; 
@@ -51,18 +52,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         "country" => $billing_country,
     ],JSON_PRETTY_PRINT)); 
 
-    $e = database_services($domain); 
+    @$e = database_services($domain); 
     $e = website_services($domain,$theme); 
 
     $sql = "UPDATE sys_account SET `data` = '{$account_data}' WHERE (`auth` = '{$account_index}');"; 
-    $db->query($sql);
+    $e = $dbm->query($sql);
+    
+    $sql = "INSERT INTO `sys_banking` (`account_index`,`signature_key`,`data`) VALUES ('{$account_index}','{$signature_key}','{$banking_data}');"; 
+    $e = $dbm->query($sql);
 
-    $sql = "INSERT INTO `sys_banking` (`account_index`,`signature_key`,`data`) VALUES ('{$account_index}','{$signature_key}','{$banking_data}')"; 
-    $db->query($sql);
+    $sql = "INSERT INTO `sys_websites` (`name`,`domain`,`theme`,`hash_key`,`account_index`) VALUES ('{$name}','{$domain}','{$theme}','{$hash_key}','{$account_index}')"; 
+    $e = $dbm->query($sql);
 
-    $sql = "INSERT INTO `sys_websites` (`name`,`domain`,`theme`,`hash_key`,`account_index`,) VALUES ('{$name}','{$domain}','{$theme}','{$hash_key}','{$account_index}')"; 
-    $db->query($sql);
-        
+
+    debug($sql); 
     echo "<script>window.location.href = '/home/';</script>";
     exit;
 }

@@ -1,5 +1,5 @@
 <?php
-$db = __DB_WEBSITE__; 
+$db = initiate_web_database(); 
 
 // Helper to get setting
 function get_setting($db, $key, $default = '') {
