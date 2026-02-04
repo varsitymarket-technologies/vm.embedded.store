@@ -36,6 +36,8 @@ if (!file_exists($site_config)){
             $data_set .= 'define("'.$value.'","api.php");'.PHP_EOL;
         }else if ($value == "__SYSTEM_CURRENCY__"){
             $data_set .= 'define("'.$value.'","'.__CURRENCY_SIGN__.'");'.PHP_EOL;
+        }else if ($value == "__SITE_TITLE__"){
+            $data_set .= 'define("'.$value.'","'.website_data('name').'");'.PHP_EOL;
         }else{
             $data_set .= 'define("'.$value.'","");'.PHP_EOL;
         }

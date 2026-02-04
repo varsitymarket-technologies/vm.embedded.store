@@ -24,7 +24,7 @@ function website_data($index){
     $AUTH = __ACCOUNT_INDEX__; 
     $tbl_index = $index; 
     $sql = "SELECT * FROM `sys_websites` WHERE (`account_index` = '{$AUTH}') LIMIT 1";
-    $e = __DB_MODULE__->query($sql); 
+    $e = __DB_MODULE__->query($sql);  
     $result = $e[0][$tbl_index] ?? false;
     return $result; 
 }
@@ -60,6 +60,24 @@ function ex($section = 1)
     $_xm = explode("/", $x);
     return $_xm[$section];
 }
+
+
+    function __account_index__(){
+        try {
+            
+            $source = $_SESSION['vm_index']; 
+            $source2 = $_SESSION['vm_key']; 
+
+            $index = base_decryption($source); 
+            $key = base64_decode($source2); 
+            $e = __decryption__($index,$key); 
+            return $e; 
+            
+        } catch (\Throwable $th) {
+            return false;
+        }
+    }
+    
 
 function base_encryption($plaintext) {
     $key= create_enc_key(); 
@@ -125,7 +143,9 @@ function initiate_web_database(){
     }
 
     $file = dirname(__FILE__)."/sites/".__DOMAIN__."/storage.data";
-    debug($file); 
+    if (__DOMAIN__ == null){
+        return null;
+    }
     $db_file = dirname(__FILE__)."/module/database.php"; 
     @include_once $db_file;  
     $e = new database_manager($file); 

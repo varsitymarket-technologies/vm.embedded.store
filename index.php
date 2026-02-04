@@ -1,4 +1,6 @@
 <?php 
+session_start(); 
+
 // Enable error logging
 ini_set('log_errors', 1);
 

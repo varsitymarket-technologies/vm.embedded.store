@@ -43,15 +43,15 @@ Read the `TEMPLATE.md` file.
 The system includes built-in services for database health and backups via the PHP CLI.
 - Initialize/Restart Database:
 ```shell 
-php /services/sys.database.php
+php services/sys.database.php
 ```
 - Create Manual Backup:
 ```shell 
-php /services/sys.database.backup.php
+php services/sys.database.backup.php
 ```
 - Restore from Rollback:
 ```shell 
-php /services/sys.database.restore.php [backup_file]
+php services/sys.database.restore.php [backup_file]
 # example: php /services/sys.database.restore.php /build/engine.backup
 ```
 

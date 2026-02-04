@@ -46,32 +46,7 @@ $orders = $db->query("SELECT * FROM orders ORDER BY id DESC");
         <!-- Main Content -->
         <div class="flex flex-1 flex-col overflow-hidden">
             <!-- Header -->
-            <header class="flex h-16 items-center justify-between bg-gray-800 px-6 border-b border-white/10">
-                <button id="sidebarOpen" class="text-gray-400 hover:text-white md:hidden">
-                    <i class="bi bi-list text-2xl"></i>
-                </button>
-                <div class="flex items-center gap-4 ml-auto">
-                    <button class="relative text-gray-400 hover:text-white">
-                        <i class="bi bi-bell text-xl"></i>
-                        <span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-purple-500"></span>
-                    </button>
-                    <div class="relative group">
-                        <button class="flex items-center gap-2 text-sm font-medium text-white focus:outline-none">
-                            <div class="h-8 w-8 rounded-full bg-purple-600 flex items-center justify-center">
-                                <i class="bi bi-person-fill"></i>
-                            </div>
-                            <span class="hidden md:block">Admin</span>
-                            <i class="bi bi-chevron-down text-xs text-gray-400"></i>
-                        </button>
-                        <!-- Dropdown -->
-                        <div class="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-gray-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden group-hover:block border border-white/10">
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Profile</a>
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Settings</a>
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Sign out</a>
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <?php @include_once "header.php"; ?>
 
             <!-- Main Scrollable Area -->
             <main class="flex-1 overflow-y-auto overflow-x-hidden bg-gray-900 p-6">
@@ -114,7 +89,7 @@ $orders = $db->query("SELECT * FROM orders ORDER BY id DESC");
                                             <div class="font-medium text-white"><?php echo htmlspecialchars($order['customer_name']); ?></div>
                                             <div class="text-xs text-gray-500"><?php echo htmlspecialchars($order['customer_email']); ?></div>
                                         </td>
-                                        <td class="px-6 py-4 text-white">$<?php echo number_format($order['total_amount'], 2); ?></td>
+                                        <td class="px-6 py-4 text-white"><?php echo __CURRENCY_SIGN__.number_format($order['total_amount'], 2); ?></td>
                                         <td class="px-6 py-4">
                                             <?php
                                             $statusClass = match($order['status'] ?? 'pending') {
@@ -185,7 +160,7 @@ $orders = $db->query("SELECT * FROM orders ORDER BY id DESC");
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-gray-400 mb-1">Total Amount ($)</label>
+                                    <label class="block text-sm font-medium text-gray-400 mb-1">Total Amount (<?php echo __CURRENCY_SIGN__; ?>)</label>
                                     <input type="number" step="0.01" name="total_amount" id="totalAmount" required class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors">
                                 </div>
 

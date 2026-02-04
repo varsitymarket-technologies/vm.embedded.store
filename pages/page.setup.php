@@ -64,8 +64,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $sql = "INSERT INTO `sys_websites` (`name`,`domain`,`theme`,`hash_key`,`account_index`) VALUES ('{$name}','{$domain}','{$theme}','{$hash_key}','{$account_index}')"; 
     $e = $dbm->query($sql);
 
-
-    debug($sql); 
     echo "<script>window.location.href = '/home/';</script>";
     exit;
 }

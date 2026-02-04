@@ -1,0 +1,7 @@
+[04-Feb-2026 16:29:34 Africa/Johannesburg] PHP Fatal error:  Uncaught Error: Undefined constant "__SITE_TITLE__" in /home/hastings/vm.embedded-sites/sites/blackbird.duckdns.org/encode.php:6
+Stack trace:
+#0 /home/hastings/vm.embedded-sites/sites/blackbird.duckdns.org/interface.php(59): include_once()
+#1 /home/hastings/vm.embedded-sites/sites/blackbird.duckdns.org/routes.php(18): include_once('...')
+#2 /home/hastings/vm.embedded-sites/sites/blackbird.duckdns.org/index.php(10): include_once('...')
+#3 {main}
+  thrown in /home/hastings/vm.embedded-sites/sites/blackbird.duckdns.org/encode.php on line 6

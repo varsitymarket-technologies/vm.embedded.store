@@ -8,7 +8,7 @@ function get_setting($db, $key, $default = '') {
 }
 
 // --- Data Fetching ---
-$currency_symbol = get_setting($db, 'currency_symbol', '$');
+$currency_symbol = __CURRENCY_SIGN__;
 
 // Stat Cards Data
 $total_revenue_result = $db->query("SELECT SUM(total_amount) as total FROM orders WHERE status = 'completed'");
@@ -67,32 +67,7 @@ foreach ($order_status_data as $row) {
 <!-- Main Content -->
 <div class="flex flex-1 flex-col overflow-hidden">
     <!-- Header -->
-    <header class="flex h-16 items-center justify-between bg-gray-800 px-6 border-b border-white/10">
-        <button id="sidebarOpen" class="text-gray-400 hover:text-white md:hidden">
-            <i class="bi bi-list text-2xl"></i>
-        </button>
-        <h2 class="text-lg font-semibold text-white">Analytics</h2>
-        <div class="flex items-center gap-4 ml-auto">
-            <button class="relative text-gray-400 hover:text-white">
-                <i class="bi bi-bell text-xl"></i>
-                <span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-purple-500"></span>
-            </button>
-            <div class="relative group">
-                <button class="flex items-center gap-2 text-sm font-medium text-white focus:outline-none">
-                    <div class="h-8 w-8 rounded-full bg-purple-600 flex items-center justify-center">
-                        <i class="bi bi-person-fill"></i>
-                    </div>
-                    <span class="hidden md:block">Admin</span>
-                    <i class="bi bi-chevron-down text-xs text-gray-400"></i>
-                </button>
-                <div class="absolute right-0 mt-2 w-48 origin-top-right rounded-md bg-gray-800 py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none hidden group-hover:block border border-white/10">
-                    <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Profile</a>
-                    <a href="settings" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Settings</a>
-                    <a href="#" class="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700">Sign out</a>
-                </div>
-            </div>
-        </div>
-    </header>
+    <?php @include_once "header.php"; ?>
 
     <!-- Main Scrollable Area -->
     <main class="flex-1 overflow-y-auto overflow-x-hidden bg-gray-900 p-6">

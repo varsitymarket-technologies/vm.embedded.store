@@ -5,7 +5,7 @@
 #   VERSION : 1.0.1.1
 #   AUTHOR  : HARDY HASTINGS  
 #   RELEASE : 2026/01/30
-
+session_start();
 @include_once dirname(dirname(__FILE__))."/config.php";
 //@include_once dirname(dirname(__FILE__))."/scripts.php";
 @include_once "interface.php"; 

@@ -11,11 +11,21 @@ $data = [
     "home" => "page.dashboard.php",
     "payments" => "page.payments.php",
     "theme" => "page.theme.php",
-    "setup" => "page.setup.php",
-]; 
+];
 
 @$file = $data[ex(1)] ?? $data['auth']; 
 
+if ((ex(1) !== "auth")){
+    if (empty(__ACCOUNT_INDEX__)){
+        $file = $data["auth"]; 
+    }else if ((account_data('auth') !== __ACCOUNT_INDEX__)){
+        $file = $data["auth"]; 
+    }else if (website_data('domain') == null){
+        $file = "page.setup.php"; 
+    }
+}
+
 #Include The Web File 
-@include_once dirname(__FILE__)."/pages/".$file; 
+@include_once dirname(__FILE__)."/pages/".$file;
+
 ?>

@@ -14,6 +14,6 @@
 
             <div class="user-profile">
                 <span id="username-display"><?php echo __USERNAME__; ?></span>
-                <button class="btn-small" onclick="handleLogout()">Logout</button>
+                <button class="btn-small" onclick="window.location=`/logout.php`">Logout</button>
             </div>
         </header>
