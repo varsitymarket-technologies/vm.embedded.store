@@ -97,7 +97,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid var(--color-border);
             position: sticky;
             top: 0;
             background-color: var(--color-background);
@@ -159,7 +158,6 @@
         .main-footer {
             text-align: center;
             padding: 40px 20px;
-            border-top: 1px solid var(--color-border);
             margin-top: 60px;
         }
 

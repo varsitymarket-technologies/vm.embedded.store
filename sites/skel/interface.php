@@ -20,9 +20,14 @@ $database = dirname(__FILE__)."/storage.data";
 #Restart Database 
 $database_module = __DB_MODULE__; 
 $database_module->override_connection($database); 
+
 # Configuration 
 $encode_node = extract_theme_nodes($theme_dir); 
 $encode_node = array_unique($encode_node); 
+
+# Extract The Auto Fill 
+$auto_fill_file = dirname($theme_dir)."/autofill.json"; 
+@$auto_fill = json_decode(file_get_contents($auto_fill_file),true) ?? []; 
 
 function e($data){echo $data;}
 
@@ -39,7 +44,12 @@ if (!file_exists($site_config)){
         }else if ($value == "__SITE_TITLE__"){
             $data_set .= 'define("'.$value.'","'.website_data('name').'");'.PHP_EOL;
         }else{
-            $data_set .= 'define("'.$value.'","");'.PHP_EOL;
+            if (isset($auto_fill[$value])){
+                $auto_data = $auto_fill[$value]; 
+            }else{
+                $auto_data = ""; 
+            }
+            $data_set .= 'define("'.$value.'","'.$auto_data.'");'.PHP_EOL;
         }
 
          

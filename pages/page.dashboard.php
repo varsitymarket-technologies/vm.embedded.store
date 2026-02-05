@@ -20,7 +20,7 @@
                     <h3>Admin Access</h3>
                     <div class="balance">Control Panel</div>
                     <p class="subtext">Control your sites activity</p>
-                    <button onclick="window.location='/vm-admin/<?php echo slugify(__DOMAIN__); ?>/'" class="btn btn-primary">Login to Panel</button>
+                    <button onclick="window.location='/vm-admin/<?php echo slugify(__DOMAIN__); ?>/home'" class="btn btn-primary">Login to Panel</button>
                 </div>
 
                 <div class="card">
@@ -49,11 +49,6 @@
                     frameborder="0"
                     ></iframe>
                 </div>
-                <br>
-                <div class="input-group">
-                    <label>Webstore Frame Link</label>
-                    <input value="<?php echo __WEBSITE_FRAME__; ?>" type="text">
-                </div>
                 </div>
             </div>
 
@@ -68,6 +63,29 @@
                 <div></div>
 
                 <div></div>
+
+            </div>
+
+
+            <h3 class="grid-layout">Embed Your Store</h3>
+            <div class="grid-layout">
+                <div class="card">
+                    <div class="balance">Source Page</div>
+                    <p class="subtext">Get a source copy</p>
+                    <button onclick="window.location='/payments/'" class="btn btn-primary">Download File</button>
+                </div>
+
+                <div class="card">
+                    <div class="balance">Source Snippet</div>
+                    <p class="subtext">Copy Code Script to paste into your embedded snippet</p>
+                    <button onclick="window.location='/payments/'" class="btn btn-primary">Copy Code</button>
+                </div>
+
+                <div class="card">
+                    <div class="balance">Source Link</div>
+                    <p class="subtext">Get Access Link To Paste to your Website</p>
+                    <button onclick="window.location='/payments/'" class="btn btn-primary">Copy Link</button>
+                </div>
 
             </div>
 

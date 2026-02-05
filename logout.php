@@ -14,7 +14,7 @@ session_unset();
 session_destroy();
 
 echo "<script>window.alert('Logged Out Of The System')</script>"; 
-print_r($_SESSION); 
+//print_r($_SESSION); 
 
 echo "<script>window.location='/home/'</script>"
 ?>

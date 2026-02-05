@@ -31,6 +31,5 @@
 
     <?php @include_once "pages.php"; ?>
 
-    <script src="script.js"></script>
 </body>
 </html>

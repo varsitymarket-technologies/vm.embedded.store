@@ -197,17 +197,7 @@ function extract_theme_nodes($filePath) {
         return "Error: File not found.";
     }
 
-    // 2. Read the file content into a string
     $content = file_get_contents($filePath);
-
-    /**
-     * 3. The Regex Pattern:
-     * e\(          -> Matches the literal 'e('
-     * (            -> Starts a capture group
-     * __[A-Z_]+__ -> Matches double underscores, uppercase letters/underscores, then double underscores
-     * )            -> Ends the capture group
-     * \)           -> Matches the literal closing ')'
-     */
     $pattern = '/e\((__[A-Z_]+__)\)/';
 
     // 4. Perform the search

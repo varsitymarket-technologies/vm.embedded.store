@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $account_index = __ACCOUNT_INDEX__; 
     $name = $website_name; 
     $domain = $website_domain; 
-    $theme = "exalt"; 
+    $theme = "hastings.ego"; 
     
     $hash_key = hash('sha256',uniqid('key')); 
     $signature_key = str_shuffle(hash('sha256',uniqid('signature'))); 

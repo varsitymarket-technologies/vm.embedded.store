@@ -19,7 +19,7 @@ if ($testing){
         $_SESSION['vm_key'] = $vm_key; 
         $vm_index = base_encryption($data);
         $_SESSION['vm_index'] =  $vm_index; 
-        echo "<script>window.alert('Demo Account Activated 1.{$_SESSION['vm_key']} ||  2.{$_SESSION['vm_index']}'); </script>"; 
+        # echo "<script>window.alert('Demo Account Activated'); </script>"; 
         echo "<script>window.location='/home/'</script>"; 
     //define('SYSTEM_ERROR',$sql); 
 }

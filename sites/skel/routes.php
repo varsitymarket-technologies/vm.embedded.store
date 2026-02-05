@@ -6,6 +6,8 @@
 #   AUTHOR  : HARDY HASTINGS  
 #   RELEASE : 2026/02/01
 
+session_start(); 
+
 // Enable error logging
 ini_set('log_errors', 1);
 

@@ -1,0 +1,11 @@
+{   
+    "__SITE_TITLE__": "My New Shop",
+    "__SITE_LOGO__": "/assets/favicon.png",
+    "__SHOP_INTRO__": "Hasting's Ego",
+    "__SHOP_PARAGRAPH__": "Quality products, delivered to you.",
+    "__SHOP_DESCRIPTION__": "Sharing Designs and Crafts.",
+    "__DESIGN_COLOR_TEXT__": "WHITE",
+    "__DESIGN_COLOR_BACKGROUND__": "BLACK",
+    "__DESIGN_COLOR_PRIMARY__": "#ed1b24",
+    "__DESIGN_COLOR_SURFACE__": "#1F1B1B"
+}
