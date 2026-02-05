@@ -30,7 +30,9 @@ The page themes allow you to change your store designs to how you want your stor
 - Compehensive Management: Dedicated pages for User Roles, Product Catalogs, Order Tracking.
 
 ## Creating Your Own Template 
-Read the `TEMPLATE.md` file.
+The system allows users to create their own themes. Please Read the `theme.md` file.
+
+[Go To Doc](theme.md)
 
 # Tech Stack 
 

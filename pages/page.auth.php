@@ -28,7 +28,7 @@
             </div>
             <br><br>
             <div class="auth-buttons">
-                <button class="btn btn-github" onclick="window.location='/home/'">
+                <button class="btn btn-github" onclick="alert(`Google Auth Token Missing`)">
                     <i class="fab fa-google"></i> Continue With Google
                 </button>
             </div>
