@@ -4,12 +4,15 @@
 
 # VM.EMBEDDED.SITES
 
-<p align="center"> <strong>A lightweight, plug-and-play e-commerce micro-service.</strong>
-
-Turn any static page (Google Sites, Cloudflare Pages, Github pages) into a fully functional storefront. </p>
+<p align="center"> <strong>A lightweight, plug-and-play e-commerce micro-service.</strong>Turn any static page (Google Sites, Cloudflare Pages, Github pages) into a fully functional storefront. </p>
 
 # What is vm.embedded.sites ?
 vm.embedded.sites is a self-hosted e-commerce plugin designed for users who need a professional shop without the overhead of developing a custom application. It splits into two parts: a high -performance Shop Frontend for customers and a robust Admin Control Panel for mnagement. 
+
+# Guide Section 
+* 1. .|.[Create A Theme](/guide/theme.md)
+* 2. .|.[Deploy To Production](/guide/deploy.md)
+
 
 ## Why use this?
 - Zero-Friction Intergration: Embed via `<iframe>` or simply export your page into a single exported web page. 
@@ -33,6 +36,7 @@ The page themes allow you to change your store designs to how you want your stor
 The system allows users to create their own themes. Please Read the `theme.md` file.
 
 [Go To Doc](theme.md)
+
 
 # Tech Stack 
 
