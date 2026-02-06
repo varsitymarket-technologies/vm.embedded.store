@@ -1,0 +1,15 @@
+version: '3'
+services:
+# Use Docker Compose
+  php-apache:
+    image: sigblue/apache-php:83-full
+    restart: unless-stopped
+    ports:
+      - 7700:80
+    volumes:
+      - ./:/var/www/html/public/
+    environment:
+      # gd is already included here, along with other specified extensions
+      PHP_EXTENSIONS: pgsql gettext imap sockets zip curl dom gd exif intl mbstring bcmath opcache soap xml xmlrpc fileinfo pdo_sqlite pdo_mysql pdo_pgsql
+      PECL_EXTENSION: sodium
+      STARTUP_COMMAND_1: composer install
