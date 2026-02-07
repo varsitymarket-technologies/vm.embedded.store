@@ -6,7 +6,6 @@
 #   AUTHOR  : HARDY HASTINGS  
 #   RELEASE : 2026/01/30
 ?>
-<?php @include_once "config.php"; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

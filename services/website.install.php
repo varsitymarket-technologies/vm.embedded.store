@@ -29,7 +29,7 @@ if (!is_dir($website_folder.$anchor_site)){
 
 # Copy Elements From The Skeleton Structure 
 
-    $file = $website_folder."skel/.htaccess"; 
+    $file = dirname($website_folder)."/skel/.htaccess"; 
     $target_file = $website_folder.$anchor_site."/.htaccess"; 
     # Start with .htaccess 
     if (!file_exists($target_file)){
@@ -38,7 +38,7 @@ if (!is_dir($website_folder.$anchor_site)){
 
 
     $element = "routes.php"; 
-    $file = $website_folder."skel/".$element; 
+     $file = dirname($website_folder)."/skel/".$element;  
     $target_file = $website_folder.$anchor_site."/".$element; 
     # Start with Routes File
     if (!file_exists($target_file)){
@@ -46,7 +46,7 @@ if (!is_dir($website_folder.$anchor_site)){
     }
 
     $element = "index.php"; 
-    $file = $website_folder."skel/".$element; 
+     $file = dirname($website_folder)."/skel/".$element;  
     $target_file = $website_folder.$anchor_site."/".$element; 
     # Start with Index File
     if (!file_exists($target_file)){
@@ -54,7 +54,7 @@ if (!is_dir($website_folder.$anchor_site)){
     }
 
     $element = "interface.php"; 
-    $file = $website_folder."skel/".$element; 
+     $file = dirname($website_folder)."/skel/".$element;  
     $target_file = $website_folder.$anchor_site."/".$element; 
     # Start with Routes File
     if (!file_exists($target_file)){
@@ -62,7 +62,7 @@ if (!is_dir($website_folder.$anchor_site)){
     }
 
     $element = "api.php"; 
-    $file = $website_folder."skel/".$element; 
+     $file = dirname($website_folder)."/skel/".$element;  
     $target_file = $website_folder.$anchor_site."/".$element; 
     # Start with Routes File
     if (!file_exists($target_file)){

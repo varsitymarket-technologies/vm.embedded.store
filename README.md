@@ -34,7 +34,6 @@ The page themes allow you to change your store designs to how you want your stor
 
 ## Creating Your Own Template 
 The system allows users to create their own themes. Please Read the `theme.md` file.
-
 [Go To Doc](theme.md)
 
 

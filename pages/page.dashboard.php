@@ -20,7 +20,7 @@
                     <h3>Admin Access</h3>
                     <div class="balance">Control Panel</div>
                     <p class="subtext">Control your sites activity</p>
-                    <button onclick="window.location='/vm-admin/<?php echo slugify(__DOMAIN__); ?>/home'" class="btn btn-primary">Login to Panel</button>
+                    <button onclick="window.location='/vm-admin/<?php echo (__DOMAIN__); ?>/home'" class="btn btn-primary">Login to Panel</button>
                 </div>
 
                 <div class="card">
@@ -55,7 +55,7 @@
             <h3 class="grid-layout">More Controls</h3>
             <div class="grid-layout">
                 <div class="card">
-                    <div class="balance">Paymenents</div>
+                    <div class="balance">Payments</div>
                     <p class="subtext">Manage Your Webstore payments</p>
                     <button onclick="window.location='/payments/'" class="btn btn-primary">Manage Payments</button>
                 </div>
@@ -72,19 +72,19 @@
                 <div class="card">
                     <div class="balance">Source Page</div>
                     <p class="subtext">Get a source copy</p>
-                    <button onclick="window.location='/payments/'" class="btn btn-primary">Download File</button>
+                    <button onclick="window.location='/export-source/'" class="btn btn-primary">Generate Code</button>
                 </div>
 
                 <div class="card">
                     <div class="balance">Source Snippet</div>
                     <p class="subtext">Copy Code Script to paste into your embedded snippet</p>
-                    <button onclick="window.location='/payments/'" class="btn btn-primary">Copy Code</button>
+                    <button onclick="window.location='/export-frame/'" class="btn btn-primary">Generate Code</button>
                 </div>
 
                 <div class="card">
                     <div class="balance">Source Link</div>
                     <p class="subtext">Get Access Link To Paste to your Website</p>
-                    <button onclick="window.location='/payments/'" class="btn btn-primary">Copy Link</button>
+                    <button onclick="window.location='/export-link/'" class="btn btn-primary">Generate Code</button>
                 </div>
 
             </div>

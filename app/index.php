@@ -14,7 +14,7 @@ foreach ($websites as $key => $value) {
 }
 
 if (file_exists($website)){
-    @include_once $website; 
+    include_once ($website); 
     die(0); 
 }
 

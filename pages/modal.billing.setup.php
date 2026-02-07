@@ -48,6 +48,7 @@
         <div class="steps-indicator">
             <div class="step-dot active" data-step="1"></div>
             <div class="step-dot" data-step="2"></div>
+            <div class="step-dot" data-step="3"></div>
         </div>
 
         <form method="POST" action="" id="multiStepForm">
@@ -64,8 +65,50 @@
             </div>
 
             <div class="form-step" id="step2">
-                <h1>Welcome User</h1> 
-                <p class="subtext">Try out one of our stores.</p>
+                <p class="subtext">Please Fill In Your Billing Information</p> 
+                <div class="input-group">
+                    <label>Street Address</label>
+                    <input name="bstreet" type="text" placeholder="">
+                </div>
+                <div class="input-group">
+                    <label>Zip Code</label>
+                    <input name="bzip" type="text" placeholder="">
+                </div>
+                <div class="input-group">
+                    <label>Province</label>
+                    <input name="bstate" type="text" placeholder="">
+                </div>
+                <div class="input-group">
+                    <label>City</label>
+                    <input name="bcity" type="text" placeholder="">
+                </div>
+                <div class="input-group">
+                    <label>Country</label>
+                    <input name="bcountry" type="text" placeholder="">
+                </div>
+            </div>
+
+            <div class="form-step" id="step3">
+                <p class="subtext">Please Fill In Your Payment Information</p>
+                <div class="input-group">
+                    <label>Select Bank</label>
+                    <input name="account_provider" type="text" placeholder="">
+                </div>
+
+                <div class="input-group">
+                    <label>Account Number</label>
+                    <input name="account_number" type="text" placeholder="" required>
+                </div>
+
+                <div class="input-group">
+                    <label>Account Type</label>
+                    <input name="account_type" type="text" placeholder="">
+                </div>
+
+                <div class="input-group">
+                    <label>Branch Code</label>
+                    <input name="account_branch" type="text" placeholder="">
+                </div>
             </div>
 
             <div class="btn-group">

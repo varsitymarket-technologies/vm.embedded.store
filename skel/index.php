@@ -7,5 +7,5 @@
 #   RELEASE : 2026/02/01
 
 
-@include_once "routes.php"; 
+@include_once dirname(__FILE__)."/routes.php"; 
 ?>

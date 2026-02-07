@@ -9,6 +9,31 @@
 define("__DB_MODULE__",initiate_database()); 
 define("__DB_WEBSITE__",initiate_web_database()); 
 
+
+function get_domain(){
+    // Standard method
+    $domain = $_SERVER['HTTP_HOST'] ?? false ;
+    if ($domain == false){
+        $domain = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'];
+    }
+
+    return $domain; 
+}
+
+
+function map(){
+    $e = [
+    "auth" => "page.auth.php",
+    "home" => "page.dashboard.php",
+    "payments" => "page.payments.php",
+    "theme" => "page.theme.php",
+    "export-frame" => "page.export.frame.php",
+    "export-link" => "page.export.link.php",
+    "export-source" => "page.export.code.php",
+];
+    return $e; 
+}
+
 function account_data($index){
     @include_once "config.php"; 
     $AUTH = __ACCOUNT_INDEX__; 

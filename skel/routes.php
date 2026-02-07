@@ -17,5 +17,5 @@ ini_set('error_log', dirname(__FILE__).'/error-file.log');
 // Set the error reporting level
 error_reporting(E_ALL);
 
-@include_once "interface.php"; 
+@include_once dirname(__FILE__)."/interface.php"; 
 ?>

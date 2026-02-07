@@ -1,8 +1,8 @@
 <?php 
+@include_once dirname(dirname(__FILE__))."/config.php";
 
-$domain = "https://micro-web.levidoc.com"; 
-$website = "yello"; 
-
-
-echo $domain."/app/".$website."/";
+function export_application($website,$domain){
+    $website_hash = hash("sha256",$website); 
+    return $domain."/app/".$website_hash."/"; 
+}
 ?>

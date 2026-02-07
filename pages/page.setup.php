@@ -75,7 +75,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <main>
         <div>
             
-            <?php @include_once "modal.setup.php"; ?>
+            <?php
+            $active_billing = false; 
+            if ($active_billing){
+                @include_once "modal.billing.setup.php";
+            }else{
+                @include_once "modal.setup.php";
+            }
+            
+            ?>
 
         </div>
 

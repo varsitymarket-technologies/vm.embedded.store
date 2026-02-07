@@ -2,6 +2,10 @@
 *.sql
 # Ignore all .backup files
 *.backup
+# Ignore all .log and .pxy files 
+*.log 
+
+*.pxy
 
 *.debug
 # Ignore all files in any directory named build

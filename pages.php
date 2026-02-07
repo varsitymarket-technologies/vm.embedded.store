@@ -6,12 +6,7 @@
 #   AUTHOR  : HARDY HASTINGS  
 #   RELEASE : 2026/01/30
 
-$data = [
-    "auth" => "page.auth.php",
-    "home" => "page.dashboard.php",
-    "payments" => "page.payments.php",
-    "theme" => "page.theme.php",
-];
+$data = map(); 
 
 @$file = $data[ex(1)] ?? $data['auth']; 
 

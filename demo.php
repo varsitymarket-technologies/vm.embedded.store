@@ -1,7 +1,7 @@
 <?php 
 session_start();
 
-@include "config.php"; 
+@include dirname(__FILE__)."/config.php"; 
 $testing = true;
 if ($testing){
         # hard Coding The Auth Credentials 
@@ -19,7 +19,7 @@ if ($testing){
         $_SESSION['vm_key'] = $vm_key; 
         $vm_index = base_encryption($data);
         $_SESSION['vm_index'] =  $vm_index; 
-        echo "<script>window.alert('Demo Account Activated'); </script>"; 
+        #echo "<script>window.alert('Demo Account Activated'); </script>"; 
         echo "<script>window.location='/home/'</script>"; 
     //define('SYSTEM_ERROR',$sql); 
 }

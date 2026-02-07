@@ -8,5 +8,5 @@
 session_start();
 @include_once dirname(dirname(__FILE__))."/config.php";
 //@include_once dirname(dirname(__FILE__))."/scripts.php";
-@include_once "interface.php"; 
+@include_once dirname(__FILE__)."/interface.php"; 
 ?>
