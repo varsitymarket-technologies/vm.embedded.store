@@ -96,5 +96,15 @@ $db->query($sql_orders);
 $db->query($sql_settings);
 //echo "Table 'settings' checked/created.\n";
 
+$sql = "INSERT INTO `products` (`name`,`description`,`price`,`image`) VALUES ('Shoes','Voluptas facere animi explicabo non quis magni recusandae. Numquam debitis pariatur omnis facere unde. Laboriosam minus amet nesciunt est. Et saepe eos maxime tempore quasi deserunt ab. ','300','/img/demo-shoes.jpg'); ";
+$db->query($sql); 
+
+$sql = "INSERT INTO `products` (`name`,`description`,`price`,`image`) VALUES ('Shoes','Voluptas facere animi explicabo non quis magni recusandae. Numquam debitis pariatur omnis facere unde. Laboriosam minus amet nesciunt est. Et saepe eos maxime tempore quasi deserunt ab. ','400','/img/demo-shoes-2.jpg'); ";
+$db->query($sql); 
+
+$sql = "INSERT INTO `products` (`name`,`description`,`price`,`image`) VALUES ('Shoes','Voluptas facere animi explicabo non quis magni recusandae. Numquam debitis pariatur omnis facere unde. Laboriosam minus amet nesciunt est. Et saepe eos maxime tempore quasi deserunt ab. ','600','/img/demo-shoes-3.jpg'); ";
+$db->query($sql); 
+
+
 //echo "\nInstallation complete.";
 ?>

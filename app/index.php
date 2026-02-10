@@ -14,8 +14,13 @@ foreach ($websites as $key => $value) {
 }
 
 if (file_exists($website)){
-    include_once ($website); 
+    if (stripos("u:".ex(3),"api.php") >= 1 ){
+        include_once dirname($website)."/api.php" ; 
+    }else{
+        include_once ($website); 
+    }
     die(0); 
+
 }
 
 $page = dirname(dirname(__FILE__))."/pages/error.500.deployment.php";

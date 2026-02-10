@@ -71,8 +71,9 @@
             <pre style="height:20rem; overflow:auto; ">
                 <code id="vs-editor" contenteditable="true">
                     <?php 
-                    $target = "testings.com"; 
-                    $domain = "http://localhost:7700"; 
+                    $domain = __WEBSITE_DOMAIN__; 
+                    $target = __DOMAIN__; 
+
                     @include dirname(dirname(__FILE__)). "/services/export.store.source.php"; 
                     function format_to_editor($html_content){
                         $search = ["<",">","&",'"',"'"];
@@ -84,19 +85,39 @@
                         $e = str_ireplace($search,$replace,$html_content);
                         return $e ;
                     }
+
+                    function format_($html_content){
+                        $search = ["<"] ;
+                        $replace = ["&#60"];
+                        //$e = str_ireplace($replace,$search,$html_content);
+                        return $html_content ;
+                    }
                     $e = format_to_editor(export_application($target,$domain)); 
                     echo $e; 
                     ?>
                 </code>
+
+                
             </pre>
             <br>
             <span>This Store is only active for 30 days</span>
             <br>
             <br>
             <div style="display:flex;">
-                <button>Copy Code</button>
+                <button onclick="copy_code();">Copy Code</button>
                 <button onclick="window.location='/home/'" style="margin-left:3rem; background-color:#7a1aab; color:white; ">Back </button>
             </div>
+
+        <script>
+            function copy_code(){
+                const code_element = document.getElementById('vs-editor'); 
+                const htmltocopy = ````<?php echo strip_tags(format_(format_to_editor(export_application($target,$domain)))); ?>````;
+                alert(htmltocopy); 
+                navigator.clipboard.writeText(htmltocopy).then(()=> {
+                   
+                }); 
+            }
+        </script>
         </div>
     </div>
 </div>

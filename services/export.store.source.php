@@ -10,6 +10,7 @@ function export_application($website,$domain){
 
     # Configuration 
     $encode_node = extract_theme_nodes($theme_dir."/interface"); 
+    //debug($theme_dir."/interface"); 
     $encode_node = array_unique($encode_node); 
 
     @include_once dirname($theme_file)."/config.php";
