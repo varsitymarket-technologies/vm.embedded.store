@@ -62,14 +62,36 @@
                 background: #000000 !important;
                 color: #14a12d !important;
             }
+
+
+.code-container {
+  text-align: center;
+}
+#code {
+	width: 100%;
+	height: 100%;
+	resize: none;
+	background-color: rgb(26, 26, 26);
+	border-radius: 5px;
+	border: none;
+	color: #4cca41;
+	padding: 10px;
+	margin: auto;
+	display: block;
+	min-height: 18rem;
+}
+#code:focus {
+  outline: none !important;
+}
+
 </style>
 
 <div class="modal-overlay active" id="modalOverlay">
     <div class="modal-content" style="max-width: 45rem; ">
         <div>
             <p>Page Source Code</p>
-            <pre style="height:20rem; overflow:auto; ">
-                <code id="vs-editor" contenteditable="true">
+                  <div class="code-container">
+                    <textarea class="area" id="code" name="code" readonly="">
                     <?php 
                     $domain = __WEBSITE_DOMAIN__; 
                     $target = __DOMAIN__; 
@@ -92,13 +114,12 @@
                         //$e = str_ireplace($replace,$search,$html_content);
                         return $html_content ;
                     }
-                    $e = format_to_editor(export_application($target,$domain)); 
+                    $e = (export_application($target,$domain)); 
                     echo $e; 
                     ?>
-                </code>
+                    </textarea>
+                </div>
 
-                
-            </pre>
             <br>
             <span>This Store is only active for 30 days</span>
             <br>
@@ -110,11 +131,10 @@
 
         <script>
             function copy_code(){
-                const code_element = document.getElementById('vs-editor'); 
-                const htmltocopy = ````<?php echo strip_tags(format_(format_to_editor(export_application($target,$domain)))); ?>````;
-                alert(htmltocopy); 
+                const code_element = document.getElementById('code'); 
+                const htmltocopy = code_element.value;
                 navigator.clipboard.writeText(htmltocopy).then(()=> {
-                   
+                   alert("Code Coppied"); 
                 }); 
             }
         </script>
