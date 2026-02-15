@@ -24,4 +24,13 @@ if($request == "products"){
     }
     echo json_encode($data);
 }
+
+if($request == "product_description"){
+    $data = $db->query("SELECT * FROM products WHERE id = ?", [$_GET['id']]); 
+    foreach($data as $key => $value){
+        $data[$key]['price'] = (float) $value['price'];
+        $data[$key]['id'] = (int) $value['id'];
+    }
+    echo json_encode($data[0]);
+}
 ?>

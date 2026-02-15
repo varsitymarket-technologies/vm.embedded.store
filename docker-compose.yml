@@ -5,7 +5,7 @@ services:
     image: sigblue/apache-php:83-full
     restart: unless-stopped
     ports:
-      - 7700:80
+      - 8016:80
     volumes:
       - ./:/var/www/html/public/
     environment:
