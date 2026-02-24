@@ -178,7 +178,7 @@ function initiate_web_database(){
 }
 
 function debug($output){
-    file_put_contents('raw.debug',$output); 
+    file_put_contents(dirname(__FILE__).'/build/raw.debug',$output,FILE_APPEND); 
 }
 
 function initiate_database(){

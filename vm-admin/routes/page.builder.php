@@ -76,7 +76,7 @@ foreach ($settings as $key => $value) {
     <!-- Header -->
     <header class="flex h-16 items-center justify-between bg-gray-800 px-6 border-b border-white/10 shrink-0">
         <div class="flex items-center gap-4">
-            <button id="sidebarOpen" class="text-gray-400 hover:text-white md:hidden">
+            <button onclick="open_menu()" id="sidebarOpen" class="text-gray-400 hover:text-white md:hidden">
                 <i class="bi bi-list text-2xl"></i>
             </button>
             <h2 class="text-lg font-semibold text-white">Page Builder</h2>

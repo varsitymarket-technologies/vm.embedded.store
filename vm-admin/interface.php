@@ -100,6 +100,144 @@
             </nav>
         </aside>
 
+        <style>
+
+                            .menu-overlay {
+                                height: 100%;
+                                width: 0;
+                                position: fixed;
+                                z-index: 100;
+                                top: 0;
+                                left: 0;
+                                background-color: rgb(0, 0, 0);
+                                background-color: rgba(0, 0, 0, 0.9);
+                                overflow-x: hidden;
+                                transition: 0.5s;
+                                max-width: 60vh;
+                                opacity: 1;
+                                pointer-events: all;
+                            }
+
+                            .menu-overlay a {
+                                padding: 8px;
+                                text-decoration: none;
+                                font-size: 2vh;
+                                color: #818181;
+                                display: block;
+                                transition: 0.3s;
+                            }
+
+                            .overlay-content {
+                                position: relative;
+                                top: 5%;
+                                width: 100%;
+                                text-align: center;
+                                margin-top: 30px;
+                            }
+
+                            .thththththt {
+                                font-size: 2rem;
+                            }
+
+                            .closebtn {
+                                font-size: 3rem !important;
+                                display: flex !important;
+                                margin: 10px !important;
+                                padding: 0;
+                                height: auto;
+                                /* position: absolute; */
+                                /* top: 2rem; */
+                                /* left: 3rem; */
+                                flex-direction: row-reverse !important;
+                            }
+
+                            .sesedesedwsedwdd {
+                                text-align: start;
+                                margin: 0.6rem 0 0 3rem;
+                            }
+
+                            .sesedesedwsedwdd i {
+                                font-size: 1.1rem !important;
+                            }
+        </style>
+        <script>
+                            function open_menu() {
+                                document.getElementById("myNav").style.width = "100%";
+                            }
+
+                            function close_menu() {
+                                document.getElementById("myNav").style.width = "0%";
+                            }
+
+                            function reload_page(url){
+                                if (url == "#"){
+                                    location.reload(); 
+                                }else{
+                                    location.href = url; 
+                                }
+                            }
+        </script>
+        <div id="myNav" class="menu-overlay" style="width: 0%;">
+                                <a class="closebtn" onclick="close_menu();">×</a>
+                                <div class="overlay-content">
+                                    <img onclick="reload_page('#')" src="/assets/favicon.png" style="width:20vh; height:auto; margin:auto; ">
+                                    <a></a>
+
+                                    <a href="/../home/" class="sesedesedwsedwdd">
+                                        <i class="bi bi-grid-fill mr-3"></i>
+                                        <span>Dashboard</span>
+                                    </a>
+
+                                    <a href="analytics" class="sesedesedwsedwdd">
+                                        <i class="bi bi-bar-chart-line-fill mr-3"></i>
+                                        <span>Analytics</span>
+                                    </a>
+
+                                    <a href="users"  class="sesedesedwsedwdd">                    
+                                        <i class="bi bi-people-fill mr-3"></i>
+                                        <span>Users</span>
+                                    </a>
+
+                                    <a href="categories" class="sesedesedwsedwdd">
+                                        <i class="bi bi-tags-fill mr-3"></i>
+                                        <span>Categories</span>
+                                    </a>
+
+                                    <a href="products" class="sesedesedwsedwdd">
+                                        <i class="bi bi-box-seam-fill mr-3"></i>
+                                        <span>Products</span>
+                                    </a>
+
+                                    <a href="discounts" class="sesedesedwsedwdd">
+                                        <i class="bi bi-percent mr-3"></i>
+                                        <span>Discounts</span>
+                                    </a>
+
+                                    <a href="sales" class="sesedesedwsedwdd">
+                                        <i class="bi bi-currency-dollar mr-3"></i>
+                                        <span>Sales</span>
+                                    </a>
+                                    <a href="orders" class="sesedesedwsedwdd">
+                                        <i class="bi bi-cart-check mr-3"></i>
+                                        <span>Orders</span>
+                                    </a>
+                                    <a href="builder" class="sesedesedwsedwdd">
+                                        <i class="bi bi-layout-text-sidebar mr-3"></i>
+                                        <span>Page Builder</span>
+                                    </a>
+                                    <a href="settings" class="sesedesedwsedwdd">
+                                        <i class="bi bi-gear mr-3"></i>
+                                        <span>Settings</span>
+                                    </a>
+                                    <a style="margin:1rem"></a>
+                                    <br>
+                                    <a style="margin:0.4rem"></a>
+                                    <br>
+                                    <p style="font-size:9px; padding: 0rem 0px 8rem 0px">Powered by VARSITYMARKET <span style="font-size: 8px; font-weight: 800;">technologies<span></p>
+
+                                </div>
+        </div>
+
         <?php @include_once "routes.php"; ?>
 
     </div>

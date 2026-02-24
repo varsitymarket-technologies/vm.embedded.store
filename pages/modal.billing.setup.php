@@ -144,7 +144,7 @@
         
         if (currentStep === steps.length - 1) {
             nextBtn.innerText = 'Launch Website';
-            nextBtn.style.background = '#059669'; // Success green
+            nextBtn.style.background = '#292727a8'; // Success green
         } else {
             nextBtn.innerText = 'Next';
             nextBtn.style.background = '#4f46e5';

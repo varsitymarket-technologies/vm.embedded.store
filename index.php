@@ -22,6 +22,12 @@ if (strlen(ex(1)) <= 0){
     $page = ex(); 
 }
 
+if ($page == "apk"){
+    $e = dirname(__FILE__)."/apk/index.php";
+    include_once $e; 
+    die(0);
+}
+
 if ($page == "app"){
     $e = dirname(__FILE__)."/app/index.php";
     include_once $e; 

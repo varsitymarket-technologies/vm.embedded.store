@@ -1,5 +1,5 @@
             <header class="flex h-16 items-center justify-between bg-gray-800 px-6 border-b border-white/10">
-                <button id="sidebarOpen" class="text-gray-400 hover:text-white md:hidden">
+                <button id="sidebarOpen" onclick="open_menu()" class="text-gray-400 hover:text-white md:hidden">
                     <i class="bi bi-list text-2xl"></i>
                 </button>
                 <div class="flex items-center gap-4 ml-auto">
