@@ -2,7 +2,7 @@
 
     $auth = $_POST['account']; 
     $domain = website_data('domain',$auth);
-    if ($domain !== false){
+    if ($domain == false){
         echo json_encode(['error' =>'Could Not Locate Domain'],JSON_PRETTY_PRINT); 
         exit(); 
     } 
