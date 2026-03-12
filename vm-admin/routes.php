@@ -18,6 +18,8 @@ $data = [
     "builder" => "page.builder.php",
     "settings" => "page.settings.php",
     "analytics" => "page.analytics.php",
+    "theme" => "page.theme.php",
+    "deploy" => "page.deploy.php",
 ]; 
 
 @$file = $data[ex(3)] ?? $data['auth']; 

@@ -88,16 +88,20 @@
                     <i class="bi bi-cart-fill mr-3"></i>
                     <span>Orders</span>
                 </a>
-                <a href="builder" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+                <a href="theme" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-palette-fill mr-3"></i>
+                    <span>Themes</span>
+                </a>
+                <a href="builder" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+                    <i class="bi bi-easel mr-3"></i>
                     <span>Page Builder</span>
                 </a>
                 <a href="settings" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-gear-fill mr-3"></i>
                     <span>Settings</span>
                 </a>
-                <a href="settings" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
-                    <i class="bi bi-gear-fill mr-3"></i>
+                <a href="deploy" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+                    <i class="bi bi-file-earmark-code mr-3"></i>
                     <span>Site Deployment</span>
                 </a>
                 
@@ -234,7 +238,7 @@
                                         <span>Settings</span>
                                     </a>
                                     <a href="settings" class="sesedesedwsedwdd">
-                                        <i class="bi bi-gear mr-3"></i>
+                                        <i class="bi bi-file-earmark-code"></i>
                                         <span>Site Deployment</span>
                                     </a>
                                     <a style="margin:1rem"></a>

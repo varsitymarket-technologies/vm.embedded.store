@@ -157,10 +157,9 @@
             <div class="glass-card">
                 <div>
                     <div class="card-label">Website Theme</div>
-                    <div class="card-value"><?php echo __WEBSITE_THEME__; ?></div>
+                    <div style="font-size:2.5em;" class="card-value"><?php echo __WEBSITE_THEME__; ?></div>
                     <p class="subtext">Customizing the look of your digital storefront.</p>
                 </div>
-                <button onclick="window.location='/theme/'" class="btn-action">Change Theme</button>
             </div>
 
             <div class="glass-card">
