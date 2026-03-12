@@ -12,7 +12,7 @@ header("Content-Type: application/json; charset=UTF-8");
 ini_set('display_errors', 'On'); 
 
 @include dirname(dirname(__FILE__))."/config.php"; 
-file_put_contents(json_encode($_POST)); 
+file_put_contents('debug.log',json_encode($_POST,JSON_PRETTY_PRINT)); 
 define("__AUTH_X__",$_SERVER['__VM_EMBEDDED_FREE_KEY__']); 
 # Create The Admiin Account And Preserve The Session.
 
