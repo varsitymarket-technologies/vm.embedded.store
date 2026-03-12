@@ -1,12 +1,24 @@
 <?php 
+
+#   TITLE   : APK Module   
+#   DESC    : Creates and links your account to the avaialable susbscription.
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 1.0.1.1
+#   AUTHOR  : HARDY HASTINGS  
+#   RELEASE : 2026/03/08
+
+
+
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 ini_set('display_errors', 'On'); 
+
 @include dirname(dirname(__FILE__))."/config.php"; 
+define("__AUTH_X__",$_SESSION['__VM_EMBEDDED_FREE_KEY__']); 
 
 # Create The Admiin Account And Preserve The Session.
 
-$key = 'vm_key' ?? null;
+$key = __AUTH_X__ ?? null;
 #Receive The Data From The Application.
 @$input = encode($_POST['data'],$key) ?? false;
 $input = json_decode($input,true);

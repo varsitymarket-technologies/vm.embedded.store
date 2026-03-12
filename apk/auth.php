@@ -1,4 +1,13 @@
 <?php
+#   TITLE   : APK Auth   
+#   DESC    : Makes you to simply login to your network services.
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 1.0.1.1
+#   AUTHOR  : HARDY HASTINGS  
+#   RELEASE : 2026/03/08
+
+define("__APK_SECRET__",hash("sha256","YOUR SECRET SESSION")); 
+
 session_start();
 @include_once dirname(dirname(__FILE__)) . '/config.php'; // Include DB connection""; 
 class VM_Authenticator {
@@ -45,7 +54,7 @@ class VM_Authenticator {
 }
 
 // CONFIGURATION
-$auth = new VM_Authenticator('your_super_secret_random_string_here'); // Must match the Hub's secret
+$auth = new VM_Authenticator(__APK_SECRET__); // Must match the Hub's secret
 
 if (isset($_GET['sig'])) {
     $auth->authenticate($_GET['user'], $_GET['ts'], $_GET['nonce'], $_GET['sig']);

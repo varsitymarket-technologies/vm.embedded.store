@@ -44,9 +44,13 @@ function account_data($index){
     return $result; 
 }
 
-function website_data($index){
+function website_data($index,$auth=false){
     @include_once "config.php"; 
-    $AUTH = __ACCOUNT_INDEX__; 
+    if ($auth == false){
+        $AUTH = __ACCOUNT_INDEX__;
+    }else{
+        $AUTH = $auth;
+    } 
     $tbl_index = $index; 
     $sql = "SELECT * FROM `sys_websites` WHERE (`account_index` = '{$AUTH}') LIMIT 1";
     $e = __DB_MODULE__->query($sql);  
@@ -233,4 +237,57 @@ function extract_theme_nodes($filePath) {
     }
 
     return []; // Return empty array if no matches found
+}
+
+
+function load_env($path)
+{
+    if (!file_exists($path)) {
+        return false;
+    }
+
+    $lines = file($path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        // Skip comments starting with #
+        if (strpos(trim($line), '#') === 0) {
+            continue;
+        }
+
+        // Split by the first '=' found
+        list($name, $value) = explode('=', $line, 2);
+        $name = trim($name);
+        $value = trim($value);
+
+        // Remove surrounding quotes if they exist
+        $value = trim($value, '"\'');
+
+        if (!array_key_exists($name, $_SERVER) && !array_key_exists($name, $_ENV)) {
+            putenv(sprintf('%s=%s', $name, $value));
+            $_ENV[$name] = $value;
+            $_SERVER[$name] = $value;
+        }
+    }
+    return true;
+}
+
+function delete_folder($dir) {
+    if (!file_exists($dir)) {
+        return true;
+    }
+
+    if (!is_dir($dir)) {
+        return unlink($dir);
+    }
+
+    foreach (scandir($dir) as $item) {
+        if ($item == '.' || $item == '..') {
+            continue;
+        }
+
+        if (!delete_folder($dir . DIRECTORY_PATH_SEPARATOR . $item)) {
+            return false;
+        }
+    }
+
+    return rmdir($dir);
 }
