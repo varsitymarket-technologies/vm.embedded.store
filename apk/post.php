@@ -11,12 +11,12 @@ header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json; charset=UTF-8");
 @include dirname(dirname(__FILE__))."/config.php"; 
 $rescources = []; 
-$rescources['name'] = $_SESSION['__APK_NAME__'];
-$rescources['description'] =  $_SESSION['__APK_DESC__'];
+$rescources['name'] = $_SERVER['__APK_NAME__'];
+$rescources['description'] =  $_SERVER['__APK_DESC__'];
 $rescources['node'] = ""; 
-$rescources['server'] =  $_SESSION['__APK_SERVER__']; 
-$rescources['host'] =  $_SESSION['__APK_HOST__']; 
-$rescources['hostname'] =  $_SESSION['__APK_HOSTNAME__']; 
+$rescources['server'] =  $_SERVER['__APK_SERVER__']; 
+$rescources['host'] =  $_SERVER['__APK_HOST__']; 
+$rescources['hostname'] =  $_SERVER['__APK_HOSTNAME__']; 
 $rescources['hosting'] = 'shared'; 
 $rescources['status'] = 'runing';
 

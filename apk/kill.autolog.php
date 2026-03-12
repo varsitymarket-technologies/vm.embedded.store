@@ -13,7 +13,7 @@ ini_set('display_errors', 'On');
 
 @include dirname(dirname(__FILE__))."/config.php"; 
 
-define("__AUTH_X__",$_SESSION['__VM_EMBEDDED_FREE_KEY__']); 
+define("__AUTH_X__",$_SERVER['__VM_EMBEDDED_FREE_KEY__']); 
 # Create The Admiin Account And Preserve The Session.
 
 $key = __AUTH_X__ ?? null;
