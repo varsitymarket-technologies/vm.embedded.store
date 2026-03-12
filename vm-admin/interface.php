@@ -96,6 +96,10 @@
                     <i class="bi bi-gear-fill mr-3"></i>
                     <span>Settings</span>
                 </a>
+                <a href="settings" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+                    <i class="bi bi-gear-fill mr-3"></i>
+                    <span>Site Deployment</span>
+                </a>
                 
             </nav>
         </aside>
@@ -228,6 +232,10 @@
                                     <a href="settings" class="sesedesedwsedwdd">
                                         <i class="bi bi-gear mr-3"></i>
                                         <span>Settings</span>
+                                    </a>
+                                    <a href="settings" class="sesedesedwsedwdd">
+                                        <i class="bi bi-gear mr-3"></i>
+                                        <span>Site Deployment</span>
                                     </a>
                                     <a style="margin:1rem"></a>
                                     <br>
