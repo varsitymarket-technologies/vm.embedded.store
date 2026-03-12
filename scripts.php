@@ -284,7 +284,7 @@ function delete_folder($dir) {
             continue;
         }
 
-        if (!delete_folder($dir . DIRECTORY_PATH_SEPARATOR . $item)) {
+        if (!delete_folder($dir . "/" . $item)) {
             return false;
         }
     }
