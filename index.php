@@ -28,6 +28,11 @@ if ($page == "apk"){
     die(0);
 }
 
+if ($page == "sync-github"){
+    @include_once dirname(__FILE__)."/module/github.php";
+    die(0);  
+}
+
 if ($page == "app"){
     $e = dirname(__FILE__)."/app/index.php";
     include_once $e; 

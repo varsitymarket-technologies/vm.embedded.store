@@ -38,6 +38,15 @@
         .btn-prev { background: #e5e7eb; color: #374151; }
         .hidden { display: none; }
 
+        .input-group textarea {
+	background-color: var(--bg-color);
+	border: 1px solid var(--border-color);
+	padding: 0.8rem;
+	border-radius: 6px;
+	color: white;
+	font-size: 1rem;
+}
+
         .input-group {
             margin-bottom:1rem;
         }
@@ -48,6 +57,7 @@
         <div class="steps-indicator">
             <div class="step-dot active" data-step="1"></div>
             <div class="step-dot" data-step="2"></div>
+            <div class="step-dot" data-step="3"></div>
         </div>
 
         <form method="POST" action="" id="multiStepForm">
@@ -58,14 +68,26 @@
                     <input name="wb_name" type="text" placeholder="" required>
                 </div>
                 <div class="input-group">
-                    <label>Website Domain</label>
+                    <label>Website Domain <br><span style="font-size:8px;">(leave blank if you dont have a domain)</span></label>
                     <input name="wb_domain" type="text" placeholder="example.co.za" required>
                 </div>
             </div>
 
             <div class="form-step" id="step2">
-                <h1>Welcome User</h1> 
-                <p class="subtext">Try out one of our stores.</p>
+                <p class="subtext">Tell us more about your business </p> 
+                <div class="input-group">
+                    <label>Your Industry</label>
+                    <input name="wb_name" type="text" placeholder="" required>
+                </div>
+                <div class="input-group">
+                    <label>About Your Business <br><span style="font-size:8px;">(optional)</span></label>
+                    <textarea></textarea>
+                </div>
+            </div>
+
+            <div class="form-step" id="step3">
+                <h3 style="text-align:center;">Your Store Is Ready</h3> 
+                <p style="text-align:center;" class="subtext">Try out one of our stores.</p>
             </div>
 
             <div class="btn-group">
@@ -100,7 +122,7 @@
         prevBtn.classList.toggle('hidden', currentStep === 0);
         
         if (currentStep === steps.length - 1) {
-            nextBtn.innerText = 'Launch Website';
+            nextBtn.innerText = 'Create Store';
         } else {
             nextBtn.innerText = 'Next';
             nextBtn.style.background = '#4f46e5';
@@ -114,7 +136,7 @@
         } else {
 
             forms.submit(); 
-            alert('Website Created Successfully!');
+            //alert('Website Created Successfully!');
             modal.classList.remove('active');
             // Logic to submit form data goes here
         }

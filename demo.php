@@ -6,7 +6,7 @@ $testing = true;
 if ($testing){
         # hard Coding The Auth Credentials 
         $name = "demo_".substr(str_shuffle('1234567890'),4);
-        $email = $name."@vmtech.com";
+        $email = $name."@vmtech.co.za";
         $image = '/assets/favicon.png';   
         $auth = uniqid(str_shuffle(bin2hex(random_bytes(32))));
         $sql = "INSERT INTO `sys_account` (`name`,`email`,`image`,`auth`) VALUES ('{$name}','{$email}','{$image}','{$auth}')"; 
