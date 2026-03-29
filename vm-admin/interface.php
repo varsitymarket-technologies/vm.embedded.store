@@ -42,7 +42,7 @@
 <body class="bg-gray-900 text-white font-sans antialiased">
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
-        <aside id="sidebar" class="absolute z-20 h-full w-64 -translate-x-full transform bg-gray-800 transition-transform duration-300 ease-in-out md:relative md:translate-x-0 border-r border-white/10">
+        <aside id="sidebar" style="overflow:auto; " class="absolute z-20 h-full w-64 -translate-x-full transform bg-gray-800 transition-transform duration-300 ease-in-out md:relative md:translate-x-0 border-r border-white/10">
             <nav class="mt-4 px-2">
                 <div style="display: flex; align-items: center; justify-content: flex-end;">
                     <button id="sidebarClose" class="md:hidden text-gray-400 hover:text-white">
@@ -59,6 +59,9 @@
                     <span>Dashboard</span>
                 </a>
 
+
+                <span style="font-size: 9px;padding: 1rem;">General</span>
+
                 <a href="analytics" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-bar-chart-line-fill mr-3"></i>
                     <span>Analytics</span>
@@ -68,6 +71,12 @@
                     <i class="bi bi-people-fill mr-3"></i>
                     <span>Users</span>
                 </a>
+
+                <a href="forms" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+                    <i class="bi bi-box-seam-fill mr-3"></i>
+                    <span>Forms</span>
+                </a>
+                <span style="font-size: 9px;padding: 1rem;">Store Management</span>
                 <a href="categories" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-tags-fill mr-3"></i>
                     <span>Categories</span>
@@ -88,6 +97,7 @@
                     <i class="bi bi-cart-fill mr-3"></i>
                     <span>Orders</span>
                 </a>
+                <span style="font-size: 9px;padding: 1rem;">Site Customiation</span>
                 <a href="theme" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-palette-fill mr-3"></i>
                     <span>Themes</span>
@@ -96,14 +106,19 @@
                     <i class="bi bi-easel mr-3"></i>
                     <span>Page Builder</span>
                 </a>
-                <a href="settings" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
-                    <i class="bi bi-gear-fill mr-3"></i>
-                    <span>Settings</span>
-                </a>
                 <a href="deploy" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-file-earmark-code mr-3"></i>
                     <span>Site Deployment</span>
                 </a>
+                <span style="font-size: 9px;padding: 1rem;">More</span>
+
+                <a href="settings" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+                    <i class="bi bi-gear-fill mr-3"></i>
+                    <span>Settings</span>
+                </a>
+                <br><br>
+                
+                <br><br><br><br>
                 
             </nav>
         </aside>

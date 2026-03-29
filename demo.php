@@ -2,7 +2,14 @@
 session_start();
 
 @include dirname(__FILE__)."/config.php"; 
-$testing = true;
+
+$testing = false;
+if (isset($_SERVER['__DEMO__'])){
+    if ($_SERVER['__DEMO__'] == "active"){
+        $testing = true;
+    }
+}
+
 if ($testing){
         # hard Coding The Auth Credentials 
         $name = "demo_".substr(str_shuffle('1234567890'),4);
@@ -20,6 +27,9 @@ if ($testing){
         $vm_index = base_encryption($data);
         $_SESSION['vm_index'] =  $vm_index; 
         #echo "<script>window.alert('Demo Account Activated'); </script>"; 
-        echo "<script>window.location='/home/'</script>"; 
+        echo "<script>window.location='/home/'</script>";
+        exit();  
     //define('SYSTEM_ERROR',$sql); 
 }
+
+echo "<script>window.location='/home/'</script>";

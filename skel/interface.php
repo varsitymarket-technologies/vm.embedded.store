@@ -66,6 +66,13 @@ if (!file_exists($site_encode)){
     }
     file_put_contents($site_encode, $template_structure);
 }
-@include_once $site_encode; 
+
+$site_preview = dirname(__FILE__)."/builder.cache.html"; 
+if (file_exists($site_preview)){
+    @include_once $site_preview;
+}else{
+    @include_once $site_encode;
+}
+ 
 
 ?>

@@ -2,6 +2,7 @@ version: '3'
 services:
 # Use Docker Compose
   php-apache:
+    container_name: vm-emb-sites
     image: sigblue/apache-php:83-full
     restart: unless-stopped
     ports:

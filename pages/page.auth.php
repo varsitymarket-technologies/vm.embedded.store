@@ -14,11 +14,15 @@
             
             <?php }?>
 
-            <h1>Micro Webstore</h1>
+            <h1>Embedded Webstores</h1>
             <p>
-                A cloud-based shopping solution designed to help you sell online
+                A lightweight, plug-and-play e-commerce micro-service. 
             </p>
             
+            <?php 
+            if (isset($_SERVER['__DEMO__'])): 
+                if ($_SERVER['__DEMO__'] == "active"): 
+            ?>
             <div>
                 <div class="auth-buttons">
                     <button class="btn btn-github" onclick="window.location='/demo.php'">
@@ -26,11 +30,10 @@
                     </button>
                 </div>
             </div>
+            <?php
+                endif; 
+            endif; 
+            ?>
             <br><br>
-            <div class="auth-buttons">
-                <button class="btn btn-github" onclick="alert(`Google Auth Token Missing`)">
-                    <i class="fab fa-google"></i> Continue With Google
-                </button>
-            </div>
         </div>
     </div>

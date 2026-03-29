@@ -1,0 +1,9 @@
+{
+  "default": {
+    "hash": "v1.0.0.1",
+    "files": ["interface","poster.png"]
+  },"hastings.ego": {
+    "hash": "v1.0.0.2",
+    "files": ["interface","autofill.json","poster.png"]
+  }
+}
