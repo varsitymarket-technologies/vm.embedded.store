@@ -9,7 +9,7 @@ services:
       - 8016:80
     volumes:
       - ./:/var/www/html/public/
-      - ../:/var/www/html/data/
+      - ../data/:/var/www/html/data/
     environment:
       # gd is already included here, along with other specified extensions
       PHP_EXTENSIONS: pgsql gettext imap sockets zip curl dom gd exif intl mbstring bcmath opcache soap xml xmlrpc fileinfo pdo_sqlite pdo_mysql pdo_pgsql
