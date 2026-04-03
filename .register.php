@@ -41,7 +41,6 @@ function sync_themes() {
                 $remote_file_url = $remote_base_url . $theme_id . '/' . $file_path;
                 $local_file_path = $theme_dir . $file_path;
 
-                // Create sub-sub-directories (e.g., theme/neon-nights/scripts/)
                 $sub_dir = dirname($local_file_path);
                 if (!is_dir($sub_dir)) mkdir($sub_dir, 0755, true);
 

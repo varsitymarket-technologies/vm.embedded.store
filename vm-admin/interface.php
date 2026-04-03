@@ -12,7 +12,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Varsity Market | Embedded Mini Store Admin</title>
+    <title>Embedded Store Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -96,6 +96,10 @@
                 <a href="orders" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-cart-fill mr-3"></i>
                     <span>Orders</span>
+                </a>
+                <a href="payments" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+                    <i class="bi bi-currency-dollar mr-3"></i>
+                    <span>Payments</span>
                 </a>
                 <span style="font-size: 9px;padding: 1rem;">Site Customiation</span>
                 <a href="theme" class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
@@ -229,6 +233,11 @@
                                     <a href="products" class="sesedesedwsedwdd">
                                         <i class="bi bi-box-seam-fill mr-3"></i>
                                         <span>Products</span>
+                                    </a>
+
+                                    <a href="payments" class="sesedesedwsedwdd">
+                                        <i class="bi bi-currency-dollar mr-3"></i>
+                                        <span>Payments</span>
                                     </a>
 
                                     <a href="discounts" class="sesedesedwsedwdd">

@@ -4,7 +4,14 @@ $active_theme_file = dirname(dirname(dirname(__FILE__)))."/sites/".__DOMAIN__."/
 $active_theme_name = file_exists($active_theme_file) ? trim(file_get_contents($active_theme_file)) : '';
 
 $theme_base_path = dirname(dirname(dirname(__FILE__))).'/themes/'.$active_theme_name;
-$index_file = $theme_base_path . '/index.html'; // Or index.php
+
+if (file_exists(dirname(dirname(dirname(__FILE__)))."/sites/".__DOMAIN__."/builder.cache.html")) {
+    $index_file = dirname(dirname(dirname(__FILE__)))."/sites/".__DOMAIN__."/builder.cache.html";
+} elseif (file_exists($theme_base_path.'/index.php')) {
+    $index_file = $theme_base_path . '/index.php';
+} else {
+    $index_file = null; // No file to edit
+}
 
 // 2. Handle Save Request
 if (isset($_POST['save_code'])) {
@@ -24,8 +31,11 @@ $domain = __WEBSITE_DOMAIN__;
 $target = __DOMAIN__; 
 
 @include dirname(dirname(dirname(__FILE__))). "/services/export.store.source.php"; 
-
-$current_code = (export_application($target,$domain)); 
+if (!empty($current_code)){
+    # pass; 
+}else{
+    $current_code = (export_application($target,$domain));
+} 
 ?>
         <!-- Main Content -->
         <div class="flex flex-1 flex-col overflow-hidden">
