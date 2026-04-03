@@ -15,5 +15,10 @@ define("__WEBSITE_THEME__",website_data('theme'));
 define("__WEBSITE_URL__","/sites/".__DOMAIN__."/index.php"); 
 define("__WEBSITE_FRAME__",__WEBSITE_DOMAIN__."/sites/".uniqid('store_')."/".hash("sha256",__USERNAME__)."/"); 
 
-define("__ENV_LOAD__",load_env(dirname(__FILE__)."/.env")); 
+if (file_exists(dirname(dirname(__FILE__))."/data/.env")){
+    define("__ENV_LOAD__",load_env(dirname(dirname(__FILE__))."/data/.env"));
+}else{
+    define("__ENV_LOAD__",load_env(dirname(__FILE__)."/.env"));
+}
+ 
 ?>
