@@ -42,15 +42,14 @@ if (!empty($current_code)){
     <?php @include_once "header.php"; ?> 
 
 <div class="flex flex-col h-screen bg-[#060606] text-gray-200">
-    <div class="h-16 border-b border-white/10 bg-[#111] px-6 flex items-center justify-between">
+    <div class="h-16 border-b border-white/10 bg-[#111] px-6 flex items-center justify-between py-4">
         <div class="flex items-center gap-4">
             <div>
-                <h1 class="text-sm font-bold uppercase tracking-widest">Deploying Site</h1>
-                <p class="text-xs text-gray-500">Theme: <?php echo $active_theme_name; ?></p>
+                <h1 class="text-sm font-bold uppercase">Webstore Deployment</h1>
             </div>
         </div>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 items-justify-center">
             <div class="hidden lg:flex items-center bg-black/40 border border-white/5 rounded-lg px-3 py-1.5 text-xs">
                 <i class="bi bi-globe2 text-gray-500 mr-2"></i>
                 <span class="text-gray-400"><?php echo $site_url; ?></span>
@@ -60,21 +59,38 @@ if (!empty($current_code)){
             </div>
 
             <button onclick="downloadCode()" class="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
-                <i class="bi bi-download mr-2"></i> Download HTML
+                <i class="bi bi-download mr-2"></i> Download Code
             </button>
             
             <form method="POST" class="m-0">
                 <textarea name="code_content" id="hidden_code" class="hidden"></textarea>
                 <button type="submit" name="save_code" onclick="syncCode()" class="bg-purple-600 hover:bg-purple-500 text-white px-6 py-2 rounded-md text-sm font-bold transition-all shadow-lg shadow-purple-500/20">
-                    Push to Production
+                    Publish Webstore
                 </button>
             </form>
         </div>
     </div>
+    <button onclick="code_editor()" class="lg:hidden absolute bottom-4 right-4 bg-gray-600 hover:bg-blue-500 text-white px-4 py-2 rounded-full uppercase shadow-lg shadow-blue-900/20 z-10">
+        Edit Code
+    </button>
+    <script>
+        function code_editor() {
+            const editorPanel = document.getElementById('editor_panel');
+            const previewPanel = document.getElementById('preview_panel');
+            if (editorPanel.style.display === 'none' || !editorPanel.style.display) {
+                editorPanel.style.display = 'flex';
+                previewPanel.style.display = 'none';
+            } else {
+                editorPanel.style.display = 'none';
+                previewPanel.style.display = 'flex';
+            }
+        }
+    </script>
+
 
     <div class="flex flex-1 overflow-hidden">
         
-        <div class="w-1/2 flex flex-col border-r border-white/10">
+        <div id="editor_panel" class="w-full lg:w-1/2 hidden lg:flex flex-col border-r border-white/10">
             <div class="bg-[#1a1a1a] px-4 py-2 text-[10px] font-bold text-gray-500 uppercase flex justify-between">
                 <span>Source Editor</span>
                 <span id="save_status">Saved</span>
@@ -82,9 +98,10 @@ if (!empty($current_code)){
             <textarea id="editor" class="flex-1 bg-[#0d0d0d] text-emerald-400 p-6 font-mono text-sm outline-none resize-none leading-relaxed" spellcheck="false"><?php echo htmlspecialchars($current_code); ?></textarea>
         </div>
 
-        <div class="w-1/2 flex flex-col bg-white">
+        <div id="preview_panel" class="w-full lg:w-1/2 flex flex-col bg-white">
             <div class="bg-[#1a1a1a] px-4 py-2 text-[10px] font-bold text-gray-500 uppercase">
                 <span>Live Preview (Responsive)</span>
+
             </div>
             <iframe id="preview" class="w-full h-full border-none"></iframe>
         </div>

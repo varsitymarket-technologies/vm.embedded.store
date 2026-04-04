@@ -22,8 +22,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         file_put_contents($htmlFile, $_POST['site_rendered_html']);
     }
 
-    header("Location: ?success=1");
-    exit;
+    header("Location: #");
 }
 
 // --- LOAD CONFIG ---
@@ -45,8 +44,7 @@ if (!empty($matches[1])) {
 
 <body class="bg-[#0c0d0e] text-gray-300 overflow-hidden">
 
-
-<div class="flex h-screen w-full">
+<div class="flex h-screen w-full flex-col overflow-hidden">
 
     <!-- 
     <aside class="sidebar flex flex-col z-20">
@@ -77,11 +75,14 @@ if (!empty($matches[1])) {
     </aside>
     -->
 
-    <main class="flex-1 canvas-area flex flex-col relative p-12 pt-2">
+    <?php @include_once "header.php"; ?>
+
+
+    <main class="flex-1 canvas-area flex flex-col relative p-2 pt-2">
         <div class="p-6 border-b border-white/5 flex items-center justify-between bg-black/20">
             <span class="font-bold text-[10px] uppercase tracking-widest text-white">Page Editor</span>
             <button onclick="saveViaForm()" class="bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-black px-4 py-2 rounded-full uppercase shadow-lg shadow-blue-900/20">
-                Publish
+                Save Changes
             </button>
         </div>
 

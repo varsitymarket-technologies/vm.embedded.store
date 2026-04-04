@@ -12,6 +12,8 @@ if (isset($_POST['edthemes'])){
     # Remove The Encoded File 
     unlink(dirname($saved_path)."/config.php"); 
     unlink(dirname($saved_path)."/encode.php");
+    unlink(dirname($saved_path)."/builder.cache.html");
+
     
     // Refresh to show active state
     echo "<script>window.location.href = window.location.href;</script>";
@@ -35,7 +37,7 @@ foreach ($directories as $key => $value) {
     $theme['color'] = 'from-white-600 to-purple-600'; 
     $theme['author'] = 'vmTECH'; 
     $theme['type'] = 'E-commerce';
-    $theme['version'] = '1.2.0';  
+    $theme['version'] = 'Embedded v1.0';  
     $theme['is_active'] = ($name === $active_theme);
 
     $theme_library[] = $theme; 

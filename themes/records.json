@@ -5,5 +5,17 @@
   },"hastings.ego": {
     "hash": "v1.0.0.2",
     "files": ["interface","autofill.json","poster.png"]
+  },"austin": {
+    "hash": "v1.0.1.3",
+    "files": ["interface","autofill.json","poster.png"]
+  },"starved.hustla": {
+    "hash": "v1.0.1.4",
+    "files": ["interface","poster.png"]
+  },"mashala": {
+    "hash": "v1.0.1.4",
+    "files": ["interface","poster.png"]
+  },"corselle": {
+    "hash": "v1.0.1.4",
+    "files": ["interface","poster.png"]
   }
 }

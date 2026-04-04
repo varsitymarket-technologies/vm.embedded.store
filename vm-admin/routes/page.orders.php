@@ -135,7 +135,7 @@ $orders = $db->query("SELECT * FROM orders ORDER BY id DESC");
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
                 <div class="fixed inset-0 bg-gray-900 bg-opacity-75 transition-opacity backdrop-blur-sm" aria-hidden="true" onclick="closeModal()"></div>
 
-                <div class="relative inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-white/10">
+                <div style="min-width: 21rem;" class="relative inline-block align-bottom bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-white/10">
                     <form method="POST" id="orderForm">
                         <input type="hidden" name="action" id="formAction" value="add_order">
                         <input type="hidden" name="id" id="orderId">

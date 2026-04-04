@@ -13,7 +13,7 @@
                 </div>
 
                                 
-                <div class="flex flex-1 flex-col bg-gray-900 text-white min-h-screen p-6" x-data="dashboard()">
+                <div class="flex flex-1 flex-col bg-gray-900 text-white min-h-screen p-2" x-data="dashboard()">
                     <div class="max-w-7xl mx-auto w-full space-y-8">
                         
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">

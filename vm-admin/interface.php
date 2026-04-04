@@ -186,6 +186,13 @@
                             .sesedesedwsedwdd i {
                                 font-size: 1.1rem !important;
                             }
+
+                            .anch_item{
+                                font-size:0.7rem !important; 
+                                text-align: left !important;
+                                margin: 0.5rem 0 0 3rem !important;
+                                padding: 0; 
+                            }
         </style>
         <script>
                             function open_menu() {
@@ -210,9 +217,14 @@
                                     <img onclick="reload_page('#')" src="/assets/favicon.png" style="width:20vh; height:auto; margin:auto; ">
                                     <a></a>
 
+
                                     <a href="/../home/" class="sesedesedwsedwdd">
                                         <i class="bi bi-grid-fill mr-3"></i>
                                         <span>Dashboard</span>
+                                    </a>
+                                    
+                                    <a class="anch_item">
+                                        <span>General</span>
                                     </a>
 
                                     <a href="analytics" class="sesedesedwsedwdd">
@@ -225,6 +237,16 @@
                                         <span>Users</span>
                                     </a>
 
+                                    <a href="forms" class="sesedesedwsedwdd">
+                                        <i class="bi bi-box-seam-fill mr-3"></i>
+                                        <span>Forms</span>
+                                    </a>
+                                    
+                                    <a class="anch_item">
+                                        <span>Store Management</span>
+                                    </a>
+
+
                                     <a href="categories" class="sesedesedwsedwdd">
                                         <i class="bi bi-tags-fill mr-3"></i>
                                         <span>Categories</span>
@@ -235,36 +257,48 @@
                                         <span>Products</span>
                                     </a>
 
-                                    <a href="payments" class="sesedesedwsedwdd">
-                                        <i class="bi bi-currency-dollar mr-3"></i>
-                                        <span>Payments</span>
-                                    </a>
-
                                     <a href="discounts" class="sesedesedwsedwdd">
                                         <i class="bi bi-percent mr-3"></i>
                                         <span>Discounts</span>
                                     </a>
 
                                     <a href="sales" class="sesedesedwsedwdd">
-                                        <i class="bi bi-currency-dollar mr-3"></i>
+                                        <i class="bi bi-tag-fill mr-3"></i>
                                         <span>Sales</span>
                                     </a>
                                     <a href="orders" class="sesedesedwsedwdd">
                                         <i class="bi bi-cart-check mr-3"></i>
                                         <span>Orders</span>
                                     </a>
+
+                                    <a href="payments" class="sesedesedwsedwdd">
+                                        <i class="bi bi-currency-dollar mr-3"></i>
+                                        <span>Payments</span>
+                                    </a>
+
+                                    <a class="anch_item">
+                                        <span>Site Customisation</span>
+                                    </a>
+                                    <a href="theme" class="sesedesedwsedwdd">
+                                        <i class="bi bi-palette"></i>
+                                        <span>Themes</span>
+                                    </a>
                                     <a href="builder" class="sesedesedwsedwdd">
-                                        <i class="bi bi-layout-text-sidebar mr-3"></i>
+                                        <i class="bi bi-layout-text-sidebar"></i>
                                         <span>Page Builder</span>
+                                    </a>
+                                    <a href="deploy" class="sesedesedwsedwdd">
+                                        <i class="bi bi-file-earmark-code"></i>
+                                        <span>Publish</span>
+                                    </a>
+                                    <a class="anch_item">
+                                        <span>More</span>
                                     </a>
                                     <a href="settings" class="sesedesedwsedwdd">
                                         <i class="bi bi-gear mr-3"></i>
                                         <span>Settings</span>
                                     </a>
-                                    <a href="settings" class="sesedesedwsedwdd">
-                                        <i class="bi bi-file-earmark-code"></i>
-                                        <span>Site Deployment</span>
-                                    </a>
+
                                     <a style="margin:1rem"></a>
                                     <br>
                                     <a style="margin:0.4rem"></a>
