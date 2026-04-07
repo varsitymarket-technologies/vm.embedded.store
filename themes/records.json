@@ -17,5 +17,8 @@
   },"corselle": {
     "hash": "v1.0.1.4",
     "files": ["interface","poster.png"]
+  },"eros": {
+    "hash": "v1.0.1.4",
+    "files": ["interface","poster.png"]
   }
 }

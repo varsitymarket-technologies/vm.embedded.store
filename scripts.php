@@ -38,8 +38,8 @@ function account_data($index){
     @include_once "config.php"; 
     $AUTH = __ACCOUNT_INDEX__; 
     $tbl_index = $index; 
-    $sql = "SELECT * FROM `sys_account` WHERE (`auth` = '{$AUTH}') LIMIT 1";
-    $e = __DB_MODULE__->query($sql); 
+    $sql = "SELECT * FROM `sys_account` WHERE (`auth` = ?) LIMIT 1";
+    $e = __DB_MODULE__->query($sql, [$AUTH]); 
     $result = $e[0][$tbl_index] ?? false;
     return $result; 
 }
@@ -52,8 +52,8 @@ function website_data($index,$auth=false){
         $AUTH = $auth;
     } 
     $tbl_index = $index; 
-    $sql = "SELECT * FROM `sys_websites` WHERE (`account_index` = '{$AUTH}') LIMIT 1";
-    $e = __DB_MODULE__->query($sql);  
+    $sql = "SELECT * FROM `sys_websites` WHERE (`account_index` = ?) LIMIT 1";
+    $e = __DB_MODULE__->query($sql, [$AUTH]);  
     $result = $e[0][$tbl_index] ?? false;
     return $result; 
 }
@@ -62,8 +62,8 @@ function banking_data($index){
     @include_once "config.php";
     $AUTH = __ACCOUNT_INDEX__; 
     $tbl_index = $index; 
-    $sql = "SELECT * FROM `sys_banking` WHERE (`account_index` = '{$AUTH}') LIMIT 1";
-    $e = __DB_MODULE__->query($sql); 
+    $sql = "SELECT * FROM `sys_banking` WHERE (`account_index` = ?) LIMIT 1";
+    $e = __DB_MODULE__->query($sql, [$AUTH]); 
     
     try {    
         $signature_key = $e[0]['signature_key']; 
@@ -180,6 +180,24 @@ function initiate_web_database(){
     $e = new database_manager($file); 
     return $e; 
 }
+
+function initiate_sensitive_database(){
+    @include_once "config.php";
+    if (!defined('__DOMAIN__')){
+        return null;
+    }
+    $file = dirname(__FILE__)."/sites/".__DOMAIN__."/sensitive.data";
+    $db_file = dirname(__FILE__)."/module/database.php";
+    @include_once $db_file;
+    $e = new database_manager($file);
+    // Create the settings table if it doesn't exist
+    $e->createTable("settings", [
+        "key" => "VARCHAR(255) PRIMARY KEY",
+        "value" => "TEXT"
+    ]);
+    return $e;
+}
+
 
 function debug($output){
     file_put_contents(dirname(__FILE__).'/build/raw.debug',$output,FILE_APPEND); 

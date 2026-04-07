@@ -16,8 +16,8 @@ if ($testing){
         $email = $name."@vmtech.co.za";
         $image = '/assets/favicon.png';   
         $auth = uniqid(str_shuffle(bin2hex(random_bytes(32))));
-        $sql = "INSERT INTO `sys_account` (`name`,`email`,`image`,`auth`) VALUES ('{$name}','{$email}','{$image}','{$auth}')"; 
-        $e = __DB_MODULE__->query($sql); 
+        $sql = "INSERT INTO `sys_account` (`name`,`email`,`image`,`auth`) VALUES (?, ?, ?, ?)"; 
+        $e = __DB_MODULE__->query($sql, [$name, $email, $image, $auth]); 
 
         $index = str_shuffle(uniqid("sys_account")); 
         $data = __encryption__($auth,$index); 

@@ -31,16 +31,16 @@ if ($session == $key){
     $auth = uniqid(str_shuffle(bin2hex(random_bytes(32))));
 
     # Checking If The Account Already Exists.
-    $sql = "SELECT * FROM `sys_account` WHERE (`email` = '{$email}') OR (`name` = '{$name}') LIMIT 1";
-    $e = __DB_MODULE__->query($sql); 
+    $sql = "SELECT * FROM `sys_account` WHERE (`email` = ?) OR (`name` = ?) LIMIT 1";
+    $e = __DB_MODULE__->query($sql, [$email, $name]); 
     $e = count($e); 
     if (($e) > 0){
         echo json_encode(["error"=>"Account Already Exists"],JSON_PRETTY_PRINT);
         #return false; 
     }else{
-        $sql = "INSERT INTO `sys_account` (`name`,`email`,`image`,`auth`) VALUES ('{$name}','{$email}','{$image}','{$auth}')"; 
+        $sql = "INSERT INTO `sys_account` (`name`,`email`,`image`,`auth`) VALUES (?, ?, ?, ?)"; 
         echo json_encode(["index"=>$auth,"message"=>"Account Created"],JSON_PRETTY_PRINT); 
-        $e = __DB_MODULE__->query($sql); 
+        $e = __DB_MODULE__->query($sql, [$name, $email, $image, $auth]); 
     }   
 }else{
     echo json_encode(["error" => "Unauthorized Access"],JSON_PRETTY_PRINT);

@@ -55,14 +55,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     @$e = database_services($domain); 
     $e = website_services($domain,$theme); 
 
-    $sql = "UPDATE sys_account SET `data` = '{$account_data}' WHERE (`auth` = '{$account_index}');"; 
-    $e = $dbm->query($sql);
+    $sql = "UPDATE sys_account SET `data` = ? WHERE (`auth` = ?);"; 
+    $e = $dbm->query($sql, [$account_data, $account_index]);
     
-    $sql = "INSERT INTO `sys_banking` (`account_index`,`signature_key`,`data`) VALUES ('{$account_index}','{$signature_key}','{$banking_data}');"; 
-    $e = $dbm->query($sql);
+    $sql = "INSERT INTO `sys_banking` (`account_index`,`signature_key`,`data`) VALUES (?, ?, ?);"; 
+    $e = $dbm->query($sql, [$account_index, $signature_key, $banking_data]);
 
-    $sql = "INSERT INTO `sys_websites` (`name`,`domain`,`theme`,`hash_key`,`account_index`) VALUES ('{$name}','{$domain}','{$theme}','{$hash_key}','{$account_index}')"; 
-    $e = $dbm->query($sql);
+    $sql = "INSERT INTO `sys_websites` (`name`,`domain`,`theme`,`hash_key`,`account_index`) VALUES (?, ?, ?, ?, ?)"; 
+    $e = $dbm->query($sql, [$name, $domain, $theme, $hash_key, $account_index]);
 
     echo "<script>window.location.href = '/home/';</script>";
     exit;
