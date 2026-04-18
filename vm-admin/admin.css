@@ -1,3 +1,73 @@
+/* Vercel-style Settings Layout Helpers */
+.settings-layout {
+    display: flex;
+    gap: 3rem;
+}
+
+.settings-sidebar {
+    width: 240px;
+    flex-shrink: 0;
+}
+
+.settings-content {
+    flex-grow: 1;
+    max-width: 800px;
+}
+
+.settings-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #94a3b8;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    margin-bottom: 4px;
+    border: 1px solid transparent;
+}
+
+.settings-nav-item:hover {
+    background: rgba(255, 255, 255, 0.03);
+    color: #f8fafc;
+    transform: translateX(4px);
+}
+
+.settings-nav-item.active {
+    background: rgba(122, 26, 171, 0.1);
+    color: #a855f7;
+    border-color: rgba(122, 26, 171, 0.2);
+}
+
+.v-card {
+    background: #111;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.5);
+}
+
+.v-card-header {
+    padding: 1.5rem 2rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: linear-gradient(to bottom, rgba(255,255,255,0.02), transparent);
+}
+
+.v-card-body {
+    padding: 2rem;
+}
+
+.v-card-footer {
+    padding: 1.25rem 2rem;
+    background: rgba(255, 255, 255, 0.01);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: flex-end;
+}
+
 /* Custom Scrollbar for Webkit browsers */
 ::-webkit-scrollbar {
     width: 8px;
@@ -5,14 +75,22 @@
 }
 
 ::-webkit-scrollbar-track {
-    background: #1e1e2f; 
+    background: #1e1e2f;
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #2c2e43; 
+    background: #2c2e43;
     border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #e14eca; 
+    background: #e14eca;
+}
+
+/* Glassmorphism panel for some elements */
+.glass-panel {
+    background: rgba(10, 10, 11, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
 }

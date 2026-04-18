@@ -150,9 +150,35 @@ $categories = $db->query("SELECT * FROM categories ORDER BY id DESC");
                                     <textarea name="description" id="categoryDescription" rows="3" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors"></textarea>
                                 </div>
 
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-400 mb-1">Image URL</label>
-                                    <input type="text" name="image" id="categoryImage" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors" placeholder="https://example.com/image.jpg">
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium text-gray-400 mb-1">Category Image</label>
+                                    <div class="flex flex-col gap-4">
+                                        <!-- Image Preview Container -->
+                                        <div id="imagePreviewContainer" class="hidden relative aspect-square w-32 rounded-xl overflow-hidden bg-gray-900 border border-white/10 group">
+                                            <img id="imagePreview" src="" class="h-full w-full object-cover">
+                                            <button type="button" onclick="removeImage()" class="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- upload section -->
+                                        <label class="relative flex-1 cursor-pointer">
+                                            <div class="flex items-center justify-center gap-2 bg-gray-900 border border-gray-700 border-dashed rounded-xl px-4 py-6 text-gray-400 hover:border-purple-500 hover:text-white transition-all">
+                                                <i class="bi bi-cloud-arrow-up text-2xl"></i>
+                                                <span class="text-xs font-bold uppercase tracking-widest">Click to Upload</span>
+                                            </div>
+                                            <input type="file" id="categoryImageFile" accept="image/*" class="hidden" onchange="handleImageUpload(this)">
+                                        </label>
+
+                                        <div class="relative">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <div class="h-px flex-1 bg-white/5"></div>
+                                                <span class="text-[10px] text-gray-600 font-bold uppercase tracking-widest">or use URL</span>
+                                                <div class="h-px flex-1 bg-white/5"></div>
+                                            </div>
+                                            <input type="text" name="image" id="categoryImage" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors" placeholder="https://example.com/image.jpg">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -170,11 +196,35 @@ $categories = $db->query("SELECT * FROM categories ORDER BY id DESC");
         </div>
 
         <script>
+        function handleImageUpload(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const base64String = e.target.result;
+                    document.getElementById('categoryImage').value = base64String;
+                    
+                    const preview = document.getElementById('imagePreview');
+                    const container = document.getElementById('imagePreviewContainer');
+                    preview.src = base64String;
+                    container.classList.remove('hidden');
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function removeImage() {
+            document.getElementById('categoryImage').value = '';
+            document.getElementById('categoryImageFile').value = '';
+            document.getElementById('imagePreviewContainer').classList.add('hidden');
+        }
+
         function openModal(mode, category = null) {
             const modal = document.getElementById('categoryModal');
             const form = document.getElementById('categoryForm');
             const title = document.getElementById('modalTitle');
             const action = document.getElementById('formAction');
+            const container = document.getElementById('imagePreviewContainer');
+            const preview = document.getElementById('imagePreview');
             
             modal.classList.remove('hidden');
             
@@ -185,11 +235,19 @@ $categories = $db->query("SELECT * FROM categories ORDER BY id DESC");
                 document.getElementById('categoryName').value = category.name;
                 document.getElementById('categoryDescription').value = category.description;
                 document.getElementById('categoryImage').value = category.image;
+                
+                if (category.image) {
+                    preview.src = category.image;
+                    container.classList.remove('hidden');
+                } else {
+                    container.classList.add('hidden');
+                }
             } else {
                 title.textContent = 'Add New Category';
                 action.value = 'add_category';
                 form.reset();
                 document.getElementById('categoryId').value = '';
+                container.classList.add('hidden');
             }
         }
 

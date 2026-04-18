@@ -13,60 +13,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $file = dirname(dirname(__FILE__))."/build/vm.engine.sql";
     $dbm = new database_manager($file);
 
-    #Recieve THe Data From The Forms 
-    $website_name = $_POST['wb_name']; 
-    $website_domain = $_POST['wb_domain']; 
-
-    $account_number = $_POST['account_number'];
-    $account_type = $_POST['account_type'];
-    $account_provider = $_POST['account_provider'];
-    $account_branch = $_POST['account_branch'];
-
-    $billing_street = $_POST['bstreet']; 
-    $billing_zip = $_POST['bzip']; 
-    $billing_city = $_POST['bcity']; 
-    $billing_country = $_POST['bcountry']; 
-    $billing_state = $_POST['bstate']; 
-
-    $account_index = __ACCOUNT_INDEX__; 
-    $name = $website_name; 
-    $domain = $website_domain; 
-    $theme = "default"; 
+    # Receive Data From The Forms
+    $website_name = $_POST['wb_name'];
     
-    $hash_key = hash('sha256',uniqid('key')); 
-    $signature_key = str_shuffle(hash('sha256',uniqid('signature'))); 
+    // Domain Selection Logic
+    $domain_type = $_POST['domain_type'] ?? 'custom';
+    if ($domain_type === 'subdomain' && isset($_SERVER['PARENT_DOMAIN'])) {
+        $prefix = preg_replace('/[^a-z0-9-]/', '', strtolower($_POST['subdomain_prefix']));
+        $website_domain = $prefix . "." . $_SERVER['PARENT_DOMAIN'];
+    } else {
+        $website_domain = $_POST['wb_domain'];
+    }
 
-    $banking_data = __encryption__(json_encode([
-        'number' => $account_number,
-        'type' => $account_type,
-        'branch' => $account_branch,
-        'provider' => $account_provider,
-    ],JSON_PRETTY_PRINT),$signature_key);
-
+    $account_index = __ACCOUNT_INDEX__;
+    $name = $website_name;
+    $domain = $website_domain;
+    $theme = "default";
+    
+    $hash_key = hash('sha256',uniqid('key'));
+    $signature_key = str_shuffle(hash('sha256',uniqid('signature')));
 
     $account_data = base_encryption(json_encode([
-        "street" => $billing_street,
-        "city" => $billing_city,
-        "state" => $billing_state,
-        "zip" => $billing_zip,
-        "country" => $billing_country,
-    ],JSON_PRETTY_PRINT)); 
+        "street" => "Default",
+        "city" => $_POST['bcity'] ?? "Default",
+        "state" => "Default",
+        "zip" => "0000",
+        "country" => "South Africa",
+    ],JSON_PRETTY_PRINT));
 
-    @$e = database_services($domain); 
-    $e = website_services($domain,$theme); 
+    @$e = database_services($domain);
+    $e = website_services($domain,$theme);
 
-    $sql = "UPDATE sys_account SET `data` = ? WHERE (`auth` = ?);"; 
+    $sql = "UPDATE sys_account SET `data` = ? WHERE (`auth` = ?);";
     $e = $dbm->query($sql, [$account_data, $account_index]);
-    
-    $sql = "INSERT INTO `sys_banking` (`account_index`,`signature_key`,`data`) VALUES (?, ?, ?);"; 
-    $e = $dbm->query($sql, [$account_index, $signature_key, $banking_data]);
 
-    $sql = "INSERT INTO `sys_websites` (`name`,`domain`,`theme`,`hash_key`,`account_index`) VALUES (?, ?, ?, ?, ?)"; 
+    $sql = "INSERT INTO `sys_websites` (`name`,`domain`,`theme`,`hash_key`,`account_index`) VALUES (?, ?, ?, ?, ?)";
     $e = $dbm->query($sql, [$name, $domain, $theme, $hash_key, $account_index]);
 
     echo "<script>window.location.href = '/home/';</script>";
     exit;
 }
+
 ?>
     <!-- DASHBOARD SECTION (Hidden by default) -->
     <div id="dashboard-container" class="container">

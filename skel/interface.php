@@ -39,6 +39,10 @@ if (!file_exists($site_config)){
         
         if ($value == "__SYSTEM_API__"){
             $data_set .= 'define("'.$value.'","api.php");'.PHP_EOL;
+        }else if ($value == "__SYSTEM_JS_API__"){
+            $data_set .= 'define("'.$value.'","vm.api.js");'.PHP_EOL;
+        }else if ($value == "__SYSTEM_JS_THEME__"){
+            $data_set .= 'define("'.$value.'","vm.theme.js");'.PHP_EOL;
         }else if ($value == "__SYSTEM_CURRENCY__"){
             $data_set .= 'define("'.$value.'","'.__CURRENCY_SIGN__.'");'.PHP_EOL;
         }else if ($value == "__SITE_TITLE__"){

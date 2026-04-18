@@ -83,11 +83,11 @@ function admin_percentage(){
 
 function ex($section = 1)
 {
-    $url = "//{$_SERVER['HTTP_HOST']}{$_SERVER['REQUEST_URI']}";
-
     $x = $_SERVER['REQUEST_URI'];
+    // Strip query string from the URI to ensure clean segment matching
+    $x = strtok($x, '?');
     $_xm = explode("/", $x);
-    return $_xm[$section];
+    return $_xm[$section] ?? '';
 }
 
 

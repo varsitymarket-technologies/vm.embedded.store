@@ -1,170 +1,502 @@
 <?php
-session_start();
-$db = initiate_web_database(); 
+/**
+ * page.settings.php - Redesigned Premium Settings Interface
+ */
 
-// Helper to get setting
-function get_setting($db, $key, $default = '') {
-    $result = $db->query("SELECT value FROM settings WHERE `key` = ?", [$key]);
-    return $result && isset($result[0]['value']) ? $result[0]['value'] : $default;
+$db_engine = __DB_MODULE__;
+$db_site = initiate_web_database();
+$domain = __DOMAIN__;
+
+// --- 1. Encryption & Encrypted Config Handling ---
+$config_key = create_enc_key();
+$config_path = dirname(dirname(dirname(__FILE__))) . "/sites/$domain/email.config.enc";
+
+function save_encrypted_config($path, $data, $key)
+{
+    if (!file_exists(dirname($path)))
+        mkdir(dirname($path), 0777, true);
+    $json = json_encode($data);
+    $encrypted = __encryption__($json, $key);
+    return file_put_contents($path, $encrypted);
 }
 
-// Handle Save
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'save_settings') {
-    $settings = $_POST['settings'] ?? [];
-    foreach ($settings as $key => $value) {
-        $value = is_array($value) ? json_encode($value) : trim($value);
-        
-        // Using "INSERT ... ON DUPLICATE KEY UPDATE" if your DB driver supports it, 
-        // otherwise the manual check you had works fine:
-        $exists = $db->query("SELECT id FROM settings WHERE `key` = ?", [$key]);
-        if ($exists) {
-            $db->query("UPDATE settings SET value = ? WHERE `key` = ?", [$value, $key]);
-        } else {
-            $db->query("INSERT INTO settings (`key`, `value`) VALUES (?, ?)", [$key, $value]);
-        }
+function load_encrypted_config($path, $key)
+{
+    if (!file_exists($path))
+        return [];
+    $encrypted = file_get_contents($path);
+    $json = __decryption__($encrypted, $key);
+    return json_decode($json, true) ?: [];
+}
+
+// --- 2. Handle Save Actions ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if ($_POST['action'] === 'save_email_config') {
+        $email_settings = $_POST['email'] ?? [];
+        save_encrypted_config($config_path, $email_settings, $config_key);
+        header("Location: ?tab=messaging&saved=1");
+        exit;
     }
-    header("Location: " . $_SERVER['PHP_SELF'] . "?success=1");
-    exit;
+
+    if ($_POST['action'] === 'save_branding') {
+        $branding = $_POST['branding'] ?? [];
+        foreach ($branding as $key => $val) {
+            $db_site->query("INSERT INTO settings (`key`, `value`) VALUES (?, ?) ON CONFLICT(`key`) DO UPDATE SET value = ?", [$key, $val, $val]);
+        }
+        header("Location: ?tab=branding&saved=1");
+        exit;
+    }
 }
 
-// Configuration Map for Keys and Defaults
-$setting_map = [
-    // Branding & SEO
-    'site_title' => 'Varsity Market',
-    'meta_description' => 'The premier marketplace for students.',
-    'meta_keywords' => 'market, university, student trade',
-    
-    // Email Config
-    'smtp_host' => '',
-    'smtp_port' => '587',
-    'smtp_user' => '',
-    'smtp_pass' => '',
-    'email_template' => '<html><body><h1>Hello {{name}}</h1><p>{{message}}</p></body></html>',
-    
-    // App & Domain
-    'connector_code' => bin2hex(random_bytes(8)),
-    'custom_domain' => '',
-    'dns_record_value' => '192.168.1.1', // Your static target
-];
+// --- 3. Load Current Configs ---
+$email_current = load_encrypted_config($config_path, $config_key);
+$site_name = website_data('name');
+$site_domain = website_data('domain');
+$site_theme = website_data('theme');
 
-$current = [];
-foreach ($setting_map as $key => $def) {
-    $current[$key] = get_setting($db, $key, $def);
-}
+// Defaults for Email
+$email_current['host'] = $email_current['host'] ?? '';
+$email_current['port'] = $email_current['port'] ?? '587';
+$email_current['user'] = $email_current['user'] ?? '';
+$email_current['pass'] = $email_current['pass'] ?? '';
+$email_current['template'] = $email_current['template'] ?? "<html>\n<body style=\"font-family: sans-serif; color: #333;\">\n  <div style=\"max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;\">\n    <h1 style=\"color: #7a1aab;\">Hello {{name}}!</h1>\n    <p>{{message}}</p>\n    <hr style=\"border: none; border-top: 1px solid #eee; margin: 20px 0;\">\n    <small style=\"color: #888;\">Sent from Your Online Store</small>\n  </div>\n</body>\n</html>";
+
+$active_tab = $_GET['tab'] ?? 'general';
 ?>
 
-<div class="flex flex-1 flex-col overflow-hidden bg-gray-900 text-white min-h-screen">
+
+<!-- Main Content -->
+<div class="flex flex-1 flex-col overflow-hidden">
+    <!-- Header -->
     <?php @include_once "header.php"; ?>
 
-    <main class="flex-1 overflow-y-auto p-6">
-        <div class="max-w-5xl mx-auto">
-            <form method="POST">
-                <input type="hidden" name="action" value="save_settings">
-                
-                <div class="flex justify-between items-center mb-6">
-                    <h2 class="text-2xl font-bold">System Configuration</h2>
-                    <button type="submit" class="bg-purple-600 hover:bg-purple-700 px-6 py-2 rounded-lg font-medium transition-all">
-                        Save All Changes
-                    </button>
+
+    <div class="animate-fade-in pb-20 flex-1 overflow-y-auto overflow-x-hidden bg-gray-900 p-6">
+        <!-- Header Section -->
+        <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <?php if (isset($_GET['saved'])): ?>
+                <div id="saveToast"
+                    class="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-2 rounded-full text-sm font-bold animate-bounce">
+                    <i class="bi bi-check2-circle text-lg"></i>
+                    <span>Changes saved successfully</span>
+                </div>
+                <script>setTimeout(() => document.getElementById('saveToast').remove(), 5000);</script>
+            <?php endif; ?>
+        </div>
+
+
+        <?php if ($active_tab == 'general'): ?>
+            <div>
+                <h1 class="text-4xl font-black tracking-tight text-white mb-2">Settings</h1>
+                <p class="text-gray-400 text-lg">Configure your store environment, branding, and integrations.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div onclick="window.location.href='?tab=branding'"
+                    class="p-6 bg-black/40 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group relative overflow-hidden">
+                    <div class="flex items-center gap-4 mb-3 relative z-10">
+                        <div class="p-3 bg-white/5 rounded-xl group-hover:bg-purple-600/20 transition-colors">
+                            <i class="bi bi-brush-fill text-xl"></i>
+                        </div>
+                        <span class="font-bold text-white">Store Branding</span>
+                    </div>
+                    <p class="text-xs text-gray-500 leading-relaxed relative z-10">Configure your store branding.</p>
+                    <div
+                        class="absolute -right-4 -bottom-4 opacity-[0.02] transform rotate-12 group-hover:opacity-[0.05] transition-opacity">
+                        <i class="bi bi-brush-fill text-9xl"></i>
+                    </div>
                 </div>
 
-                <div class="space-y-6">
-                    
-                    <section class="bg-gray-800 border border-white/5 rounded-xl p-6">
-                        <h3 class="text-lg font-semibold mb-4 text-purple-400">Site Branding & SEO</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-medium text-gray-400 mb-1 uppercase">Site Title</label>
-                                <input type="text" name="settings[site_title]" value="<?= htmlspecialchars($current['site_title']) ?>" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:border-purple-500 outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-400 mb-1 uppercase">Meta Keywords</label>
-                                <input type="text" name="settings[meta_keywords]" value="<?= htmlspecialchars($current['meta_keywords']) ?>" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:border-purple-500 outline-none">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-xs font-medium text-gray-400 mb-1 uppercase">Meta Description</label>
-                                <textarea name="settings[meta_description]" rows="2" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:border-purple-500 outline-none"><?= htmlspecialchars($current['meta_description']) ?></textarea>
-                            </div>
+                <div onclick="window.location.href='?tab=email'"
+                    class="p-6 bg-black/40 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group relative overflow-hidden">
+                    <div class="flex items-center gap-4 mb-3 relative z-10">
+                        <div class="p-3 bg-white/5 rounded-xl group-hover:bg-purple-600/20 transition-colors">
+                            <i class="bi bi-envelope-fill text-xl"></i>
                         </div>
-                    </section>
+                        <span class="font-bold text-white">Email Configuration</span>
+                    </div>
+                    <p class="text-xs text-gray-500 leading-relaxed relative z-10">Configure your email settings for
+                        transactional emails.</p>
+                    <div
+                        class="absolute -right-4 -bottom-4 opacity-[0.02] transform rotate-12 group-hover:opacity-[0.05] transition-opacity">
+                        <i class="bi bi-envelope-fill text-9xl"></i>
+                    </div>
+                </div>
 
-                    <section class="bg-gray-800 border border-white/5 rounded-xl p-6">
-                        <h3 class="text-lg font-semibold mb-4 text-purple-400">SMTP & Email Templates</h3>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div class="md:col-span-2">
-                                <label class="block text-xs font-medium text-gray-400 mb-1 uppercase">SMTP Host</label>
-                                <input type="text" name="settings[smtp_host]" value="<?= htmlspecialchars($current['smtp_host']) ?>" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-400 mb-1 uppercase">Port</label>
-                                <input type="text" name="settings[smtp_port]" value="<?= htmlspecialchars($current['smtp_port']) ?>" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-400 mb-1 uppercase">Username</label>
-                                <input type="text" name="settings[smtp_user]" value="<?= htmlspecialchars($current['smtp_user']) ?>" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-medium text-gray-400 mb-1 uppercase">Password</label>
-                                <input type="password" name="settings[smtp_pass]" value="<?= htmlspecialchars($current['smtp_pass']) ?>" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 outline-none">
-                            </div>
+                <div onclick="window.location.href='?tab=deployment'"
+                    class="p-6 bg-black/40 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group relative overflow-hidden">
+                    <div class="flex items-center gap-4 mb-3 relative z-10">
+                        <div class="p-3 bg-white/5 rounded-xl group-hover:bg-purple-600/20 transition-colors">
+                            <i class="bi bi-github text-xl"></i>
                         </div>
-                        <div>
-                            <label class="block text-xs font-medium text-gray-400 mb-1 uppercase">HTML Email Template</label>
-                            <textarea name="settings[email_template]" rows="6" class="w-full font-mono text-sm bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 focus:border-purple-500 outline-none"><?= htmlspecialchars($current['email_template']) ?></textarea>
-                            <p class="text-[10px] text-gray-500 mt-1">Use {{name}}, {{message}}, and {{link}} as placeholders.</p>
+                        <span class="font-bold text-white">GitHub Deployment</span>
+                    </div>
+                    <p class="text-xs text-gray-500 leading-relaxed relative z-10">Connect your source code for automated
+                        delivery cycles.</p>
+                    <div
+                        class="absolute -right-4 -bottom-4 opacity-[0.02] transform rotate-12 group-hover:opacity-[0.05] transition-opacity">
+                        <i class="bi bi-github text-9xl"></i>
+                    </div>
+                </div>
+
+                <div onclick="window.location.href='?tab=domain'"
+                    class="p-6 bg-black/40 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group relative overflow-hidden">
+                    <div class="flex items-center gap-4 mb-3 relative z-10">
+                        <div class="p-3 bg-white/5 rounded-xl group-hover:bg-purple-600/20 transition-colors">
+                            <i class="bi bi-globe text-xl"></i>
                         </div>
-                    </section>
+                        <span class="font-bold text-white">Connect Domain</span>
+                    </div>
+                    <p class="text-xs text-gray-500 leading-relaxed relative z-10">Connect your domain to your store.</p>
+                    <div
+                        class="absolute -right-4 -bottom-4 opacity-[0.02] transform rotate-12 group-hover:opacity-[0.05] transition-opacity">
+                        <i class="bi bi-globe text-9xl"></i>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <section class="bg-gray-800 border border-white/5 rounded-xl p-6">
-                            <h3 class="text-lg font-semibold mb-2 text-purple-400">PWA Connector</h3>
-                            <p class="text-sm text-gray-400 mb-4">Use this code in your mobile app to sync admin settings.</p>
-                            <div class="flex gap-2">
-                                <input type="text" name="settings[connector_code]" value="<?= htmlspecialchars($current['connector_code']) ?>" class="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 font-mono text-purple-400" readonly>
-                                <button type="button" onclick="navigator.clipboard.writeText('<?= $current['connector_code'] ?>')" class="bg-gray-700 px-3 rounded-lg hover:bg-gray-600 transition-colors text-sm">Copy</button>
+
+        <div class="settings-layout">
+            <!-- Sidebar Navigation -->
+
+            <!-- Main Content Area -->
+            <main class="settings-content">
+
+                <?php if ($active_tab == 'branding'): ?>
+                    <div>
+                        <button onclick="window.location.href='?tab=general'"
+                            class="bg-white text-black px-8 py-2.5 rounded-full text-sm font-black hover:bg-gray-200 transition-all transform hover:scale-105 active:scale-95 shadow-xl">
+                            Back To Settings
+                        </button>
+                    </div>
+                    <br><br>
+
+                    <form method="POST">
+                        <input type="hidden" name="action" value="save_branding">
+                        <div class="v-card animate-slide-up">
+                            <div class="v-card-header">
+                                <h2 class="text-xl font-bold text-white">Public Branding</h2>
+                                <p class="text-sm text-gray-400 mt-2">Personalize how your store appears to customers.</p>
                             </div>
-                        </section>
+                            <div class="v-card-body space-y-8">
+                                <div class="space-y-3">
+                                    <label class="text-sm font-bold text-gray-200">Store Name</label>
+                                    <input type="text" name="branding[wb_name]" value="<?= htmlspecialchars($site_name) ?>"
+                                        class="w-full bg-[#080808] border border-white/10 rounded-xl px-4 py-3.5 focus:border-purple-500 outline-none transition-all shadow-inner"
+                                        placeholder="e.g. My Premium Store">
+                                    <p class="text-[11px] text-gray-500">This name appears in browser tabs and customer
+                                        emails.
+                                    </p>
+                                </div>
 
-                        <section class="bg-gray-800 border border-white/5 rounded-xl p-6">
-                            <h3 class="text-lg font-semibold mb-2 text-purple-400">Domain Mapping</h3>
-                            <label class="block text-xs font-medium text-gray-400 mb-1 uppercase">Your Custom Domain</label>
-                            <input type="text" name="settings[custom_domain]" placeholder="e.g. shop.yourname.com" value="<?= htmlspecialchars($current['custom_domain']) ?>" class="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 mb-3 outline-none">
-                            
-                            <div class="p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
-                                <p class="text-[11px] text-blue-300 uppercase font-bold mb-1">Required DNS Record (A)</p>
-                                <div class="flex justify-between text-sm font-mono">
-                                    <span class="text-gray-400">Type: A</span>
-                                    <span class="text-white">Value: <?= $current['dns_record_value'] ?></span>
+                                <div class="space-y-3 opacity-60">
+                                    <label class="text-sm font-bold text-gray-200">Primary Public URL</label>
+                                    <div class="relative">
+                                        <input type="text" value="<?= htmlspecialchars($site_domain) ?>" readonly
+                                            class="w-full bg-black/40 border border-white/5 rounded-xl px-4 py-3.5 text-gray-500 cursor-not-allowed">
+                                        <span
+                                            class="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black bg-white/5 px-2 py-0.5 rounded uppercase">Connected</span>
+                                    </div>
                                 </div>
                             </div>
-                        </section>
+                            <br>
+                            <div class="v-card-footer">
+                                <button type="submit"
+                                    class="bg-white text-black px-8 py-2.5 rounded-full text-sm font-black hover:bg-gray-200 transition-all transform hover:scale-105 active:scale-95 shadow-xl">
+                                    Update Branding
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                <?php endif; ?>
+
+                <?php if ($active_tab == 'domain'): ?>
+                    <div>
+                        <button onclick="window.location.href='?tab=general'"
+                            class="bg-white text-black px-8 py-2.5 rounded-full text-sm font-black hover:bg-gray-200 transition-all transform hover:scale-105 active:scale-95 shadow-xl">
+                            Back To Settings
+                        </button>
+                    </div>
+                    <br><br>
+
+                    <div class="v-card animate-slide-up">
+                        <div class="v-card-header">
+                            <h2 class="text-xl font-bold text-white">Domain Mapping</h2>
+                            <p class="text-sm text-gray-400 mt-2">Connect your custom domain to your hosted repository.</p>
+                        </div>
+                        <div class="v-card-body space-y-12">
+                            <div>
+                                <div class="flex items-center gap-3 mb-6">
+                                    <span
+                                        class="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center font-black text-xs">1</span>
+                                    <h3 class="text-sm font-black text-white uppercase tracking-widest">Select Provider</h3>
+                                </div>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div
+                                        class="p-6 bg-black/40 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group relative overflow-hidden">
+                                        <div class="flex items-center gap-4 mb-3 relative z-10">
+                                            <div
+                                                class="p-3 bg-white/5 rounded-xl group-hover:bg-purple-600/20 transition-colors">
+                                                <i class="bi bi-github text-xl"></i>
+                                            </div>
+                                            <span class="font-bold text-white">GitHub Pages</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500 leading-relaxed relative z-10">Optimized for free
+                                            static
+                                            hosting. High reliability.</p>
+                                        <div
+                                            class="absolute -right-4 -bottom-4 opacity-[0.02] transform rotate-12 group-hover:opacity-[0.05] transition-opacity">
+                                            <i class="bi bi-github text-9xl"></i>
+                                        </div>
+                                    </div>
+                                    <div
+                                        class="p-6 bg-black/40 rounded-2xl border border-white/5 hover:border-purple-500/30 transition-all cursor-pointer group relative overflow-hidden">
+                                        <div class="flex items-center gap-4 mb-3 relative z-10">
+                                            <div
+                                                class="p-3 bg-white/5 rounded-xl group-hover:bg-purple-600/20 transition-colors">
+                                                <i class="bi bi-triangle-fill text-xl"></i>
+                                            </div>
+                                            <span class="font-bold text-white">Vercel Edge</span>
+                                        </div>
+                                        <p class="text-xs text-gray-500 leading-relaxed relative z-10">Premium global
+                                            performance and automatic SSL.</p>
+                                        <div
+                                            class="absolute -right-4 -bottom-4 opacity-[0.02] transform rotate-12 group-hover:opacity-[0.05] transition-opacity">
+                                            <i class="bi bi-triangle-fill text-9xl"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <div class="flex items-center gap-3 mb-6">
+                                    <span
+                                        class="w-8 h-8 rounded-full bg-purple-600 text-white flex items-center justify-center font-black text-xs">2</span>
+                                    <h3 class="text-sm font-black text-white uppercase tracking-widest">DNS Configuration
+                                    </h3>
+                                </div>
+                                <div class="overflow-hidden rounded-2xl border border-white/5 bg-[#080808]">
+                                    <table class="w-full text-left text-xs font-mono">
+                                        <thead class="bg-white/5 text-gray-500 uppercase tracking-tighter">
+                                            <tr>
+                                                <th class="px-6 py-4 font-black">Type</th>
+                                                <th class="px-6 py-4 font-black">Name</th>
+                                                <th class="px-6 py-4 font-black">Value</th>
+                                                <th class="px-6 py-4 font-black text-right">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-white/5">
+                                            <tr class="hover:bg-white/[0.02] transition-colors">
+                                                <td class="px-6 py-4">
+                                                    <span
+                                                        class="bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest border border-purple-500/20">CNAME</span>
+                                                </td>
+                                                <td class="px-6 py-4 text-gray-300 font-bold">www</td>
+                                                <td class="px-6 py-4 text-purple-400">cname.vercel-dns.com</td>
+                                                <td class="px-6 py-4 text-right"><i
+                                                        class="bi bi-check-circle-fill text-emerald-500"></i></td>
+                                            </tr>
+                                            <tr class="hover:bg-white/[0.02] transition-colors">
+                                                <td class="px-6 py-4">
+                                                    <span
+                                                        class="bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest border border-orange-500/20">A</span>
+                                                </td>
+                                                <td class="px-6 py-4 text-gray-300 font-bold">@</td>
+                                                <td class="px-6 py-4 text-purple-400">
+                                                    <?= $_SERVER['SERVER_ADDR'] ?>
+                                                </td>
+                                                <td class="px-6 py-4 text-right"><i
+                                                        class="bi bi-cloud-check-fill text-emerald-500"></i></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    <section class="bg-gray-800 border border-white/5 rounded-xl p-6">
-                        <h3 class="text-lg font-semibold mb-4 text-purple-400">GitHub Deployment</h3>
-                        <?php if (isset($_SESSION['github_user'])): ?>
-                            <div class="flex items-center justify-between p-4 bg-green-900/10 border border-green-500/20 rounded-xl">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center">
-                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                    <br><br>
+
+                <?php endif; ?>
+
+                <?php if ($active_tab == 'email'): ?>
+                    <div>
+                        <button onclick="window.location.href='?tab=general'"
+                            class="bg-white text-black px-8 py-2.5 rounded-full text-sm font-black hover:bg-gray-200 transition-all transform hover:scale-105 active:scale-95 shadow-xl">
+                            Back To Settings
+                        </button>
+                    </div>
+                    <br><br>
+
+                    <form method="POST" id="emailForm">
+                        <input type="hidden" name="action" value="save_email_config">
+                        <div class="v-card animate-slide-up">
+                            <div class="v-card-header flex justify-between items-center">
+                                <div>
+                                    <h2 class="text-xl font-bold text-white">Email Configuration</h2>
+                                    <p class="text-sm text-gray-400 mt-2">Securely store SMTP and notification templates.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="v-card-body space-y-12">
+                                <!-- SMTP Section -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div class="space-y-3">
+                                        <label class="text-xs font-black uppercase tracking-widest text-gray-500">SMTP
+                                            Host</label>
+                                        <input type="text" name="email[host]"
+                                            value="<?= htmlspecialchars($email_current['host']) ?>"
+                                            placeholder="smtp.gmail.com"
+                                            class="w-full bg-[#080808] border border-white/10 rounded-xl px-4 py-3.5 focus:border-purple-500 outline-none transition-all">
                                     </div>
-                                    <div>
-                                        <p class="font-bold"><?= $_SESSION['github_user'] ?></p>
-                                        <p class="text-xs text-green-400">Connected for this session</p>
+                                    <div class="space-y-3">
+                                        <label class="text-xs font-black uppercase tracking-widest text-gray-500">SMTP
+                                            Port</label>
+                                        <input type="text" name="email[port]"
+                                            value="<?= htmlspecialchars($email_current['port']) ?>"
+                                            class="w-full bg-[#080808] border border-white/10 rounded-xl px-4 py-3.5 focus:border-purple-500 outline-none transition-all">
+                                    </div>
+                                    <div class="space-y-3">
+                                        <label
+                                            class="text-xs font-black uppercase tracking-widest text-gray-500">Username</label>
+                                        <input type="text" name="email[user]"
+                                            value="<?= htmlspecialchars($email_current['user']) ?>"
+                                            class="w-full bg-[#080808] border border-white/10 rounded-xl px-4 py-3.5 focus:border-purple-500 outline-none transition-all">
+                                    </div>
+                                    <div class="space-y-3">
+                                        <label
+                                            class="text-xs font-black uppercase tracking-widest text-gray-500">Password</label>
+                                        <div class="relative group">
+                                            <input type="password" name="email[pass]"
+                                                value="<?= htmlspecialchars($email_current['pass']) ?>"
+                                                class="w-full bg-[#080808] border border-white/10 rounded-xl px-4 py-3.5 focus:border-purple-500 outline-none transition-all">
+                                            <i
+                                                class="bi bi-eye-slash absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 group-hover:text-gray-400 cursor-pointer"></i>
+                                        </div>
                                     </div>
                                 </div>
-                                <a href="logout_github.php" class="text-xs text-red-400 hover:underline">Disconnect</a>
-                            </div>
-                        <?php else: ?>
-                            <a href="github_auth.php" class="inline-flex items-center gap-2 bg-[#24292e] hover:bg-black px-5 py-2.5 rounded-lg transition-all text-sm">
-                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-                                Connect GitHub Repository
-                            </a>
-                        <?php endif; ?>
-                    </section>
 
-                </div>
-            </form>
+                                <!-- Template Editor -->
+                                <div class="space-y-4">
+                                    <div class="flex justify-between items-end">
+                                        <div class="space-y-1">
+                                            <label class="text-xs font-black uppercase tracking-widest text-gray-500">System
+                                                Notification Template</label>
+                                            <p class="text-[10px] text-gray-600">Supports <code
+                                                    class="text-purple-400">{{name}}</code> and <code
+                                                    class="text-purple-400">{{message}}</code> tags.</p>
+                                        </div>
+                                        <button type="button" onclick="togglePreview()"
+                                            class="px-4 py-1.5 bg-purple-600/10 text-purple-400 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-purple-600 hover:text-white transition-all">
+                                            <i class="bi bi-eye-fill mr-1"></i> Preview Template
+                                        </button>
+                                    </div>
+                                    <textarea name="email[template]" id="emailTemplate" rows="12"
+                                        class="w-full bg-[#020202] border border-white/10 rounded-2xl px-6 py-6 font-mono text-xs text-purple-300 outline-none focus:border-purple-500 leading-relaxed shadow-lg"><?= htmlspecialchars($email_current['template']) ?></textarea>
+                                </div>
+                            </div>
+                            <div class="v-card-footer">
+                                <button type="submit"
+                                    class="bg-purple-600 text-white px-8 py-2.5 rounded-full text-sm font-black hover:bg-purple-500 transition-all shadow-xl shadow-purple-900/40">
+                                    Save Configuration
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+
+                    <!-- Preview Display -->
+                    <div id="previewContainer" class="hidden animate-slide-up mt-8">
+                        <div class="v-card border-purple-500/30 overflow-hidden">
+                            <div class="v-card-header bg-purple-600/5 flex justify-between items-center py-4">
+                                <h2 class="text-xs font-black uppercase tracking-[0.3em] text-purple-400">Live Render</h2>
+                                <button onclick="togglePreview()"
+                                    class="text-gray-500 hover:text-white transition-colors"><i
+                                        class="bi bi-x-lg"></i></button>
+                            </div>
+                            <div class="v-card-body bg-[#fcfcfc] p-0 shadow-inner">
+                                <iframe id="previewFrame" class="w-full h-[600px] border-none shadow-2xl"></iframe>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        function togglePreview() {
+                            const container = document.getElementById('previewContainer');
+                            const isHidden = container.classList.contains('hidden');
+
+                            if (isHidden) {
+                                container.classList.remove('hidden');
+                                updatePreview();
+                                setTimeout(() => container.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+                            } else {
+                                container.classList.add('hidden');
+                            }
+                        }
+
+                        function updatePreview() {
+                            const template = document.getElementById('emailTemplate').value;
+                            const frame = document.getElementById('previewFrame');
+
+                            let rendered = template
+                                .replace(/{{name}}/g, 'Valued Customer')
+                                .replace(/{{message}}/g, 'This is a sample encrypted notification sent from your Store Admin. The styling here will match how your customers see automated emails.')
+                                .replace(/{{link}}/g, '#');
+
+                            const doc = frame.contentDocument || frame.contentWindow.document;
+                            doc.open();
+                            doc.write(rendered);
+                            doc.close();
+                        }
+                    </script>
+
+                    <br><br>
+
+                <?php endif; ?>
+
+                <?php if ($active_tab == 'deployment'): ?>
+                    <div>
+                        <button onclick="window.location.href='?tab=general'"
+                            class="bg-white text-black px-8 py-2.5 rounded-full text-sm font-black hover:bg-gray-200 transition-all transform hover:scale-105 active:scale-95 shadow-xl">
+                            Back To Settings
+                        </button>
+                    </div>
+                    <br><br>
+
+                    <div class="v-card animate-slide-up">
+                        <div class="v-card-header">
+                            <h2 class="text-xl font-bold text-white">Advanced Deployment</h2>
+                            <p class="text-sm text-gray-400 mt-2">Connect your source code for automated delivery cycles.
+                            </p>
+                        </div>
+                        <div class="v-card-body text-center py-20 px-8">
+                            <div
+                                class="w-24 h-24 bg-white/5 rounded-3xl flex items-center justify-center mx-auto mb-8 transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                                <i class="bi bi-github text-5xl text-gray-300"></i>
+                            </div>
+                            <h3 class="text-2xl font-black text-white mb-4">Connect GitHub Repository</h3>
+                            <p class="text-gray-500 text-sm max-w-sm mx-auto mb-10 leading-relaxed font-medium">Authorize
+                                Varsity Market to automate your builds and push production updates directly to your hosting
+                                provider.</p>
+
+                            <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                                <a href="github_auth.php"
+                                    class="inline-flex items-center gap-3 bg-[#24292e] hover:bg-black text-white px-8 py-3.5 rounded-full transition-all font-black text-sm shadow-xl shadow-black/40 group">
+                                    <i class="bi bi-plug-fill text-lg group-hover:rotate-45 transition-transform"></i>
+                                    Authorize GitHub
+                                </a>
+                                <a href="#"
+                                    class="text-xs font-black uppercase tracking-widest text-gray-500 hover:text-white transition-colors">Setup
+                                    Guide &rarr;</a>
+                            </div>
+                        </div>
+                    </div>
+
+                <?php endif; ?>
+
+            </main>
         </div>
-    </main>
+    </div>
+
 </div>
