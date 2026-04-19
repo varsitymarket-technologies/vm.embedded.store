@@ -1,7 +1,7 @@
 <div align="center">
-  <img src="https://avatars.githubusercontent.com/u/219999828?s=400&u=2166fd2a4b7e592c0f1e9893a34aeb1105bc6bea&v=4" width="180px" alt="Varsity Market Logo">
+  <img src="https://avatars.githubusercontent.com/u/219999828?s=400&u=2166fd2a4b7e592c0f1e9893a34aeb1105bc6bea&v=4" width="120px" alt="Varsity Market Logo">
   <h1>Varsity Market: Embedded Store Engine</h1>
-  <p><strong>Democratizing Micro-Commerce with Zero-Friction Deployment.</strong></p>
+  <p>A modular PHP-based commerce engine for themeable, portable storefronts.</p>
 
   [![PWA Ready](https://img.shields.io/badge/PWA-Ready-success?style=for-the-badge&logo=pwa)](https://web.dev/progressive-web-apps/)
   [![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](LICENSE)
@@ -9,66 +9,54 @@
 
 ---
 
-## 🚀 The Vision
+## Overview
 
-**Varsity Market** is a modular, high-performance commerce engine designed to turn any static environment into a professional storefront. Whether it's a personal portfolio, a social landing page, or a distributed micro-site, our engine provides the transactional power of a major e-commerce platform with the lightweight footprint of a plugin.
+**Varsity Market** is a lightweight engine designed to deploy and manage embedded e-commerce storefronts. Built with a focus on portability and performance, it allows for seamless integration into existing sites or standalone deployment as a Progressive Web App (PWA).
 
-### Why Investors & Partners Care
-- **Market Flexibility**: Fits the growing "Creator Economy" and "Hyper-Local Business" sectors perfectly.
-- **Architectural Efficiency**: Built on a decoupled, SPE (Single Page Experience) architecture that minimizes server load and maximizes speed.
-- **Scalable Distribution**: One core engine, thousands of embedded instances.
+### Core Features
+- **Theme-Based Architecture**: Modular frontend templates located in the `/themes` directory.
+- **Embedded Deployment**: Support for exporting storefronts via `iFrame` or direct source code distribution.
+- **Unified Admin Dashboard**: A centralized interface (`/vm-admin`) for managing inventory, orders, and configuration.
+- **Storage**: High-efficiency SQLite 3 backend for zero-dependency portability.
+- **Cloud Integration**: Built-in support for Cloudflare (DNS management) and GitHub (automated deployment workflows).
 
-### Why Developers Choose Us
-- **Zero-Dependency Core**: Lightweight PHP/SQLite backend means deployment is as simple as a file transfer.
-- **Developer-First API**: Clean, state-based micro-services for product management and order fulfillment.
-- **Theme-able Frontend**: Fully customizable storefronts using modern CSS and efficient JS.
+## Technical Stack
+- **Languages**: PHP 7.4+, JavaScript (ES6+), CSS3
+- **Database**: SQLite 3
+- **Protocol**: RESTful API for internal services
+- **PWA**: Service Worker integration for offline capabilities
 
----
+## Directory Structure
+- `/vm-admin`: Administrative console and backend logic.
+- `/services`: System scripts for database maintenance and export utilities.
+- `/themes`: Directory for UI/UX templates.
+- `/module`: Core application modules (e.g., GitHub integration).
+- `/app`: PWA client-side resources.
 
-## 🔥 Key Features
+## Getting Started
 
-### 📦 Embedded Storefronts
-Seamlessly embed your shop into any platform using our generated `<iframe>` or full `<source code>` exports. Your shop stays with you, wherever your content lives.
-
-### 🛡️ Robust Admin Console
-A premium, dark-themed command center for managing everything from inventory and order tracking to discount codes and subdomain mapping.
-
-### 📈 Built-in Analytics
-Real-time traffic tracking and sales insights built directly into the engine, giving you immediate feedback on business performance.
-
----
-
-## 🛠 Tech Stack
-
-| Layer | Tools |
-|:--- |:--- |
-| **Logic** | PHP 7.4+ |
-| **Data** | SQLite 3 (High Efficiency) |
-| **UI** | Vanilla CSS, Tailwind, JS |
-| **Mobile** | PWA (Progressive Web App) |
-
----
-
-## 🚦 Getting Started
+### Prerequisites
+- PHP 7.4 or higher
+- SQLite 3 extension enabled
+- Web server (Apache/Nginx) with rewrite support
 
 ### Installation
-1. Clone the repository to your PHP-enabled server.
-2. Configure your environment variables in `.env`.
-3. Point your web server to the root directory.
+1. Clone the repository to your server root.
+2. Configure the `.env` file with your credentials (GitHub, Cloudflare, etc.).
+3. Initialize the database:
+   ```bash
+   php services/sys.database.php
+   ```
 
-### Quick Commands (CLI)
-Initialize or maintain your database directly from the terminal:
-```bash
-# Initialize/Reset System
-php services/sys.database.php
+## Maintenance Commands
+The engine provides several CLI tools for system management:
 
-# Create Secure Backup
-php services/sys.database.backup.php
-```
+| Command | Description |
+| :--- | :--- |
+| `php services/sys.database.php` | Initialize or reset the core database. |
+| `php services/sys.database.backup.php` | Generate a timestamped backup of the database. |
+| `php services/sys.database.reboot.php` | Perform a clean system reboot and state reset. |
+| `php services/sys.database.restore.php` | Restore the database from the latest backup. |
 
 ---
-
-<div align="center">
-  <p>Built with ❤️ by <strong>Varsity Market Technologies</strong></p>
-  <p><i>Empowering the next generation of digital entrepreneurs.</i></p>
-</div>
+**Varsity Market Technologies**
