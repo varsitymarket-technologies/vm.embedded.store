@@ -23,6 +23,9 @@ $total_products = $total_products_result[0]['total'] ?? 0;
 $total_users_result = $db->query("SELECT COUNT(id) as total FROM users");
 $total_users = $total_users_result[0]['total'] ?? 0;
 
+$total_views_result = $db->query("SELECT COUNT(id) as total FROM page_views");
+$total_views = $total_views_result[0]['total'] ?? 0;
+
 // Sales Over Time Chart Data (last 30 days)
 $sales_over_time = $db->query("
     SELECT 
@@ -39,6 +42,24 @@ $sales_data = [];
 foreach ($sales_over_time as $row) {
     $sales_labels[] = date('M d', strtotime($row['date']));
     $sales_data[] = $row['sales'];
+}
+
+// Page Views Over Time Chart Data (last 30 days)
+$views_over_time = $db->query("
+    SELECT 
+        strftime('%Y-%m-%d', created_at) as date, 
+        COUNT(id) as views 
+    FROM page_views 
+    WHERE created_at >= date('now', '-30 days')
+    GROUP BY date 
+    ORDER BY date ASC
+");
+
+$views_labels = []; // We might reuse sales_labels if they match, but separate is safer
+$views_data = [];
+foreach ($views_over_time as $row) {
+    $views_labels[] = date('M d', strtotime($row['date']));
+    $views_data[] = $row['views'];
 }
 
 // Order Status Chart Data
@@ -89,6 +110,10 @@ foreach ($order_status_data as $row) {
                 <p class="text-sm font-medium text-gray-400">Total Users</p>
                 <p class="text-3xl font-bold text-white mt-2"><?php echo number_format($total_users); ?></p>
             </div>
+            <div class="rounded-xl bg-gray-800 p-6 border border-white/5">
+                <p class="text-sm font-medium text-gray-400">Total Page Views</p>
+                <p class="text-3xl font-bold text-white mt-2"><?php echo number_format($total_views); ?></p>
+            </div>
         </div>
 
         <!-- Charts -->
@@ -99,8 +124,14 @@ foreach ($order_status_data as $row) {
                 <canvas id="salesChart"></canvas>
             </div>
 
-            <!-- Order Status Chart -->
+            <!-- Views Over Time Chart -->
             <div class="lg:col-span-2 rounded-xl bg-gray-800 border border-white/5 p-6">
+                <h3 class="text-lg font-semibold mb-4 text-white">Traffic (Page Views)</h3>
+                <canvas id="viewsChart"></canvas>
+            </div>
+
+            <!-- Order Status Chart -->
+            <div class="lg:col-span-2 rounded-xl bg-gray-800 border border-white/5 p-6 mt-6">
                 <h3 class="text-lg font-semibold mb-4 text-white">Order Status</h3>
                 <div class="max-w-xs mx-auto mt-8">
                     <canvas id="orderStatusChart"></canvas>
@@ -174,6 +205,30 @@ document.addEventListener('DOMContentLoaded', () => {
                         position: 'bottom',
                         labels: { boxWidth: 12, padding: 20 }
                     }
+                }
+            }
+        });
+    }
+
+    // Views Chart
+    const viewsCtx = document.getElementById('viewsChart')?.getContext('2d');
+    if (viewsCtx) {
+        new Chart(viewsCtx, {
+            type: 'bar',
+            data: {
+                labels: <?php echo json_encode($views_labels); ?>,
+                datasets: [{
+                    label: 'Page Views',
+                    data: <?php echo json_encode($views_data); ?>,
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true }
                 }
             }
         });

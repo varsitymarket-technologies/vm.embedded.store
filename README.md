@@ -1,72 +1,74 @@
-<h1 align="center">
-    <a><img src="https://avatars.githubusercontent.com/u/219999828?s=400&u=2166fd2a4b7e592c0f1e9893a34aeb1105bc6bea&v=4" width="175px" alt="< VM.EMBEDDED SITES >"></a>
-</h1>
+<div align="center">
+  <img src="https://avatars.githubusercontent.com/u/219999828?s=400&u=2166fd2a4b7e592c0f1e9893a34aeb1105bc6bea&v=4" width="180px" alt="Varsity Market Logo">
+  <h1>Varsity Market: Embedded Store Engine</h1>
+  <p><strong>Democratizing Micro-Commerce with Zero-Friction Deployment.</strong></p>
 
-# VM.EMBEDDED.SITES
+  [![PWA Ready](https://img.shields.io/badge/PWA-Ready-success?style=for-the-badge&logo=pwa)](https://web.dev/progressive-web-apps/)
+  [![License](https://img.shields.io/badge/License-Proprietary-red?style=for-the-badge)](LICENSE)
+</div>
 
-<p align="center"> <strong>A lightweight, plug-and-play e-commerce micro-service.</strong>Turn any static page (Google Sites, Cloudflare Pages, Github pages) into a fully functional storefront. </p>
+---
 
-# What is vm.embedded.sites ?
-vm.embedded.sites is a self-hosted e-commerce plugin designed for users who need a professional shop without the overhead of developing a custom application. It splits into two parts: a high -performance Shop Frontend for customers and a robust Admin Control Panel for mnagement. 
+## 🚀 The Vision
 
-# Guide Section 
-* 1. .|.[Create A Theme](/guide/theme.md)
-* 2. .|.[Deploy To Production](/guide/deploy.md)
+**Varsity Market** is a modular, high-performance commerce engine designed to turn any static environment into a professional storefront. Whether it's a personal portfolio, a social landing page, or a distributed micro-site, our engine provides the transactional power of a major e-commerce platform with the lightweight footprint of a plugin.
 
+### Why Investors & Partners Care
+- **Market Flexibility**: Fits the growing "Creator Economy" and "Hyper-Local Business" sectors perfectly.
+- **Architectural Efficiency**: Built on a decoupled, SPE (Single Page Experience) architecture that minimizes server load and maximizes speed.
+- **Scalable Distribution**: One core engine, thousands of embedded instances.
 
-## Why use this?
-- Zero-Friction Intergration: Embed via `<iframe>` or simply export your page into a single exported web page. 
-- Lightweight: No heavy databases or complex dependencies required.
-- Decoupled Management: Update your products in the Admin Panel; the changes will instantly be reflected on your static website.
+### Why Developers Choose Us
+- **Zero-Dependency Core**: Lightweight PHP/SQLite backend means deployment is as simple as a file transfer.
+- **Developer-First API**: Clean, state-based micro-services for product management and order fulfillment.
+- **Theme-able Frontend**: Fully customizable storefronts using modern CSS and efficient JS.
 
-# App Features
-## Shop Frontend
-- SPE Architecture: Single Page Expirience [Shop, Product, and Checkout views transition without reloads]. 
-- Responsive: Optimized for mobile shoppers using Bootstrap 5. 
-- Page Designs: 
-The page themes allow you to change your store designs to how you want your store to look like.
-- Simple Export: This tool exports your page into two formats `<iframe>` or `<source code>`. This makes it easy to embed the store to your static web page.
+---
 
-## Admin Control Panel
-<p align="center"> <img src="https://raw.githubusercontent.com/varsitymarket-technologies/vm.embedded.store/refs/heads/master/assets/admin_ui.png" width="100%" alt="Admin UI Preview"> </p>
+## 🔥 Key Features
 
-- Compehensive Management: Dedicated pages for User Roles, Product Catalogs, Order Tracking.
+### 📦 Embedded Storefronts
+Seamlessly embed your shop into any platform using our generated `<iframe>` or full `<source code>` exports. Your shop stays with you, wherever your content lives.
 
-## Creating Your Own Template 
-The system allows users to create their own themes. Please Read the `theme.md` file.
-[Go To Doc](theme.md)
+### 🛡️ Robust Admin Console
+A premium, dark-themed command center for managing everything from inventory and order tracking to discount codes and subdomain mapping.
 
+### 📈 Built-in Analytics
+Real-time traffic tracking and sales insights built directly into the engine, giving you immediate feedback on business performance.
 
-# Tech Stack 
+---
 
-| Section | Technologies |
-| --- | --- | --- |
-| Backend | PHP 7.4+ |
-| Shop UI | Tailwind CSS, JS |
+## 🛠 Tech Stack
 
-# Database & CLI Tools
-The system includes built-in services for database health and backups via the PHP CLI.
-- Initialize/Restart Database:
-```shell 
+| Layer | Tools |
+|:--- |:--- |
+| **Logic** | PHP 7.4+ |
+| **Data** | SQLite 3 (High Efficiency) |
+| **UI** | Vanilla CSS, Tailwind, JS |
+| **Mobile** | PWA (Progressive Web App) |
+
+---
+
+## 🚦 Getting Started
+
+### Installation
+1. Clone the repository to your PHP-enabled server.
+2. Configure your environment variables in `.env`.
+3. Point your web server to the root directory.
+
+### Quick Commands (CLI)
+Initialize or maintain your database directly from the terminal:
+```bash
+# Initialize/Reset System
 php services/sys.database.php
-```
-- Create Manual Backup:
-```shell 
+
+# Create Secure Backup
 php services/sys.database.backup.php
 ```
-- Restore from Rollback:
-```shell 
-php services/sys.database.restore.php [backup_file]
-# example: php /services/sys.database.restore.php /build/engine.backup
-```
 
-# API Reference 
-The frontend fetches data from `api.php`. 
+---
 
-## Products 
-Endpoint: `Get api.php?state=products`
-- Function: Returns all the products in the Micro Store Application. 
-
-## Category 
-Endpoint: `Get api.php?state=categories`
-- Function: Returns all the products in the Micro Store Application. 
+<div align="center">
+  <p>Built with ❤️ by <strong>Varsity Market Technologies</strong></p>
+  <p><i>Empowering the next generation of digital entrepreneurs.</i></p>
+</div>

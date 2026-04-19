@@ -19,6 +19,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 @include_once dirname(dirname(dirname(__FILE__))). "/scripts.php"; 
 $db = __DB_MODULE__;  
 $db->override_connection(dirname(__FILE__).'/storage.data'); 
+$db->createTable("page_views", [
+    "id" => "INTEGER PRIMARY KEY AUTOINCREMENT",
+    "user_agent" => "TEXT",
+    "ip_address" => "TEXT",
+    "state" => "VARCHAR(255)",
+    "created_at" => "DATETIME DEFAULT CURRENT_TIMESTAMP"
+]);
+$db->query("INSERT INTO page_views (user_agent, ip_address, state) VALUES (?, ?, ?)", [$_SERVER['HTTP_USER_AGENT'] ?? '', $_SERVER['REMOTE_ADDR'] ?? '', $_GET['state'] ?? 'index']);
 
 $request = $_GET['state'] ?? ''; 
 $method = $_SERVER['REQUEST_METHOD'];
