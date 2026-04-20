@@ -1,4 +1,4 @@
-<?php 
+<?php
 #   TITLE   : Admin Routing Scripts   
 #   DESC    : The Admin Routing Scripts 
 #   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
@@ -14,6 +14,8 @@ $data = [
     "users" => "page.users.php",
     "discounts" => "page.discounts.php",
     "sales" => "page.sales.php",
+    "delivery" => "page.delivery.php",
+    "logistics" => "page.logistics.php",
     "orders" => "page.orders.php",
     "builder" => "page.builder.php",
     "settings" => "page.settings.php",
@@ -21,11 +23,18 @@ $data = [
     "theme" => "page.theme.php",
     "deploy" => "page.deploy.php",
     "payments" => "page.payments.php",
-    "forms" => "page.forms.php"
-]; 
+    "forms" => "page.forms.php",
+    "session" => "page.session-expired.php",
+];
 
-@$file = $data[ex(3)] ?? $data['auth']; 
+@$file = $data[ex(3)] ?? $data['home'];
+
+if (empty(__ACCOUNT_INDEX__)) {
+    $file = $data["session"];
+} else if ((account_data('auth') !== __ACCOUNT_INDEX__)) {
+    $file = $data["session"];
+}
 
 #Include The Web File 
-@include_once dirname(__FILE__)."/routes/".$file; 
+@include_once dirname(__FILE__) . "/routes/" . $file;
 ?>

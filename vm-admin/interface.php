@@ -38,7 +38,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
     <link rel="stylesheet" href="admin.css">
     <link href="/assets/favicon.png" rel="icon">
-    <link href="/assets/favicon.png" rel="apple-touch-icon">
+    <link href="/assets/icon-192.png" rel="apple-touch-icon">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#7a1aab">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="VarsityMarket">
 </head>
 
 <body class="bg-gray-900 text-white font-sans antialiased">
@@ -103,6 +110,16 @@
                     class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-tag-fill mr-3"></i>
                     <span>Sales</span>
+                </a>
+                <a href="delivery"
+                    class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+                    <i class="bi bi-truck mr-3"></i>
+                    <span>Delivery</span>
+                </a>
+                <a href="logistics"
+                    class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+                    <i class="bi bi-box-seam mr-3"></i>
+                    <span>Logistics</span>
                 </a>
                 <a href="orders"
                     class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
@@ -283,6 +300,14 @@
                     <i class="bi bi-tag-fill mr-3"></i>
                     <span>Sales</span>
                 </a>
+                <a href="delivery" class="sesedesedwsedwdd">
+                    <i class="bi bi-truck mr-3"></i>
+                    <span>Delivery</span>
+                </a>
+                <a href="logistics" class="sesedesedwsedwdd">
+                    <i class="bi bi-box-seam mr-3"></i>
+                    <span>Logistics</span>
+                </a>
                 <a href="orders" class="sesedesedwsedwdd">
                     <i class="bi bi-cart-check mr-3"></i>
                     <span>Orders</span>
@@ -330,6 +355,7 @@
 
     </div>
     <script src="admin.js"></script>
+    <script src="/assets/pwa.js"></script>
 </body>
 
 </html>

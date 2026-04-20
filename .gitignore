@@ -4,8 +4,13 @@
 *.backup
 # Ignore all .log and .pxy files 
 *.log 
+*.env
+
+*.storage
 
 *.pxy
+
+*.data
 
 *.debug
 # Ignore all files in any directory named build

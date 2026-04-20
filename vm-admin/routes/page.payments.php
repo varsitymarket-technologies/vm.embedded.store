@@ -1,3 +1,66 @@
+<?php
+$db = initiate_web_database();
+
+$db->query("CREATE TABLE IF NOT EXISTS payouts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    amount REAL,
+    status TEXT DEFAULT 'Pending',
+    method TEXT DEFAULT 'Bank Transfer',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)");
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    if ($action === 'withdraw') {
+        $amount = (float)($_POST['amount'] ?? 0);
+        if ($amount > 0) {
+            $db->query("INSERT INTO payouts (amount, status, method) VALUES (?, 'Pending', 'Bank Transfer')", [$amount]);
+        }
+        echo "<script>window.location.href = window.location.href;</script>";
+        exit;
+    }
+}
+
+// Stats calculations
+$orders = $db->query("SELECT * FROM orders");
+$grossRevenue = 0;
+$totalOrders = 0;
+if ($orders) {
+    foreach($orders as $o) {
+        if ($o['status'] !== 'cancelled') {
+            $grossRevenue += (float)($o['total_amount'] ?? 0);
+            $totalOrders++;
+        }
+    }
+}
+$avgOrder = $totalOrders > 0 ? $grossRevenue / $totalOrders : 0;
+
+$payouts_data = $db->query("SELECT * FROM payouts ORDER BY id DESC");
+$totalPayouts = 0;
+$transactions = [];
+if ($payouts_data) {
+    foreach($payouts_data as $p) {
+        if ($p['status'] === 'Completed') {
+            $totalPayouts += (float)$p['amount'];
+        }
+        $transactions[] = [
+            'id' => 'TXN-' . str_pad($p['id'], 5, '0', STR_PAD_LEFT),
+            'status' => $p['status'],
+            'method' => $p['method'],
+            'amount' => number_format((float)$p['amount'], 2)
+        ];
+    }
+}
+
+$balance = max(0, $grossRevenue - $totalPayouts);
+
+$stats = [
+    [ 'label' => 'Gross Revenue', 'value' => '$'.number_format($grossRevenue, 2), 'percentage' => '+0%', 'trendUp' => true ],
+    [ 'label' => 'Avg Order Value', 'value' => '$'.number_format($avgOrder, 2), 'percentage' => '+0%', 'trendUp' => true ],
+    [ 'label' => 'Total Payouts', 'value' => '$'.number_format($totalPayouts, 2), 'percentage' => '+0%', 'trendUp' => true ],
+    [ 'label' => 'Available Balance', 'value' => '$'.number_format($balance, 2), 'percentage' => '+0%', 'trendUp' => true ],
+];
+?>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
@@ -49,10 +112,11 @@
                                     <p class="text-purple-300 text-sm mb-1">Available to Payout</p>
                                     <h1 class="text-5xl font-black mb-6">$<span x-text="wallet.balance.toLocaleString()"></span></h1>
                                     
-                                    <form @submit.prevent="submitWithdrawal" class="space-y-4">
+                                    <form method="POST" class="space-y-4" @submit="if(withdrawAmount <= 0 || withdrawAmount > wallet.balance) { $event.preventDefault(); return false; } loading = true;">
+                                        <input type="hidden" name="action" value="withdraw">
                                         <div>
                                             <label class="text-[10px] uppercase text-purple-300 font-bold">Withdrawal Amount</label>
-                                            <input type="number" x-model="withdrawAmount" 
+                                            <input type="number" step="0.01" name="amount" x-model="withdrawAmount" 
                                                 class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-purple-400 transition-all"
                                                 placeholder="0.00">
                                             <p x-show="withdrawAmount > wallet.balance" class="text-red-400 text-[10px] mt-1 font-bold">
@@ -131,20 +195,10 @@
                     return {
                         loading: false,
                         withdrawAmount: 0,
-                        // PLACEHOLDER DATA (This would normally come from your PHP API)
-                        stats: [
-                            { label: 'Gross Revenue', value: '$12,450.00', percentage: '14%', trendUp: true },
-                            { label: 'Avg Order Value', value: '$84.20', percentage: '2%', trendUp: false },
-                            { label: 'Total Payouts', value: '$8,100.00', percentage: '8%', trendUp: true },
-                            { label: 'Success Rate', value: '99.2%', percentage: '0.4%', trendUp: true },
-                        ],
-                        wallet: { balance: 4350.25 },
-                        bank: { name: 'Chase Business High-Yield', account: 'XXXX-9901' },
-                        transactions: [
-                            { id: 'TXN-99201', status: 'Completed', method: 'Bank Transfer', amount: '1,200.00' },
-                            { id: 'TXN-99198', status: 'Pending', method: 'Direct Deposit', amount: '450.00' },
-                            { id: 'TXN-99150', status: 'Completed', method: 'Bank Transfer', amount: '80.00' },
-                        ],
+                        stats: <?php echo json_encode($stats); ?>,
+                        wallet: { balance: <?php echo (float)$balance; ?> },
+                        bank: { name: 'Linked Business Account', account: 'XXXX-XXXX' },
+                        transactions: <?php echo json_encode($transactions); ?>,
 
                         init() {
                             this.renderChart();
@@ -171,22 +225,6 @@
                                     scales: { y: { display: false }, x: { grid: { display: false } } }
                                 }
                             });
-                        },
-
-                        async submitWithdrawal() {
-                            this.loading = true;
-                            // API CALL LOGIC:
-                            // const response = await fetch('/api/v1/payments.php', {
-                            //    method: 'POST',
-                            //    body: JSON.stringify({ action: 'withdraw', amount: this.withdrawAmount })
-                            // });
-                            
-                            setTimeout(() => {
-                                alert(`Success! $${this.withdrawAmount} sent to your bank.`);
-                                this.wallet.balance -= this.withdrawAmount;
-                                this.withdrawAmount = 0;
-                                this.loading = false;
-                            }, 1500);
                         }
                     }
                 }

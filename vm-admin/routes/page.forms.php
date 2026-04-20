@@ -1,3 +1,72 @@
+<?php
+$db = initiate_web_database();
+
+// Create tables if they don't exist
+$db->query("CREATE TABLE IF NOT EXISTS forms (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT,
+    email TEXT,
+    subject TEXT,
+    message TEXT,
+    unread INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)");
+$db->query("CREATE TABLE IF NOT EXISTS subscribers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE,
+    status TEXT DEFAULT 'active',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)");
+
+// Handle Form Submissions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = $_POST['action'] ?? '';
+    if ($action === 'mark_read') {
+        $id = $_POST['id'] ?? 0;
+        $db->query("UPDATE forms SET unread = 0 WHERE id = ?", [$id]);
+        echo "<script>window.location.href = window.location.href;</script>";
+        exit;
+    } elseif ($action === 'delete_lead') {
+        $id = $_POST['id'] ?? 0;
+        $db->query("DELETE FROM forms WHERE id = ?", [$id]);
+        echo "<script>window.location.href = window.location.href;</script>";
+        exit;
+    }
+}
+
+$leads_data = $db->query("SELECT * FROM forms ORDER BY id DESC");
+$subs_data = $db->query("SELECT * FROM subscribers ORDER BY id DESC");
+
+$leads = [];
+$unread = 0;
+if ($leads_data) {
+    foreach($leads_data as $l) {
+        if ($l['unread']) $unread++;
+        $leads[] = [
+            'id' => $l['id'],
+            'name' => htmlspecialchars($l['name'] ?? ''),
+            'email' => htmlspecialchars($l['email'] ?? ''),
+            'subject' => htmlspecialchars($l['subject'] ?? ''),
+            'message' => htmlspecialchars($l['message'] ?? ''),
+            'date' => date('M j, Y g:i A', strtotime($l['created_at'] ?? 'now')),
+            'unread' => (bool)$l['unread']
+        ];
+    }
+}
+
+$subscribers = [];
+if ($subs_data) {
+    foreach($subs_data as $s) {
+        $subscribers[] = [
+            'email' => htmlspecialchars($s['email'] ?? ''),
+            'date' => date('M j, Y', strtotime($s['created_at'] ?? 'now'))
+        ];
+    }
+}
+$subs_count = count($subscribers);
+$totalInquiries = count($leads);
+$convRate = ($totalInquiries > 0 || $subs_count > 0) ? round(($subs_count / ($totalInquiries + $subs_count)) * 100, 1) : 0;
+?>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
@@ -92,12 +161,16 @@
                                 <td class="px-6 py-4 text-xs text-gray-500" x-text="lead.date"></td>
                                 <td class="px-6 py-4 text-right">
                                     <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button class="p-2 hover:bg-gray-700 rounded-lg text-purple-400" title="Mark as Read">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                        </button>
-                                        <button class="p-2 hover:bg-red-900/30 rounded-lg text-red-500" title="Delete">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                        </button>
+                                        <form method="POST" class="inline" x-html="`<input type='hidden' name='action' value='mark_read'><input type='hidden' name='id' value='${lead.id}'>`">
+                                            <button type="submit" class="p-2 hover:bg-gray-700 rounded-lg text-purple-400" title="Mark as Read">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            </button>
+                                        </form>
+                                        <form method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this lead?');" x-html="`<input type='hidden' name='action' value='delete_lead'><input type='hidden' name='id' value='${lead.id}'>`">
+                                            <button type="submit" class="p-2 hover:bg-red-900/30 rounded-lg text-red-500" title="Delete">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>
@@ -142,22 +215,13 @@ function formManager() {
     return {
         activeTab: 'contacts',
         stats: {
-            totalInquiries: 142,
-            unread: 12,
-            subscribers: 2840,
-            convRate: 3.8
+            totalInquiries: <?php echo json_encode($totalInquiries); ?>,
+            unread: <?php echo json_encode($unread); ?>,
+            subscribers: <?php echo json_encode($subs_count); ?>,
+            convRate: <?php echo json_encode($convRate); ?>
         },
-        // PLACEHOLDER DATA
-        leads: [
-            { id: 1, name: "Alex Rivera", email: "alex@example.com", subject: "Bulk Order Inquiry", message: "Hey, I'm looking to order 500 units for our upcoming varsity event. Do you offer discounts?", date: "2 mins ago", unread: true },
-            { id: 2, name: "Sarah Chen", email: "sarah.c@university.edu", subject: "Partnership Opportunity", message: "The Student Union is interested in featuring your market in our weekly newsletter...", date: "4 hours ago", unread: true },
-            { id: 3, name: "Marcus Thorne", email: "m.thorne@gmail.com", subject: "Refund Status", message: "I haven't received my refund for order #9921 yet. Please check.", date: "Yesterday", unread: false }
-        ],
-        subscribers: [
-            { email: "john.doe@mit.edu", date: "April 1, 2026" },
-            { email: "lisa_v@outlook.com", date: "March 31, 2026" },
-            { email: "tech_guru@startup.io", date: "March 28, 2026" }
-        ],
+        leads: <?php echo json_encode($leads); ?>,
+        subscribers: <?php echo json_encode($subscribers); ?>,
         exportData() {
             alert("Generating CSV export for " + this.activeTab + "...");
         }

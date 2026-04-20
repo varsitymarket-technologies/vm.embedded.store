@@ -1,18 +1,15 @@
-// sw.js — Service Worker for Varsity Market PWA
-const CACHE_NAME = 'varsity-market-v2';
+// sw.js — Service Worker for PHP PWA Demo
+const CACHE_NAME = 'php-pwa-v1';
 const OFFLINE_URL = '/offline.php';
 
 // Assets to pre-cache on install
 const PRE_CACHE = [
   '/',
+  '/index.php',
   '/offline.php',
   '/manifest.json',
-  '/assets/style.css',
-  '/assets/script.js',
-  '/assets/pwa.js',
-  '/assets/favicon.png',
-  '/assets/icon-192.png',
-  '/assets/icon-512.png',
+  '/css/app.css',
+  '/js/app.js',
 ];
 
 // ── Install ──────────────────────────────────────────────
@@ -44,8 +41,8 @@ self.addEventListener('fetch', event => {
   // Only handle GET requests
   if (request.method !== 'GET') return;
 
-  // API calls: network-only (don't cache dynamic data)
-  if (request.url.includes('/api.php') || request.url.includes('/api/')) {
+  // API calls: network-only (don't cache)
+  if (request.url.includes('/api/')) {
     event.respondWith(
       fetch(request).catch(() =>
         new Response(JSON.stringify({ error: 'Offline', offline: true }), {
@@ -83,38 +80,30 @@ async function flushQueue() {
   const db = await openDB();
   const tx = db.transaction('queue', 'readwrite');
   const store = tx.objectStore('queue');
-  const all = await getAllFromStore(store);
+  const items = await store.getAll();
 
-  for (const item of all) {
+  for (const item of items) {
     try {
       await fetch(item.url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(item.data),
       });
-      store.delete(item.id);
+      await store.delete(item.id);
     } catch {
       // Will retry on next sync
     }
   }
 }
 
-function getAllFromStore(store) {
-  return new Promise((resolve, reject) => {
-    const req = store.getAll();
-    req.onsuccess = () => resolve(req.result);
-    req.onerror = () => reject(req.error);
-  });
-}
-
 // ── Push Notifications ────────────────────────────────────
 self.addEventListener('push', event => {
-  const data = event.data?.json() ?? { title: 'Varsity Market', body: 'You have a new update.' };
+  const data = event.data?.json() ?? { title: 'New update', body: '' };
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/assets/icon-192.png',
-      badge: '/assets/icon-192.png',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/badge-72.png',
       data: { url: data.url || '/' },
     })
   );
@@ -128,7 +117,7 @@ self.addEventListener('notificationclick', event => {
 // ── Tiny IndexedDB helper ─────────────────────────────────
 function openDB() {
   return new Promise((resolve, reject) => {
-    const req = indexedDB.open('vm-pwa-queue', 1);
+    const req = indexedDB.open('pwa-queue', 1);
     req.onupgradeneeded = e => e.target.result.createObjectStore('queue', { keyPath: 'id', autoIncrement: true });
     req.onsuccess = e => resolve(e.target.result);
     req.onerror = () => reject(req.error);
