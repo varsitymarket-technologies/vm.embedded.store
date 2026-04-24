@@ -40,7 +40,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 }
 
 $site_url    = "https://" . __DOMAIN__;
-$preview_url = $site_url . "?preview=true&theme=" . $active_theme_name;
+$domain = defined('__WEBSITE_DOMAIN__') ? __WEBSITE_DOMAIN__ : '';
+$target = defined('__DOMAIN__') ? __DOMAIN__ : '';
+
+@include dirname(dirname(dirname(__FILE__))) . "/services/export.store.source.php";
+
+// Load existing content: builder cache > theme > export
+$current_code = '';
+if (file_exists($index_file)) {
+    $current_code = file_get_contents($index_file);
+} elseif (!empty($target)) {
+    $current_code = export_application($target, $domain);
+}
 ?>
 
 <style>
@@ -865,7 +876,7 @@ $preview_url = $site_url . "?preview=true&theme=" . $active_theme_name;
         <!-- CANVAS -->
         <div class="fb-canvas" id="canvas-area">
             <div class="canvas-wrap vp-desktop" id="canvas-wrap">
-                <iframe id="editor-iframe" src="<?php echo htmlspecialchars($preview_url); ?>"></iframe>
+                <iframe id="editor-iframe" src="about:blank"></iframe>
             </div>
         </div>
 
@@ -1154,6 +1165,9 @@ $preview_url = $site_url . "?preview=true&theme=" . $active_theme_name;
     <input type="hidden" name="site_rendered_html" id="html-payload">
     <div id="conf-inputs"></div>
 </form>
+
+<!-- SITE CONTENT (loaded into iframe via JS) -->
+<textarea id="site-source" style="display:none"><?php echo htmlspecialchars($current_code); ?></textarea>
 
 <!-- ══════════════════════════════════════════
      MAIN SCRIPT
@@ -1639,7 +1653,11 @@ $preview_url = $site_url . "?preview=true&theme=" . $active_theme_name;
             clean.querySelectorAll('[data-vc-done]').forEach(e => delete e.dataset.vcDone);
             clean.querySelectorAll('[data-source-tpl]').forEach(e => { e.removeAttribute('data-source-tpl'); e.removeAttribute('data-tpl-idx'); });
 
-            document.getElementById('html-payload').value = clean.outerHTML;
+            const html = clean.outerHTML;
+            document.getElementById('html-payload').value = html;
+            // Update source textarea so undo/reload uses latest saved version
+            const source = document.getElementById('site-source');
+            if (source) source.value = html;
             form.submit();
             unsaved = false;
             toast('Page saved successfully', 'ok');
@@ -1675,13 +1693,39 @@ $preview_url = $site_url . "?preview=true&theme=" . $active_theme_name;
     });
 
     /* ─── IFRAME INIT ─── */
+    function loadSiteContent() {
+        const source = document.getElementById('site-source');
+        const content = source ? source.value : '';
+        if (!content) {
+            toast('No site content found — create your site first', 'err', 4000);
+            return;
+        }
+        try {
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            doc.open();
+            doc.write(content);
+            doc.close();
+        } catch(e) {
+            console.error('[Builder] Failed to write content to iframe', e);
+        }
+    }
+
     iframe.addEventListener('load', () => {
-        injectEngine();
-        setTimeout(() => {
-            pushHistory(); // initial state
-            refreshLayers();
-        }, 500);
+        // Only inject engine if iframe has real content (not about:blank with empty body)
+        try {
+            const doc = iframe.contentDocument || iframe.contentWindow.document;
+            if (doc.body && doc.body.innerHTML.trim().length > 0) {
+                injectEngine();
+                setTimeout(() => {
+                    pushHistory();
+                    refreshLayers();
+                }, 300);
+            }
+        } catch(e) {}
     });
+
+    // Initial load: write site content into iframe
+    loadSiteContent();
 
     function injectEngine() {
         try {
