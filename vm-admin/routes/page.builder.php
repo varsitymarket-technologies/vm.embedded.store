@@ -43,14 +43,54 @@ $site_url    = "https://8016-cs-303aa018-3691-48e4-861b-ac80ea045b86.cs-asia-sou
 $domain = defined('__WEBSITE_DOMAIN__') ? __WEBSITE_DOMAIN__ : '';
 $target = defined('__DOMAIN__') ? __DOMAIN__ : '';
 
-@include dirname(dirname(dirname(__FILE__))) . "/services/export.store.source.php";
+@include_once dirname(dirname(dirname(__FILE__))) . "/services/export.store.source.php";
 
 // Load existing content: builder cache > theme > export
 $current_code = '';
-if (file_exists($index_file)) {
+if ($index_file && file_exists($index_file)) {
     $current_code = file_get_contents($index_file);
 } elseif (!empty($target)) {
-    $current_code = export_application($target, $domain);
+    $theme_check = dirname(dirname(dirname(__FILE__))) . "/sites/" . $target . "/theme";
+    if (file_exists($theme_check)) {
+        try {
+            $current_code = export_application($target, $domain);
+        } catch (\Throwable $e) {
+            $current_code = '';
+        }
+    }
+}
+// Fallback: starter template when no site content exists
+if (empty(trim($current_code ?? ''))) {
+    $current_code = '<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Store</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Inter, system-ui, sans-serif; background: #fafafa; color: #1a1a1a; }
+.hero { padding: 80px 24px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
+.hero h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 12px; }
+.hero p { font-size: 1.1rem; opacity: 0.9; max-width: 500px; margin: 0 auto 24px; }
+.hero button { background: #fff; color: #764ba2; border: none; padding: 14px 32px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; }
+.section { padding: 60px 24px; max-width: 900px; margin: 0 auto; }
+.section h2 { font-size: 1.8rem; font-weight: 700; margin-bottom: 16px; }
+.section p { font-size: 1rem; line-height: 1.7; color: #555; }
+</style>
+</head>
+<body>
+<div class="hero">
+  <h1>Welcome to Your Store</h1>
+  <p>Start building your storefront by editing this page. Click any element to select it, double-click text to edit inline.</p>
+  <button>Get Started</button>
+</div>
+<div class="section">
+  <h2>About Us</h2>
+  <p>This is your starter template. Use the Page Builder to customise every element. Add new blocks using the Insert button above.</p>
+</div>
+</body>
+</html>';
 }
 ?>
 
@@ -1300,6 +1340,7 @@ if (file_exists($index_file)) {
 
     window.refreshLayers = function() {
         try {
+            
             const doc = iframe.contentDocument || iframe.contentWindow.document;
             const body = doc.body;
             if (!body) return;
