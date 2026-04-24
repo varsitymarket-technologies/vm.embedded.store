@@ -55,10 +55,10 @@ if ($payouts_data) {
 $balance = max(0, $grossRevenue - $totalPayouts);
 
 $stats = [
-    [ 'label' => 'Gross Revenue', 'value' => '$'.number_format($grossRevenue, 2), 'percentage' => '+0%', 'trendUp' => true ],
-    [ 'label' => 'Avg Order Value', 'value' => '$'.number_format($avgOrder, 2), 'percentage' => '+0%', 'trendUp' => true ],
-    [ 'label' => 'Total Payouts', 'value' => '$'.number_format($totalPayouts, 2), 'percentage' => '+0%', 'trendUp' => true ],
-    [ 'label' => 'Available Balance', 'value' => '$'.number_format($balance, 2), 'percentage' => '+0%', 'trendUp' => true ],
+    [ 'label' => 'Gross Revenue', 'value' => __CURRENCY_SIGN__.number_format($grossRevenue, 2), 'percentage' => '+0%', 'trendUp' => true ],
+    [ 'label' => 'Avg Order Value', 'value' => __CURRENCY_SIGN__.number_format($avgOrder, 2), 'percentage' => '+0%', 'trendUp' => true ],
+    [ 'label' => 'Total Payouts', 'value' => __CURRENCY_SIGN__.number_format($totalPayouts, 2), 'percentage' => '+0%', 'trendUp' => true ],
+    [ 'label' => 'Available Balance', 'value' => __CURRENCY_SIGN__.number_format($balance, 2), 'percentage' => '+0%', 'trendUp' => true ],
 ];
 ?>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -162,7 +162,7 @@ $stats = [
                                                         }" class="px-2 py-1 rounded text-[10px] font-bold" x-text="tx.status"></span>
                                                     </td>
                                                     <td class="px-6 py-4 text-sm text-gray-300" x-text="tx.method"></td>
-                                                    <td class="px-6 py-4 text-right font-bold" x-text="'$' + tx.amount"></td>
+                                                    <td class="px-6 py-4 text-right font-bold" x-text="'<?php echo __CURRENCY_SIGN__; ?>' + tx.amount"></td>
                                                 </tr>
                                             </template>
                                         </tbody>

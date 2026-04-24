@@ -134,8 +134,8 @@
 
         // Get button and link elements
         const loginBtn = document.getElementById('login-redirect-btn');
-        const supportLink = document.getElementById('support-link');
-        const homeLink = document.getElementById('home-link');
+        const supportLink = null;
+        const homeLink = null;
 
         // Default redirect targets (you can modify according to your app structure)
         const LOGIN_URL = '/';          // Change to your actual login route

@@ -39,7 +39,7 @@ if (isset($_POST['save_code'])) {
             }
 
             // Save selected repo to database
-            $db_site->query("INSERT INTO settings (`key`, `value`) VALUES ('github_repo', ?) ON CONFLICT(`key`) DO UPDATE SET value = ?", [$target_repo, $target_repo, $target_repo]);
+            $db_site->query("INSERT INTO settings (`key`, `value`) VALUES ('github_repo', ?) ON CONFLICT(`key`) DO UPDATE SET value = ?", [$target_repo, $target_repo]);
 
             // Get owner
             $owner = $github_session->get_user_login();
