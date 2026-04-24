@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     echo "<script>window.__SAVED__=true;</script>";
 }
 
-$site_url    = "https://" . __DOMAIN__;
+$site_url    = "https://8016-cs-303aa018-3691-48e4-861b-ac80ea045b86.cs-asia-southeast1-palm.cloudshell.dev";
 $domain = defined('__WEBSITE_DOMAIN__') ? __WEBSITE_DOMAIN__ : '';
 $target = defined('__DOMAIN__') ? __DOMAIN__ : '';
 
