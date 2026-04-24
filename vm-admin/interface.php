@@ -65,7 +65,8 @@
                         style="height: 100%; margin: 1rem auto; display: block; width: 8rem;">
                 </div>
 
-                <a href="/../home/" class="group flex items-center rounded-lg bg-purple-600 px-4 py-2 text-white">
+                <?php $admin_base = '/vm-admin/' . (__DOMAIN__ ?? '') . '/'; ?>
+                <a href="/home/" class="group flex items-center rounded-lg bg-purple-600 px-4 py-2 text-white">
                     <i class="bi bi-grid-fill mr-3"></i>
                     <span>Dashboard</span>
                 </a>
@@ -73,83 +74,83 @@
 
                 <span style="font-size: 9px;padding: 1rem;">General</span>
 
-                <a href="analytics"
+                <a href="<?php echo $admin_base; ?>analytics"
                     class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-bar-chart-line-fill mr-3"></i>
                     <span>Analytics</span>
                 </a>
 
-                <a href="users"
+                <a href="<?php echo $admin_base; ?>users"
                     class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-people-fill mr-3"></i>
                     <span>Users</span>
                 </a>
 
-                <a href="forms"
+                <a href="<?php echo $admin_base; ?>forms"
                     class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-box-seam-fill mr-3"></i>
                     <span>Forms</span>
                 </a>
                 <span style="font-size: 9px;padding: 1rem;">Store Management</span>
-                <a href="categories"
+                <a href="<?php echo $admin_base; ?>categories"
                     class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-tags-fill mr-3"></i>
                     <span>Categories</span>
                 </a>
-                <a href="products"
+                <a href="<?php echo $admin_base; ?>products"
                     class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-box-seam-fill mr-3"></i>
                     <span>Products</span>
                 </a>
-                <a href="discounts"
+                <a href="<?php echo $admin_base; ?>discounts"
                     class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-percent mr-3"></i>
                     <span>Discounts</span>
                 </a>
-                <a href="sales"
+                <a href="<?php echo $admin_base; ?>sales"
                     class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-tag-fill mr-3"></i>
                     <span>Sales</span>
                 </a>
-                <a href="delivery"
+                <a href="<?php echo $admin_base; ?>delivery"
                     class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-truck mr-3"></i>
                     <span>Delivery</span>
                 </a>
-                <a href="logistics"
+                <a href="<?php echo $admin_base; ?>logistics"
                     class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-box-seam mr-3"></i>
                     <span>Logistics</span>
                 </a>
-                <a href="orders"
+                <a href="<?php echo $admin_base; ?>orders"
                     class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-cart-fill mr-3"></i>
                     <span>Orders</span>
                 </a>
-                <a href="payments"
+                <a href="<?php echo $admin_base; ?>payments"
                     class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-currency-dollar mr-3"></i>
                     <span>Payments</span>
                 </a>
-                <span style="font-size: 9px;padding: 1rem;">Site Customiation</span>
-                <a href="theme"
+                <span style="font-size: 9px;padding: 1rem;">Site Customisation</span>
+                <a href="<?php echo $admin_base; ?>theme"
                     class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-palette-fill mr-3"></i>
                     <span>Themes</span>
                 </a>
-                <a href="builder"
+                <a href="<?php echo $admin_base; ?>builder"
                     class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-easel mr-3"></i>
                     <span>Page Builder</span>
                 </a>
-                <a href="deploy"
+                <a href="<?php echo $admin_base; ?>deploy"
                     class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-file-earmark-code mr-3"></i>
                     <span>Site Deployment</span>
                 </a>
                 <span style="font-size: 9px;padding: 1rem;">More</span>
 
-                <a href="settings"
+                <a href="<?php echo $admin_base; ?>settings"
                     class="group mt-1 flex items-center rounded-lg px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
                     <i class="bi bi-gear-fill mr-3"></i>
                     <span>Settings</span>
@@ -252,7 +253,7 @@
                 <a></a>
 
 
-                <a href="/../home/" class="sesedesedwsedwdd">
+                <a href="/home/" class="sesedesedwsedwdd">
                     <i class="bi bi-grid-fill mr-3"></i>
                     <span>Dashboard</span>
                 </a>
@@ -261,17 +262,17 @@
                     <span>General</span>
                 </a>
 
-                <a href="analytics" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>analytics" class="sesedesedwsedwdd">
                     <i class="bi bi-bar-chart-line-fill mr-3"></i>
                     <span>Analytics</span>
                 </a>
 
-                <a href="users" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>users" class="sesedesedwsedwdd">
                     <i class="bi bi-people-fill mr-3"></i>
                     <span>Users</span>
                 </a>
 
-                <a href="forms" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>forms" class="sesedesedwsedwdd">
                     <i class="bi bi-box-seam-fill mr-3"></i>
                     <span>Forms</span>
                 </a>
@@ -281,39 +282,39 @@
                 </a>
 
 
-                <a href="categories" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>categories" class="sesedesedwsedwdd">
                     <i class="bi bi-tags-fill mr-3"></i>
                     <span>Categories</span>
                 </a>
 
-                <a href="products" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>products" class="sesedesedwsedwdd">
                     <i class="bi bi-box-seam-fill mr-3"></i>
                     <span>Products</span>
                 </a>
 
-                <a href="discounts" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>discounts" class="sesedesedwsedwdd">
                     <i class="bi bi-percent mr-3"></i>
                     <span>Discounts</span>
                 </a>
 
-                <a href="sales" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>sales" class="sesedesedwsedwdd">
                     <i class="bi bi-tag-fill mr-3"></i>
                     <span>Sales</span>
                 </a>
-                <a href="delivery" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>delivery" class="sesedesedwsedwdd">
                     <i class="bi bi-truck mr-3"></i>
                     <span>Delivery</span>
                 </a>
-                <a href="logistics" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>logistics" class="sesedesedwsedwdd">
                     <i class="bi bi-box-seam mr-3"></i>
                     <span>Logistics</span>
                 </a>
-                <a href="orders" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>orders" class="sesedesedwsedwdd">
                     <i class="bi bi-cart-check mr-3"></i>
                     <span>Orders</span>
                 </a>
 
-                <a href="payments" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>payments" class="sesedesedwsedwdd">
                     <i class="bi bi-currency-dollar mr-3"></i>
                     <span>Payments</span>
                 </a>
@@ -321,22 +322,22 @@
                 <a class="anch_item">
                     <span>Site Customisation</span>
                 </a>
-                <a href="theme" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>theme" class="sesedesedwsedwdd">
                     <i class="bi bi-palette"></i>
                     <span>Themes</span>
                 </a>
-                <a href="builder" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>builder" class="sesedesedwsedwdd">
                     <i class="bi bi-layout-text-sidebar"></i>
                     <span>Page Builder</span>
                 </a>
-                <a href="deploy" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>deploy" class="sesedesedwsedwdd">
                     <i class="bi bi-file-earmark-code"></i>
                     <span>Publish</span>
                 </a>
                 <a class="anch_item">
                     <span>More</span>
                 </a>
-                <a href="settings" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>settings" class="sesedesedwsedwdd">
                     <i class="bi bi-gear mr-3"></i>
                     <span>Settings</span>
                 </a>

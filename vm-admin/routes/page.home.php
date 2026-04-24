@@ -1,8 +1,25 @@
+<?php
+$db = initiate_web_database();
+$currency_symbol = defined('__CURRENCY_SIGN__') ? __CURRENCY_SIGN__ : '$';
+
+// Fetch dashboard stats safely
+$revenue_result = $db->query("SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE status = 'completed'");
+$total_revenue = $revenue_result[0]['total'] ?? 0;
+
+$orders_result = $db->query("SELECT COUNT(*) as total FROM orders");
+$total_orders = $orders_result[0]['total'] ?? 0;
+
+$products_result = $db->query("SELECT COUNT(*) as total FROM products");
+$total_products = $products_result[0]['total'] ?? 0;
+
+$users_result = $db->query("SELECT COUNT(*) as total FROM page_views");
+$total_users = $users_result[0]['total'] ?? 0;
+?>
 <div class="flex flex-1 flex-col overflow-hidden">
     <?php @include_once "header.php"; ?>
 
     <main class="flex-1 overflow-y-auto overflow-x-hidden bg-gray-900 p-4 md:p-8">
-        
+
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
                 <h2 class="text-2xl font-bold text-white">Dashboard Overview</h2>
@@ -89,7 +106,7 @@
         <div class="rounded-2xl bg-gray-800 border border-white/5 shadow-xl overflow-hidden">
             <div class="px-6 py-5 border-b border-white/10 flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-white">Recent Transactions</h3>
-                <a href="orders.php" class="text-sm text-purple-400 hover:text-purple-300 font-medium transition">View All Orders</a>
+                <a href="<?php echo '/vm-admin/' . (__DOMAIN__ ?? '') . '/orders'; ?>" class="text-sm text-purple-400 hover:text-purple-300 font-medium transition">View All Orders</a>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-sm">

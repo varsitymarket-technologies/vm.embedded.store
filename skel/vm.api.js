@@ -1,12 +1,26 @@
 /**
  * Varsity Market Website API Client
  * This client allows websites to interact with the Varsity Market Micro API.
- * Version: 1.0.0
+ * Version: 1.2.0
  */
 
 class VMApi {
-    constructor(apiEndpoint = 'api.php') {
-        this.apiEndpoint = apiEndpoint;
+    constructor(apiEndpoint) {
+        // Auto-detect API endpoint relative to the current page if not provided
+        if (apiEndpoint) {
+            this.apiEndpoint = apiEndpoint;
+        } else if (window.StoreConfig && window.StoreConfig.apiEndpoint) {
+            this.apiEndpoint = window.StoreConfig.apiEndpoint;
+        } else {
+            // Default: api.php relative to the current script location
+            const scripts = document.querySelectorAll('script[src*="vm.api"]');
+            if (scripts.length > 0) {
+                const src = scripts[scripts.length - 1].src;
+                this.apiEndpoint = src.substring(0, src.lastIndexOf('/') + 1) + 'api.php';
+            } else {
+                this.apiEndpoint = 'api.php';
+            }
+        }
     }
 
     async _fetch(state, params = {}, method = 'GET', body = null) {
@@ -29,7 +43,7 @@ class VMApi {
         try {
             const response = await fetch(url, options);
             if (!response.ok) {
-                const errorData = await response.json();
+                const errorData = await response.json().catch(() => ({}));
                 throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
             }
             return await response.json();
@@ -52,14 +66,29 @@ class VMApi {
         return this._fetch('products_by_category', { category_id: categoryId });
     }
 
+    // Search
+    async searchProducts(query) {
+        return this._fetch('search', { q: query });
+    }
+
     // Category Endpoints
     async getCategories() {
         return this._fetch('categories');
     }
 
+    // Discounts
+    async getDiscounts() {
+        return this._fetch('discounts');
+    }
+
     // Site Info
     async getSiteInfo() {
         return this._fetch('site');
+    }
+
+    // Order Lookup
+    async getOrders(email) {
+        return this._fetch('orders', { email });
     }
 
     // Order Placement
@@ -89,6 +118,18 @@ class VMCart {
             this.items.push({ ...product, qty });
         }
         this.save();
+    }
+
+    update(productId, qty) {
+        const item = this.items.find(item => item.id === productId);
+        if (item) {
+            item.qty = Math.max(0, qty);
+            if (item.qty === 0) {
+                this.remove(productId);
+                return;
+            }
+            this.save();
+        }
     }
 
     remove(productId) {

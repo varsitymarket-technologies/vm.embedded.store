@@ -43,6 +43,8 @@ if (!file_exists($site_config)){
             $data_set .= 'define("'.$value.'","vm.api.js");'.PHP_EOL;
         }else if ($value == "__SYSTEM_JS_THEME__"){
             $data_set .= 'define("'.$value.'","vm.theme.js");'.PHP_EOL;
+        }else if ($value == "__SYSTEM_JS_CONNECT__"){
+            $data_set .= 'define("'.$value.'","vm.connect.js");'.PHP_EOL;
         }else if ($value == "__SYSTEM_CURRENCY__"){
             $data_set .= 'define("'.$value.'","'.__CURRENCY_SIGN__.'");'.PHP_EOL;
         }else if ($value == "__SITE_TITLE__"){

@@ -1,7 +1,7 @@
 /**
  * Varsity Market Universal Theme Engine
  * Provides "Shopify-like" functionality to any theme.
- * Version: 1.0.0
+ * Version: 1.2.0
  */
 
 class VMTheme {
@@ -10,18 +10,23 @@ class VMTheme {
         this.cart = window.VMCart;
         this.root = document.querySelector('#app-root') || document.body;
         this.currentView = '';
-        
+        this.configLoaded = false;
+
         this.init();
     }
 
-    init() {
+    async init() {
+        // Load store config first
+        await this.loadConfig();
+
         // Handle Hash Routing
         window.addEventListener('hashchange', () => this.handleRouting());
-        
+
         // Handle Data-View Clicks
         document.addEventListener('click', (e) => {
             const viewTrigger = e.target.closest('[data-view]');
             if (viewTrigger) {
+                e.preventDefault();
                 const view = viewTrigger.getAttribute('data-view');
                 const id = viewTrigger.getAttribute('data-id');
                 window.location.hash = id ? `${view}/${id}` : view;
@@ -30,10 +35,36 @@ class VMTheme {
 
         // Initial Route
         this.handleRouting();
-        
+
         // Global Cart Counter listener
         window.addEventListener('vm-cart-updated', () => this.updateCartCounters());
         this.updateCartCounters();
+    }
+
+    async loadConfig() {
+        try {
+            const siteInfo = await this.api.getSiteInfo();
+            window.StoreConfig = {
+                name: siteInfo.name || 'My Store',
+                currency: siteInfo.currency || '$',
+                domain: siteInfo.domain || window.location.hostname,
+                apiEndpoint: this.api.apiEndpoint
+            };
+            this.configLoaded = true;
+
+            // Update any existing title elements
+            const titleEls = document.querySelectorAll('.js-store-name, #store-name');
+            titleEls.forEach(el => el.textContent = window.StoreConfig.name);
+
+            document.title = window.StoreConfig.name;
+        } catch (error) {
+            console.warn('VM Theme: Could not load store config, using defaults.', error);
+            window.StoreConfig = window.StoreConfig || {
+                name: 'My Store',
+                currency: '$',
+                domain: window.location.hostname
+            };
+        }
     }
 
     async handleRouting() {
@@ -44,23 +75,31 @@ class VMTheme {
         // Show generic loading or clear root
         this.root.innerHTML = '<div class="vm-loading">Loading...</div>';
 
-        switch(view) {
-            case 'shop':
-                await this.renderShop();
-                break;
-            case 'product':
-                await this.renderProduct(id);
-                break;
-            case 'cart':
-                this.renderCart();
-                break;
-            case 'billing':
-            case 'checkout':
-                this.renderCheckout();
-                break;
-            default:
-                this.renderStaticView(view);
-                break;
+        try {
+            switch(view) {
+                case 'shop':
+                    await this.renderShop();
+                    break;
+                case 'product':
+                    await this.renderProduct(id);
+                    break;
+                case 'cart':
+                    this.renderCart();
+                    break;
+                case 'search':
+                    await this.renderSearch(id || '');
+                    break;
+                case 'billing':
+                case 'checkout':
+                    this.renderCheckout();
+                    break;
+                default:
+                    this.renderStaticView(view);
+                    break;
+            }
+        } catch (error) {
+            console.error('VM Theme: Route error', error);
+            this.root.innerHTML = '<div class="vm-error">Something went wrong. Please try again.</div>';
         }
     }
 
@@ -86,13 +125,30 @@ class VMTheme {
     async renderShop() {
         const products = await this.api.getProducts();
         this.renderTemplate('tpl-shop');
-        
+
         const grid = this.root.querySelector('.js-grid') || this.root.querySelector('#product-grid') || this.root.querySelector('.js-product-grid');
         if (grid) {
             grid.innerHTML = '';
             products.forEach(p => {
                 const card = this.createProductCard(p);
-                grid.appendChild(card);
+                if (card) grid.appendChild(card);
+            });
+        }
+
+        // Bind search if template has search input
+        const searchInput = this.root.querySelector('.js-search, #search-input');
+        if (searchInput) {
+            let debounce;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(debounce);
+                debounce = setTimeout(() => {
+                    const q = e.target.value.trim();
+                    if (q.length >= 2) {
+                        window.location.hash = `search/${encodeURIComponent(q)}`;
+                    } else if (q.length === 0) {
+                        window.location.hash = 'shop';
+                    }
+                }, 300);
             });
         }
     }
@@ -103,7 +159,7 @@ class VMTheme {
         if (cardTpl) {
             const clone = cardTpl.content.cloneNode(true);
             this.bindData(clone, product);
-            
+
             // Add click listener to the card link/element
             const link = clone.querySelector('a') || clone.firstElementChild;
             if (link) {
@@ -115,6 +171,7 @@ class VMTheme {
         }
 
         // Default minimalist fallback card
+        const currency = window.StoreConfig?.currency || '$';
         const card = document.createElement('div');
         card.className = 'product-card';
         card.setAttribute('data-view', 'product');
@@ -123,10 +180,37 @@ class VMTheme {
             <img src="${product.image || ''}" alt="${product.name}" style="width:100%; height:200px; object-fit:cover;">
             <div class="product-card-info" style="padding:1rem;">
                 <h3>${product.name}</h3>
-                <p>${window.StoreConfig?.currency || '$'}${product.price}</p>
+                <p>${currency}${product.price}</p>
             </div>
         `;
         return card;
+    }
+
+    async renderSearch(query) {
+        query = decodeURIComponent(query);
+        const products = await this.api.searchProducts(query);
+
+        // Try search template, fall back to shop template
+        if (!this.renderTemplate('tpl-search')) {
+            this.renderTemplate('tpl-shop');
+        }
+
+        const grid = this.root.querySelector('.js-grid') || this.root.querySelector('#product-grid') || this.root.querySelector('.js-product-grid');
+        if (grid) {
+            grid.innerHTML = '';
+            if (products.length === 0) {
+                grid.innerHTML = `<p class="text-center py-10 opacity-50 uppercase tracking-widest text-xs">No results for "${query}"</p>`;
+            } else {
+                products.forEach(p => {
+                    const card = this.createProductCard(p);
+                    if (card) grid.appendChild(card);
+                });
+            }
+        }
+
+        // Update search heading if present
+        const heading = this.root.querySelector('.js-search-heading, #search-heading');
+        if (heading) heading.textContent = `Results for "${query}"`;
     }
 
     async renderProduct(id) {
@@ -139,11 +223,7 @@ class VMTheme {
         if (addBtn) {
             addBtn.onclick = () => {
                 this.cart.add(product);
-                if (typeof this.showToast === 'function') {
-                    this.showToast(`${product.name} added to bag!`);
-                } else {
-                    alert(`${product.name} added to bag!`);
-                }
+                this.showToast(`${product.name} added to bag!`);
             };
         }
 
@@ -161,7 +241,8 @@ class VMTheme {
         this.renderTemplate('tpl-cart');
         const list = this.root.querySelector('.js-cart-list') || this.root.querySelector('.js-cart-container') || this.root.querySelector('.js-cart-items');
         const totalEl = this.root.querySelector('.js-total') || this.root.querySelector('.js-cart-total');
-        
+        const currency = window.StoreConfig?.currency || '$';
+
         if (list) {
             list.innerHTML = '';
             if (this.cart.items.length === 0) {
@@ -180,7 +261,7 @@ class VMTheme {
                         if (qtyAdd) qtyAdd.onclick = () => { item.qty++; this.cart.save(); this.renderCart(); };
                         if (qtySub) qtySub.onclick = () => { if (item.qty > 1) { item.qty--; this.cart.save(); this.renderCart(); } };
                         if (removeBtn) removeBtn.onclick = () => { this.cart.remove(item.id); this.renderCart(); };
-                        
+
                         list.appendChild(clone);
                     } else {
                         // Fallback list item
@@ -190,9 +271,12 @@ class VMTheme {
                         itemEl.style.padding = '1rem 0';
                         itemEl.innerHTML = `
                             <span>${item.name} (x${item.qty})</span>
-                            <span>${window.StoreConfig?.currency || '$'}${item.price}</span>
-                            <button onclick="window.VMCart.remove(${item.id}); window.location.hash='cart'; location.reload();">×</button>
+                            <span>${currency}${(item.price * item.qty).toFixed(2)}</span>
                         `;
+                        const removeBtn = document.createElement('button');
+                        removeBtn.textContent = '\u00d7';
+                        removeBtn.onclick = () => { this.cart.remove(item.id); this.renderCart(); };
+                        itemEl.appendChild(removeBtn);
                         list.appendChild(itemEl);
                     }
                 });
@@ -200,7 +284,7 @@ class VMTheme {
         }
 
         if (totalEl) {
-            totalEl.textContent = `${window.StoreConfig?.currency || '$'}${this.cart.getTotal().toFixed(2)}`;
+            totalEl.textContent = `${currency}${this.cart.getTotal().toFixed(2)}`;
         }
 
         const checkoutBtn = this.root.querySelector('.js-checkout');
@@ -213,9 +297,10 @@ class VMTheme {
         this.renderTemplate('tpl-billing') || this.renderTemplate('tpl-checkout');
         const form = this.root.querySelector('.js-billing-form') || this.root.querySelector('.js-checkout-form') || this.root.querySelector('#checkout-form');
         const totalEl = this.root.querySelector('#total-price') || this.root.querySelector('.js-total');
+        const currency = window.StoreConfig?.currency || '$';
 
         if (totalEl) {
-            totalEl.textContent = `${window.StoreConfig?.currency || '$'}${this.cart.getTotal().toFixed(2)}`;
+            totalEl.textContent = `${currency}${this.cart.getTotal().toFixed(2)}`;
         }
 
         if (form) {
@@ -235,11 +320,11 @@ class VMTheme {
                     if (document.getElementById('tpl-success')) {
                         window.location.hash = 'success';
                     } else {
-                        alert('Order placed successfully!');
+                        this.showToast('Order placed successfully!');
                         window.location.hash = 'shop';
                     }
                 } catch (error) {
-                    alert('Failed to place order. Please try again.');
+                    this.showToast('Failed to place order. Please try again.', 'error');
                 }
             };
         }
@@ -247,7 +332,8 @@ class VMTheme {
 
     bindData(container, data) {
         if (!data) return;
-        
+        const currency = window.StoreConfig?.currency || '$';
+
         for (const [key, value] of Object.entries(data)) {
             const els = container.querySelectorAll(`.js-${key}`);
             els.forEach(el => {
@@ -260,13 +346,13 @@ class VMTheme {
                         el.style.backgroundPosition = 'center';
                     }
                 } else if (key === 'price' || el.classList.contains('js-price')) {
-                    el.textContent = `${window.StoreConfig?.currency || '$'}${value}`;
+                    el.textContent = `${currency}${value}`;
                 } else {
                     el.textContent = value;
                 }
             });
         }
-        
+
         const descEls = container.querySelectorAll('.js-desc, .js-description, .js-detail-desc');
         descEls.forEach(el => el.textContent = data.description || data.desc || '');
     }
@@ -275,6 +361,40 @@ class VMTheme {
         const count = this.cart.getCount();
         const els = document.querySelectorAll('.js-cart-count, #cart-count');
         els.forEach(el => el.textContent = count);
+    }
+
+    showToast(message, type = 'success') {
+        // Remove any existing toast
+        const existing = document.querySelector('.vm-toast');
+        if (existing) existing.remove();
+
+        const toast = document.createElement('div');
+        toast.className = 'vm-toast';
+        const bgColor = type === 'error' ? '#e53e3e' : '#38a169';
+        toast.setAttribute('style', `
+            position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+            background: ${bgColor}; color: #fff; padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem; font-size: 0.875rem; z-index: 9999;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); animation: vmToastIn 0.3s ease;
+        `);
+        toast.textContent = message;
+
+        // Add animation keyframes if not present
+        if (!document.getElementById('vm-toast-styles')) {
+            const style = document.createElement('style');
+            style.id = 'vm-toast-styles';
+            style.textContent = `
+                @keyframes vmToastIn { from { opacity: 0; transform: translateX(-50%) translateY(1rem); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+                @keyframes vmToastOut { from { opacity: 1; } to { opacity: 0; transform: translateX(-50%) translateY(1rem); } }
+            `;
+            document.head.appendChild(style);
+        }
+
+        document.body.appendChild(toast);
+        setTimeout(() => {
+            toast.style.animation = 'vmToastOut 0.3s ease forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
     }
 }
 
