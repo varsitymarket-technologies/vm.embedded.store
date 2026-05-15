@@ -199,6 +199,40 @@ function initiate_sensitive_database(){
 }
 
 
+function initiate_private_database($domain){
+    if (empty($domain)){
+        return null;
+    }
+    $store_hash = hash('sha256', $domain);
+    $private_dir = dirname(dirname(__FILE__))."/data/".$store_hash;
+    if (!is_dir($private_dir)){
+        mkdir($private_dir, 0755, true);
+    }
+    $file = $private_dir."/".$domain;
+    $db_file = dirname(__FILE__)."/module/database.php";
+    @include_once $db_file;
+    $e = new database_manager($file);
+    // Create API keys table
+    $e->createTable("api_keys", [
+        "id" => "INTEGER PRIMARY KEY AUTOINCREMENT",
+        "key_name" => "VARCHAR(255)",
+        "api_key" => "VARCHAR(255) UNIQUE",
+        "active" => "INTEGER DEFAULT 1",
+        "last_used" => "DATETIME",
+        "created_at" => "DATETIME DEFAULT CURRENT_TIMESTAMP"
+    ]);
+    // Create API access logs table
+    $e->createTable("api_logs", [
+        "id" => "INTEGER PRIMARY KEY AUTOINCREMENT",
+        "api_key" => "VARCHAR(255)",
+        "endpoint" => "VARCHAR(255)",
+        "ip_address" => "VARCHAR(45)",
+        "user_agent" => "TEXT",
+        "created_at" => "DATETIME DEFAULT CURRENT_TIMESTAMP"
+    ]);
+    return $e;
+}
+
 function debug($output){
     file_put_contents(dirname(__FILE__).'/build/raw.debug',$output,FILE_APPEND); 
 }

@@ -46,6 +46,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         header("Location: ?tab=branding&saved=1");
         exit;
     }
+
+    if ($_POST['action'] === 'generate_api_key') {
+        $key_name = htmlspecialchars(trim($_POST['key_name'] ?? 'Untitled Key'), ENT_QUOTES, 'UTF-8');
+        $prefix = 'vm_live_';
+        $api_key = $prefix . bin2hex(random_bytes(24));
+        $private_db = initiate_private_database($domain);
+        if ($private_db) {
+            $private_db->query("INSERT INTO api_keys (key_name, api_key, active) VALUES (?, ?, 1)", [$key_name, $api_key]);
+        }
+        header("Location: ?tab=dev&saved=1&new_key=" . urlencode($api_key));
+        exit;
+    }
+
+    if ($_POST['action'] === 'revoke_api_key') {
+        $key_id = (int) ($_POST['key_id'] ?? 0);
+        $private_db = initiate_private_database($domain);
+        if ($private_db && $key_id > 0) {
+            $private_db->query("UPDATE api_keys SET active = 0 WHERE id = ?", [$key_id]);
+        }
+        header("Location: ?tab=dev&saved=1");
+        exit;
+    }
+
+    if ($_POST['action'] === 'delete_api_key') {
+        $key_id = (int) ($_POST['key_id'] ?? 0);
+        $private_db = initiate_private_database($domain);
+        if ($private_db && $key_id > 0) {
+            $private_db->query("DELETE FROM api_keys WHERE id = ?", [$key_id]);
+        }
+        header("Location: ?tab=dev&saved=1");
+        exit;
+    }
 }
 
 // --- 3. Load Current Configs ---
@@ -1022,7 +1054,15 @@ $active_tab = $_GET['tab'] ?? 'general';
 
                 <?php endif; ?>
 
-                <?php if ($active_tab == 'dev'): ?>
+                <?php if ($active_tab == 'dev'):
+                    // Load store info and API keys from private database
+                    $store_record = $db_engine->query("SELECT * FROM sys_websites WHERE account_index = ? LIMIT 1", [__ACCOUNT_INDEX__]);
+                    $store_id = $store_record[0]['id'] ?? '';
+                    $api_base_url = __WEBSITE_DOMAIN__ . "/store-access/" . $store_id . "/";
+                    $private_db = initiate_private_database($domain);
+                    $api_keys = $private_db ? $private_db->query("SELECT * FROM api_keys ORDER BY created_at DESC") : [];
+                    $new_key_display = $_GET['new_key'] ?? '';
+                ?>
                     <div>
                         <button onclick="window.location.href='?tab=general'"
                             class="bg-white text-black px-8 py-2.5 rounded-full text-sm font-black hover:bg-gray-200 transition-all transform hover:scale-105 active:scale-95 shadow-xl">
@@ -1031,11 +1071,29 @@ $active_tab = $_GET['tab'] ?? 'general';
                     </div>
                     <br><br>
 
+                    <?php if (!empty($new_key_display)): ?>
+                        <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-5 mb-6">
+                            <div class="flex items-start gap-3">
+                                <i class="bi bi-check-circle-fill text-emerald-400 text-xl"></i>
+                                <div class="flex-1">
+                                    <h4 class="text-emerald-400 font-bold text-sm">New API Key Generated</h4>
+                                    <p class="text-gray-400 text-xs mt-1 mb-3">Copy this key now. You won't be able to see the full key again.</p>
+                                    <div class="flex items-center gap-3 bg-black/40 rounded-lg px-4 py-3">
+                                        <code id="newKeyValue" class="text-sm font-mono text-white break-all flex-1"><?php echo htmlspecialchars($new_key_display, ENT_QUOTES, 'UTF-8'); ?></code>
+                                        <button onclick="navigator.clipboard.writeText(document.getElementById('newKeyValue').textContent); this.innerHTML='<i class=\'bi bi-check-lg\'></i> Copied'"
+                                            class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+                                            <i class="bi bi-copy"></i> Copy
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+
                     <div class="v-card animate-slide-up">
                         <div class="v-card-header">
                             <h2 class="text-xl font-bold text-white">Developer Settings</h2>
-                            <p class="text-sm text-gray-400 mt-2">API access and security credentials for external
-                                integrations.</p>
+                            <p class="text-sm text-gray-400 mt-2">API access and security credentials for external integrations.</p>
                         </div>
                         <div class="v-card-body py-8 px-8">
 
@@ -1044,48 +1102,74 @@ $active_tab = $_GET['tab'] ?? 'general';
                                 <div class="flex items-center justify-between flex-wrap gap-4 mb-5">
                                     <div>
                                         <h3 class="text-lg font-bold text-white">API Access</h3>
-                                        <p class="text-xs text-gray-500 mt-1">RESTful API endpoints for store management and
-                                            automation</p>
+                                        <p class="text-xs text-gray-500 mt-1">RESTful API endpoints for store management and automation</p>
                                     </div>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" class="sr-only peer" id="api_toggle" checked>
-                                        <div
-                                            class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
-                                        </div>
-                                        <span class="ml-3 text-sm font-medium text-gray-300">Enabled</span>
-                                    </label>
                                 </div>
 
-                                <!-- API Base URL -->
-                                <div class="bg-blue-500/5 rounded-xl p-4 mb-5 border border-blue-500/20">
+                                <!-- Store ID -->
+                                <div class="bg-purple-500/5 rounded-xl p-4 mb-4 border border-purple-500/20">
                                     <div class="flex items-center justify-between flex-wrap gap-3">
                                         <div>
-                                            <span class="text-xs font-mono text-gray-400 uppercase tracking-wider">API
-                                                Endpoint</span>
-                                            <p class="text-white font-mono text-sm mt-1 break-all">
-                                                https://api.yourstore.com/v1/</p>
+                                            <span class="text-xs font-mono text-gray-400 uppercase tracking-wider">Store ID</span>
+                                            <p class="text-white font-mono text-sm mt-1"><?php echo htmlspecialchars($store_id, ENT_QUOTES, 'UTF-8'); ?></p>
                                         </div>
-                                        <button onclick="navigator.clipboard.writeText('https://api.yourstore.com/v1/')"
+                                        <button onclick="navigator.clipboard.writeText('<?php echo htmlspecialchars($store_id, ENT_QUOTES, 'UTF-8'); ?>'); this.innerHTML='<i class=\'bi bi-check-lg\'></i> Copied'; setTimeout(() => this.innerHTML='<i class=\'bi bi-copy\'></i> Copy', 2000)"
                                             class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors">
                                             <i class="bi bi-copy"></i> Copy
                                         </button>
                                     </div>
                                 </div>
 
-                                <!-- API Documentation Link -->
-                                <div class="bg-white/5 rounded-xl p-4 mb-6">
-                                    <div class="flex items-center gap-3">
-                                        <i class="bi bi-file-text-fill text-2xl text-blue-400"></i>
-                                        <div class="flex-1">
-                                            <h4 class="text-white font-bold text-sm">API Documentation</h4>
-                                            <p class="text-gray-500 text-xs">Complete reference for endpoints,
-                                                authentication, and webhooks</p>
+                                <!-- API Base URL -->
+                                <div class="bg-blue-500/5 rounded-xl p-4 mb-5 border border-blue-500/20">
+                                    <div class="flex items-center justify-between flex-wrap gap-3">
+                                        <div>
+                                            <span class="text-xs font-mono text-gray-400 uppercase tracking-wider">API Endpoint</span>
+                                            <p id="apiEndpoint" class="text-white font-mono text-sm mt-1 break-all"><?php echo htmlspecialchars($api_base_url, ENT_QUOTES, 'UTF-8'); ?></p>
                                         </div>
-                                        <a href="#"
-                                            class="text-blue-400 hover:text-blue-300 text-sm font-medium transition-colors">
-                                            Read Docs <i class="bi bi-arrow-right"></i>
-                                        </a>
+                                        <button onclick="navigator.clipboard.writeText(document.getElementById('apiEndpoint').textContent); this.innerHTML='<i class=\'bi bi-check-lg\'></i> Copied'; setTimeout(() => this.innerHTML='<i class=\'bi bi-copy\'></i> Copy', 2000)"
+                                            class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors">
+                                            <i class="bi bi-copy"></i> Copy
+                                        </button>
                                     </div>
+                                </div>
+
+                                <!-- Available Endpoints -->
+                                <div class="bg-white/5 rounded-xl p-4 mb-6">
+                                    <h4 class="text-white font-bold text-sm mb-3"><i class="bi bi-book"></i> Available Endpoints</h4>
+                                    <div class="space-y-2">
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">GET</span>
+                                            <code class="text-xs text-gray-400 font-mono">?state=products</code>
+                                            <span class="text-gray-600 text-xs">— List all products</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">GET</span>
+                                            <code class="text-xs text-gray-400 font-mono">?state=product&id={id}</code>
+                                            <span class="text-gray-600 text-xs">— Get single product</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">GET</span>
+                                            <code class="text-xs text-gray-400 font-mono">?state=categories</code>
+                                            <span class="text-gray-600 text-xs">— List categories</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">GET</span>
+                                            <code class="text-xs text-gray-400 font-mono">?state=search&q={query}</code>
+                                            <span class="text-gray-600 text-xs">— Search products</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">GET</span>
+                                            <code class="text-xs text-gray-400 font-mono">?state=discounts</code>
+                                            <span class="text-gray-600 text-xs">— Active discounts</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded font-mono">POST</span>
+                                            <code class="text-xs text-gray-400 font-mono">?state=order</code>
+                                            <span class="text-gray-600 text-xs">— Place an order</span>
+                                        </div>
+                                    </div>
+                                    <p class="text-gray-600 text-xs mt-3">Pass API key via <code class="text-gray-500">X-API-Key</code> header, <code class="text-gray-500">Authorization: Bearer {key}</code>, or <code class="text-gray-500">?api_key={key}</code></p>
                                 </div>
                             </div>
 
@@ -1094,296 +1178,119 @@ $active_tab = $_GET['tab'] ?? 'general';
                                 <div class="flex items-center justify-between flex-wrap gap-4 mb-5">
                                     <div>
                                         <h3 class="text-lg font-bold text-white">API Keys</h3>
-                                        <p class="text-xs text-gray-500 mt-1">Generate and manage API keys for external
-                                            applications</p>
+                                        <p class="text-xs text-gray-500 mt-1">Generate and manage API keys for external applications</p>
                                     </div>
-                                    <button onclick="alert('Generate new API key')"
+                                    <button onclick="document.getElementById('generateKeyModal').classList.remove('hidden')"
                                         class="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-5 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2">
                                         <i class="bi bi-plus-lg"></i> Generate New Key
                                     </button>
                                 </div>
 
+                                <?php if (!empty($api_keys)): ?>
                                 <!-- Existing API Keys Table -->
                                 <div class="overflow-x-auto">
                                     <table class="w-full text-left">
                                         <thead class="border-b border-gray-700">
                                             <tr>
-                                                <th class="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                                                    Key Name</th>
-                                                <th class="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                                                    API Key</th>
-                                                <th class="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                                                    Created</th>
-                                                <th class="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                                                    Last Used</th>
-                                                <th class="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider">
-                                                    Actions</th>
+                                                <th class="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Key Name</th>
+                                                <th class="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider">API Key</th>
+                                                <th class="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Status</th>
+                                                <th class="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Created</th>
+                                                <th class="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Last Used</th>
+                                                <th class="pb-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody class="divide-y divide-gray-800">
-                                            <tr>
-                                                <td class="py-3 text-white text-sm">Production App</td>
+                                            <?php foreach ($api_keys as $key): ?>
+                                            <tr class="<?php echo $key['active'] ? '' : 'opacity-50'; ?>">
+                                                <td class="py-3 text-white text-sm"><?php echo htmlspecialchars($key['key_name'], ENT_QUOTES, 'UTF-8'); ?></td>
                                                 <td class="py-3">
-                                                    <code
-                                                        class="bg-black/50 px-2 py-1 rounded text-xs font-mono text-gray-300">vm_live_••••••••••••••••</code>
+                                                    <code class="bg-black/50 px-2 py-1 rounded text-xs font-mono text-gray-300"><?php echo htmlspecialchars(substr($key['api_key'], 0, 12), ENT_QUOTES, 'UTF-8'); ?>••••••••</code>
                                                 </td>
-                                                <td class="py-3 text-gray-400 text-xs">2024-12-01</td>
-                                                <td class="py-3 text-gray-400 text-xs">2 hours ago</td>
+                                                <td class="py-3">
+                                                    <?php if ($key['active']): ?>
+                                                        <span class="bg-green-500/20 text-green-400 text-xs px-2 py-0.5 rounded">Active</span>
+                                                    <?php else: ?>
+                                                        <span class="bg-red-500/20 text-red-400 text-xs px-2 py-0.5 rounded">Revoked</span>
+                                                    <?php endif; ?>
+                                                </td>
+                                                <td class="py-3 text-gray-400 text-xs"><?php echo htmlspecialchars($key['created_at'] ?? '', ENT_QUOTES, 'UTF-8'); ?></td>
+                                                <td class="py-3 text-gray-400 text-xs"><?php echo $key['last_used'] ? htmlspecialchars($key['last_used'], ENT_QUOTES, 'UTF-8') : 'Never'; ?></td>
                                                 <td class="py-3">
                                                     <div class="flex items-center gap-2">
-                                                        <button onclick="alert('Revoke this API key?')"
-                                                            class="text-red-400 hover:text-red-300 text-xs transition-colors">
-                                                            <i class="bi bi-trash3"></i>
-                                                        </button>
-                                                        <button
-                                                            onclick="navigator.clipboard.writeText('vm_live_xxxxxxxxxxxx')"
-                                                            class="text-gray-400 hover:text-white text-xs transition-colors">
-                                                            <i class="bi bi-copy"></i>
-                                                        </button>
+                                                        <?php if ($key['active']): ?>
+                                                        <form method="POST" style="display:inline" onsubmit="return confirm('Revoke this API key? It will no longer be able to access the API.')">
+                                                            <input type="hidden" name="action" value="revoke_api_key">
+                                                            <input type="hidden" name="key_id" value="<?php echo (int) $key['id']; ?>">
+                                                            <button type="submit" class="text-amber-400 hover:text-amber-300 text-xs transition-colors" title="Revoke">
+                                                                <i class="bi bi-slash-circle"></i>
+                                                            </button>
+                                                        </form>
+                                                        <?php endif; ?>
+                                                        <form method="POST" style="display:inline" onsubmit="return confirm('Permanently delete this API key?')">
+                                                            <input type="hidden" name="action" value="delete_api_key">
+                                                            <input type="hidden" name="key_id" value="<?php echo (int) $key['id']; ?>">
+                                                            <button type="submit" class="text-red-400 hover:text-red-300 text-xs transition-colors" title="Delete">
+                                                                <i class="bi bi-trash3"></i>
+                                                            </button>
+                                                        </form>
                                                     </div>
                                                 </td>
                                             </tr>
-                                            <tr>
-                                                <td class="py-3 text-white text-sm">Development Client</td>
-                                                <td class="py-3">
-                                                    <code
-                                                        class="bg-black/50 px-2 py-1 rounded text-xs font-mono text-gray-300">vm_test_••••••••••••••••</code>
-                                                </td>
-                                                <td class="py-3 text-gray-400 text-xs">2024-12-15</td>
-                                                <td class="py-3 text-gray-400 text-xs">Never</td>
-                                                <td class="py-3">
-                                                    <div class="flex items-center gap-2">
-                                                        <button onclick="alert('Revoke this API key?')"
-                                                            class="text-red-400 hover:text-red-300 text-xs transition-colors">
-                                                            <i class="bi bi-trash3"></i>
-                                                        </button>
-                                                        <button
-                                                            onclick="navigator.clipboard.writeText('vm_test_xxxxxxxxxxxx')"
-                                                            class="text-gray-400 hover:text-white text-xs transition-colors">
-                                                            <i class="bi bi-copy"></i>
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
+                                            <?php endforeach; ?>
                                         </tbody>
                                     </table>
                                 </div>
-
-                                <!-- No keys message (alternative) -->
-                                <div id="no_keys_message" class="text-center py-8 hidden">
+                                <?php else: ?>
+                                <!-- No keys message -->
+                                <div class="text-center py-8">
                                     <i class="bi bi-key text-4xl text-gray-600"></i>
                                     <p class="text-gray-500 text-sm mt-2">No API keys generated yet</p>
-                                    <p class="text-gray-600 text-xs">Click "Generate New Key" to create your first API key
-                                    </p>
+                                    <p class="text-gray-600 text-xs">Click "Generate New Key" to create your first API key</p>
                                 </div>
+                                <?php endif; ?>
                             </div>
 
-                            <!-- Security Keys Rollback Section -->
+                            <!-- Quick Start Example -->
                             <div class="border-t border-gray-800 pt-6 mb-8">
-                                <div class="flex items-center justify-between flex-wrap gap-4 mb-5">
-                                    <div>
-                                        <h3 class="text-lg font-bold text-white">Security Keys Rollback</h3>
-                                        <p class="text-xs text-gray-500 mt-1">Manage and rollback your security credentials
-                                        </p>
-                                    </div>
-                                </div>
-
-                                <!-- Current Security Keys -->
-                                <div class="bg-amber-500/10 rounded-xl p-5 mb-6 border border-amber-500/20">
-                                    <div class="flex items-start gap-3">
-                                        <i class="bi bi-exclamation-triangle-fill text-amber-400 text-xl"></i>
-                                        <div class="flex-1">
-                                            <h4 class="text-amber-400 font-bold text-sm uppercase tracking-wide">Active
-                                                Security Keys</h4>
-                                            <div class="mt-3 space-y-3">
-                                                <div
-                                                    class="flex items-center justify-between flex-wrap gap-2 bg-black/30 rounded-lg px-3 py-2">
-                                                    <span class="text-gray-300 text-xs font-mono">Encryption Key
-                                                        (Primary)</span>
-                                                    <code
-                                                        class="text-xs font-mono text-gray-400">aes_256_••••••••••••••••••••</code>
-                                                    <button onclick="alert('Key rolled back to previous version')"
-                                                        class="text-amber-400 hover:text-amber-300 text-xs transition-colors">
-                                                        Rollback <i class="bi bi-arrow-repeat"></i>
-                                                    </button>
-                                                </div>
-                                                <div
-                                                    class="flex items-center justify-between flex-wrap gap-2 bg-black/30 rounded-lg px-3 py-2">
-                                                    <span class="text-gray-300 text-xs font-mono">JWT Secret</span>
-                                                    <code
-                                                        class="text-xs font-mono text-gray-400">jwt_sec_••••••••••••••••••••</code>
-                                                    <button onclick="alert('JWT secret rolled back')"
-                                                        class="text-amber-400 hover:text-amber-300 text-xs transition-colors">
-                                                        Rollback <i class="bi bi-arrow-repeat"></i>
-                                                    </button>
-                                                </div>
-                                                <div
-                                                    class="flex items-center justify-between flex-wrap gap-2 bg-black/30 rounded-lg px-3 py-2">
-                                                    <span class="text-gray-300 text-xs font-mono">Webhook Secret</span>
-                                                    <code
-                                                        class="text-xs font-mono text-gray-400">wh_sec_••••••••••••••••••••</code>
-                                                    <button onclick="alert('Webhook secret rolled back')"
-                                                        class="text-amber-400 hover:text-amber-300 text-xs transition-colors">
-                                                        Rollback <i class="bi bi-arrow-repeat"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                            <p class="text-xs text-gray-500 mt-3">⚠️ Rolling back security keys will
-                                                invalidate existing sessions</p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Key Version History -->
-                                <div class="mb-6">
-                                    <h4 class="text-sm font-bold text-gray-300 mb-3 uppercase tracking-wide">Key Version
-                                        History</h4>
-                                    <div class="space-y-3">
-                                        <div
-                                            class="flex items-center justify-between flex-wrap gap-3 bg-white/5 rounded-lg px-4 py-3">
-                                            <div>
-                                                <span class="text-white text-sm font-medium">v2.1.0</span>
-                                                <span class="text-gray-500 text-xs ml-2">Current</span>
-                                            </div>
-                                            <span class="text-gray-400 text-xs">Rotated on Dec 20, 2024</span>
-                                            <button onclick="alert('Restore this version')"
-                                                class="text-blue-400 hover:text-blue-300 text-xs transition-colors">
-                                                Restore <i class="bi bi-arrow-counterclockwise"></i>
-                                            </button>
-                                        </div>
-                                        <div
-                                            class="flex items-center justify-between flex-wrap gap-3 bg-white/5 rounded-lg px-4 py-3 opacity-75">
-                                            <div>
-                                                <span class="text-white text-sm font-medium">v2.0.0</span>
-                                            </div>
-                                            <span class="text-gray-400 text-xs">Rotated on Nov 15, 2024</span>
-                                            <button onclick="alert('Restore version v2.0.0')"
-                                                class="text-blue-400 hover:text-blue-300 text-xs transition-colors">
-                                                Restore <i class="bi bi-arrow-counterclockwise"></i>
-                                            </button>
-                                        </div>
-                                        <div
-                                            class="flex items-center justify-between flex-wrap gap-3 bg-white/5 rounded-lg px-4 py-3 opacity-75">
-                                            <div>
-                                                <span class="text-white text-sm font-medium">v1.5.0</span>
-                                            </div>
-                                            <span class="text-gray-400 text-xs">Rotated on Oct 01, 2024</span>
-                                            <button onclick="alert('Restore version v1.5.0')"
-                                                class="text-blue-400 hover:text-blue-300 text-xs transition-colors">
-                                                Restore <i class="bi bi-arrow-counterclockwise"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Bulk Rollback Action -->
-                                <div class="bg-red-500/5 rounded-xl p-5 border border-red-500/20">
-                                    <div class="flex items-center justify-between flex-wrap gap-4">
-                                        <div class="flex items-center gap-3">
-                                            <i class="bi bi-exclamation-octagon-fill text-red-400 text-xl"></i>
-                                            <div>
-                                                <h4 class="text-white font-bold text-sm">Emergency Rollback</h4>
-                                                <p class="text-gray-500 text-xs">Rollback all security keys to previous
-                                                    stable version</p>
-                                            </div>
-                                        </div>
-                                        <button
-                                            onclick="if(confirm('⚠️ WARNING: This will rollback ALL security keys and may disrupt active integrations. Continue?')) alert('Emergency rollback initiated')"
-                                            class="bg-red-600/80 hover:bg-red-600 text-white px-5 py-2 rounded-lg text-xs font-bold transition-all">
-                                            <i class="bi bi-shield-exclamation"></i> Emergency Rollback
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Webhooks Section -->
-                            <div class="border-t border-gray-800 pt-6 mb-8">
-                                <div class="flex items-center justify-between flex-wrap gap-4 mb-5">
-                                    <div>
-                                        <h3 class="text-lg font-bold text-white">Webhooks</h3>
-                                        <p class="text-xs text-gray-500 mt-1">Configure endpoints for real-time event
-                                            notifications</p>
-                                    </div>
-                                    <button onclick="alert('Add webhook endpoint')"
-                                        class="bg-white/10 hover:bg-white/20 text-white px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
-                                        <i class="bi bi-plus-lg"></i> Add Webhook
-                                    </button>
-                                </div>
-
-                                <div class="space-y-3">
-                                    <div class="bg-white/5 rounded-xl p-4">
-                                        <div class="flex items-center justify-between flex-wrap gap-3 mb-3">
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-white text-sm font-medium">Order Updates</span>
-                                                <span
-                                                    class="bg-green-500/20 text-green-400 text-xs px-2 py-0.5 rounded">Active</span>
-                                            </div>
-                                            <div class="flex items-center gap-2">
-                                                <button onclick="alert('Test webhook')"
-                                                    class="text-gray-400 hover:text-white text-xs">
-                                                    <i class="bi bi-send"></i> Test
-                                                </button>
-                                                <button onclick="alert('Delete webhook')"
-                                                    class="text-red-400 hover:text-red-300 text-xs">
-                                                    <i class="bi bi-trash3"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                        <code
-                                            class="text-xs font-mono text-gray-400 break-all">https://your-app.com/webhooks/order-update</code>
-                                        <div class="flex flex-wrap gap-2 mt-3">
-                                            <span class="text-xs bg-white/5 px-2 py-0.5 rounded">order.created</span>
-                                            <span class="text-xs bg-white/5 px-2 py-0.5 rounded">order.paid</span>
-                                            <span class="text-xs bg-white/5 px-2 py-0.5 rounded">order.fulfilled</span>
-                                            <span class="text-xs bg-white/5 px-2 py-0.5 rounded">order.cancelled</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Save & Reset Buttons -->
-                            <div
-                                class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-800">
-                                <div class="text-xs text-gray-500">
-                                    <i class="bi bi-code-slash"></i> API Rate Limit: 1000 requests per minute
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <button onclick="alert('Settings reset to default')"
-                                        class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2.5 rounded-full text-sm font-medium transition-all">
-                                        Reset to Default
-                                    </button>
-                                    <button onclick="alert('Developer settings saved!')"
-                                        class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-2.5 rounded-full font-black text-sm transition-all transform hover:scale-105 shadow-xl shadow-blue-900/30">
-                                        <i class="bi bi-save"></i> Save Settings
-                                    </button>
+                                <h3 class="text-lg font-bold text-white mb-4">Quick Start</h3>
+                                <div class="bg-black/60 rounded-xl p-5 border border-white/5">
+                                    <p class="text-gray-400 text-xs mb-3 font-mono">// Fetch products from your store</p>
+                                    <pre class="text-sm font-mono text-emerald-400 whitespace-pre-wrap break-all">fetch('<?php echo htmlspecialchars($api_base_url, ENT_QUOTES, 'UTF-8'); ?>?state=products', {
+  headers: { 'X-API-Key': 'YOUR_API_KEY' }
+})
+.then(res => res.json())
+.then(data => console.log(data));</pre>
                                 </div>
                             </div>
 
                         </div>
                     </div>
 
-                    <!-- JavaScript for API toggle and key management -->
-                    <script>
-                        // API toggle handler
-                        document.getElementById('api_toggle')?.addEventListener('change', function (e) {
-                            const label = e.target.nextElementSibling.nextElementSibling;
-                            if (label) label.textContent = e.target.checked ? 'Enabled' : 'Disabled';
-
-                            // Show/hide API related sections
-                            const apiSections = document.querySelectorAll('.api-dependent');
-                            apiSections.forEach(section => {
-                                section.style.opacity = e.target.checked ? '1' : '0.5';
-                                section.style.pointerEvents = e.target.checked ? 'auto' : 'none';
-                            });
-                        });
-
-                        // Optional: Show no keys message if table empty (demo)
-                        const keyRows = document.querySelectorAll('tbody tr');
-                        const noKeysMsg = document.getElementById('no_keys_message');
-                        if (keyRows.length === 0 && noKeysMsg) {
-                            noKeysMsg.classList.remove('hidden');
-                        }
-                    </script>
+                    <!-- Generate Key Modal -->
+                    <div id="generateKeyModal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+                        <div class="bg-gray-900 border border-gray-700 rounded-2xl p-6 w-full max-w-md">
+                            <h3 class="text-lg font-bold text-white mb-4">Generate New API Key</h3>
+                            <form method="POST">
+                                <input type="hidden" name="action" value="generate_api_key">
+                                <div class="mb-4">
+                                    <label class="block text-sm text-gray-400 mb-2">Key Name</label>
+                                    <input type="text" name="key_name" required placeholder="e.g. Production App, Mobile Client"
+                                        class="w-full bg-black/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm focus:border-blue-500 focus:outline-none">
+                                </div>
+                                <div class="flex items-center gap-3 justify-end">
+                                    <button type="button" onclick="document.getElementById('generateKeyModal').classList.add('hidden')"
+                                        class="bg-gray-700 hover:bg-gray-600 text-white px-5 py-2 rounded-lg text-sm transition-all">
+                                        Cancel
+                                    </button>
+                                    <button type="submit"
+                                        class="bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-5 py-2 rounded-lg text-sm font-bold transition-all">
+                                        <i class="bi bi-key"></i> Generate Key
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
 
                 <?php endif; ?>
 
