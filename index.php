@@ -22,6 +22,8 @@ if (strlen(ex(1)) <= 0){
     $page = ex(); 
 }
 
+// Note: /track/ is served directly by Apache from track/index.php (self-contained, no bootstrap)
+
 if ($page == "store-access"){
     $e = dirname(__FILE__)."/api/index.php";
     include_once $e;

@@ -205,8 +205,12 @@ function initiate_private_database($domain){
     }
     $store_hash = hash('sha256', $domain);
     $private_dir = dirname(dirname(__FILE__))."/data/".$store_hash;
+    // Fallback to local build dir if the external data dir isn't writable
+    if (!is_dir(dirname(dirname(__FILE__))."/data/") && !@mkdir(dirname(dirname(__FILE__))."/data/", 0755, true)) {
+        $private_dir = dirname(__FILE__)."/build/data/".$store_hash;
+    }
     if (!is_dir($private_dir)){
-        mkdir($private_dir, 0755, true);
+        @mkdir($private_dir, 0755, true);
     }
     $file = $private_dir."/".$domain;
     $db_file = dirname(__FILE__)."/module/database.php";

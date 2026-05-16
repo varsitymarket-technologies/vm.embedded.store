@@ -1,10 +1,11 @@
 <?php
-#   TITLE   : Admin Interface   
-#   DESC    : The Interface handling the Admin GUI 
+#   TITLE   : Admin Interface
+#   DESC    : The Interface handling the Admin GUI
 #   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
 #   VERSION : 1.0.1.1
-#   AUTHOR  : HARDY HASTINGS  
+#   AUTHOR  : HARDY HASTINGS
 #   RELEASE : 2026/01/30
+ob_start();
 ?>
 
 <!DOCTYPE html>
