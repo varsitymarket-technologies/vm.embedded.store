@@ -52,6 +52,15 @@ if ($page == "app"){
 }else if (isset($map[$page])){
     @include_once dirname(__FILE__)."/interface.php"; 
     die(0); 
+}else if ($page == "websites"){
+    $website = dirname(__FILE__)."/sites/".__DOMAIN__."/index.php";
+    if (file_exists($website)){
+        include_once $website; 
+        die(0); 
+    }else{
+        @include_once dirname(__FILE__)."/pages/error.404.lost.php";
+        die(0);  
+    }
 }else{
     @include_once dirname(__FILE__)."/pages/error.404.lost.php";
     die(0);  

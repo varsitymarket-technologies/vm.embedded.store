@@ -57,7 +57,7 @@ ob_start();
             $current_page = ex(3) ?: 'home';
             $store_name = website_data('name') ?: 'My Store';
             $store_domain = __DOMAIN__ ?? '';
-            $store_url = __WEBSITE_URL__ ?? '';
+            $store_url = __WEBSITE_FRAME__ ?? '';
 
             // Helper for nav link classes
             function nav_cls($page, $current) {

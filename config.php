@@ -13,7 +13,7 @@ define("__DOMAIN__",website_data('domain'));
 define("__WEBSITE_DOMAIN__", "http://".get_domain().""); 
 define("__WEBSITE_THEME__",website_data('theme')); 
 define("__WEBSITE_URL__","/sites/".__DOMAIN__."/index.php"); 
-define("__WEBSITE_FRAME__",__WEBSITE_DOMAIN__."/sites/".uniqid('store_')."/".hash("sha256",__USERNAME__)."/"); 
+define("__WEBSITE_FRAME__",__WEBSITE_DOMAIN__."/websites/".uniqid('store_')."/".hash("sha256",__USERNAME__)."/"); 
 
 if (file_exists(dirname(dirname(__FILE__))."/data/.env")){
     define("__ENV_LOAD__",load_env(dirname(dirname(__FILE__))."/data/.env"));
