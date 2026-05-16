@@ -358,10 +358,26 @@ ob_start();
         <div id="myNav" class="menu-overlay" style="width: 0%;">
             <a class="closebtn" onclick="close_menu();">×</a>
             <div class="overlay-content">
-                <div style="padding: 0 2rem; text-align: left;">
-                    <p style="font-size: 1rem; font-weight: 700; color: #fff; margin: 0;"><?php echo htmlspecialchars($store_name, ENT_QUOTES, 'UTF-8'); ?></p>
-                    <p style="font-size: 0.65rem; color: #666; margin: 0;"><?php echo htmlspecialchars($store_domain, ENT_QUOTES, 'UTF-8'); ?></p>
+
+                <div class="px-3 pb-4 mb-3 border-white/5">
+                    <div class="flex items-center gap-3">
+                        <div class="h-10 w-10 rounded-xl bg-purple-600 flex items-center justify-center shrink-0">
+                            <i class="bi bi-shop text-white text-lg"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-white text-sm font-bold truncate"><?php echo htmlspecialchars($store_name, ENT_QUOTES, 'UTF-8'); ?></p>
+                            <p class="text-gray-500 text-xs truncate"><?php echo htmlspecialchars($store_domain, ENT_QUOTES, 'UTF-8'); ?></p>
+                        </div>
+                    </div>
+                    <?php if (!empty($store_url)): ?>
+                    <a href="<?php echo htmlspecialchars($store_url, ENT_QUOTES, 'UTF-8'); ?>" target="_blank"
+                        class="mt-3 flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+                        <i class="bi bi-box-arrow-up-right"></i>
+                        <span>View Store</span>
+                    </a>
+                    <?php endif; ?>
                 </div>
+
                 <a></a>
 
                 <a href="<?php echo $admin_base; ?>" class="sesedesedwsedwdd">
