@@ -11,29 +11,30 @@ $data = map();
 @$file = $data[ex(1)] ?? $data['auth']; 
 
 if (empty(__ACCOUNT_INDEX__)) {
-    $file = $data["session"];
+    $file = "page.auth.php";
 } else if ((account_data('auth') !== __ACCOUNT_INDEX__)) {
-    $file = $data["session"];
-} else if ((account_data('auth') !== __ACCOUNT_INDEX__)) {
-    $file = $data["session"];
+    $file = "page.auth.php";
 }
 
 
 // --- Domain & Store Ownership Check ---
 $db_engine = __DB_MODULE__;
 $domain = __DOMAIN__;
-$url_domain = ex(2);
 
 // Verify the logged-in user owns the store they're trying to access
 $store_record = $db_engine->query("SELECT * FROM sys_websites WHERE account_index = ? LIMIT 1", [__ACCOUNT_INDEX__]);
 $owned_domain = $store_record[0]['domain'] ?? null;
 
-if (empty($owned_domain)) {
-    $file = "page.setup.php";
-}else if (!empty($url_domain) && $url_domain !== $owned_domain) {
-    $file = "page.setup.php";
-}else{
-    $file = "page.dashboard.php";
+if ($file !== "page.auth.php"){    
+    if (empty($owned_domain)) {
+        $file = "page.setup.php";
+    }else if (empty($domain)) {
+        $file = "page.setup.php";
+    }else if (empty($owned_domain)) {
+        $file = "page.setup.php";
+    }else{
+        $file = "page.dashboard.php";
+    }
 }
 
 #Include The Web File 

@@ -235,7 +235,7 @@ ob_start();
                     <div class="min-w-0 flex-1">
                         <p class="text-white text-sm font-medium truncate"><?php echo htmlspecialchars(__USERNAME__ ?? 'User', ENT_QUOTES, 'UTF-8'); ?></p>
                     </div>
-                    <a href="/auth/?logout=true" title="Sign out" class="text-gray-500 hover:text-red-400 transition-colors">
+                    <a href="/logout.php" title="Sign out" class="text-gray-500 hover:text-red-400 transition-colors">
                         <i class="bi bi-box-arrow-right"></i>
                     </a>
                 </div>
@@ -455,7 +455,7 @@ ob_start();
                         <span style="font-size:0.65rem;font-weight:700;color:#fff;"><?php echo strtoupper(substr(__USERNAME__ ?? 'U', 0, 1)); ?></span>
                     </div>
                     <span style="font-size:0.75rem;color:#999;"><?php echo htmlspecialchars(__USERNAME__ ?? 'User', ENT_QUOTES, 'UTF-8'); ?></span>
-                    <a href="/auth/?logout=true" style="margin-left:auto;font-size:0.75rem;color:#666;">
+                    <a href="/logout.php" style="margin-left:auto;font-size:0.75rem;color:#666;">
                         <i class="bi bi-box-arrow-right"></i>
                     </a>
                 </div>

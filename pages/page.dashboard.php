@@ -28,8 +28,6 @@ $store_name = website_data('name') ?: 'My Store';
 
     .dashboard-wrapper {
         max-width: 1200px;
-        margin: 0 auto;
-        padding: 1.5rem;
     }
 
     .section-title {
@@ -153,7 +151,7 @@ $store_name = website_data('name') ?: 'My Store';
 
     .carousel-slide {
         min-width: 100%;
-        min-height: 220px;
+        min-height: 32rem;
         padding: 2.5rem;
         display: flex;
         flex-direction: column;
@@ -281,6 +279,34 @@ $store_name = website_data('name') ?: 'My Store';
     <?php @include_once "header.php"; ?>
 <main class="grid-layout">
     <div class="dashboard-wrapper">
+    <h3 class="section-title">Your Website</h3>
+        <div class="grid-container">
+            <div class="glass-card">
+                <div>
+                    <div class="card-label">Admin Access</div>
+                    <div class="card-value">Control Panel</div>
+                    <p class="subtext">Manage site activity and user settings.</p>
+                </div>
+                <button onclick="window.location='/vm-admin/<?php echo (__DOMAIN__); ?>/home'" class="btn-action">Open Panel</button>
+            </div>
+
+            <div class="glass-card">
+                <div>
+                    <div class="card-label">Website Theme</div>
+                    <div style="font-size:2.5em;" class="card-value"><?php echo __WEBSITE_THEME__; ?></div>
+                    <p class="subtext">Customizing the look of your digital storefront.</p>
+                </div>
+            </div>
+
+            <div class="glass-card">
+                <div>
+                    <div class="card-label">Website Status</div>
+                    <div class="card-value"><?php echo __DOMAIN__; ?></div>
+                    <div class="status-badge">ACTIVE</div>
+                </div>
+                <p class="subtext" style="margin-top:1.5rem;">Your store is live and accepting traffic.</p>
+            </div>
+        </div>
 
         <!-- What's New & Tips Carousel -->
         <div class="carousel-wrapper" id="carousel-wrapper">
@@ -382,42 +408,13 @@ $store_name = website_data('name') ?: 'My Store';
         })();
         </script>
 
-        <h3 class="section-title">Your Website</h3>
-        <div class="grid-container">
-            <div class="glass-card">
-                <div>
-                    <div class="card-label">Admin Access</div>
-                    <div class="card-value">Control Panel</div>
-                    <p class="subtext">Manage site activity and user settings.</p>
-                </div>
-                <button onclick="window.location='/vm-admin/<?php echo (__DOMAIN__); ?>/home'" class="btn-action">Open Panel</button>
-            </div>
-
-            <div class="glass-card">
-                <div>
-                    <div class="card-label">Website Theme</div>
-                    <div style="font-size:2.5em;" class="card-value"><?php echo __WEBSITE_THEME__; ?></div>
-                    <p class="subtext">Customizing the look of your digital storefront.</p>
-                </div>
-            </div>
-
-            <div class="glass-card">
-                <div>
-                    <div class="card-label">Website Status</div>
-                    <div class="card-value"><?php echo __DOMAIN__; ?></div>
-                    <div class="status-badge">ACTIVE</div>
-                </div>
-                <p class="subtext" style="margin-top:1.5rem;">Your store is live and accepting traffic.</p>
-            </div>
-        </div>
-
         <h3 class="section-title">Live Storefront</h3>
         <div class="preview-container">
             <div class="preview-header">
                 <div class="dot"></div><div class="dot"></div><div class="dot"></div>
                 <span style="font-size: 12px; color: var(--text-muted); margin-left: 10px;"><?php echo __DOMAIN__; ?></span>
             </div>
-            <iframe src="<?php echo __WEBSITE_URL__; ?>" style="height: 60vh; width: 100%; border: none;" frameborder="0"></iframe>
+            <iframe src="<?php echo __WEBSITE_URL__; ?>" style="height: 70vh; width: 100%; border: none;" frameborder="0"></iframe>
         </div>
 
     </div>
