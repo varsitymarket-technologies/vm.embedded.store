@@ -1055,14 +1055,39 @@ $active_tab = $_GET['tab'] ?? 'general';
                 <?php endif; ?>
 
                 <?php if ($active_tab == 'dev'):
-                    // Load store info and API keys from private database
-                    $store_record = $db_engine->query("SELECT * FROM sys_websites WHERE account_index = ? LIMIT 1", [__ACCOUNT_INDEX__]);
-                    $store_id = $store_record[0]['id'] ?? '';
-                    $api_base_url = __WEBSITE_DOMAIN__ . "/store-access/" . $store_id . "/";
-                    $private_db = initiate_private_database($domain);
-                    $api_keys = $private_db ? $private_db->query("SELECT * FROM api_keys ORDER BY created_at DESC") : [];
+                    $store_id = '';
+                    $api_base_url = '';
+                    $api_keys = [];
+                    $private_db = null;
                     $new_key_display = $_GET['new_key'] ?? '';
+                    $dev_error = '';
+
+                    try {
+                        $store_record = $db_engine->query("SELECT * FROM sys_websites WHERE account_index = ? LIMIT 1", [__ACCOUNT_INDEX__]);
+                        $store_id = $store_record[0]['id'] ?? '';
+                        $api_base_url = __WEBSITE_DOMAIN__ . "/store-access/" . $store_id . "/";
+                        if (!empty($domain)) {
+                            $private_db = initiate_private_database($domain);
+                            $api_keys = $private_db ? $private_db->query("SELECT * FROM api_keys ORDER BY created_at DESC") : [];
+                        }
+                    } catch (\Throwable $th) {
+                        $dev_error = $th->getMessage();
+                    }
+
+                    $sdk_url = __WEBSITE_DOMAIN__ . "/store-access/" . $store_id . "/sdk/vm-store.js";
                 ?>
+                    <?php if (!empty($dev_error)): ?>
+                    <div class="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-6">
+                        <div class="flex items-center gap-3">
+                            <i class="bi bi-exclamation-triangle text-amber-400"></i>
+                            <div>
+                                <p class="text-amber-400 font-bold text-sm">Configuration Notice</p>
+                                <p class="text-gray-400 text-xs"><?php echo htmlspecialchars($dev_error, ENT_QUOTES, 'UTF-8'); ?>. Please ensure your store is properly configured.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+
                     <div>
                         <button onclick="window.location.href='?tab=general'"
                             class="bg-white text-black px-8 py-2.5 rounded-full text-sm font-black hover:bg-gray-200 transition-all transform hover:scale-105 active:scale-95 shadow-xl">
