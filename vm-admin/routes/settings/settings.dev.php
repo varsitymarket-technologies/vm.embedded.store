@@ -3,9 +3,9 @@
                     $store_id = '';
                     $api_base_url = '';
                     $api_keys = [];
-                    $private_db = null;
                     $new_key_display = $_GET['new_key'] ?? '';
                     $dev_error = '';
+                    $private_pdo = null;
 
                     try {
                         $store_record = $db_engine->query("SELECT * FROM sys_websites WHERE account_index = ? LIMIT 1", [__ACCOUNT_INDEX__]);
@@ -14,9 +14,15 @@
                         }
                         $store_id = $store_record[0]['id'] ?? '';
                         $api_base_url = __WEBSITE_DOMAIN__ . "/store-access/" . $store_id . "/";
+
+                        // Use get_private_pdo() (raw PDO) to avoid uncatchable fatal from database_manager
                         if (!empty($domain)) {
-                            $private_db = initiate_private_database($domain);
-                            $api_keys = $private_db ? $private_db->query("SELECT * FROM api_keys ORDER BY created_at DESC") : [];
+                            $private_pdo = get_private_pdo($domain);
+                            if ($private_pdo) {
+                                $stmt = $private_pdo->prepare("SELECT * FROM api_keys ORDER BY created_at DESC");
+                                $stmt->execute();
+                                $api_keys = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+                            }
                         }
                     } catch (\Throwable $th) {
                         $dev_error = $th->getMessage();

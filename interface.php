@@ -12,7 +12,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Varsity Market</title>
+    <title>Embedded Store Engine</title>
     <link rel="stylesheet" href="/assets/style.css">
 
     <meta name="description" content="Varsity Market — Premium Embedded Store Engine">

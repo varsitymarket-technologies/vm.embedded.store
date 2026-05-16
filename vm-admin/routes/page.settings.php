@@ -92,6 +92,40 @@ function get_setting($db, $key, $default = '') {
     }
 }
 
+// --- Helper: get private DB via raw PDO (avoids uncatchable fatal from database_manager) ---
+function get_private_pdo($domain) {
+    if (empty($domain)) return null;
+    $store_hash = hash('sha256', $domain);
+    $base_dir = dirname(dirname(dirname(__FILE__)));
+    $private_dir = dirname($base_dir) . "/data/" . $store_hash;
+    if (!is_dir(dirname($base_dir) . "/data/") && !@mkdir(dirname($base_dir) . "/data/", 0755, true)) {
+        $private_dir = $base_dir . "/build/data/" . $store_hash;
+    }
+    if (!is_dir($private_dir)) {
+        @mkdir($private_dir, 0755, true);
+    }
+    $db_path = $private_dir . "/" . $domain;
+    $pdo = new PDO("sqlite:" . $db_path);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->exec("CREATE TABLE IF NOT EXISTS api_keys (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        key_name VARCHAR(255),
+        api_key VARCHAR(255) UNIQUE,
+        active INTEGER DEFAULT 1,
+        last_used DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS api_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        api_key VARCHAR(255),
+        endpoint VARCHAR(255),
+        ip_address VARCHAR(45),
+        user_agent TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
+    return $pdo;
+}
+
 // --- Handle POST Save Actions ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'save_email_config') {
@@ -114,9 +148,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $key_name = htmlspecialchars(trim($_POST['key_name'] ?? 'Untitled Key'), ENT_QUOTES, 'UTF-8');
         $prefix = 'vm_live_';
         $api_key = $prefix . bin2hex(random_bytes(24));
-        $private_db = initiate_private_database($domain);
-        if ($private_db) {
-            $private_db->query("INSERT INTO api_keys (key_name, api_key, active) VALUES (?, ?, 1)", [$key_name, $api_key]);
+        $private_pdo = get_private_pdo($domain);
+        if ($private_pdo) {
+            $stmt = $private_pdo->prepare("INSERT INTO api_keys (key_name, api_key, active) VALUES (?, ?, 1)");
+            $stmt->execute([$key_name, $api_key]);
         }
         header("Location: ?tab=dev&saved=1&new_key=" . urlencode($api_key));
         exit;
@@ -124,9 +159,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     if ($_POST['action'] === 'revoke_api_key') {
         $key_id = (int) ($_POST['key_id'] ?? 0);
-        $private_db = initiate_private_database($domain);
-        if ($private_db && $key_id > 0) {
-            $private_db->query("UPDATE api_keys SET active = 0 WHERE id = ?", [$key_id]);
+        $private_pdo = get_private_pdo($domain);
+        if ($private_pdo && $key_id > 0) {
+            $stmt = $private_pdo->prepare("UPDATE api_keys SET active = 0 WHERE id = ?");
+            $stmt->execute([$key_id]);
         }
         header("Location: ?tab=dev&saved=1");
         exit;
@@ -134,9 +170,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     if ($_POST['action'] === 'delete_api_key') {
         $key_id = (int) ($_POST['key_id'] ?? 0);
-        $private_db = initiate_private_database($domain);
-        if ($private_db && $key_id > 0) {
-            $private_db->query("DELETE FROM api_keys WHERE id = ?", [$key_id]);
+        $private_pdo = get_private_pdo($domain);
+        if ($private_pdo && $key_id > 0) {
+            $stmt = $private_pdo->prepare("DELETE FROM api_keys WHERE id = ?");
+            $stmt->execute([$key_id]);
         }
         header("Location: ?tab=dev&saved=1");
         exit;

@@ -35,6 +35,42 @@ if (empty(__ACCOUNT_INDEX__)) {
     $file = $data["session"];
 }
 
+
+// --- Domain & Store Ownership Check ---
+$db_engine = __DB_MODULE__;
+$domain = __DOMAIN__;
+$url_domain = ex(2);
+
+// Verify the logged-in user owns the store they're trying to access
+$store_record = $db_engine->query("SELECT * FROM sys_websites WHERE account_index = ? LIMIT 1", [__ACCOUNT_INDEX__]);
+$owned_domain = $store_record[0]['domain'] ?? null;
+
+if (empty($owned_domain)) {
+    // User has no store — redirect to setup
+    echo '<div class="flex items-center justify-center min-h-[60vh]"  style="display:block; margin: auto;">
+        <div class="text-center">
+            <i class="bi bi-shop text-6xl text-gray-600"></i>
+            <h2 class="text-2xl font-bold text-white mt-4">No Store Found</h2>
+            <p class="text-gray-400 mt-2">You need to create a store before accessing the control panel.</p>
+            <a href="/home/" class="inline-block mt-6 bg-purple-600 text-white px-6 py-2.5 rounded-full text-sm font-bold hover:bg-purple-500 transition-all">Go to Dashboard</a>
+        </div>
+    </div>';
+    return;
+}
+
+// Prevent accessing another user's store via URL manipulation
+if (!empty($url_domain) && $url_domain !== $owned_domain) {
+    echo '<div class="flex items-center justify-center min-h-[60vh]" style="display:block; margin: auto;">
+        <div class="text-center">
+            <i class="bi bi-shield-x text-6xl text-red-500"></i>
+            <h2 class="text-2xl font-bold text-white mt-4">Access Denied</h2>
+            <p class="text-gray-400 mt-2">You do not have permission to manage this store.</p>
+            <a href="/vm-admin/' . htmlspecialchars($owned_domain, ENT_QUOTES, 'UTF-8') . '/settings" class="inline-block mt-6 bg-purple-600 text-white px-6 py-2.5 rounded-full text-sm font-bold hover:bg-purple-500 transition-all">Go to Your Settings</a>
+        </div>
+    </div>';
+    return;
+}
+
 #Include The Web File 
 @include_once dirname(__FILE__) . "/routes/" . $file;
 ?>
