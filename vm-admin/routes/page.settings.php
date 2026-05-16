@@ -78,6 +78,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         header("Location: ?tab=dev&saved=1");
         exit;
     }
+
+    if ($_POST['action'] === 'save_currency') {
+        $currency = $_POST['currency'] ?? [];
+        foreach ($currency as $key => $val) {
+            $db_site->query("INSERT INTO settings (`key`, `value`) VALUES (?, ?) ON CONFLICT(`key`) DO UPDATE SET value = ?", [$key, $val, $val]);
+        }
+        // Save accepted currencies as JSON array
+        $accepted = $_POST['accepted_currencies'] ?? [];
+        $db_site->query("INSERT INTO settings (`key`, `value`) VALUES ('accepted_currencies', ?) ON CONFLICT(`key`) DO UPDATE SET value = ?", [json_encode($accepted), json_encode($accepted)]);
+        header("Location: ?tab=currency&saved=1");
+        exit;
+    }
+
+    if ($_POST['action'] === 'save_payment') {
+        $payment_config = $_POST['payment'] ?? [];
+        $payment_path = dirname(dirname(dirname(__FILE__))) . "/sites/$domain/payment.config.enc";
+        save_encrypted_config($payment_path, $payment_config, $config_key);
+        header("Location: ?tab=payment&saved=1");
+        exit;
+    }
+
+    if ($_POST['action'] === 'save_discord') {
+        $discord = $_POST['discord'] ?? [];
+        foreach ($discord as $key => $val) {
+            $db_site->query("INSERT INTO settings (`key`, `value`) VALUES (?, ?) ON CONFLICT(`key`) DO UPDATE SET value = ?", ['discord_' . $key, $val, $val]);
+        }
+        // Save notification events as JSON
+        $events = $_POST['discord_events'] ?? [];
+        $db_site->query("INSERT INTO settings (`key`, `value`) VALUES ('discord_events', ?) ON CONFLICT(`key`) DO UPDATE SET value = ?", [json_encode($events), json_encode($events)]);
+        // Save mention settings
+        $mentions = $_POST['discord_mentions'] ?? [];
+        $db_site->query("INSERT INTO settings (`key`, `value`) VALUES ('discord_mentions', ?) ON CONFLICT(`key`) DO UPDATE SET value = ?", [json_encode($mentions), json_encode($mentions)]);
+        header("Location: ?tab=app&saved=1");
+        exit;
+    }
+
+    if ($_POST['action'] === 'save_console') {
+        $console = $_POST['console'] ?? [];
+        if (!empty($console['regenerate_secret'])) {
+            $new_secret = 'vm_sec_' . bin2hex(random_bytes(12));
+            $db_site->query("INSERT INTO settings (`key`, `value`) VALUES ('console_secret_key', ?) ON CONFLICT(`key`) DO UPDATE SET value = ?", [$new_secret, $new_secret]);
+        }
+        header("Location: ?tab=console&saved=1");
+        exit;
+    }
+}
+
+// --- Helper: load a setting from the site DB ---
+function get_setting($db, $key, $default = '') {
+    $result = $db->query("SELECT value FROM settings WHERE `key` = ? LIMIT 1", [$key]);
+    return $result[0]['value'] ?? $default;
 }
 
 // --- 3. Load Current Configs ---
@@ -85,6 +136,29 @@ $email_current = load_encrypted_config($config_path, $config_key);
 $site_name = website_data('name');
 $site_domain = website_data('domain');
 $site_theme = website_data('theme');
+
+// Currency settings
+$cur_default = get_setting($db_site, 'default_currency', 'ZAR');
+$cur_symbol_pos = get_setting($db_site, 'symbol_position', 'left');
+$cur_decimals = get_setting($db_site, 'decimal_places', '2');
+$cur_thousands = get_setting($db_site, 'thousand_separator', ',');
+$cur_decimal_sep = get_setting($db_site, 'decimal_separator', '.');
+$cur_auto_convert = get_setting($db_site, 'auto_conversion', '1');
+$cur_accepted = json_decode(get_setting($db_site, 'accepted_currencies', '["ZAR","USD"]'), true) ?: ['ZAR','USD'];
+
+// Payment settings
+$payment_path = dirname(dirname(dirname(__FILE__))) . "/sites/$domain/payment.config.enc";
+$payment_current = load_encrypted_config($payment_path, $config_key);
+
+// Discord settings
+$discord_webhook = get_setting($db_site, 'discord_webhook_url', '');
+$discord_enabled = get_setting($db_site, 'discord_enabled', '0');
+$discord_events = json_decode(get_setting($db_site, 'discord_events', '["new_order","payment_received","order_fulfilled","low_stock"]'), true) ?: [];
+$discord_mentions = json_decode(get_setting($db_site, 'discord_mentions', '[]'), true) ?: [];
+$discord_style = get_setting($db_site, 'discord_message_style', 'embed');
+$discord_color = get_setting($db_site, 'discord_embed_color', '#5865F2');
+$discord_bot_name = get_setting($db_site, 'discord_bot_name', 'Varsity Market Store');
+$discord_avatar = get_setting($db_site, 'discord_avatar_url', '');
 
 // Defaults for Email
 $email_current['host'] = $email_current['host'] ?? '';
@@ -617,7 +691,22 @@ $active_tab = $_GET['tab'] ?? 'general';
 
                 <?php endif; ?>
 
-                <?php if ($active_tab == 'currency'): ?>
+                <?php if ($active_tab == 'currency'):
+                    $currencies = [
+                        'ZAR' => ['flag' => '', 'name' => 'South African Rand', 'symbol' => 'R'],
+                        'USD' => ['flag' => '', 'name' => 'US Dollar', 'symbol' => '$'],
+                        'EUR' => ['flag' => '', 'name' => 'Euro', 'symbol' => '€'],
+                        'GBP' => ['flag' => '', 'name' => 'British Pound', 'symbol' => '£'],
+                        'CAD' => ['flag' => '', 'name' => 'Canadian Dollar', 'symbol' => 'C$'],
+                        'AUD' => ['flag' => '', 'name' => 'Australian Dollar', 'symbol' => 'A$'],
+                        'JPY' => ['flag' => '', 'name' => 'Japanese Yen', 'symbol' => '¥'],
+                        'CNY' => ['flag' => '', 'name' => 'Chinese Yuan', 'symbol' => '¥'],
+                        'INR' => ['flag' => '', 'name' => 'Indian Rupee', 'symbol' => '₹'],
+                        'NGN' => ['flag' => '', 'name' => 'Nigerian Naira', 'symbol' => '₦'],
+                        'KES' => ['flag' => '', 'name' => 'Kenyan Shilling', 'symbol' => 'KSh'],
+                        'BWP' => ['flag' => '', 'name' => 'Botswana Pula', 'symbol' => 'P'],
+                    ];
+                ?>
                     <div>
                         <button onclick="window.location.href='?tab=general'"
                             class="bg-white text-black px-8 py-2.5 rounded-full text-sm font-black hover:bg-gray-200 transition-all transform hover:scale-105 active:scale-95 shadow-xl">
@@ -626,163 +715,131 @@ $active_tab = $_GET['tab'] ?? 'general';
                     </div>
                     <br><br>
 
-                    <div class="v-card animate-slide-up">
-                        <div class="v-card-header">
-                            <h2 class="text-xl font-bold text-white">Store Currencies</h2>
-                            <p class="text-sm text-gray-400 mt-2">Configure your store's default currency and available
-                                payment options.
-                            </p>
-                        </div>
-                        <div class="v-card-body py-8 px-8">
-
-                            <!-- Default Currency Selection -->
-                            <div class="mb-8">
-                                <label class="block text-sm font-bold text-gray-300 mb-3 uppercase tracking-wide">Default
-                                    Currency</label>
-                                <select
-                                    class="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors">
-                                    <option value="USD" selected>🇺🇸 USD - US Dollar ($)</option>
-                                    <option value="EUR">🇪🇺 EUR - Euro (€)</option>
-                                    <option value="GBP">🇬🇧 GBP - British Pound (£)</option>
-                                    <option value="CAD">🇨🇦 CAD - Canadian Dollar (C$)</option>
-                                    <option value="AUD">🇦🇺 AUD - Australian Dollar (A$)</option>
-                                    <option value="JPY">🇯🇵 JPY - Japanese Yen (¥)</option>
-                                    <option value="CNY">🇨🇳 CNY - Chinese Yuan (¥)</option>
-                                    <option value="INR">🇮🇳 INR - Indian Rupee (₹)</option>
-                                    <option value="AED">🇦🇪 AED - Dirham (د.إ)</option>
-                                    <option value="SAR">🇸🇦 SAR - Saudi Riyal (﷼)</option>
-                                </select>
-                                <p class="text-xs text-gray-500 mt-2">This is the main currency displayed on your
-                                    storefront.</p>
+                    <form method="POST">
+                        <input type="hidden" name="action" value="save_currency">
+                        <div class="v-card animate-slide-up">
+                            <div class="v-card-header">
+                                <h2 class="text-xl font-bold text-white">Store Currencies</h2>
+                                <p class="text-sm text-gray-400 mt-2">Configure your store's default currency and available payment options.</p>
                             </div>
+                            <div class="v-card-body py-8 px-8">
 
-                            <!-- Accepted Currencies (Multi-select / Toggle List) -->
-                            <div class="mb-8">
-                                <label class="block text-sm font-bold text-gray-300 mb-3 uppercase tracking-wide">Accepted
-                                    Currencies</label>
-                                <p class="text-xs text-gray-500 mb-3">Customers can pay using any of these currencies
-                                    (auto-converted).</p>
-
-                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                                    <label
-                                        class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-2.5 cursor-pointer hover:bg-white/10 transition-colors">
-                                        <input type="checkbox" class="w-4 h-4 accent-blue-500" checked>
-                                        <span class="text-white text-sm">🇺🇸 USD ($)</span>
-                                    </label>
-                                    <label
-                                        class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-2.5 cursor-pointer hover:bg-white/10 transition-colors">
-                                        <input type="checkbox" class="w-4 h-4 accent-blue-500" checked>
-                                        <span class="text-white text-sm">🇪🇺 EUR (€)</span>
-                                    </label>
-                                    <label
-                                        class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-2.5 cursor-pointer hover:bg-white/10 transition-colors">
-                                        <input type="checkbox" class="w-4 h-4 accent-blue-500">
-                                        <span class="text-white text-sm">🇬🇧 GBP (£)</span>
-                                    </label>
-                                    <label
-                                        class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-2.5 cursor-pointer hover:bg-white/10 transition-colors">
-                                        <input type="checkbox" class="w-4 h-4 accent-blue-500">
-                                        <span class="text-white text-sm">🇨🇦 CAD (C$)</span>
-                                    </label>
-                                    <label
-                                        class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-2.5 cursor-pointer hover:bg-white/10 transition-colors">
-                                        <input type="checkbox" class="w-4 h-4 accent-blue-500">
-                                        <span class="text-white text-sm">🇦🇺 AUD (A$)</span>
-                                    </label>
-                                    <label
-                                        class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-2.5 cursor-pointer hover:bg-white/10 transition-colors">
-                                        <input type="checkbox" class="w-4 h-4 accent-blue-500">
-                                        <span class="text-white text-sm">🇯🇵 JPY (¥)</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <!-- Currency Format Settings -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                <div>
-                                    <label class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Symbol
-                                        Position</label>
-                                    <select
-                                        class="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500">
-                                        <option value="left">Left ($100)</option>
-                                        <option value="right">Right (100$)</option>
-                                        <option value="left_space">Left with space ($ 100)</option>
-                                        <option value="right_space">Right with space (100 $)</option>
+                                <!-- Default Currency Selection -->
+                                <div class="mb-8">
+                                    <label class="block text-sm font-bold text-gray-300 mb-3 uppercase tracking-wide">Default Currency</label>
+                                    <select name="currency[default_currency]"
+                                        class="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-500 transition-colors">
+                                        <?php foreach ($currencies as $code => $c): ?>
+                                            <option value="<?= $code ?>" <?= $cur_default === $code ? 'selected' : '' ?>><?= $c['flag'] ?> <?= $code ?> - <?= htmlspecialchars($c['name']) ?> (<?= $c['symbol'] ?>)</option>
+                                        <?php endforeach; ?>
                                     </select>
+                                    <p class="text-xs text-gray-500 mt-2">This is the main currency displayed on your storefront.</p>
                                 </div>
-                                <div>
-                                    <label
-                                        class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Decimal
-                                        Places</label>
-                                    <select
-                                        class="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500">
-                                        <option value="0">0 (123)</option>
-                                        <option value="2" selected>2 (123.45)</option>
-                                        <option value="3">3 (123.456)</option>
-                                    </select>
-                                </div>
-                            </div>
 
-                            <!-- Thousand Separator & Decimal Separator -->
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                <div>
-                                    <label
-                                        class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Thousand
-                                        Separator</label>
-                                    <select
-                                        class="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500">
-                                        <option value="," selected>Comma (1,234.56)</option>
-                                        <option value=".">Period (1.234,56)</option>
-                                        <option value="space">Space (1 234.56)</option>
-                                        <option value="none">None (1234.56)</option>
-                                    </select>
-                                </div>
-                                <div>
-                                    <label
-                                        class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Decimal
-                                        Separator</label>
-                                    <select
-                                        class="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500">
-                                        <option value="." selected>Period (123.45)</option>
-                                        <option value=",">Comma (123,45)</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Auto-Conversion Toggle -->
-                            <div class="bg-white/5 rounded-xl p-5 mb-8">
-                                <div class="flex items-center justify-between flex-wrap gap-4">
-                                    <div>
-                                        <h4 class="text-white font-bold text-sm uppercase tracking-wide">Automatic Currency
-                                            Conversion</h4>
-                                        <p class="text-gray-500 text-xs mt-1">Enable real-time exchange rate updates via API
-                                        </p>
+                                <!-- Accepted Currencies -->
+                                <div class="mb-8">
+                                    <label class="block text-sm font-bold text-gray-300 mb-3 uppercase tracking-wide">Accepted Currencies</label>
+                                    <p class="text-xs text-gray-500 mb-3">Customers can pay using any of these currencies (auto-converted).</p>
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                                        <?php foreach ($currencies as $code => $c): ?>
+                                        <label class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-2.5 cursor-pointer hover:bg-white/10 transition-colors">
+                                            <input type="checkbox" name="accepted_currencies[]" value="<?= $code ?>" class="w-4 h-4 accent-blue-500" <?= in_array($code, $cur_accepted) ? 'checked' : '' ?>>
+                                            <span class="text-white text-sm"><?= $c['flag'] ?> <?= $code ?> (<?= $c['symbol'] ?>)</span>
+                                        </label>
+                                        <?php endforeach; ?>
                                     </div>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" class="sr-only peer" checked>
-                                        <div
-                                            class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
-                                        </div>
-                                        <span class="ml-3 text-sm font-medium text-gray-300">Enabled</span>
-                                    </label>
                                 </div>
-                            </div>
 
-                            <!-- Save Button -->
-                            <div
-                                class="flex flex-col sm:flex-row items-center justify-end gap-4 pt-4 border-t border-gray-800">
-                                <button onclick="alert('Currency settings saved!')"
-                                    class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 rounded-full font-black text-sm transition-all transform hover:scale-105 shadow-xl shadow-blue-900/30">
-                                    💾 Save Currency Settings
-                                </button>
-                            </div>
+                                <!-- Currency Format Settings -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Symbol Position</label>
+                                        <select name="currency[symbol_position]"
+                                            class="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500">
+                                            <option value="left" <?= $cur_symbol_pos === 'left' ? 'selected' : '' ?>>Left ($100)</option>
+                                            <option value="right" <?= $cur_symbol_pos === 'right' ? 'selected' : '' ?>>Right (100$)</option>
+                                            <option value="left_space" <?= $cur_symbol_pos === 'left_space' ? 'selected' : '' ?>>Left with space ($ 100)</option>
+                                            <option value="right_space" <?= $cur_symbol_pos === 'right_space' ? 'selected' : '' ?>>Right with space (100 $)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Decimal Places</label>
+                                        <select name="currency[decimal_places]"
+                                            class="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500">
+                                            <option value="0" <?= $cur_decimals === '0' ? 'selected' : '' ?>>0 (123)</option>
+                                            <option value="2" <?= $cur_decimals === '2' ? 'selected' : '' ?>>2 (123.45)</option>
+                                            <option value="3" <?= $cur_decimals === '3' ? 'selected' : '' ?>>3 (123.456)</option>
+                                        </select>
+                                    </div>
+                                </div>
 
+                                <!-- Thousand & Decimal Separators -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Thousand Separator</label>
+                                        <select name="currency[thousand_separator]"
+                                            class="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500">
+                                            <option value="," <?= $cur_thousands === ',' ? 'selected' : '' ?>>Comma (1,234.56)</option>
+                                            <option value="." <?= $cur_thousands === '.' ? 'selected' : '' ?>>Period (1.234,56)</option>
+                                            <option value="space" <?= $cur_thousands === 'space' ? 'selected' : '' ?>>Space (1 234.56)</option>
+                                            <option value="none" <?= $cur_thousands === 'none' ? 'selected' : '' ?>>None (1234.56)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Decimal Separator</label>
+                                        <select name="currency[decimal_separator]"
+                                            class="w-full bg-white/5 border border-gray-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-blue-500">
+                                            <option value="." <?= $cur_decimal_sep === '.' ? 'selected' : '' ?>>Period (123.45)</option>
+                                            <option value="," <?= $cur_decimal_sep === ',' ? 'selected' : '' ?>>Comma (123,45)</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- Auto-Conversion Toggle -->
+                                <div class="bg-white/5 rounded-xl p-5 mb-8">
+                                    <div class="flex items-center justify-between flex-wrap gap-4">
+                                        <div>
+                                            <h4 class="text-white font-bold text-sm uppercase tracking-wide">Automatic Currency Conversion</h4>
+                                            <p class="text-gray-500 text-xs mt-1">Enable real-time exchange rate updates via API</p>
+                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" name="currency[auto_conversion]" value="1" class="sr-only peer" <?= $cur_auto_convert === '1' ? 'checked' : '' ?>>
+                                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                            <span class="ml-3 text-sm font-medium text-gray-300"><?= $cur_auto_convert === '1' ? 'Enabled' : 'Disabled' ?></span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Save Button -->
+                                <div class="flex flex-col sm:flex-row items-center justify-end gap-4 pt-4 border-t border-gray-800">
+                                    <button type="submit"
+                                        class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 rounded-full font-black text-sm transition-all transform hover:scale-105 shadow-xl shadow-blue-900/30">
+                                        Save Currency Settings
+                                    </button>
+                                </div>
+
+                            </div>
                         </div>
-                    </div>
+                    </form>
 
                 <?php endif; ?>
 
-                <?php if ($active_tab == 'payment'): ?>
+                <?php if ($active_tab == 'payment'):
+                    $pay_cod_enabled = $payment_current['cod_enabled'] ?? '1';
+                    $pay_cod_min = $payment_current['cod_min_amount'] ?? '';
+                    $pay_cod_fee = $payment_current['cod_fee'] ?? '0.00';
+                    $pay_yoco_enabled = $payment_current['yoco_enabled'] ?? '0';
+                    $pay_yoco_secret = $payment_current['yoco_secret'] ?? '';
+                    $pay_yoco_public = $payment_current['yoco_public'] ?? '';
+                    $pay_yoco_mode = $payment_current['yoco_mode'] ?? 'test';
+                    $pay_yoco_fee = $payment_current['yoco_fee'] ?? '2.9';
+                    $pay_paypal_enabled = $payment_current['paypal_enabled'] ?? '0';
+                    $pay_paypal_client = $payment_current['paypal_client_id'] ?? '';
+                    $pay_paypal_secret = $payment_current['paypal_secret'] ?? '';
+                    $pay_paypal_env = $payment_current['paypal_env'] ?? 'sandbox';
+                    $pay_paypal_fee = $payment_current['paypal_fee'] ?? '3.4';
+                    $pay_paypal_guest = $payment_current['paypal_guest_checkout'] ?? '0';
+                ?>
                     <div>
                         <button onclick="window.location.href='?tab=general'"
                             class="bg-white text-black px-8 py-2.5 rounded-full text-sm font-black hover:bg-gray-200 transition-all transform hover:scale-105 active:scale-95 shadow-xl">
@@ -791,263 +848,187 @@ $active_tab = $_GET['tab'] ?? 'general';
                     </div>
                     <br><br>
 
-                    <div class="v-card animate-slide-up">
-                        <div class="v-card-header">
-                            <h2 class="text-xl font-bold text-white">Payment Methods</h2>
-                            <p class="text-sm text-gray-400 mt-2">Configure how your customers can pay for their orders.</p>
-                        </div>
-                        <div class="v-card-body py-8 px-8">
-
-                            <!-- Cash on Delivery Option -->
-                            <div class="bg-white/5 rounded-xl p-5 mb-6">
-                                <div class="flex items-center justify-between flex-wrap gap-4">
-                                    <div class="flex items-center gap-4">
-                                        <div
-                                            class="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                                            <i class="bi bi-cash-stack text-2xl text-emerald-400"></i>
-                                        </div>
-                                        <div>
-                                            <h4 class="text-white font-bold text-base">Cash on Delivery</h4>
-                                            <p class="text-gray-500 text-xs mt-1">Customers pay in cash when they receive
-                                                their order</p>
-                                        </div>
-                                    </div>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" class="sr-only peer" id="cod_toggle" checked>
-                                        <div
-                                            class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600">
-                                        </div>
-                                        <span class="ml-3 text-sm font-medium text-gray-300">Enabled</span>
-                                    </label>
-                                </div>
-
-                                <!-- Additional COD Settings (shown when enabled) -->
-                                <div id="cod_settings" class="mt-5 pt-4 border-t border-gray-700/50">
-                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-xs font-bold text-gray-400 mb-2">Minimum Order Amount
-                                                (Optional)</label>
-                                            <input type="number" step="0.01" placeholder="No minimum"
-                                                class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500">
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold text-gray-400 mb-2">Additional Fee</label>
-                                            <input type="number" step="0.01" value="0.00"
-                                                class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500">
-                                        </div>
-                                    </div>
-                                    <p class="text-xs text-gray-500 mt-3">⚠️ Cash on Delivery is only available for local
-                                        deliveries</p>
-                                </div>
+                    <form method="POST">
+                        <input type="hidden" name="action" value="save_payment">
+                        <div class="v-card animate-slide-up">
+                            <div class="v-card-header">
+                                <h2 class="text-xl font-bold text-white">Payment Methods</h2>
+                                <p class="text-sm text-gray-400 mt-2">Configure how your customers can pay for their orders.</p>
                             </div>
+                            <div class="v-card-body py-8 px-8">
 
-                            <!-- Credit Card via YOCO -->
-                            <div class="bg-white/5 rounded-xl p-5 mb-6">
-                                <div class="flex items-center justify-between flex-wrap gap-4">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
-                                            <i class="bi bi-credit-card-2-front text-2xl text-purple-400"></i>
+                                <!-- Cash on Delivery -->
+                                <div class="bg-white/5 rounded-xl p-5 mb-6">
+                                    <div class="flex items-center justify-between flex-wrap gap-4">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                                                <i class="bi bi-cash-stack text-2xl text-emerald-400"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="text-white font-bold text-base">Cash on Delivery</h4>
+                                                <p class="text-gray-500 text-xs mt-1">Customers pay in cash when they receive their order</p>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <h4 class="text-white font-bold text-base">YOCO (Credit Card)</h4>
-                                            <p class="text-gray-500 text-xs mt-1">Accept Visa, Mastercard, and American
-                                                Express via YOCO</p>
-                                        </div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="hidden" name="payment[cod_enabled]" value="0">
+                                            <input type="checkbox" name="payment[cod_enabled]" value="1" class="sr-only peer" id="cod_toggle" <?= $pay_cod_enabled === '1' ? 'checked' : '' ?>>
+                                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                                            <span class="ml-3 text-sm font-medium text-gray-300"><?= $pay_cod_enabled === '1' ? 'Enabled' : 'Disabled' ?></span>
+                                        </label>
                                     </div>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" class="sr-only peer" id="yoco_toggle">
-                                        <div
-                                            class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600">
-                                        </div>
-                                        <span class="ml-3 text-sm font-medium text-gray-300">Disabled</span>
-                                    </label>
-                                </div>
-
-                                <!-- YOCO Configuration (shown when enabled) -->
-                                <div id="yoco_settings" class="mt-5 pt-4 border-t border-gray-700/50 hidden">
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label class="block text-xs font-bold text-gray-400 mb-2">YOCO Secret
-                                                Key</label>
-                                            <input type="password" placeholder="sk_test_xxxxxxxxxxxxx"
-                                                class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500 font-mono">
-                                            <p class="text-xs text-gray-500 mt-1">Find this in your YOCO dashboard under
-                                                Developers → API Keys</p>
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold text-gray-400 mb-2">YOCO Public
-                                                Key</label>
-                                            <input type="text" placeholder="pk_test_xxxxxxxxxxxxx"
-                                                class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500 font-mono">
-                                        </div>
+                                    <div id="cod_settings" class="mt-5 pt-4 border-t border-gray-700/50" style="opacity:<?= $pay_cod_enabled === '1' ? '1' : '0.5' ?>">
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                             <div>
-                                                <label class="block text-xs font-bold text-gray-400 mb-2">Payment
-                                                    Mode</label>
-                                                <select
-                                                    class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
-                                                    <option value="test">🔧 Test Mode</option>
-                                                    <option value="live">🚀 Live Mode</option>
-                                                </select>
+                                                <label class="block text-xs font-bold text-gray-400 mb-2">Minimum Order Amount (Optional)</label>
+                                                <input type="number" step="0.01" name="payment[cod_min_amount]" value="<?= htmlspecialchars($pay_cod_min) ?>" placeholder="No minimum"
+                                                    class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500">
                                             </div>
                                             <div>
-                                                <label class="block text-xs font-bold text-gray-400 mb-2">Transaction Fee
-                                                    (%)</label>
-                                                <input type="number" step="0.1" value="2.9"
-                                                    class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
+                                                <label class="block text-xs font-bold text-gray-400 mb-2">Additional Fee</label>
+                                                <input type="number" step="0.01" name="payment[cod_fee]" value="<?= htmlspecialchars($pay_cod_fee) ?>"
+                                                    class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-emerald-500">
                                             </div>
                                         </div>
-                                        <button
-                                            class="text-xs text-purple-400 hover:text-purple-300 transition-colors flex items-center gap-1">
-                                            <i class="bi bi-question-circle"></i> Test YOCO Connection
-                                        </button>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- PayPal -->
-                            <div class="bg-white/5 rounded-xl p-5 mb-6">
-                                <div class="flex items-center justify-between flex-wrap gap-4">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                                            <i class="bi bi-paypal text-2xl text-blue-400"></i>
-                                        </div>
-                                        <div>
-                                            <h4 class="text-white font-bold text-base">PayPal</h4>
-                                            <p class="text-gray-500 text-xs mt-1">Accept payments via PayPal wallet, credit
-                                                cards, and more</p>
-                                        </div>
-                                    </div>
-                                    <label class="relative inline-flex items-center cursor-pointer">
-                                        <input type="checkbox" class="sr-only peer" id="paypal_toggle">
-                                        <div
-                                            class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
-                                        </div>
-                                        <span class="ml-3 text-sm font-medium text-gray-300">Disabled</span>
-                                    </label>
-                                </div>
-
-                                <!-- PayPal Configuration (shown when enabled) -->
-                                <div id="paypal_settings" class="mt-5 pt-4 border-t border-gray-700/50 hidden">
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label class="block text-xs font-bold text-gray-400 mb-2">PayPal Client
-                                                ID</label>
-                                            <input type="text" placeholder="AYxXxxxxxx...xxxxx"
-                                                class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500 font-mono">
-                                            <p class="text-xs text-gray-500 mt-1">Get from PayPal Developer Dashboard → Apps
-                                                & Credentials</p>
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-bold text-gray-400 mb-2">PayPal Secret
-                                                Key</label>
-                                            <input type="password" placeholder="EJxxxxxx...xxxxx"
-                                                class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500 font-mono">
-                                        </div>
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label
-                                                    class="block text-xs font-bold text-gray-400 mb-2">Environment</label>
-                                                <select
-                                                    class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
-                                                    <option value="sandbox">🧪 Sandbox (Test)</option>
-                                                    <option value="production">🌍 Production (Live)</option>
-                                                </select>
+                                <!-- Credit Card via YOCO -->
+                                <div class="bg-white/5 rounded-xl p-5 mb-6">
+                                    <div class="flex items-center justify-between flex-wrap gap-4">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                                                <i class="bi bi-credit-card-2-front text-2xl text-purple-400"></i>
                                             </div>
                                             <div>
-                                                <label class="block text-xs font-bold text-gray-400 mb-2">Transaction Fee
-                                                    (%)</label>
-                                                <input type="number" step="0.1" value="3.4"
-                                                    class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                                                <h4 class="text-white font-bold text-base">YOCO (Credit Card)</h4>
+                                                <p class="text-gray-500 text-xs mt-1">Accept Visa, Mastercard, and American Express via YOCO</p>
                                             </div>
                                         </div>
-                                        <div class="flex items-center gap-3">
-                                            <input type="checkbox" id="paypal_credit_card" class="accent-blue-500">
-                                            <label for="paypal_credit_card" class="text-xs text-gray-300">Allow guest
-                                                checkout (credit/debit cards without PayPal account)</label>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="hidden" name="payment[yoco_enabled]" value="0">
+                                            <input type="checkbox" name="payment[yoco_enabled]" value="1" class="sr-only peer" id="yoco_toggle" <?= $pay_yoco_enabled === '1' ? 'checked' : '' ?>>
+                                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                                            <span class="ml-3 text-sm font-medium text-gray-300"><?= $pay_yoco_enabled === '1' ? 'Enabled' : 'Disabled' ?></span>
+                                        </label>
+                                    </div>
+                                    <div id="yoco_settings" class="mt-5 pt-4 border-t border-gray-700/50 <?= $pay_yoco_enabled !== '1' ? 'hidden' : '' ?>">
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-400 mb-2">YOCO Secret Key</label>
+                                                <input type="password" name="payment[yoco_secret]" value="<?= htmlspecialchars($pay_yoco_secret) ?>" placeholder="sk_test_xxxxxxxxxxxxx"
+                                                    class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500 font-mono">
+                                                <p class="text-xs text-gray-500 mt-1">Find this in your YOCO dashboard under Developers &rarr; API Keys</p>
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-400 mb-2">YOCO Public Key</label>
+                                                <input type="text" name="payment[yoco_public]" value="<?= htmlspecialchars($pay_yoco_public) ?>" placeholder="pk_test_xxxxxxxxxxxxx"
+                                                    class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500 font-mono">
+                                            </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-400 mb-2">Payment Mode</label>
+                                                    <select name="payment[yoco_mode]"
+                                                        class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
+                                                        <option value="test" <?= $pay_yoco_mode === 'test' ? 'selected' : '' ?>>Test Mode</option>
+                                                        <option value="live" <?= $pay_yoco_mode === 'live' ? 'selected' : '' ?>>Live Mode</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-400 mb-2">Transaction Fee (%)</label>
+                                                    <input type="number" step="0.1" name="payment[yoco_fee]" value="<?= htmlspecialchars($pay_yoco_fee) ?>"
+                                                        class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-purple-500">
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Payment Method Order (Drag & Drop style) -->
-                            <div class="bg-white/5 rounded-xl p-5 mb-8">
-                                <h4 class="text-white font-bold text-sm uppercase tracking-wide mb-3">Payment Method Order
-                                </h4>
-                                <p class="text-gray-500 text-xs mb-4">Drag to rearrange the order payment options appear at
-                                    checkout</p>
-
-                                <div class="space-y-2">
-                                    <div
-                                        class="flex items-center justify-between bg-black/30 rounded-lg px-4 py-2.5 cursor-move">
-                                        <div class="flex items-center gap-3">
-                                            <i class="bi bi-grip-vertical text-gray-500"></i>
-                                            <i class="bi bi-cash-stack text-emerald-400"></i>
-                                            <span class="text-white text-sm">Cash on Delivery</span>
+                                <!-- PayPal -->
+                                <div class="bg-white/5 rounded-xl p-5 mb-6">
+                                    <div class="flex items-center justify-between flex-wrap gap-4">
+                                        <div class="flex items-center gap-4">
+                                            <div class="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                                                <i class="bi bi-paypal text-2xl text-blue-400"></i>
+                                            </div>
+                                            <div>
+                                                <h4 class="text-white font-bold text-base">PayPal</h4>
+                                                <p class="text-gray-500 text-xs mt-1">Accept payments via PayPal wallet, credit cards, and more</p>
+                                            </div>
                                         </div>
-                                        <span class="text-xs text-gray-500">Enabled</span>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="hidden" name="payment[paypal_enabled]" value="0">
+                                            <input type="checkbox" name="payment[paypal_enabled]" value="1" class="sr-only peer" id="paypal_toggle" <?= $pay_paypal_enabled === '1' ? 'checked' : '' ?>>
+                                            <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                            <span class="ml-3 text-sm font-medium text-gray-300"><?= $pay_paypal_enabled === '1' ? 'Enabled' : 'Disabled' ?></span>
+                                        </label>
                                     </div>
-                                    <div
-                                        class="flex items-center justify-between bg-black/30 rounded-lg px-4 py-2.5 cursor-move opacity-50">
-                                        <div class="flex items-center gap-3">
-                                            <i class="bi bi-grip-vertical text-gray-500"></i>
-                                            <i class="bi bi-credit-card-2-front text-purple-400"></i>
-                                            <span class="text-white text-sm">YOCO (Credit Card)</span>
+                                    <div id="paypal_settings" class="mt-5 pt-4 border-t border-gray-700/50 <?= $pay_paypal_enabled !== '1' ? 'hidden' : '' ?>">
+                                        <div class="space-y-4">
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-400 mb-2">PayPal Client ID</label>
+                                                <input type="text" name="payment[paypal_client_id]" value="<?= htmlspecialchars($pay_paypal_client) ?>" placeholder="AYxXxxxxxx...xxxxx"
+                                                    class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500 font-mono">
+                                                <p class="text-xs text-gray-500 mt-1">Get from PayPal Developer Dashboard &rarr; Apps & Credentials</p>
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-400 mb-2">PayPal Secret Key</label>
+                                                <input type="password" name="payment[paypal_secret]" value="<?= htmlspecialchars($pay_paypal_secret) ?>" placeholder="EJxxxxxx...xxxxx"
+                                                    class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500 font-mono">
+                                            </div>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-400 mb-2">Environment</label>
+                                                    <select name="payment[paypal_env]"
+                                                        class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                                                        <option value="sandbox" <?= $pay_paypal_env === 'sandbox' ? 'selected' : '' ?>>Sandbox (Test)</option>
+                                                        <option value="production" <?= $pay_paypal_env === 'production' ? 'selected' : '' ?>>Production (Live)</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-400 mb-2">Transaction Fee (%)</label>
+                                                    <input type="number" step="0.1" name="payment[paypal_fee]" value="<?= htmlspecialchars($pay_paypal_fee) ?>"
+                                                        class="w-full bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-500">
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <input type="hidden" name="payment[paypal_guest_checkout]" value="0">
+                                                <input type="checkbox" name="payment[paypal_guest_checkout]" value="1" id="paypal_credit_card" class="accent-blue-500" <?= $pay_paypal_guest === '1' ? 'checked' : '' ?>>
+                                                <label for="paypal_credit_card" class="text-xs text-gray-300">Allow guest checkout (credit/debit cards without PayPal account)</label>
+                                            </div>
                                         </div>
-                                        <span class="text-xs text-gray-500">Disabled</span>
-                                    </div>
-                                    <div
-                                        class="flex items-center justify-between bg-black/30 rounded-lg px-4 py-2.5 cursor-move opacity-50">
-                                        <div class="flex items-center gap-3">
-                                            <i class="bi bi-grip-vertical text-gray-500"></i>
-                                            <i class="bi bi-paypal text-blue-400"></i>
-                                            <span class="text-white text-sm">PayPal</span>
-                                        </div>
-                                        <span class="text-xs text-gray-500">Disabled</span>
                                     </div>
                                 </div>
-                            </div>
 
-                            <!-- Save Button -->
-                            <div
-                                class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-800">
-                                <div class="text-xs text-gray-500">
-                                    <i class="bi bi-shield-check"></i> All payments are securely processed via PCI-compliant
-                                    gateways
+                                <!-- Save Button -->
+                                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-800">
+                                    <div class="text-xs text-gray-500">
+                                        <i class="bi bi-shield-check"></i> All payment credentials are stored with AES-256-CBC encryption
+                                    </div>
+                                    <button type="submit"
+                                        class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 rounded-full font-black text-sm transition-all transform hover:scale-105 shadow-xl shadow-blue-900/30">
+                                        Save Payment Settings
+                                    </button>
                                 </div>
-                                <button onclick="alert('Payment method settings saved!')"
-                                    class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 rounded-full font-black text-sm transition-all transform hover:scale-105 shadow-xl shadow-blue-900/30">
-                                    💳 Save Payment Settings
-                                </button>
-                            </div>
 
+                            </div>
                         </div>
-                    </div>
+                    </form>
 
-                    <!-- JavaScript to handle toggle visibility -->
                     <script>
                         document.getElementById('cod_toggle')?.addEventListener('change', function (e) {
                             const settings = document.getElementById('cod_settings');
-                            if (settings) {
-                                settings.style.opacity = e.target.checked ? '1' : '0.5';
-                            }
+                            if (settings) settings.style.opacity = e.target.checked ? '1' : '0.5';
                         });
-
                         document.getElementById('yoco_toggle')?.addEventListener('change', function (e) {
                             const settings = document.getElementById('yoco_settings');
                             const label = e.target.nextElementSibling.nextElementSibling;
-                            if (settings) {
-                                settings.classList.toggle('hidden', !e.target.checked);
-                            }
+                            if (settings) settings.classList.toggle('hidden', !e.target.checked);
                             if (label) label.textContent = e.target.checked ? 'Enabled' : 'Disabled';
                         });
-
                         document.getElementById('paypal_toggle')?.addEventListener('change', function (e) {
                             const settings = document.getElementById('paypal_settings');
                             const label = e.target.nextElementSibling.nextElementSibling;
-                            if (settings) {
-                                settings.classList.toggle('hidden', !e.target.checked);
-                            }
+                            if (settings) settings.classList.toggle('hidden', !e.target.checked);
                             if (label) label.textContent = e.target.checked ? 'Enabled' : 'Disabled';
                         });
                     </script>
@@ -1163,10 +1144,11 @@ $active_tab = $_GET['tab'] ?? 'general';
                                 <div class="bg-white/5 rounded-xl p-4 mb-6">
                                     <h4 class="text-white font-bold text-sm mb-3"><i class="bi bi-book"></i> Available Endpoints</h4>
                                     <div class="space-y-2">
+                                        <p class="text-gray-500 text-[10px] uppercase tracking-wider font-bold mb-1">Read Data</p>
                                         <div class="flex items-center gap-2">
                                             <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">GET</span>
                                             <code class="text-xs text-gray-400 font-mono">?state=products</code>
-                                            <span class="text-gray-600 text-xs">— List all products</span>
+                                            <span class="text-gray-600 text-xs">— List products (paginated)</span>
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">GET</span>
@@ -1180,6 +1162,11 @@ $active_tab = $_GET['tab'] ?? 'general';
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">GET</span>
+                                            <code class="text-xs text-gray-400 font-mono">?state=products_by_category&category_id={id}</code>
+                                            <span class="text-gray-600 text-xs">— Products by category</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">GET</span>
                                             <code class="text-xs text-gray-400 font-mono">?state=search&q={query}</code>
                                             <span class="text-gray-600 text-xs">— Search products</span>
                                         </div>
@@ -1189,9 +1176,56 @@ $active_tab = $_GET['tab'] ?? 'general';
                                             <span class="text-gray-600 text-xs">— Active discounts</span>
                                         </div>
                                         <div class="flex items-center gap-2">
+                                            <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">GET</span>
+                                            <code class="text-xs text-gray-400 font-mono">?state=site</code>
+                                            <span class="text-gray-600 text-xs">— Store info</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">GET</span>
+                                            <code class="text-xs text-gray-400 font-mono">?state=orders&email={email}</code>
+                                            <span class="text-gray-600 text-xs">— Order history by email</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-mono">GET</span>
+                                            <code class="text-xs text-gray-400 font-mono">?state=cart&cart_id={id}</code>
+                                            <span class="text-gray-600 text-xs">— Get cart contents</span>
+                                        </div>
+
+                                        <p class="text-gray-500 text-[10px] uppercase tracking-wider font-bold mt-3 mb-1">Cart & Checkout</p>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded font-mono">POST</span>
+                                            <code class="text-xs text-gray-400 font-mono">?state=cart_create</code>
+                                            <span class="text-gray-600 text-xs">— Create new cart session</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded font-mono">POST</span>
+                                            <code class="text-xs text-gray-400 font-mono">?state=cart_add</code>
+                                            <span class="text-gray-600 text-xs">— Add item to cart</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded font-mono">POST</span>
+                                            <code class="text-xs text-gray-400 font-mono">?state=cart_update</code>
+                                            <span class="text-gray-600 text-xs">— Update item quantity</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded font-mono">POST</span>
+                                            <code class="text-xs text-gray-400 font-mono">?state=cart_remove</code>
+                                            <span class="text-gray-600 text-xs">— Remove item from cart</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded font-mono">POST</span>
+                                            <code class="text-xs text-gray-400 font-mono">?state=checkout_create</code>
+                                            <span class="text-gray-600 text-xs">— Create checkout session</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded font-mono">POST</span>
+                                            <code class="text-xs text-gray-400 font-mono">?state=checkout_complete</code>
+                                            <span class="text-gray-600 text-xs">— Complete checkout with customer info</span>
+                                        </div>
+                                        <div class="flex items-center gap-2">
                                             <span class="text-xs bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded font-mono">POST</span>
                                             <code class="text-xs text-gray-400 font-mono">?state=order</code>
-                                            <span class="text-gray-600 text-xs">— Place an order</span>
+                                            <span class="text-gray-600 text-xs">— Place a direct order</span>
                                         </div>
                                     </div>
                                     <p class="text-gray-600 text-xs mt-3">Pass API key via <code class="text-gray-500">X-API-Key</code> header, <code class="text-gray-500">Authorization: Bearer {key}</code>, or <code class="text-gray-500">?api_key={key}</code></p>
@@ -1276,11 +1310,81 @@ $active_tab = $_GET['tab'] ?? 'general';
                                 <?php endif; ?>
                             </div>
 
-                            <!-- Quick Start Example -->
+                            <!-- JavaScript SDK Section -->
                             <div class="border-t border-gray-800 pt-6 mb-8">
-                                <h3 class="text-lg font-bold text-white mb-4">Quick Start</h3>
+                                <div class="flex items-center justify-between flex-wrap gap-4 mb-5">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-white">JavaScript SDK</h3>
+                                        <p class="text-xs text-gray-500 mt-1">Drop-in storefront SDK for external websites — GitHub Pages, static sites, and more</p>
+                                    </div>
+                                </div>
+
+                                <!-- SDK Script Tag -->
+                                <div class="bg-purple-500/5 rounded-xl p-4 mb-4 border border-purple-500/20">
+                                    <span class="text-xs font-mono text-gray-400 uppercase tracking-wider">Include Script</span>
+                                    <div class="flex items-center gap-3 mt-2 bg-black/40 rounded-lg px-4 py-3">
+                                        <code id="sdkScriptTag" class="text-sm font-mono text-purple-300 break-all flex-1">&lt;script src="<?php echo htmlspecialchars($sdk_url, ENT_QUOTES, 'UTF-8'); ?>"&gt;&lt;/script&gt;</code>
+                                        <button onclick="navigator.clipboard.writeText('<script src=\'<?php echo htmlspecialchars($sdk_url, ENT_QUOTES, 'UTF-8'); ?>\'><\/script>'); this.innerHTML='<i class=\'bi bi-check-lg\'></i> Copied'; setTimeout(() => this.innerHTML='<i class=\'bi bi-copy\'></i> Copy', 2000)"
+                                            class="text-xs bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap">
+                                            <i class="bi bi-copy"></i> Copy
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- SDK Quick Start -->
+                                <div class="bg-black/60 rounded-xl p-5 border border-white/5 mb-4">
+                                    <p class="text-gray-400 text-xs mb-3 font-mono">// Initialize the SDK</p>
+                                    <pre class="text-sm font-mono text-emerald-400 whitespace-pre-wrap break-all">const store = new VMStore({
+  storeId: '<?php echo htmlspecialchars($store_id, ENT_QUOTES, 'UTF-8'); ?>',
+  apiKey: 'YOUR_API_KEY'
+});
+
+// Inject default styles
+store.ui.injectStyles();
+
+// Render a product grid
+store.ui.productGrid('#shop');
+
+// Add cart badge to an element
+store.ui.cartBadge('#cart-icon');
+
+// Render interactive cart with checkout
+store.ui.cartDrawer('#cart');</pre>
+                                </div>
+
+                                <!-- SDK API Reference -->
+                                <div class="bg-white/5 rounded-xl p-4 mb-4">
+                                    <h4 class="text-white font-bold text-sm mb-3"><i class="bi bi-code-slash"></i> SDK Methods</h4>
+                                    <div class="space-y-2 text-xs font-mono">
+                                        <div class="flex items-start gap-2">
+                                            <span class="bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded shrink-0">Products</span>
+                                            <code class="text-gray-400">store.products.list({ page, limit }) / .get(id) / .search(query) / .byCategory(id)</code>
+                                        </div>
+                                        <div class="flex items-start gap-2">
+                                            <span class="bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded shrink-0">Cart</span>
+                                            <code class="text-gray-400">store.cart.add(productId, qty) / .update(productId, qty) / .remove(productId) / .get() / .clear()</code>
+                                        </div>
+                                        <div class="flex items-start gap-2">
+                                            <span class="bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded shrink-0">Checkout</span>
+                                            <code class="text-gray-400">store.checkout.redirect({ returnUrl }) / .create({ returnUrl }) / .complete(sessionId, customer)</code>
+                                        </div>
+                                        <div class="flex items-start gap-2">
+                                            <span class="bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded shrink-0">UI</span>
+                                            <code class="text-gray-400">store.ui.productGrid(el) / .productCard(el, product) / .cartBadge(el) / .cartDrawer(el) / .injectStyles()</code>
+                                        </div>
+                                        <div class="flex items-start gap-2">
+                                            <span class="bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded shrink-0">Events</span>
+                                            <code class="text-gray-400">store.on('cart:updated' | 'cart:item-added' | 'cart:item-removed' | 'checkout:completed', callback)</code>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Raw API Quick Start -->
+                            <div class="border-t border-gray-800 pt-6 mb-8">
+                                <h3 class="text-lg font-bold text-white mb-4">Raw API (fetch)</h3>
                                 <div class="bg-black/60 rounded-xl p-5 border border-white/5">
-                                    <p class="text-gray-400 text-xs mb-3 font-mono">// Fetch products from your store</p>
+                                    <p class="text-gray-400 text-xs mb-3 font-mono">// Fetch products directly via the REST API</p>
                                     <pre class="text-sm font-mono text-emerald-400 whitespace-pre-wrap break-all">fetch('<?php echo htmlspecialchars($api_base_url, ENT_QUOTES, 'UTF-8'); ?>?state=products', {
   headers: { 'X-API-Key': 'YOUR_API_KEY' }
 })
@@ -1319,7 +1423,17 @@ $active_tab = $_GET['tab'] ?? 'general';
 
                 <?php endif; ?>
 
-                <?php if ($active_tab == 'console'): ?>
+                <?php if ($active_tab == 'console'):
+                    // Load real store data for console
+                    $console_store_url = __WEBSITE_DOMAIN__ ?? '';
+                    $console_store_record = $db_engine->query("SELECT * FROM sys_websites WHERE account_index = ? LIMIT 1", [__ACCOUNT_INDEX__]);
+                    $console_store_id = $console_store_record[0]['id'] ?? '';
+                    $console_secret = get_setting($db_site, 'console_secret_key', '');
+                    if (empty($console_secret)) {
+                        $console_secret = 'vm_sec_' . bin2hex(random_bytes(12));
+                        $db_site->query("INSERT INTO settings (`key`, `value`) VALUES ('console_secret_key', ?) ON CONFLICT(`key`) DO UPDATE SET value = ?", [$console_secret, $console_secret]);
+                    }
+                ?>
                     <div>
                         <button onclick="window.location.href='?tab=general'"
                             class="bg-white text-black px-8 py-2.5 rounded-full text-sm font-black hover:bg-gray-200 transition-all transform hover:scale-105 active:scale-95 shadow-xl">
@@ -1331,72 +1445,35 @@ $active_tab = $_GET['tab'] ?? 'general';
                     <div class="v-card animate-slide-up">
                         <div class="v-card-header">
                             <h2 class="text-xl font-bold text-white">Store Connection</h2>
-                            <p class="text-sm text-gray-400 mt-2">Connect your desktop application to manage this store
-                                remotely.</p>
+                            <p class="text-sm text-gray-400 mt-2">Connect your desktop application to manage this store remotely.</p>
                         </div>
                         <div class="v-card-body py-8 px-8">
-
-                            <!-- Connection Status -->
-                            <div class="mb-8">
-                                <div
-                                    class="bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl p-5 border border-green-500/20">
-                                    <div class="flex items-center justify-between flex-wrap gap-4">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                                            <div>
-                                                <h3 class="text-green-400 font-bold text-sm uppercase tracking-wide">
-                                                    Connection Active</h3>
-                                                <p class="text-gray-300 text-sm mt-1">Your desktop app is connected to this
-                                                    store</p>
-                                            </div>
-                                        </div>
-                                        <button onclick="alert('Disconnect desktop app?')"
-                                            class="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 rounded-lg text-xs font-bold transition-colors">
-                                            <i class="bi bi-plug"></i> Disconnect
-                                        </button>
-                                    </div>
-                                    <div class="mt-4 pt-3 border-t border-green-500/20">
-                                        <div class="flex items-center gap-4 text-xs">
-                                            <span class="text-gray-400">Last sync:</span>
-                                            <span class="text-gray-300">Just now</span>
-                                            <span class="text-gray-400">Connected device:</span>
-                                            <span class="text-gray-300">DESKTOP-ABC123 (Windows)</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
 
                             <!-- Connection Instructions -->
                             <div class="mb-8">
                                 <h3 class="text-lg font-bold text-white mb-4">Connect Your Desktop Application</h3>
-                                <p class="text-sm text-gray-400 mb-6">Use the credentials below to connect your downloaded
-                                    store management app to this online store.</p>
+                                <p class="text-sm text-gray-400 mb-6">Use the credentials below to connect your downloaded store management app to this online store.</p>
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <!-- Step 1 -->
                                     <div class="bg-white/5 rounded-xl p-5">
                                         <div class="flex items-center gap-3 mb-4">
-                                            <div
-                                                class="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
+                                            <div class="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
                                                 <span class="text-blue-400 font-bold text-sm">1</span>
                                             </div>
                                             <h4 class="text-white font-bold text-sm">Download Desktop App</h4>
                                         </div>
-                                        <p class="text-gray-400 text-xs mb-4">Download the latest version of our desktop
-                                            application for your operating system.</p>
+                                        <p class="text-gray-400 text-xs mb-4">Download the latest version of our desktop application for your operating system.</p>
                                         <div class="flex flex-wrap gap-3">
-                                            <a href="#"
-                                                class="flex items-center gap-2 bg-black/50 hover:bg-black/70 px-4 py-2 rounded-lg transition-colors">
+                                            <a href="#" class="flex items-center gap-2 bg-black/50 hover:bg-black/70 px-4 py-2 rounded-lg transition-colors">
                                                 <i class="bi bi-windows text-blue-400"></i>
                                                 <span class="text-white text-sm">Windows</span>
                                             </a>
-                                            <a href="#"
-                                                class="flex items-center gap-2 bg-black/50 hover:bg-black/70 px-4 py-2 rounded-lg transition-colors">
+                                            <a href="#" class="flex items-center gap-2 bg-black/50 hover:bg-black/70 px-4 py-2 rounded-lg transition-colors">
                                                 <i class="bi bi-apple text-gray-400"></i>
                                                 <span class="text-white text-sm">macOS</span>
                                             </a>
-                                            <a href="#"
-                                                class="flex items-center gap-2 bg-black/50 hover:bg-black/70 px-4 py-2 rounded-lg transition-colors">
+                                            <a href="#" class="flex items-center gap-2 bg-black/50 hover:bg-black/70 px-4 py-2 rounded-lg transition-colors">
                                                 <i class="bi bi-ubuntu text-orange-400"></i>
                                                 <span class="text-white text-sm">Linux</span>
                                             </a>
@@ -1406,22 +1483,18 @@ $active_tab = $_GET['tab'] ?? 'general';
                                     <!-- Step 2 -->
                                     <div class="bg-white/5 rounded-xl p-5">
                                         <div class="flex items-center gap-3 mb-4">
-                                            <div
-                                                class="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
+                                            <div class="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center">
                                                 <span class="text-blue-400 font-bold text-sm">2</span>
                                             </div>
                                             <h4 class="text-white font-bold text-sm">Enter Credentials in App</h4>
                                         </div>
-                                        <p class="text-gray-400 text-xs mb-4">Use these credentials when prompted by the
-                                            desktop application.</p>
+                                        <p class="text-gray-400 text-xs mb-4">Use these credentials when prompted by the desktop application.</p>
                                         <div class="space-y-3">
                                             <div class="bg-black/30 rounded-lg p-3">
                                                 <span class="text-gray-500 text-xs uppercase tracking-wide">Store URL</span>
                                                 <div class="flex items-center justify-between mt-1">
-                                                    <code
-                                                        class="text-white font-mono text-sm break-all">https://yourstore.varsitymarket.com</code>
-                                                    <button
-                                                        onclick="navigator.clipboard.writeText('https://yourstore.varsitymarket.com')"
+                                                    <code class="text-white font-mono text-sm break-all"><?= htmlspecialchars($console_store_url) ?></code>
+                                                    <button onclick="navigator.clipboard.writeText('<?= htmlspecialchars($console_store_url) ?>')"
                                                         class="text-gray-400 hover:text-white text-xs ml-2">
                                                         <i class="bi bi-copy"></i>
                                                     </button>
@@ -1430,8 +1503,8 @@ $active_tab = $_GET['tab'] ?? 'general';
                                             <div class="bg-black/30 rounded-lg p-3">
                                                 <span class="text-gray-500 text-xs uppercase tracking-wide">Store ID</span>
                                                 <div class="flex items-center justify-between mt-1">
-                                                    <code class="text-white font-mono text-sm">store_8f7g3h2j9k1l</code>
-                                                    <button onclick="navigator.clipboard.writeText('store_8f7g3h2j9k1l')"
+                                                    <code class="text-white font-mono text-sm"><?= htmlspecialchars($console_store_id) ?></code>
+                                                    <button onclick="navigator.clipboard.writeText('<?= htmlspecialchars($console_store_id) ?>')"
                                                         class="text-gray-400 hover:text-white text-xs ml-2">
                                                         <i class="bi bi-copy"></i>
                                                     </button>
@@ -1447,169 +1520,28 @@ $active_tab = $_GET['tab'] ?? 'general';
                                 <div class="flex items-start gap-3">
                                     <i class="bi bi-shield-lock-fill text-amber-400 text-xl"></i>
                                     <div class="flex-1">
-                                        <h4 class="text-amber-400 font-bold text-sm uppercase tracking-wide">Connection
-                                            Secret Key</h4>
-                                        <p class="text-gray-400 text-xs mt-1 mb-4">This unique key authenticates your
-                                            desktop app with this store. Keep it secure!</p>
-
+                                        <h4 class="text-amber-400 font-bold text-sm uppercase tracking-wide">Connection Secret Key</h4>
+                                        <p class="text-gray-400 text-xs mt-1 mb-4">This unique key authenticates your desktop app with this store. Keep it secure!</p>
                                         <div class="bg-black/50 rounded-lg p-3">
                                             <div class="flex items-center justify-between flex-wrap gap-3">
-                                                <code class="text-white font-mono text-sm break-all"
-                                                    id="connection_secret">vm_sec_8f7g3h2j9k1l_4m5n6p7q8r9s</code>
+                                                <code class="text-white font-mono text-sm break-all" id="connection_secret"><?= htmlspecialchars($console_secret) ?></code>
                                                 <div class="flex items-center gap-2">
-                                                    <button onclick="copySecret()"
+                                                    <button type="button" onclick="copySecret()"
                                                         class="bg-white/10 hover:bg-white/20 text-white px-3 py-1.5 rounded-lg text-xs transition-colors">
                                                         <i class="bi bi-copy"></i> Copy
                                                     </button>
-                                                    <button onclick="regenerateSecret()"
-                                                        class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 px-3 py-1.5 rounded-lg text-xs transition-colors">
-                                                        <i class="bi bi-arrow-repeat"></i> Regenerate
-                                                    </button>
+                                                    <form method="POST" style="display:inline" onsubmit="return confirm('Regenerating the secret key will disconnect all currently connected desktop apps. Continue?')">
+                                                        <input type="hidden" name="action" value="save_console">
+                                                        <input type="hidden" name="console[regenerate_secret]" value="1">
+                                                        <button type="submit"
+                                                            class="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 px-3 py-1.5 rounded-lg text-xs transition-colors">
+                                                            <i class="bi bi-arrow-repeat"></i> Regenerate
+                                                        </button>
+                                                    </form>
                                                 </div>
                                             </div>
                                         </div>
-                                        <p class="text-xs text-gray-500 mt-3">
-                                            ⚠️ Regenerating the secret key will disconnect all currently connected desktop
-                                            apps.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Connection QR Code (Optional) -->
-                            <div class="mb-8">
-                                <div class="flex items-center justify-between flex-wrap gap-4 mb-4">
-                                    <div>
-                                        <h3 class="text-lg font-bold text-white">Quick Connect via QR Code</h3>
-                                        <p class="text-xs text-gray-400 mt-1">Scan with your desktop app to connect
-                                            instantly</p>
-                                    </div>
-                                    <button onclick="alert('QR code refreshed')"
-                                        class="text-gray-400 hover:text-white text-sm transition-colors">
-                                        <i class="bi bi-arrow-clockwise"></i> Refresh
-                                    </button>
-                                </div>
-                                <div class="flex justify-center">
-                                    <div class="bg-white p-4 rounded-2xl inline-block">
-                                        <div class="w-48 h-48 bg-gray-800 rounded-xl flex items-center justify-center">
-                                            <!-- Simulated QR Code -->
-                                            <div class="text-center">
-                                                <i class="bi bi-qr-code-scan text-7xl text-gray-600"></i>
-                                                <p class="text-xs text-gray-500 mt-2">QR Code Placeholder</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <p class="text-center text-xs text-gray-500 mt-3">Open desktop app → Click "Scan QR" → Scan
-                                    this code</p>
-                            </div>
-
-                            <!-- Connected Devices -->
-                            <div class="border-t border-gray-800 pt-6 mb-8">
-                                <div class="flex items-center justify-between flex-wrap gap-4 mb-5">
-                                    <div>
-                                        <h3 class="text-lg font-bold text-white">Connected Devices</h3>
-                                        <p class="text-xs text-gray-400 mt-1">Devices currently connected to this store</p>
-                                    </div>
-                                    <button onclick="alert('Revoke all devices')"
-                                        class="text-red-400 hover:text-red-300 text-sm transition-colors">
-                                        <i class="bi bi-trash3"></i> Revoke All
-                                    </button>
-                                </div>
-
-                                <div class="space-y-3">
-                                    <div class="bg-white/5 rounded-xl p-4">
-                                        <div class="flex items-center justify-between flex-wrap gap-3">
-                                            <div class="flex items-center gap-3">
-                                                <div
-                                                    class="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                                                    <i class="bi bi-laptop text-blue-400 text-lg"></i>
-                                                </div>
-                                                <div>
-                                                    <h4 class="text-white font-bold text-sm">DESKTOP-ABC123</h4>
-                                                    <p class="text-gray-500 text-xs">Windows 11 • Connected 2 hours ago</p>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center gap-2">
-                                                <span
-                                                    class="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded-full">Active</span>
-                                                <button onclick="alert('Revoke this device')"
-                                                    class="text-red-400 hover:text-red-300 text-sm ml-2">
-                                                    <i class="bi bi-x-circle"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="bg-white/5 rounded-xl p-4 opacity-60">
-                                        <div class="flex items-center justify-between flex-wrap gap-3">
-                                            <div class="flex items-center gap-3">
-                                                <div
-                                                    class="w-10 h-10 bg-gray-500/20 rounded-lg flex items-center justify-center">
-                                                    <i class="bi bi-phone text-gray-400 text-lg"></i>
-                                                </div>
-                                                <div>
-                                                    <h4 class="text-white font-bold text-sm">iPhone - John's Phone</h4>
-                                                    <p class="text-gray-500 text-xs">iOS 17 • Last seen yesterday</p>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center gap-2">
-                                                <span
-                                                    class="bg-gray-500/20 text-gray-400 text-xs px-2 py-1 rounded-full">Offline</span>
-                                                <button onclick="alert('Revoke this device')"
-                                                    class="text-red-400 hover:text-red-300 text-sm ml-2">
-                                                    <i class="bi bi-x-circle"></i>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Connection Logs -->
-                            <div class="border-t border-gray-800 pt-6 mb-8">
-                                <div class="flex items-center justify-between flex-wrap gap-4 mb-4">
-                                    <div>
-                                        <h3 class="text-lg font-bold text-white">Recent Connection Activity</h3>
-                                        <p class="text-xs text-gray-400 mt-1">Monitor desktop app connection history</p>
-                                    </div>
-                                    <button onclick="alert('View full logs')"
-                                        class="text-blue-400 hover:text-blue-300 text-sm transition-colors">
-                                        View All <i class="bi bi-arrow-right"></i>
-                                    </button>
-                                </div>
-
-                                <div class="space-y-2">
-                                    <div
-                                        class="flex items-center justify-between flex-wrap gap-2 text-sm py-2 border-b border-gray-800">
-                                        <div class="flex items-center gap-3">
-                                            <i class="bi bi-check-circle-fill text-green-500 text-xs"></i>
-                                            <span class="text-gray-300">Desktop app connected</span>
-                                        </div>
-                                        <span class="text-gray-500 text-xs">Today, 10:32 AM</span>
-                                    </div>
-                                    <div
-                                        class="flex items-center justify-between flex-wrap gap-2 text-sm py-2 border-b border-gray-800">
-                                        <div class="flex items-center gap-3">
-                                            <i class="bi bi-arrow-repeat text-blue-400 text-xs"></i>
-                                            <span class="text-gray-300">Data sync completed</span>
-                                        </div>
-                                        <span class="text-gray-500 text-xs">Today, 10:30 AM</span>
-                                    </div>
-                                    <div
-                                        class="flex items-center justify-between flex-wrap gap-2 text-sm py-2 border-b border-gray-800">
-                                        <div class="flex items-center gap-3">
-                                            <i class="bi bi-key-fill text-amber-400 text-xs"></i>
-                                            <span class="text-gray-300">New connection token generated</span>
-                                        </div>
-                                        <span class="text-gray-500 text-xs">Yesterday, 3:15 PM</span>
-                                    </div>
-                                    <div class="flex items-center justify-between flex-wrap gap-2 text-sm py-2">
-                                        <div class="flex items-center gap-3">
-                                            <i class="bi bi-laptop text-gray-500 text-xs"></i>
-                                            <span class="text-gray-300">Desktop app (DESKTOP-XYZ789) disconnected</span>
-                                        </div>
-                                        <span class="text-gray-500 text-xs">Yesterday, 2:00 PM</span>
+                                        <p class="text-xs text-gray-500 mt-3">Regenerating the secret key will disconnect all currently connected desktop apps.</p>
                                     </div>
                                 </div>
                             </div>
@@ -1647,50 +1579,37 @@ $active_tab = $_GET['tab'] ?? 'general';
                                 </div>
                             </div>
 
-                            <!-- Save Button -->
-                            <div
-                                class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 mt-4 border-t border-gray-800">
-                                <div class="text-xs text-gray-500">
-                                    <i class="bi bi-shield-check"></i> All connections are encrypted via TLS 1.3
-                                </div>
-                                <button onclick="alert('Store connection settings saved!')"
-                                    class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 rounded-full font-black text-sm transition-all transform hover:scale-105 shadow-xl shadow-blue-900/30">
-                                    <i class="bi bi-save"></i> Save Connection Settings
-                                </button>
-                            </div>
 
                         </div>
                     </div>
 
-                    <!-- JavaScript for secret key management -->
                     <script>
                         function copySecret() {
                             const secretElement = document.getElementById('connection_secret');
                             if (secretElement) {
                                 navigator.clipboard.writeText(secretElement.textContent);
-                                // Optional: Show temporary notification
                                 const btn = event.target.closest('button');
                                 const originalText = btn.innerHTML;
                                 btn.innerHTML = '<i class="bi bi-check"></i> Copied!';
-                                setTimeout(() => {
-                                    btn.innerHTML = originalText;
-                                }, 2000);
-                            }
-                        }
-
-                        function regenerateSecret() {
-                            if (confirm('⚠️ Regenerating the secret key will disconnect all currently connected desktop apps. Continue?')) {
-                                // Simulate regeneration
-                                const newSecret = 'vm_sec_' + Math.random().toString(36).substring(2, 15) + '_' + Math.random().toString(36).substring(2, 10);
-                                document.getElementById('connection_secret').textContent = newSecret;
-                                alert('New connection secret key generated successfully!');
+                                setTimeout(() => { btn.innerHTML = originalText; }, 2000);
                             }
                         }
                     </script>
 
                 <?php endif; ?>
 
-                <?php if ($active_tab == 'app'): ?>
+                <?php if ($active_tab == 'app'):
+                    $discord_event_list = [
+                        'new_order' => ['label' => 'New Order', 'desc' => 'When a customer places a new order'],
+                        'payment_received' => ['label' => 'Payment Received', 'desc' => 'When an order payment is confirmed'],
+                        'order_fulfilled' => ['label' => 'Order Fulfilled', 'desc' => 'When an order is shipped/delivered'],
+                        'order_cancelled' => ['label' => 'Order Cancelled', 'desc' => 'When an order is cancelled'],
+                        'new_review' => ['label' => 'New Review', 'desc' => 'When a customer leaves a product review'],
+                        'low_stock' => ['label' => 'Low Stock Alert', 'desc' => 'When product stock falls below threshold'],
+                        'new_customer' => ['label' => 'New Customer', 'desc' => 'When a new customer registers'],
+                        'system_alert' => ['label' => 'System Alert', 'desc' => 'Critical system notifications'],
+                    ];
+                ?>
                     <div>
                         <button onclick="window.location.href='?tab=general'"
                             class="bg-white text-black px-8 py-2.5 rounded-full text-sm font-black hover:bg-gray-200 transition-all transform hover:scale-105 active:scale-95 shadow-xl">
@@ -1699,326 +1618,173 @@ $active_tab = $_GET['tab'] ?? 'general';
                     </div>
                     <br><br>
 
-                    <div class="v-card animate-slide-up">
-                        <div class="v-card-header">
-                            <h2 class="text-xl font-bold text-white">Plugins</h2>
-                            <p class="text-sm text-gray-400 mt-2">Extend your store functionality with integrated plugins.
-                            </p>
-                        </div>
-                        <div class="v-card-body py-8 px-8">
+                    <form method="POST">
+                        <input type="hidden" name="action" value="save_discord">
+                        <div class="v-card animate-slide-up">
+                            <div class="v-card-header">
+                                <h2 class="text-xl font-bold text-white">Plugins</h2>
+                                <p class="text-sm text-gray-400 mt-2">Extend your store functionality with integrated plugins.</p>
+                            </div>
+                            <div class="v-card-body py-8 px-8">
 
-                            <!-- Discord Plugin Card -->
-                            <div
-                                class="bg-gradient-to-br from-[#5865F2]/10 to-[#7289DA]/5 rounded-xl border border-[#5865F2]/30 overflow-hidden">
-
-                                <!-- Plugin Header -->
-                                <div class="p-6 border-b border-[#5865F2]/20">
-                                    <div class="flex items-center justify-between flex-wrap gap-4">
-                                        <div class="flex items-center gap-4">
-                                            <div
-                                                class="w-14 h-14 bg-[#5865F2]/20 rounded-2xl flex items-center justify-center">
-                                                <i class="bi bi-discord text-3xl text-[#5865F2]"></i>
-                                            </div>
-                                            <div>
-                                                <div class="flex items-center gap-2 flex-wrap">
-                                                    <h3 class="text-xl font-bold text-white">Discord Integration</h3>
-                                                    <span
-                                                        class="bg-green-500/20 text-green-400 text-xs px-2 py-0.5 rounded-full">Active</span>
-                                                </div>
-                                                <p class="text-gray-400 text-sm mt-1">Connect your Discord server for
-                                                    real-time store notifications</p>
-                                            </div>
-                                        </div>
-                                        <label class="relative inline-flex items-center cursor-pointer">
-                                            <input type="checkbox" class="sr-only peer" id="discord_toggle" checked>
-                                            <div
-                                                class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#5865F2]">
-                                            </div>
-                                            <span class="ml-3 text-sm font-medium text-gray-300">Plugin Enabled</span>
-                                        </label>
-                                    </div>
-                                </div>
-
-                                <!-- Plugin Configuration Body -->
-                                <div id="discord_config" class="p-6">
-
-                                    <!-- Webhook URL Configuration -->
-                                    <div class="mb-8">
-                                        <label class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">
-                                            Discord Webhook URL
-                                        </label>
-                                        <div class="flex flex-col sm:flex-row gap-3">
-                                            <input type="text"
-                                                placeholder="https://discord.com/api/webhooks/xxxxxxxxxx/xxxxxxxxxx"
-                                                value="https://discord.com/api/webhooks/1234567890/ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-                                                class="flex-1 bg-black/30 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#5865F2] font-mono">
-                                            <button onclick="alert('Test webhook connection')"
-                                                class="bg-[#5865F2] hover:bg-[#4752C4] text-white px-6 py-3 rounded-xl text-sm font-bold transition-all flex items-center justify-center gap-2">
-                                                <i class="bi bi-send"></i> Test Connection
-                                            </button>
-                                        </div>
-                                        <p class="text-xs text-gray-500 mt-2">
-                                            <i class="bi bi-question-circle"></i>
-                                            Create a webhook in your Discord server: Server Settings → Integrations →
-                                            Webhooks → New Webhook
-                                        </p>
-                                    </div>
-
-                                    <!-- Notification Events -->
-                                    <div class="mb-8">
-                                        <h4 class="text-sm font-bold text-gray-300 mb-4 uppercase tracking-wide">
-                                            Notification Events</h4>
-                                        <p class="text-xs text-gray-500 mb-4">Choose which store events trigger Discord
-                                            notifications</p>
-
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                            <label
-                                                class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors">
-                                                <input type="checkbox" class="w-4 h-4 accent-[#5865F2]" checked>
-                                                <div>
-                                                    <span class="text-white text-sm">🛒 New Order</span>
-                                                    <p class="text-gray-500 text-xs">When a customer places a new order</p>
-                                                </div>
-                                            </label>
-
-                                            <label
-                                                class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors">
-                                                <input type="checkbox" class="w-4 h-4 accent-[#5865F2]" checked>
-                                                <div>
-                                                    <span class="text-white text-sm">💰 Payment Received</span>
-                                                    <p class="text-gray-500 text-xs">When an order payment is confirmed</p>
-                                                </div>
-                                            </label>
-
-                                            <label
-                                                class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors">
-                                                <input type="checkbox" class="w-4 h-4 accent-[#5865F2]" checked>
-                                                <div>
-                                                    <span class="text-white text-sm">📦 Order Fulfilled</span>
-                                                    <p class="text-gray-500 text-xs">When an order is shipped/delivered</p>
-                                                </div>
-                                            </label>
-
-                                            <label
-                                                class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors">
-                                                <input type="checkbox" class="w-4 h-4 accent-[#5865F2]">
-                                                <div>
-                                                    <span class="text-white text-sm">❌ Order Cancelled</span>
-                                                    <p class="text-gray-500 text-xs">When an order is cancelled by
-                                                        customer/admin</p>
-                                                </div>
-                                            </label>
-
-                                            <label
-                                                class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors">
-                                                <input type="checkbox" class="w-4 h-4 accent-[#5865F2]">
-                                                <div>
-                                                    <span class="text-white text-sm">⭐ New Review</span>
-                                                    <p class="text-gray-500 text-xs">When a customer leaves a product review
-                                                    </p>
-                                                </div>
-                                            </label>
-
-                                            <label
-                                                class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors">
-                                                <input type="checkbox" class="w-4 h-4 accent-[#5865F2]" checked>
-                                                <div>
-                                                    <span class="text-white text-sm">📉 Low Stock Alert</span>
-                                                    <p class="text-gray-500 text-xs">When product stock falls below
-                                                        threshold</p>
-                                                </div>
-                                            </label>
-
-                                            <label
-                                                class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors">
-                                                <input type="checkbox" class="w-4 h-4 accent-[#5865F2]">
-                                                <div>
-                                                    <span class="text-white text-sm">👤 New Customer</span>
-                                                    <p class="text-gray-500 text-xs">When a new customer registers</p>
-                                                </div>
-                                            </label>
-
-                                            <label
-                                                class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors">
-                                                <input type="checkbox" class="w-4 h-4 accent-[#5865F2]">
-                                                <div>
-                                                    <span class="text-white text-sm">🔔 System Alert</span>
-                                                    <p class="text-gray-500 text-xs">Critical system notifications</p>
-                                                </div>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <!-- Notification Format -->
-                                    <div class="mb-8">
-                                        <h4 class="text-sm font-bold text-gray-300 mb-4 uppercase tracking-wide">
-                                            Notification Format</h4>
-
-                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <!-- Embed Style -->
-                                            <div>
-                                                <label class="block text-xs font-bold text-gray-400 mb-2">Message
-                                                    Style</label>
-                                                <select
-                                                    class="w-full bg-black/30 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#5865F2]">
-                                                    <option value="embed" selected>Rich Embed (Colorful & Detailed)</option>
-                                                    <option value="simple">Simple Text Message</option>
-                                                    <option value="compact">Compact Format</option>
-                                                </select>
-                                            </div>
-
-                                            <!-- Embed Color -->
-                                            <div>
-                                                <label class="block text-xs font-bold text-gray-400 mb-2">Embed
-                                                    Color</label>
-                                                <div class="flex items-center gap-3">
-                                                    <input type="color" value="#5865F2"
-                                                        class="w-12 h-10 rounded-lg cursor-pointer bg-black/30 border border-gray-700">
-                                                    <input type="text" value="#5865F2"
-                                                        class="flex-1 bg-black/30 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm font-mono focus:outline-none focus:border-[#5865F2]">
-                                                    <span class="text-xs text-gray-500">Discord Blurple</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Mention Settings -->
-                                    <div class="mb-8">
-                                        <h4 class="text-sm font-bold text-gray-300 mb-4 uppercase tracking-wide">Mention
-                                            Settings</h4>
-
-                                        <div class="bg-white/5 rounded-xl p-4 space-y-3">
-                                            <label class="flex items-center gap-3 cursor-pointer">
-                                                <input type="checkbox" class="w-4 h-4 accent-[#5865F2]">
-                                                <span class="text-white text-sm">@everyone for important orders</span>
-                                            </label>
-                                            <label class="flex items-center gap-3 cursor-pointer">
-                                                <input type="checkbox" class="w-4 h-4 accent-[#5865F2]">
-                                                <span class="text-white text-sm">@here for low stock alerts</span>
-                                            </label>
-                                            <label class="flex items-center gap-3 cursor-pointer">
-                                                <input type="checkbox" class="w-4 h-4 accent-[#5865F2]" checked>
-                                                <span class="text-white text-sm">Mention specific role for new orders</span>
-                                            </label>
-
-                                            <div class="pl-7">
-                                                <select
-                                                    class="w-full md:w-64 bg-black/30 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[#5865F2]">
-                                                    <option value="">Select role to mention</option>
-                                                    <option value="staff">@Store Staff</option>
-                                                    <option value="admin">@Admin</option>
-                                                    <option value="manager">@Manager</option>
-                                                    <option value="owner">@Owner</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Test Notification Section -->
-                                    <div class="bg-[#5865F2]/5 rounded-xl p-5 mb-8 border border-[#5865F2]/20">
+                                <!-- Discord Plugin Card -->
+                                <div class="bg-gradient-to-br from-[#5865F2]/10 to-[#7289DA]/5 rounded-xl border border-[#5865F2]/30 overflow-hidden">
+                                    <div class="p-6 border-b border-[#5865F2]/20">
                                         <div class="flex items-center justify-between flex-wrap gap-4">
-                                            <div class="flex items-center gap-3">
-                                                <i class="bi bi-bell-fill text-[#5865F2] text-xl"></i>
+                                            <div class="flex items-center gap-4">
+                                                <div class="w-14 h-14 bg-[#5865F2]/20 rounded-2xl flex items-center justify-center">
+                                                    <i class="bi bi-discord text-3xl text-[#5865F2]"></i>
+                                                </div>
                                                 <div>
-                                                    <h4 class="text-white font-bold text-sm">Send Test Notification</h4>
-                                                    <p class="text-gray-500 text-xs">Verify your Discord integration is
-                                                        working correctly</p>
+                                                    <div class="flex items-center gap-2 flex-wrap">
+                                                        <h3 class="text-xl font-bold text-white">Discord Integration</h3>
+                                                        <?php if ($discord_enabled === '1'): ?>
+                                                            <span class="bg-green-500/20 text-green-400 text-xs px-2 py-0.5 rounded-full">Active</span>
+                                                        <?php else: ?>
+                                                            <span class="bg-gray-500/20 text-gray-400 text-xs px-2 py-0.5 rounded-full">Inactive</span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                    <p class="text-gray-400 text-sm mt-1">Connect your Discord server for real-time store notifications</p>
                                                 </div>
                                             </div>
-                                            <button
-                                                onclick="alert('Test notification sent to Discord! Check your channel.')"
-                                                class="bg-[#5865F2] hover:bg-[#4752C4] text-white px-6 py-2.5 rounded-xl text-sm font-bold transition-all flex items-center gap-2">
-                                                <i class="bi bi-send"></i> Send Test Message
-                                            </button>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="hidden" name="discord[enabled]" value="0">
+                                                <input type="checkbox" name="discord[enabled]" value="1" class="sr-only peer" id="discord_toggle" <?= $discord_enabled === '1' ? 'checked' : '' ?>>
+                                                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#5865F2]"></div>
+                                                <span class="ml-3 text-sm font-medium text-gray-300"><?= $discord_enabled === '1' ? 'Plugin Enabled' : 'Plugin Disabled' ?></span>
+                                            </label>
                                         </div>
                                     </div>
 
-                                    <!-- Advanced Settings -->
-                                    <details class="mb-8">
-                                        <summary
-                                            class="cursor-pointer text-sm font-bold text-gray-400 hover:text-gray-300 transition-colors">
-                                            <i class="bi bi-gear"></i> Advanced Settings
-                                        </summary>
-                                        <div class="mt-4 space-y-4 pl-4 border-l-2 border-gray-700">
-                                            <div>
-                                                <label class="block text-xs font-bold text-gray-400 mb-2">Custom Webhook
-                                                    Name</label>
-                                                <input type="text" placeholder="Store Notifications"
-                                                    value="Varsity Market Store"
-                                                    class="w-full bg-black/30 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#5865F2]">
-                                            </div>
-                                            <div>
-                                                <label class="block text-xs font-bold text-gray-400 mb-2">Custom Avatar
-                                                    URL</label>
-                                                <input type="url" placeholder="https://yourstore.com/logo.png"
-                                                    class="w-full bg-black/30 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#5865F2]">
-                                            </div>
-                                            <label class="flex items-center gap-3 cursor-pointer">
-                                                <input type="checkbox" class="w-4 h-4 accent-[#5865F2]">
-                                                <span class="text-white text-sm">Include store performance metrics in daily
-                                                    summary</span>
-                                            </label>
-                                            <label class="flex items-center gap-3 cursor-pointer">
-                                                <input type="checkbox" class="w-4 h-4 accent-[#5865F2]" checked>
-                                                <span class="text-white text-sm">Show customer details in order
-                                                    notifications</span>
-                                            </label>
+                                    <div id="discord_config" class="p-6" style="opacity:<?= $discord_enabled === '1' ? '1' : '0.5' ?>;pointer-events:<?= $discord_enabled === '1' ? 'auto' : 'none' ?>">
+                                        <!-- Webhook URL -->
+                                        <div class="mb-8">
+                                            <label class="block text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Discord Webhook URL</label>
+                                            <input type="text" name="discord[webhook_url]" value="<?= htmlspecialchars($discord_webhook) ?>"
+                                                placeholder="https://discord.com/api/webhooks/xxxxxxxxxx/xxxxxxxxxx"
+                                                class="w-full bg-black/30 border border-gray-700 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-[#5865F2] font-mono">
+                                            <p class="text-xs text-gray-500 mt-2">
+                                                <i class="bi bi-question-circle"></i>
+                                                Create a webhook in your Discord server: Server Settings &rarr; Integrations &rarr; Webhooks &rarr; New Webhook
+                                            </p>
                                         </div>
-                                    </details>
 
-                                    <!-- Save Button -->
-                                    <div
-                                        class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-800">
-                                        <div class="text-xs text-gray-500">
-                                            <i class="bi bi-shield-check"></i> Discord plugin v2.1.0 | Last synced: Just now
+                                        <!-- Notification Events -->
+                                        <div class="mb-8">
+                                            <h4 class="text-sm font-bold text-gray-300 mb-4 uppercase tracking-wide">Notification Events</h4>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                <?php foreach ($discord_event_list as $evt_key => $evt): ?>
+                                                <label class="flex items-center gap-3 bg-white/5 rounded-xl px-4 py-3 cursor-pointer hover:bg-white/10 transition-colors">
+                                                    <input type="checkbox" name="discord_events[]" value="<?= $evt_key ?>" class="w-4 h-4 accent-[#5865F2]" <?= in_array($evt_key, $discord_events) ? 'checked' : '' ?>>
+                                                    <div>
+                                                        <span class="text-white text-sm"><?= htmlspecialchars($evt['label']) ?></span>
+                                                        <p class="text-gray-500 text-xs"><?= htmlspecialchars($evt['desc']) ?></p>
+                                                    </div>
+                                                </label>
+                                                <?php endforeach; ?>
+                                            </div>
                                         </div>
-                                        <div class="flex items-center gap-3">
-                                            <button
-                                                onclick="if(confirm('Reset Discord plugin to default settings?')) alert('Discord settings reset!')"
-                                                class="bg-gray-700 hover:bg-gray-600 text-white px-6 py-2.5 rounded-full text-sm font-medium transition-all">
-                                                Reset to Default
-                                            </button>
-                                            <button onclick="alert('Discord plugin settings saved!')"
+
+                                        <!-- Notification Format -->
+                                        <div class="mb-8">
+                                            <h4 class="text-sm font-bold text-gray-300 mb-4 uppercase tracking-wide">Notification Format</h4>
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-400 mb-2">Message Style</label>
+                                                    <select name="discord[message_style]"
+                                                        class="w-full bg-black/30 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#5865F2]">
+                                                        <option value="embed" <?= $discord_style === 'embed' ? 'selected' : '' ?>>Rich Embed (Colorful & Detailed)</option>
+                                                        <option value="simple" <?= $discord_style === 'simple' ? 'selected' : '' ?>>Simple Text Message</option>
+                                                        <option value="compact" <?= $discord_style === 'compact' ? 'selected' : '' ?>>Compact Format</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-400 mb-2">Embed Color</label>
+                                                    <div class="flex items-center gap-3">
+                                                        <input type="color" name="discord[embed_color]" value="<?= htmlspecialchars($discord_color) ?>"
+                                                            class="w-12 h-10 rounded-lg cursor-pointer bg-black/30 border border-gray-700">
+                                                        <span class="text-white text-sm font-mono"><?= htmlspecialchars($discord_color) ?></span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Mention Settings -->
+                                        <div class="mb-8">
+                                            <h4 class="text-sm font-bold text-gray-300 mb-4 uppercase tracking-wide">Mention Settings</h4>
+                                            <div class="bg-white/5 rounded-xl p-4 space-y-3">
+                                                <label class="flex items-center gap-3 cursor-pointer">
+                                                    <input type="checkbox" name="discord_mentions[]" value="everyone" class="w-4 h-4 accent-[#5865F2]" <?= in_array('everyone', $discord_mentions) ? 'checked' : '' ?>>
+                                                    <span class="text-white text-sm">@everyone for important orders</span>
+                                                </label>
+                                                <label class="flex items-center gap-3 cursor-pointer">
+                                                    <input type="checkbox" name="discord_mentions[]" value="here" class="w-4 h-4 accent-[#5865F2]" <?= in_array('here', $discord_mentions) ? 'checked' : '' ?>>
+                                                    <span class="text-white text-sm">@here for low stock alerts</span>
+                                                </label>
+                                                <label class="flex items-center gap-3 cursor-pointer">
+                                                    <input type="checkbox" name="discord_mentions[]" value="role" class="w-4 h-4 accent-[#5865F2]" <?= in_array('role', $discord_mentions) ? 'checked' : '' ?>>
+                                                    <span class="text-white text-sm">Mention specific role for new orders</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Advanced Settings -->
+                                        <details class="mb-8">
+                                            <summary class="cursor-pointer text-sm font-bold text-gray-400 hover:text-gray-300 transition-colors">
+                                                <i class="bi bi-gear"></i> Advanced Settings
+                                            </summary>
+                                            <div class="mt-4 space-y-4 pl-4 border-l-2 border-gray-700">
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-400 mb-2">Custom Webhook Name</label>
+                                                    <input type="text" name="discord[bot_name]" value="<?= htmlspecialchars($discord_bot_name) ?>" placeholder="Store Notifications"
+                                                        class="w-full bg-black/30 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#5865F2]">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-bold text-gray-400 mb-2">Custom Avatar URL</label>
+                                                    <input type="url" name="discord[avatar_url]" value="<?= htmlspecialchars($discord_avatar) ?>" placeholder="https://yourstore.com/logo.png"
+                                                        class="w-full bg-black/30 border border-gray-700 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-[#5865F2]">
+                                                </div>
+                                            </div>
+                                        </details>
+
+                                        <!-- Save Button -->
+                                        <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-gray-800">
+                                            <div class="text-xs text-gray-500">
+                                                <i class="bi bi-shield-check"></i> Discord plugin v2.1.0
+                                            </div>
+                                            <button type="submit"
                                                 class="bg-gradient-to-r from-[#5865F2] to-[#4752C4] hover:from-[#4752C4] hover:to-[#3B45A3] text-white px-8 py-2.5 rounded-full font-black text-sm transition-all transform hover:scale-105 shadow-xl shadow-[#5865F2]/30">
                                                 <i class="bi bi-save"></i> Save Plugin Settings
                                             </button>
                                         </div>
                                     </div>
-
                                 </div>
-                            </div>
 
-                            <!-- No Other Plugins Installed Message -->
-                            <div class="mt-8 text-center py-8 bg-white/5 rounded-xl border border-dashed border-gray-700">
-                                <i class="bi bi-puzzle text-4xl text-gray-600"></i>
-                                <p class="text-gray-500 text-sm mt-3">More plugins coming soon!</p>
-                                <p class="text-gray-600 text-xs mt-1">Check back later for additional integrations</p>
-                            </div>
+                                <!-- More Plugins -->
+                                <div class="mt-8 text-center py-8 bg-white/5 rounded-xl border border-dashed border-gray-700">
+                                    <i class="bi bi-puzzle text-4xl text-gray-600"></i>
+                                    <p class="text-gray-500 text-sm mt-3">More plugins coming soon!</p>
+                                    <p class="text-gray-600 text-xs mt-1">Check back later for additional integrations</p>
+                                </div>
 
+                            </div>
                         </div>
-                    </div>
+                    </form>
 
-                    <!-- JavaScript for Discord plugin toggle -->
                     <script>
                         document.getElementById('discord_toggle')?.addEventListener('change', function (e) {
                             const configSection = document.getElementById('discord_config');
                             const label = e.target.nextElementSibling.nextElementSibling;
-
                             if (configSection) {
-                                if (e.target.checked) {
-                                    configSection.style.opacity = '1';
-                                    configSection.style.pointerEvents = 'auto';
-                                    if (label) label.textContent = 'Plugin Enabled';
-                                } else {
-                                    configSection.style.opacity = '0.5';
-                                    configSection.style.pointerEvents = 'none';
-                                    if (label) label.textContent = 'Plugin Disabled';
-                                }
+                                configSection.style.opacity = e.target.checked ? '1' : '0.5';
+                                configSection.style.pointerEvents = e.target.checked ? 'auto' : 'none';
                             }
+                            if (label) label.textContent = e.target.checked ? 'Plugin Enabled' : 'Plugin Disabled';
                         });
                     </script>
 
-                <?php endif; ?>
+                <?php endif;
+                 ?>
 
 
 

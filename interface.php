@@ -45,19 +45,6 @@
     <?php } else { ?>
         <?php @include_once "pages.php"; ?>
     <?php } ?>
-
-    <!-- PWA Install Card (hidden until install prompt fires) -->
-    <div id="vm-install-card"
-        style="display:none; position:fixed; bottom:1.5rem; right:1.5rem; background:linear-gradient(135deg,#1e293b,#0f172a); border:1px solid #334155; border-radius:14px; padding:1.25rem 1.5rem; z-index:9999; box-shadow:0 12px 40px rgba(0,0,0,.5); font-family:'Inter',sans-serif; max-width:300px;">
-        <p style="color:#e2e8f0; font-size:.95rem; margin:0 0 .75rem;">Install <strong>Varsity Market</strong> for the
-            best experience.</p>
-        <button id="vm-install-btn"
-            style="background:linear-gradient(135deg,#7a1aab,#a855f7); color:#fff; border:none; padding:.6rem 1.25rem; border-radius:8px; font-size:.9rem; font-weight:600; cursor:pointer;">Install
-            App</button>
-    </div>
-
-    <!-- PWA Scripts -->
-    <script src="/assets/pwa.js"></script>
 </body>
 
 </html>
