@@ -30,6 +30,12 @@ if ($page == "store-access"){
     die(0);
 }
 
+if ($page == "store-proxy"){
+    $e = dirname(__FILE__)."/api/proxy.php";
+    @include_once $e;
+    die(0);
+}
+
 if ($page == "apk"){
     $e = dirname(__FILE__)."/apk/index.php";
     include_once $e; 
