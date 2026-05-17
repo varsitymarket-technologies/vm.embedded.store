@@ -123,6 +123,11 @@ function get_private_pdo($domain) {
         user_agent TEXT,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS cors_domains (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        domain VARCHAR(255) UNIQUE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
     return $pdo;
 }
 
@@ -174,6 +179,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if ($private_pdo && $key_id > 0) {
             $stmt = $private_pdo->prepare("DELETE FROM api_keys WHERE id = ?");
             $stmt->execute([$key_id]);
+        }
+        header("Location: ?tab=dev&saved=1");
+        exit;
+    }
+
+    if ($_POST['action'] === 'add_cors_domain') {
+        $cors_domain = trim($_POST['cors_domain'] ?? '');
+        if (!empty($cors_domain)) {
+            // Normalize: strip trailing slashes, ensure scheme
+            $cors_domain = rtrim($cors_domain, '/');
+            if (!preg_match('#^https?://#', $cors_domain)) {
+                $cors_domain = 'https://' . $cors_domain;
+            }
+            $private_pdo = get_private_pdo($domain);
+            if ($private_pdo) {
+                $stmt = $private_pdo->prepare("INSERT OR IGNORE INTO cors_domains (domain) VALUES (?)");
+                $stmt->execute([$cors_domain]);
+            }
+        }
+        header("Location: ?tab=dev&saved=1");
+        exit;
+    }
+
+    if ($_POST['action'] === 'remove_cors_domain') {
+        $cors_id = (int) ($_POST['cors_id'] ?? 0);
+        $private_pdo = get_private_pdo($domain);
+        if ($private_pdo && $cors_id > 0) {
+            $stmt = $private_pdo->prepare("DELETE FROM cors_domains WHERE id = ?");
+            $stmt->execute([$cors_id]);
         }
         header("Location: ?tab=dev&saved=1");
         exit;

@@ -234,6 +234,12 @@ function initiate_private_database($domain){
         "user_agent" => "TEXT",
         "created_at" => "DATETIME DEFAULT CURRENT_TIMESTAMP"
     ]);
+    // Create CORS whitelisted domains table
+    $e->createTable("cors_domains", [
+        "id" => "INTEGER PRIMARY KEY AUTOINCREMENT",
+        "domain" => "VARCHAR(255) UNIQUE",
+        "created_at" => "DATETIME DEFAULT CURRENT_TIMESTAMP"
+    ]);
     return $e;
 }
 

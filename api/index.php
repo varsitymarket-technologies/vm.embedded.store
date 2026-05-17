@@ -6,20 +6,17 @@
 #   AUTHOR  : HARDY HASTINGS
 #   RELEASE : 2026/05/15
 
-header("Access-Control-Allow-Origin: *");
+// CORS headers set after origin check below
 header("Access-Control-Allow-Headers: Authorization, Content-Type, X-API-Key");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Content-Type: application/json; charset=UTF-8");
-
-// Handle preflight requests
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    exit;
-}
 
 // Parse store ID from URL: /store-access/{store-id}/?state=endpoint
 $store_id = ex(2);
 
 if (empty($store_id)) {
+    header("Access-Control-Allow-Origin: *");
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit; }
     http_response_code(400);
     echo json_encode(["error" => "Missing store ID", "usage" => "/store-access/{store-id}/?state={endpoint}"]);
     exit;
@@ -30,6 +27,8 @@ $db_engine = __DB_MODULE__;
 $site = $db_engine->query("SELECT * FROM sys_websites WHERE id = ? LIMIT 1", [$store_id]);
 
 if (empty($site)) {
+    header("Access-Control-Allow-Origin: *");
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit; }
     http_response_code(404);
     echo json_encode(["error" => "Store not found"]);
     exit;
@@ -69,6 +68,38 @@ $private_db->createTable("checkout_sessions", [
     "return_url" => "TEXT",
     "created_at" => "DATETIME DEFAULT CURRENT_TIMESTAMP"
 ]);
+
+// --- CORS origin check against whitelisted domains ---
+$request_origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+$cors_whitelist = $private_db->query("SELECT domain FROM cors_domains");
+$allowed_origins = [];
+if (!empty($cors_whitelist)) {
+    foreach ($cors_whitelist as $row) {
+        $allowed_origins[] = rtrim($row['domain'], '/');
+    }
+}
+
+if (empty($allowed_origins)) {
+    // No whitelist configured — allow all origins
+    header("Access-Control-Allow-Origin: *");
+} elseif (!empty($request_origin) && in_array(rtrim($request_origin, '/'), $allowed_origins, true)) {
+    // Origin matches whitelist
+    header("Access-Control-Allow-Origin: " . $request_origin);
+    header("Vary: Origin");
+} elseif (empty($request_origin)) {
+    // No Origin header (server-to-server, curl, etc.) — allow through
+    header("Access-Control-Allow-Origin: *");
+} else {
+    // Origin not whitelisted
+    http_response_code(403);
+    echo json_encode(["error" => "Origin not allowed", "origin" => $request_origin]);
+    exit;
+}
+
+// Handle preflight requests
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    exit;
+}
 
 // --- SDK serving route (no API key required) ---
 if (ex(3) === 'sdk') {

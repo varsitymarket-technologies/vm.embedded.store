@@ -3,6 +3,7 @@
                     $store_id = '';
                     $api_base_url = '';
                     $api_keys = [];
+                    $cors_domains = [];
                     $new_key_display = $_GET['new_key'] ?? '';
                     $dev_error = '';
                     $private_pdo = null;
@@ -22,6 +23,10 @@
                                 $stmt = $private_pdo->prepare("SELECT * FROM api_keys ORDER BY created_at DESC");
                                 $stmt->execute();
                                 $api_keys = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+                                $stmt2 = $private_pdo->prepare("SELECT * FROM cors_domains ORDER BY created_at DESC");
+                                $stmt2->execute();
+                                $cors_domains = $stmt2->fetchAll(PDO::FETCH_ASSOC) ?: [];
                             }
                         }
                     } catch (\Throwable $th) {
@@ -279,6 +284,58 @@
                                     <i class="bi bi-key text-4xl text-gray-600"></i>
                                     <p class="text-gray-500 text-sm mt-2">No API keys generated yet</p>
                                     <p class="text-gray-600 text-xs">Click "Generate New Key" to create your first API key</p>
+                                </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <!-- CORS Whitelisted Domains -->
+                            <div class="border-t border-gray-800 pt-6 mb-8">
+                                <div class="flex items-center justify-between flex-wrap gap-4 mb-5">
+                                    <div>
+                                        <h3 class="text-lg font-bold text-white">Allowed Domains (CORS)</h3>
+                                        <p class="text-xs text-gray-500 mt-1">Only these domains can make API requests from the browser. Leave empty to allow all origins.</p>
+                                    </div>
+                                </div>
+
+                                <!-- Add Domain Form -->
+                                <form method="POST" class="flex items-center gap-3 mb-5">
+                                    <input type="hidden" name="action" value="add_cors_domain">
+                                    <input type="text" name="cors_domain" required placeholder="https://example.com"
+                                        class="flex-1 bg-black/50 border border-gray-700 rounded-lg px-4 py-2.5 text-white text-sm focus:border-blue-500 focus:outline-none font-mono"
+                                        pattern=".*\..*" title="Enter a valid domain (e.g. https://mysite.com)">
+                                    <button type="submit"
+                                        class="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-5 py-2.5 rounded-lg text-sm font-bold transition-all flex items-center gap-2 whitespace-nowrap">
+                                        <i class="bi bi-plus-lg"></i> Add Domain
+                                    </button>
+                                </form>
+
+                                <?php if (!empty($cors_domains)): ?>
+                                <div class="space-y-2">
+                                    <?php foreach ($cors_domains as $cd): ?>
+                                    <div class="flex items-center justify-between bg-white/5 rounded-lg px-4 py-3 border border-white/5">
+                                        <div class="flex items-center gap-3">
+                                            <i class="bi bi-globe2 text-blue-400"></i>
+                                            <code class="text-sm font-mono text-white"><?php echo htmlspecialchars($cd['domain'], ENT_QUOTES, 'UTF-8'); ?></code>
+                                        </div>
+                                        <form method="POST" style="display:inline" onsubmit="return confirm('Remove this domain from the whitelist?')">
+                                            <input type="hidden" name="action" value="remove_cors_domain">
+                                            <input type="hidden" name="cors_id" value="<?php echo (int) $cd['id']; ?>">
+                                            <button type="submit" class="text-red-400 hover:text-red-300 text-xs transition-colors" title="Remove">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <?php endforeach; ?>
+                                </div>
+                                <?php else: ?>
+                                <div class="bg-amber-500/5 border border-amber-500/15 rounded-xl p-4">
+                                    <div class="flex items-start gap-3">
+                                        <i class="bi bi-info-circle text-amber-400 mt-0.5"></i>
+                                        <div>
+                                            <p class="text-amber-400 text-sm font-bold">Open Access Mode</p>
+                                            <p class="text-gray-400 text-xs mt-1">No domains whitelisted — all origins (<code class="text-gray-500">*</code>) are currently allowed. Add domains above to restrict API access to specific websites.</p>
+                                        </div>
+                                    </div>
                                 </div>
                                 <?php endif; ?>
                             </div>
