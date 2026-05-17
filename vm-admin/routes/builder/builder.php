@@ -361,6 +361,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     .fb-action.danger { color: var(--fig-danger); border-color: rgba(242,72,34,0.25); }
     .fb-action.danger:hover { background: rgba(242,72,34,0.08); }
 
+    /* Floating Actions Toolbar */
+    .fb-float-actions {
+        position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+        display: none; align-items: center; gap: 2px;
+        background: var(--fig-surface); border: 1px solid var(--fig-border);
+        border-radius: 10px; padding: 4px 6px;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+        z-index: 1000;
+    }
+    .fb-float-actions.show { display: flex; }
+    .fb-float-btn {
+        width: 32px; height: 32px; border: none; border-radius: 6px;
+        background: transparent; color: var(--fig-text2); cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 14px; transition: all 0.12s; position: relative;
+    }
+    .fb-float-btn:hover { background: var(--fig-surface2); color: var(--fig-text); }
+    .fb-float-btn.danger:hover { background: rgba(242,72,34,0.12); color: var(--fig-danger); }
+    .fb-float-sep { width: 1px; height: 20px; background: var(--fig-border); margin: 0 2px; }
+    .fb-float-btn[title]:hover::after {
+        content: attr(title); position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%);
+        background: var(--fig-bg); color: var(--fig-text); font-size: 10px; padding: 3px 8px;
+        border-radius: 4px; white-space: nowrap; pointer-events: none;
+        border: 1px solid var(--fig-border-subtle);
+    }
+
+    /* Inspect HTML snippet */
+    .inspect-section { padding: 12px; border-bottom: 1px solid var(--fig-border-subtle); }
+    .inspect-label {
+        font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+        color: var(--fig-text3); margin-bottom: 8px;
+    }
+    .inspect-code {
+        background: var(--fig-bg); border: 1px solid var(--fig-border-subtle); border-radius: 6px;
+        padding: 10px 12px; max-height: 220px; overflow: auto; position: relative;
+    }
+    .inspect-code pre {
+        font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace; font-size: 11px;
+        color: var(--fig-text2); white-space: pre-wrap; word-break: break-all;
+        line-height: 1.6; margin: 0; tab-size: 2; outline: none;
+    }
+    .inspect-code pre[contenteditable]:focus {
+        background: rgba(13, 153, 255, 0.04);
+        box-shadow: inset 0 0 0 1px rgba(13, 153, 255, 0.2);
+        border-radius: 4px;
+    }
+    .inspect-code .hl-tag { color: #f07178; }
+    .inspect-code .hl-attr { color: #ffcb6b; }
+    .inspect-code .hl-val { color: #c3e88d; }
+    .inspect-code .hl-text { color: #b3b3b3; }
+    .inspect-copy {
+        position: absolute; top: 6px; right: 6px;
+        width: 26px; height: 26px; border: 1px solid var(--fig-border-subtle); border-radius: 4px;
+        background: var(--fig-surface); color: var(--fig-text3); cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 11px; transition: all 0.15s;
+    }
+    .inspect-copy:hover { background: var(--fig-surface2); color: var(--fig-text); }
+
     /* Toast */
     .fb-toast {
         position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(40px);
@@ -494,6 +553,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             <div class="fb-frame desktop" id="canvas-frame">
                 <iframe id="builder-iframe" src="about:blank"></iframe>
             </div>
+
+            <!-- Floating Actions Toolbar -->
+            <div class="fb-float-actions" id="float-actions">
+                <button class="fb-float-btn" onclick="moveElement('up')" title="Move Up"><i class="bi bi-arrow-up"></i></button>
+                <button class="fb-float-btn" onclick="moveElement('down')" title="Move Down"><i class="bi bi-arrow-down"></i></button>
+                <div class="fb-float-sep"></div>
+                <button class="fb-float-btn" onclick="duplicateElement()" title="Duplicate"><i class="bi bi-copy"></i></button>
+                <div class="fb-float-sep"></div>
+                <button class="fb-float-btn danger" onclick="deleteElement()" title="Delete"><i class="bi bi-trash3"></i></button>
+            </div>
         </div>
 
         <!-- Right Panel -->
@@ -543,7 +612,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                             Content <span class="chev"><i class="bi bi-chevron-right"></i></span>
                         </div>
                         <div class="fb-sec-body">
-                            <textarea class="fb-input" id="prop-text" rows="3" placeholder="Text content..." oninput="onPropChange('text')"></textarea>
+                            <textarea style="width:100%;" class="fb-input" id="prop-text" rows="3" placeholder="Text content..." oninput="onPropChange('text')"></textarea>
                         </div>
                     </div>
 
@@ -860,24 +929,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         </div>
                     </div>
 
-                    <!-- Actions -->
-                    <div class="fb-section">
-                        <div class="fb-sec-header open" onclick="toggleSec(this)">
-                            Actions <span class="chev"><i class="bi bi-chevron-right"></i></span>
-                        </div>
-                        <div class="fb-sec-body">
-                            <button class="fb-action" onclick="moveElement('up')"><i class="bi bi-arrow-up" style="font-size:12px"></i> Move Up</button>
-                            <button class="fb-action" onclick="moveElement('down')"><i class="bi bi-arrow-down" style="font-size:12px"></i> Move Down</button>
-                            <button class="fb-action" onclick="duplicateElement()"><i class="bi bi-copy" style="font-size:12px"></i> Duplicate</button>
-                            <button class="fb-action danger" onclick="deleteElement()"><i class="bi bi-trash3" style="font-size:12px"></i> Delete</button>
-                        </div>
-                    </div>
+                    <!-- Actions removed - now floating toolbar -->
                 </div>
 
                 <!-- Inspect Tab -->
                 <div id="panel-inspect" style="display:none">
-                    <div style="padding:12px;">
-                        <pre id="inspect-output" style="font-family:monospace;font-size:10px;color:var(--fig-text2);white-space:pre-wrap;word-break:break-all;line-height:1.6;"></pre>
+                    <!-- HTML Snippet -->
+                    <div class="inspect-section">
+                        <div class="inspect-label">HTML</div>
+                        <div class="inspect-code">
+                            <button class="inspect-copy" onclick="copyInspectHtml()" title="Copy"><i class="bi bi-clipboard"></i></button>
+                            <pre id="inspect-html" contenteditable="true" ></pre>
+                        </div>
+                    </div>
+                    <!-- Computed CSS -->
+                    <div class="inspect-section" style="border-bottom:none;">
+                        <div class="inspect-label">Computed Styles</div>
+                        <div class="inspect-code">
+                            <button class="inspect-copy" onclick="copyInspectCss()" title="Copy"><i class="bi bi-clipboard"></i></button>
+                            <pre id="inspect-output"></pre>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -896,6 +967,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     const panelEmpty = document.getElementById('panel-empty');
     const panelDesign = document.getElementById('panel-design');
     const panelInspect = document.getElementById('panel-inspect');
+    const floatActions = document.getElementById('float-actions');
     let currentElement = null;
     let engineReady = false;
     let currentRightTab = 'design';
@@ -949,12 +1021,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if (msg.type === 'ELEMENT_DELETED') { currentElement = null; hideProperties(); }
         if (msg.type === 'REQUEST_DELETE') { if (confirm('Delete this element?')) sendToIframe({ type: 'DELETE_ELEMENT' }); }
         if (msg.type === 'LAYERS_UPDATE') { renderLayers(msg.layers); }
+        if (msg.type === 'HTML_SYNC_ERROR') { showToast('HTML error: ' + msg.error); }
     });
 
     // ── Show/Hide Properties ──
     function showProperties(info) {
         panelEmpty.style.display = 'none';
-        panelDesign.style.display = 'block';
+        // Respect current tab: show whichever tab is active
+        panelDesign.style.display = currentRightTab === 'design' ? 'block' : 'none';
+        panelInspect.style.display = currentRightTab === 'inspect' ? 'block' : 'none';
+        floatActions.classList.add('show');
 
         // Element
         document.getElementById('prop-tag').textContent = info.tag.toLowerCase();
@@ -1059,7 +1135,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         panelEmpty.style.display = 'flex';
         panelDesign.style.display = 'none';
         panelInspect.style.display = 'none';
+        floatActions.classList.remove('show');
         document.getElementById('inspect-output').textContent = '';
+        document.getElementById('inspect-html').innerHTML = '';
     }
 
     function setVal(id, val) {
@@ -1089,6 +1167,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     function updateInspect(info) {
         if (!info) return;
+
+        // HTML snippet with syntax highlighting
+        if (info.htmlSnippet) {
+            const formatted = formatHtml(info.htmlSnippet);
+            document.getElementById('inspect-html').innerHTML = highlightHtml(formatted);
+        } else {
+            document.getElementById('inspect-html').innerHTML = '<span class="hl-text">No HTML available</span>';
+        }
+
+        // Computed CSS
         const lines = [];
         lines.push(`/* ${info.tag.toLowerCase()}${info.id ? '#'+info.id : ''}${info.classes ? '.'+info.classes.split(' ').join('.') : ''} */`);
         lines.push('');
@@ -1106,6 +1194,109 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         ];
         props.forEach(([k, v]) => { if (v && v !== 'none' && v !== 'normal') lines.push(`${k}: ${v};`); });
         document.getElementById('inspect-output').textContent = lines.join('\n');
+    }
+
+    function formatHtml(html) {
+        // Basic pretty-print: indent nested tags
+        let result = '';
+        let indent = 0;
+        const pad = () => '  '.repeat(indent);
+        // Split by tags
+        const tokens = html.replace(/>\s*</g, '>\n<').split('\n');
+        tokens.forEach(token => {
+            const t = token.trim();
+            if (!t) return;
+            if (t.startsWith('</')) {
+                indent = Math.max(0, indent - 1);
+                result += pad() + t + '\n';
+            } else if (t.startsWith('<') && !t.startsWith('<!') && !t.endsWith('/>') && !t.match(/^<(img|br|hr|input|meta|link|area|base|col|embed|source|track|wbr)\b/i)) {
+                result += pad() + t + '\n';
+                // Only indent if not self-closing and has a closing counterpart
+                if (!t.includes('</')) indent++;
+            } else {
+                result += pad() + t + '\n';
+            }
+        });
+        return result.trimEnd();
+    }
+
+    function highlightHtml(html) {
+        // Process character by character to build highlighted output
+        let out = '';
+        let i = 0;
+        const len = html.length;
+        while (i < len) {
+            if (html[i] === '<') {
+                // Find end of tag
+                const end = html.indexOf('>', i);
+                if (end === -1) { out += esc(html.slice(i)); break; }
+                const tag = html.slice(i, end + 1);
+                out += highlightTag(tag);
+                i = end + 1;
+            } else {
+                // Text content
+                const next = html.indexOf('<', i);
+                const text = next === -1 ? html.slice(i) : html.slice(i, next);
+                out += '<span class="hl-text">' + esc(text) + '</span>';
+                i = next === -1 ? len : next;
+            }
+        }
+        return out;
+    }
+
+    function highlightTag(tag) {
+        // Match: < or </, tag name, attributes, > or />
+        const m = tag.match(/^(<\/?)(\w[\w-]*)([\s\S]*?)(\/?>)$/);
+        if (!m) return esc(tag);
+        let result = esc(m[1]) + '<span class="hl-tag">' + esc(m[2]) + '</span>';
+        // Parse attributes
+        const attrs = m[3];
+        if (attrs.trim()) {
+            result += attrs.replace(/([\w-]+)\s*=\s*"([^"]*)"/g, (_, name, val) =>
+                ' <span class="hl-attr">' + esc(name) + '</span>=<span class="hl-val">"' + esc(val) + '"</span>'
+            ).replace(/([\w-]+)\s*=\s*'([^']*)'/g, (_, name, val) =>
+                ' <span class="hl-attr">' + esc(name) + '</span>=<span class="hl-val">\'' + esc(val) + '\'</span>'
+            );
+        }
+        result += esc(m[4]);
+        return result;
+    }
+
+    function esc(s) {
+        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    window.copyInspectHtml = function() {
+        const el = document.getElementById('inspect-html');
+        const text = el.textContent || el.innerText;
+        navigator.clipboard.writeText(text).then(() => showToast('HTML copied'));
+    };
+
+    window.copyInspectCss = function() {
+        const el = document.getElementById('inspect-output');
+        navigator.clipboard.writeText(el.textContent).then(() => showToast('CSS copied'));
+    };
+
+    // ── HTML contenteditable sync ──
+    const inspectHtmlEl = document.getElementById('inspect-html');
+    let htmlSyncTimeout = null;
+
+    inspectHtmlEl.addEventListener('input', function() {
+        // Debounce — sync after user stops typing for 600ms
+        clearTimeout(htmlSyncTimeout);
+        htmlSyncTimeout = setTimeout(syncHtmlToElement, 600);
+    });
+
+    inspectHtmlEl.addEventListener('blur', function() {
+        clearTimeout(htmlSyncTimeout);
+        syncHtmlToElement();
+    });
+
+    function syncHtmlToElement() {
+        if (!currentElement) return;
+        const rawHtml = inspectHtmlEl.textContent || inspectHtmlEl.innerText;
+        if (!rawHtml.trim()) return;
+        sendToIframe({ type: 'SET_OUTER_HTML', html: rawHtml.trim() });
     }
 
     // ── Layers ──

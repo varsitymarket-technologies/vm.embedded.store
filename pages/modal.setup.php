@@ -450,13 +450,27 @@
 
                     <!-- Step 4: Launch -->
                     <div class="form-step-content" id="step3">
-                        <div style="text-align: center; padding: 2rem 0;">
+                        <div style="text-align: center; padding: 1.5rem 0 1rem;">
                             <div style="font-size: 3rem; color: var(--primary-accent); margin-bottom: 1rem;">
                                 <i class="fas fa-rocket"></i>
                             </div>
-                            <h4 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">Almost There!</h4>
+                            <h4 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: #fff !important;">Almost There!</h4>
                             <p style="color: var(--text-muted)">Your store is ready to be deployed. Click finish to
                                 launch your online presence.</p>
+                        </div>
+
+                        <!-- Demo Data Toggle -->
+                        <div style="margin-top: 1rem; border: 1px solid #333; border-radius: 12px; padding: 1.25rem; background: #111;">
+                            <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; margin: 0;">
+                                <input type="checkbox" name="load_demo_data" value="1"
+                                    style="width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary-accent); flex-shrink: 0; cursor: pointer;">
+                                <div>
+                                    <span style="font-weight: 700; font-size: 0.9rem; color: #fff;">Load sample data</span>
+                                    <p style="font-size: 0.8rem; color: #888 !important; margin-top: 4px; line-height: 1.5;">
+                                        Populate your store with demo categories, products, and orders so you can explore all features right away. You can remove them later.
+                                    </p>
+                                </div>
+                            </label>
                         </div>
                     </div>
                 </div>

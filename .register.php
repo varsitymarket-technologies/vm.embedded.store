@@ -17,10 +17,20 @@ function sync_themes() {
     $manifest_json = @file_get_contents($remote_manifest_url);
     if ($manifest_json === false) return;
     
-    $local_json = file_get_contents($local_root."records.json"); 
-    if ($local_json  == $manifest_json){
-        return null;    
-    } 
+    $local_json = @file_get_contents($local_root."records.json");
+
+    // Count local theme dirs vs manifest entries to detect missing themes
+    $themes_library_check = json_decode($manifest_json, true);
+    $all_present = true;
+    if (is_array($themes_library_check)) {
+        foreach ($themes_library_check as $tid => $tdata) {
+            if (!is_dir($local_root . $tid)) { $all_present = false; break; }
+        }
+    }
+
+    if ($local_json == $manifest_json && $all_present) {
+        return null;
+    }
 
     $themes_library = json_decode($manifest_json, true);
     if (!is_array($themes_library)) return;

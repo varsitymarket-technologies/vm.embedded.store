@@ -224,8 +224,24 @@
             // Background
             backgroundImage: cs.backgroundImage,
             backgroundSize: cs.backgroundSize,
-            backgroundPosition: cs.backgroundPosition
+            backgroundPosition: cs.backgroundPosition,
+            // HTML snippet (outer element only, children summarized)
+            htmlSnippet: getHtmlSnippet(el)
         };
+    }
+
+    function getHtmlSnippet(el) {
+        try {
+            const clone = el.cloneNode(true);
+            // Remove builder overlays from clone
+            clone.querySelectorAll('[id^="vb-"], [class*="vb-"]').forEach(n => n.remove());
+            clone.removeAttribute('contenteditable');
+            clone.removeAttribute('data-vb-editing');
+            // Get outer HTML but limit size
+            let html = clone.outerHTML;
+            if (html.length > 3000) html = html.substring(0, 3000) + '\n<!-- ... truncated -->';
+            return html;
+        } catch(e) { return ''; }
     }
 
     function sendToParent(data) {
@@ -464,6 +480,23 @@
             if (msg.attr === 'innerHTML') selectedEl.innerHTML = msg.value;
             if (msg.attr === 'id') selectedEl.id = msg.value;
             if (msg.attr === 'className') selectedEl.className = msg.value;
+        }
+
+        if (msg.type === 'SET_OUTER_HTML' && selectedEl) {
+            try {
+                const parent = selectedEl.parentElement;
+                if (!parent) return;
+                const temp = document.createElement('div');
+                temp.innerHTML = msg.html;
+                const newEl = temp.firstElementChild;
+                if (newEl) {
+                    parent.replaceChild(newEl, selectedEl);
+                    select(newEl);
+                    sendToParent({ type: 'LAYERS_UPDATE', layers: buildLayersTree() });
+                }
+            } catch(e) {
+                sendToParent({ type: 'HTML_SYNC_ERROR', error: e.message });
+            }
         }
 
         if (msg.type === 'DELETE_ELEMENT' && selectedEl) {
