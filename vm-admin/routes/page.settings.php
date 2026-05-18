@@ -314,35 +314,26 @@ $tab_files = [
 
 <!-- Main Content -->
 <div class="flex flex-1 flex-col overflow-hidden">
-    <!-- Header -->
     <?php @include_once "header.php"; ?>
 
-    <div class="animate-fade-in pb-20 flex-1 overflow-y-auto overflow-x-hidden bg-gray-900 p-6">
-        <!-- Save Toast -->
-        <div class="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <?php if (isset($_GET['saved'])): ?>
-                <div id="saveToast"
-                    class="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-2 rounded-full text-sm font-bold animate-bounce">
-                    <i class="bi bi-check2-circle text-lg"></i>
-                    <span>Changes saved successfully</span>
-                </div>
-                <script>setTimeout(() => document.getElementById('saveToast').remove(), 5000);</script>
-            <?php endif; ?>
+    <main class="flex-1 overflow-y-auto overflow-x-hidden bg-[#09090b] p-6">
+
+        <?php if (isset($_GET['saved'])): ?>
+        <div id="saveToast" class="mb-4 flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-2.5 rounded-lg text-sm font-medium">
+            <i class="bi bi-check-circle"></i> Changes saved successfully
         </div>
+        <script>setTimeout(() => document.getElementById('saveToast').remove(), 4000);</script>
+        <?php endif; ?>
 
         <?php if ($active_tab == 'general'): ?>
             <?php @include $settings_dir . $tab_files['general']; ?>
         <?php endif; ?>
 
-        <div class="settings-layout">
-            <main class="settings-content">
-                <?php
-                if ($active_tab !== 'general' && isset($tab_files[$active_tab])) {
-                    @include $settings_dir . $tab_files[$active_tab];
-                }
-                ?>
-            </main>
-        </div>
-    </div>
+        <?php
+        if ($active_tab !== 'general' && isset($tab_files[$active_tab])) {
+            @include $settings_dir . $tab_files[$active_tab];
+        }
+        ?>
 
+    </main>
 </div>

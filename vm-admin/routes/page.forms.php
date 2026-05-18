@@ -31,6 +31,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db->query("DELETE FROM forms WHERE id = ?", [$id]);
         echo "<script>window.location.href = window.location.href;</script>";
         exit;
+    } elseif ($action === 'delete_subscriber') {
+        $id = $_POST['id'] ?? 0;
+        $db->query("DELETE FROM subscribers WHERE id = ?", [$id]);
+        echo "<script>window.location.href = window.location.href;</script>";
+        exit;
     }
 }
 
@@ -42,168 +47,247 @@ $unread = 0;
 if ($leads_data) {
     foreach($leads_data as $l) {
         if ($l['unread']) $unread++;
-        $leads[] = [
-            'id' => $l['id'],
-            'name' => htmlspecialchars($l['name'] ?? ''),
-            'email' => htmlspecialchars($l['email'] ?? ''),
-            'subject' => htmlspecialchars($l['subject'] ?? ''),
-            'message' => htmlspecialchars($l['message'] ?? ''),
-            'date' => date('M j, Y g:i A', strtotime($l['created_at'] ?? 'now')),
-            'unread' => (bool)$l['unread']
-        ];
+        $leads[] = $l;
     }
 }
 
 $subscribers = [];
 if ($subs_data) {
     foreach($subs_data as $s) {
-        $subscribers[] = [
-            'email' => htmlspecialchars($s['email'] ?? ''),
-            'date' => date('M j, Y', strtotime($s['created_at'] ?? 'now'))
-        ];
+        $subscribers[] = $s;
     }
 }
 $subs_count = count($subscribers);
 $totalInquiries = count($leads);
-$convRate = ($totalInquiries > 0 || $subs_count > 0) ? round(($subs_count / ($totalInquiries + $subs_count)) * 100, 1) : 0;
+$replied = $totalInquiries - $unread;
 ?>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-
         <!-- Main Content -->
         <div class="flex flex-1 flex-col overflow-hidden">
-            <!-- Header -->
             <?php @include_once "header.php"; ?>
 
-            <!-- Main Scrollable Area -->
-            <main class="flex-1 overflow-y-auto overflow-x-hidden bg-gray-900 p-6">
-                <div class="flex justify-between items-center mb-6">
-                </div>
-                
-<div class="flex flex-1 flex-col bg-gray-900 text-white min-h-screen" x-data="formManager()">
-    <div class="max-w-7xl mx-auto w-full space-y-6">
-        
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <h1 class="text-2xl font-bold">Inbound Management</h1>
-                <p class="text-gray-400 text-sm">Reviewing form submissions and audience growth.</p>
-            </div>
-            <div class="flex gap-2">
-                <button @click="exportData()" class="bg-gray-800 hover:bg-gray-700 border border-white/10 px-4 py-2 rounded-lg text-sm font-medium transition-all">
-                    Export CSV
-                </button>
-                <button class="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm font-medium transition-all">
-                    Form Settings
-                </button>
-            </div>
-        </div>
+            <main class="flex-1 overflow-y-auto overflow-x-hidden bg-[#09090b] p-6">
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div class="bg-gray-800 border border-white/5 p-5 rounded-2xl">
-                <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Total Inquiries</p>
-                <h3 class="text-2xl font-bold mt-1" x-text="stats.totalInquiries">0</h3>
-                <p class="text-green-400 text-[10px] mt-1">+12% this week</p>
-            </div>
-            <div class="bg-gray-800 border border-white/5 p-5 rounded-2xl">
-                <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Unread Leads</p>
-                <h3 class="text-2xl font-bold mt-1 text-orange-400" x-text="stats.unread">0</h3>
-                <p class="text-gray-500 text-[10px] mt-1">Requires attention</p>
-            </div>
-            <div class="bg-gray-800 border border-white/5 p-5 rounded-2xl">
-                <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Subscribers</p>
-                <h3 class="text-2xl font-bold mt-1 text-purple-400" x-text="stats.subscribers">0</h3>
-                <p class="text-purple-400/50 text-[10px] mt-1">Active mailing list</p>
-            </div>
-            <div class="bg-gray-800 border border-white/5 p-5 rounded-2xl">
-                <p class="text-gray-500 text-[10px] uppercase font-bold tracking-widest">Conv. Rate</p>
-                <h3 class="text-2xl font-bold mt-1" x-text="stats.convRate + '%'">0%</h3>
-                <div class="w-full bg-gray-700 h-1 mt-3 rounded-full overflow-hidden">
-                    <div class="bg-purple-500 h-full" :style="`width: ${stats.convRate}%` text-purple-400"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="bg-gray-800 border border-white/5 rounded-3xl overflow-hidden">
-            <div class="flex border-b border-white/5 bg-black/20">
-                <button @click="activeTab = 'contacts'" 
-                        :class="activeTab === 'contacts' ? 'text-purple-400 border-b-2 border-purple-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'"
-                        class="px-8 py-4 text-sm font-bold transition-all">
-                    Contact Submissions
-                </button>
-                <button @click="activeTab = 'newsletter'" 
-                        :class="activeTab === 'newsletter' ? 'text-purple-400 border-b-2 border-purple-400 bg-white/5' : 'text-gray-500 hover:text-gray-300'"
-                        class="px-8 py-4 text-sm font-bold transition-all">
-                    Newsletter List
-                </button>
-            </div>
-
-            <div x-show="activeTab === 'contacts'" class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-white/5 text-[10px] uppercase text-gray-400">
-                        <tr>
-                            <th class="px-6 py-4">Sender</th>
-                            <th class="px-6 py-4">Subject/Message</th>
-                            <th class="px-6 py-4">Date</th>
-                            <th class="px-6 py-4 text-right">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-white/5">
-                        <template x-for="lead in leads" :key="lead.id">
-                            <tr class="hover:bg-white/5 transition-colors group" :class="lead.unread ? 'bg-purple-500/5' : ''">
-                                <td class="px-6 py-4">
-                                    <div class="font-bold text-sm" x-text="lead.name"></div>
-                                    <div class="text-xs text-gray-500" x-text="lead.email"></div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="text-sm font-medium line-clamp-1" x-text="lead.subject"></div>
-                                    <div class="text-xs text-gray-400 line-clamp-1" x-text="lead.message"></div>
-                                </td>
-                                <td class="px-6 py-4 text-xs text-gray-500" x-text="lead.date"></td>
-                                <td class="px-6 py-4 text-right">
-                                    <div class="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <form method="POST" class="inline" x-html="`<input type='hidden' name='action' value='mark_read'><input type='hidden' name='id' value='${lead.id}'>`">
-                                            <button type="submit" class="p-2 hover:bg-gray-700 rounded-lg text-purple-400" title="Mark as Read">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                                            </button>
-                                        </form>
-                                        <form method="POST" class="inline" onsubmit="return confirm('Are you sure you want to delete this lead?');" x-html="`<input type='hidden' name='action' value='delete_lead'><input type='hidden' name='id' value='${lead.id}'>`">
-                                            <button type="submit" class="p-2 hover:bg-red-900/30 rounded-lg text-red-500" title="Delete">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
-            </div>
-
-            <div x-show="activeTab === 'newsletter'" class="p-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="md:col-span-2 space-y-4">
-                        <template x-for="sub in subscribers" :key="sub.email">
-                            <div class="flex items-center justify-between p-4 bg-black/20 rounded-xl border border-white/5">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-full bg-purple-600/20 text-purple-400 flex items-center justify-center text-xs font-bold" x-text="sub.email[0].toUpperCase()"></div>
-                                    <div>
-                                        <div class="text-sm font-medium" x-text="sub.email"></div>
-                                        <div class="text-[10px] text-gray-500" x-text="'Joined ' + sub.date"></div>
-                                    </div>
-                                </div>
-                                <span class="px-2 py-1 bg-green-500/10 text-green-500 text-[10px] font-bold rounded">ACTIVE</span>
-                            </div>
-                        </template>
+                <!-- Page Header -->
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold text-white">Forms & Subscribers</h2>
+                        <p class="text-zinc-400 text-sm mt-1">Manage contact submissions and newsletter subscribers</p>
                     </div>
-                    <div class="bg-black/40 rounded-2xl p-6 border border-white/5 h-fit">
-                        <h4 class="text-xs font-bold text-gray-400 uppercase mb-4 tracking-widest">Growth Trend</h4>
-                        <div class="h-32 bg-gray-900/50 rounded-xl flex items-end justify-between p-2 gap-1">
-                            <template x-for="h in [40, 70, 45, 90, 65, 80, 95]">
-                                <div class="bg-purple-500/40 hover:bg-purple-500 w-full rounded-t-sm transition-all" :style="`height: ${h}%` text-purple-400"></div>
-                            </template>
+                </div>
+
+                <!-- Stat Cards -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-zinc-400 text-xs font-medium">Total Inquiries</span>
+                            <span class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                                <i class="bi bi-envelope text-violet-400"></i>
+                            </span>
                         </div>
-                        <p class="text-center text-[10px] text-gray-500 mt-4 italic">Subscribers increased by 42% this month.</p>
+                        <p class="text-2xl font-bold text-white"><?php echo $totalInquiries; ?></p>
                     </div>
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-zinc-400 text-xs font-medium">Unread</span>
+                            <span class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                                <i class="bi bi-envelope-exclamation text-amber-400"></i>
+                            </span>
+                        </div>
+                        <p class="text-2xl font-bold text-white"><?php echo $unread; ?></p>
+                        <?php if ($unread > 0): ?>
+                        <p class="text-amber-400 text-xs mt-1">Requires attention</p>
+                        <?php endif; ?>
+                    </div>
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-zinc-400 text-xs font-medium">Subscribers</span>
+                            <span class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                                <i class="bi bi-people text-emerald-400"></i>
+                            </span>
+                        </div>
+                        <p class="text-2xl font-bold text-white"><?php echo $subs_count; ?></p>
+                    </div>
+                    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-zinc-400 text-xs font-medium">Read / Replied</span>
+                            <span class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center">
+                                <i class="bi bi-check2-all text-sky-400"></i>
+                            </span>
+                        </div>
+                        <p class="text-2xl font-bold text-white"><?php echo $replied; ?></p>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+                    <div class="flex border-b border-zinc-800">
+                        <button onclick="switchTab('contacts')" id="tab-contacts" class="px-6 py-3 text-sm font-medium transition-colors border-b-2 border-violet-500 text-violet-400">
+                            <i class="bi bi-envelope-open mr-1.5"></i>Contact Submissions
+                        </button>
+                        <button onclick="switchTab('newsletter')" id="tab-newsletter" class="px-6 py-3 text-sm font-medium transition-colors border-b-2 border-transparent text-zinc-500 hover:text-zinc-300">
+                            <i class="bi bi-megaphone mr-1.5"></i>Newsletter <span class="ml-1 bg-zinc-800 text-zinc-400 text-xs px-1.5 py-0.5 rounded-full"><?php echo $subs_count; ?></span>
+                        </button>
+                    </div>
+
+                    <!-- Contacts Tab -->
+                    <div id="panel-contacts">
+                        <?php if (empty($leads)): ?>
+                        <div class="flex flex-col items-center justify-center py-16 text-zinc-500">
+                            <i class="bi bi-inbox text-4xl mb-3"></i>
+                            <p class="text-sm">No contact submissions yet</p>
+                            <p class="text-xs text-zinc-600 mt-1">Submissions from your store's contact form will appear here</p>
+                        </div>
+                        <?php else: ?>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead>
+                                    <tr class="border-b border-zinc-800 text-xs text-zinc-500 uppercase">
+                                        <th class="px-5 py-3 font-medium">Sender</th>
+                                        <th class="px-5 py-3 font-medium">Subject / Message</th>
+                                        <th class="px-5 py-3 font-medium">Date</th>
+                                        <th class="px-5 py-3 font-medium text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-zinc-800/50">
+                                    <?php foreach ($leads as $lead): ?>
+                                    <tr class="hover:bg-zinc-800/30 transition-colors group <?php echo $lead['unread'] ? 'bg-violet-500/[0.03]' : ''; ?>">
+                                        <td class="px-5 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-9 h-9 rounded-full bg-violet-500/10 text-violet-400 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                                    <?php echo strtoupper(substr($lead['name'] ?? 'U', 0, 1)); ?>
+                                                </div>
+                                                <div class="min-w-0">
+                                                    <p class="text-white text-sm font-medium truncate">
+                                                        <?php echo htmlspecialchars($lead['name'] ?? 'Unknown'); ?>
+                                                        <?php if ($lead['unread']): ?>
+                                                        <span class="inline-block w-2 h-2 bg-violet-500 rounded-full ml-1.5"></span>
+                                                        <?php endif; ?>
+                                                    </p>
+                                                    <p class="text-zinc-500 text-xs truncate"><?php echo htmlspecialchars($lead['email'] ?? ''); ?></p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-5 py-4 max-w-xs">
+                                            <p class="text-zinc-200 text-sm truncate"><?php echo htmlspecialchars($lead['subject'] ?? ''); ?></p>
+                                            <p class="text-zinc-500 text-xs truncate"><?php echo htmlspecialchars($lead['message'] ?? ''); ?></p>
+                                        </td>
+                                        <td class="px-5 py-4 text-zinc-500 text-xs whitespace-nowrap">
+                                            <?php echo date('M j, g:i A', strtotime($lead['created_at'] ?? 'now')); ?>
+                                        </td>
+                                        <td class="px-5 py-4 text-right">
+                                            <div class="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <?php if ($lead['unread']): ?>
+                                                <form method="POST" class="inline">
+                                                    <input type="hidden" name="action" value="mark_read">
+                                                    <input type="hidden" name="id" value="<?php echo $lead['id']; ?>">
+                                                    <button type="submit" class="p-1.5 rounded-md hover:bg-zinc-700 text-violet-400 transition-colors" title="Mark as read">
+                                                        <i class="bi bi-check2"></i>
+                                                    </button>
+                                                </form>
+                                                <?php endif; ?>
+                                                <button onclick="viewMessage(<?php echo htmlspecialchars(json_encode($lead)); ?>)" class="p-1.5 rounded-md hover:bg-zinc-700 text-zinc-400 transition-colors" title="View">
+                                                    <i class="bi bi-eye"></i>
+                                                </button>
+                                                <form method="POST" class="inline" onsubmit="return confirm('Delete this submission?');">
+                                                    <input type="hidden" name="action" value="delete_lead">
+                                                    <input type="hidden" name="id" value="<?php echo $lead['id']; ?>">
+                                                    <button type="submit" class="p-1.5 rounded-md hover:bg-red-900/30 text-red-400 transition-colors" title="Delete">
+                                                        <i class="bi bi-trash3"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Newsletter Tab -->
+                    <div id="panel-newsletter" class="hidden">
+                        <?php if (empty($subscribers)): ?>
+                        <div class="flex flex-col items-center justify-center py-16 text-zinc-500">
+                            <i class="bi bi-megaphone text-4xl mb-3"></i>
+                            <p class="text-sm">No subscribers yet</p>
+                            <p class="text-xs text-zinc-600 mt-1">Newsletter signups from your store will appear here</p>
+                        </div>
+                        <?php else: ?>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead>
+                                    <tr class="border-b border-zinc-800 text-xs text-zinc-500 uppercase">
+                                        <th class="px-5 py-3 font-medium">Email</th>
+                                        <th class="px-5 py-3 font-medium">Status</th>
+                                        <th class="px-5 py-3 font-medium">Subscribed</th>
+                                        <th class="px-5 py-3 font-medium text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-zinc-800/50">
+                                    <?php foreach ($subscribers as $sub): ?>
+                                    <tr class="hover:bg-zinc-800/30 transition-colors group">
+                                        <td class="px-5 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div class="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xs font-bold">
+                                                    <?php echo strtoupper(substr($sub['email'] ?? 'U', 0, 1)); ?>
+                                                </div>
+                                                <span class="text-white text-sm"><?php echo htmlspecialchars($sub['email'] ?? ''); ?></span>
+                                            </div>
+                                        </td>
+                                        <td class="px-5 py-4">
+                                            <span class="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full <?php echo ($sub['status'] ?? 'active') === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-zinc-700 text-zinc-400'; ?>">
+                                                <span class="w-1.5 h-1.5 rounded-full <?php echo ($sub['status'] ?? 'active') === 'active' ? 'bg-emerald-400' : 'bg-zinc-500'; ?>"></span>
+                                                <?php echo ucfirst($sub['status'] ?? 'active'); ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-5 py-4 text-zinc-500 text-xs"><?php echo date('M j, Y', strtotime($sub['created_at'] ?? 'now')); ?></td>
+                                        <td class="px-5 py-4 text-right">
+                                            <form method="POST" class="inline opacity-0 group-hover:opacity-100 transition-opacity" onsubmit="return confirm('Remove this subscriber?');">
+                                                <input type="hidden" name="action" value="delete_subscriber">
+                                                <input type="hidden" name="id" value="<?php echo $sub['id']; ?>">
+                                                <button type="submit" class="p-1.5 rounded-md hover:bg-red-900/30 text-red-400 transition-colors" title="Remove">
+                                                    <i class="bi bi-trash3"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+<!-- View Message Modal -->
+<div id="messageModal" class="fixed inset-0 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" onclick="closeMessageModal()"></div>
+        <div class="relative bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-lg shadow-2xl">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+                <h3 class="text-white font-semibold" id="msgModalName">Message</h3>
+                <button onclick="closeMessageModal()" class="text-zinc-500 hover:text-white transition-colors"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="p-5 space-y-3">
+                <div>
+                    <label class="text-zinc-500 text-xs">From</label>
+                    <p class="text-white text-sm" id="msgModalEmail"></p>
+                </div>
+                <div>
+                    <label class="text-zinc-500 text-xs">Subject</label>
+                    <p class="text-white text-sm" id="msgModalSubject"></p>
+                </div>
+                <div>
+                    <label class="text-zinc-500 text-xs">Message</label>
+                    <p class="text-zinc-300 text-sm leading-relaxed bg-zinc-800/50 rounded-lg p-3 mt-1" id="msgModalBody"></p>
+                </div>
+                <div>
+                    <label class="text-zinc-500 text-xs">Received</label>
+                    <p class="text-zinc-400 text-sm" id="msgModalDate"></p>
                 </div>
             </div>
         </div>
@@ -211,22 +295,31 @@ $convRate = ($totalInquiries > 0 || $subs_count > 0) ? round(($subs_count / ($to
 </div>
 
 <script>
-function formManager() {
-    return {
-        activeTab: 'contacts',
-        stats: {
-            totalInquiries: <?php echo json_encode($totalInquiries); ?>,
-            unread: <?php echo json_encode($unread); ?>,
-            subscribers: <?php echo json_encode($subs_count); ?>,
-            convRate: <?php echo json_encode($convRate); ?>
-        },
-        leads: <?php echo json_encode($leads); ?>,
-        subscribers: <?php echo json_encode($subscribers); ?>,
-        exportData() {
-            alert("Generating CSV export for " + this.activeTab + "...");
-        }
+function switchTab(tab) {
+    document.getElementById('panel-contacts').classList.toggle('hidden', tab !== 'contacts');
+    document.getElementById('panel-newsletter').classList.toggle('hidden', tab !== 'newsletter');
+
+    const tabC = document.getElementById('tab-contacts');
+    const tabN = document.getElementById('tab-newsletter');
+    if (tab === 'contacts') {
+        tabC.className = tabC.className.replace('border-transparent text-zinc-500', 'border-violet-500 text-violet-400');
+        tabN.className = tabN.className.replace('border-violet-500 text-violet-400', 'border-transparent text-zinc-500');
+    } else {
+        tabN.className = tabN.className.replace('border-transparent text-zinc-500', 'border-violet-500 text-violet-400');
+        tabC.className = tabC.className.replace('border-violet-500 text-violet-400', 'border-transparent text-zinc-500');
     }
 }
+
+function viewMessage(lead) {
+    document.getElementById('msgModalName').textContent = lead.name || 'Unknown';
+    document.getElementById('msgModalEmail').textContent = lead.email || '';
+    document.getElementById('msgModalSubject').textContent = lead.subject || '(No subject)';
+    document.getElementById('msgModalBody').textContent = lead.message || '';
+    document.getElementById('msgModalDate').textContent = lead.created_at || '';
+    document.getElementById('messageModal').classList.remove('hidden');
+}
+
+function closeMessageModal() {
+    document.getElementById('messageModal').classList.add('hidden');
+}
 </script>
-            </main>
-        </div>

@@ -1,403 +1,197 @@
 <?php
-#   TITLE   : Pages Dashboard (Modern Refactor)
-#   DESC    : Optimized UI for mobile and desktop consistency.
-#   VERSION : 1.3.0
+#   TITLE   : Dashboard Home Page
+#   VERSION : 2.0.0
 
 $admin_base = '/vm-admin/' . (__DOMAIN__ ?? '') . '/';
 $store_name = website_data('name') ?: 'My Store';
+$store_domain = __DOMAIN__ ?? '';
+$store_theme = __WEBSITE_THEME__ ?? 'default';
+$store_url = __WEBSITE_URL__ ?? '#';
 ?>
-
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
 <style>
-    :root {
-        --bg-color: #0d0d0d;
-        --card-bg: #1a1a1a;
-        --accent: #8a2be2;
-        --text-main: #ffffff;
-        --text-muted: #a0a0a0;
-        --border-radius: 12px;
-        --transition: all 0.3s ease;
-    }
-
-    body {
-        background-color: var(--bg-color);
-        color: var(--text-main);
-        font-family: 'Inter', -apple-system, sans-serif;
-        margin: 0;
-        padding: 0;
-    }
-
-    .dashboard-wrapper {
-        max-width: 1200px;
-    }
-
-    .section-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin: 2rem 0 1rem;
-        color: var(--text-main);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    /* Slick Grid System */
-    .grid-container {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        gap: 1.5rem;
-        margin-bottom: 2rem;
-    }
-
-    .glass-card {
-        background: var(--card-bg);
-        border: 1px solid #2d2d2d;
-        border-radius: var(--border-radius);
-        padding: 1.5rem;
-        transition: var(--transition);
-        display: flex;
-        flex-direction: column;
-        justify-content: space-between;
-    }
-
-    .glass-card:hover {
-        border-color: var(--accent);
-        transform: translateY(-2px);
-    }
-
-    .card-label {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-        color: var(--text-muted);
-        margin-bottom: 0.5rem;
-    }
-
-    .card-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        margin-bottom: 1rem;
-    }
-
-    .subtext {
-        font-size: 0.85rem;
-        color: var(--text-muted);
-        margin-bottom: 1.5rem;
-        line-height: 1.4;
-    }
-
-    /* Buttons */
-    .btn-action {
-        background: var(--accent);
-        color: white;
-        border: none;
-        padding: 0.8rem 1.2rem;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        text-align: center;
-        transition: var(--transition);
-        width: 100%;
-    }
-
-    .btn-action:hover {
-        filter: brightness(1.2);
-        box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
-    }
-
-    /* Live Preview Section */
-    .preview-container {
-        background: var(--card-bg);
-        border-radius: var(--border-radius);
-        overflow: hidden;
-        border: 1px solid #2d2d2d;
-        margin: 2rem 0;
-    }
-
-    .preview-header {
-        padding: 1rem;
-        background: #252525;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .dot { width: 10px; height: 10px; border-radius: 50%; background: #444; }
-
-    /* Badge */
-    .status-badge {
-        display: inline-block;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 0.7rem;
-        font-weight: 800;
-        background: rgba(0, 255, 127, 0.1);
-        color: #00ff7f;
-        border: 1px solid rgba(0, 255, 127, 0.3);
-    }
-
-    /* Carousel */
-    .carousel-wrapper {
-        position: relative;
-        overflow: hidden;
-        border-radius: var(--border-radius);
-        border: 1px solid #2d2d2d;
-        margin-bottom: 2rem;
-    }
-
-    .carousel-track {
-        display: flex;
-        transition: transform 0.5s ease;
-    }
-
-    .carousel-slide {
-        min-width: 100%;
-        min-height: 32rem;
-        padding: 2.5rem;
-        display: flex;
-        flex-direction: column;
-        justify-content: flex-end;
-        gap: 0.75rem;
-        position: relative;
-        background-size: cover;
-        background-position: center;
-    }
-
-    .carousel-slide::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.2) 100%);
-        z-index: 1;
-    }
-
-    .carousel-slide > * {
-        position: relative;
-        z-index: 2;
-    }
-
-    .carousel-slide .slide-badge {
-        font-size: 0.65rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 2px;
-    }
-
-    .carousel-slide h3 {
-        font-size: 1.4rem;
-        font-weight: 700;
-        margin: 0;
-        color: #fff;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.5);
-    }
-
-    .carousel-slide p {
-        font-size: 0.9rem;
-        color: rgba(255,255,255,0.8);
-        line-height: 1.5;
-        margin: 0;
-        max-width: 600px;
-    }
-
-    .carousel-slide .slide-cta {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 0.6rem 1.2rem;
-        border-radius: 8px;
-        font-size: 0.85rem;
-        font-weight: 700;
-        color: #fff;
-        text-decoration: none;
-        transition: var(--transition);
-        width: fit-content;
-        backdrop-filter: blur(4px);
-    }
-
-    .carousel-slide .slide-cta:hover {
-        filter: brightness(1.2);
-        transform: translateX(3px);
-    }
-
-    .carousel-nav {
-        position: absolute;
-        top: 50%;
-        transform: translateY(-50%);
-        background: rgba(0,0,0,0.5);
-        border: none;
-        color: #fff;
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: var(--transition);
-        backdrop-filter: blur(4px);
-    }
-
-    .carousel-nav:hover { background: rgba(0,0,0,0.8); }
-    .carousel-nav.prev { left: 12px; }
-    .carousel-nav.next { right: 12px; }
-
-    .carousel-dots {
-        position: absolute;
-        bottom: 14px;
-        left: 50%;
-        transform: translateX(-50%);
-        display: flex;
-        gap: 8px;
-    }
-
-    .carousel-dots button {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        border: none;
-        background: rgba(255,255,255,0.3);
-        cursor: pointer;
-        transition: var(--transition);
-    }
-
-    .carousel-dots button.active {
-        background: #fff;
-        transform: scale(1.3);
-    }
-
-    @media (max-width: 768px) {
-        .grid-container {
-            grid-template-columns: 1fr;
-        }
-        .carousel-slide {
-            padding: 1.5rem;
-        }
-        .carousel-slide h3 {
-            font-size: 1.1rem;
-        }
-    }
+    body { background: #09090b !important; }
+    .dash-main { font-family: 'Inter', -apple-system, sans-serif; }
 </style>
-    <?php @include_once "header.php"; ?>
-<main class="grid-layout">
-    <div class="dashboard-wrapper">
-    <h3 class="section-title">Your Website</h3>
-        <div class="grid-container">
-            <div class="glass-card">
-                <div>
-                    <div class="card-label">Admin Access</div>
-                    <div class="card-value">Control Panel</div>
-                    <p class="subtext">Manage site activity and user settings.</p>
+
+<?php @include_once "header.php"; ?>
+
+<div class="grid-layout">
+
+    <main class="dash-main overflow-x-hidden bg-[#09090b] p-6 md:p-8 max-w-6xl mx-auto">
+
+        <!-- Page Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-white">Welcome back <?php echo __USERNAME__; ?></h1>
+                <p class="text-zinc-400 text-sm mt-1">Here's what's happening with <span class="text-violet-400 font-medium"><?php echo htmlspecialchars($store_name); ?></span></p>
+            </div>
+            <a href="<?php echo $admin_base; ?>" class="bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-lg shadow-violet-500/20">
+                Open Admin Panel
+            </a>
+        </div>
+
+        <!-- Quick Info Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <!-- Store Status -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 relative overflow-hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-zinc-400 text-xs font-medium uppercase tracking-wider">Store Status</span>
+                    <span class="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Live
+                    </span>
                 </div>
-                <button onclick="window.location='/vm-admin/<?php echo (__DOMAIN__); ?>/home'" class="btn-action">Open Panel</button>
+                <p class="text-white font-semibold text-lg"><?php echo htmlspecialchars($store_domain); ?></p>
+                <a href="<?php echo $store_url; ?>" target="_blank" class="text-violet-400 hover:text-violet-300 text-xs mt-2 inline-flex items-center gap-1 transition-colors">
+                    Visit store <i class="bi bi-box-arrow-up-right text-[10px]"></i>
+                </a>
+                <div class="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-emerald-500/5"></div>
             </div>
 
-            <div class="glass-card">
-                <div>
-                    <div class="card-label">Website Theme</div>
-                    <div style="font-size:2.5em;" class="card-value"><?php echo __WEBSITE_THEME__; ?></div>
-                    <p class="subtext">Customizing the look of your digital storefront.</p>
+            <!-- Theme -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 relative overflow-hidden">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-zinc-400 text-xs font-medium uppercase tracking-wider">Active Theme</span>
+                    <span class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                        <i class="bi bi-palette text-violet-400"></i>
+                    </span>
                 </div>
+                <p class="text-white font-semibold text-lg capitalize"><?php echo htmlspecialchars($store_theme); ?></p>
+                <a href="<?php echo $admin_base; ?>theme" class="text-violet-400 hover:text-violet-300 text-xs mt-2 inline-flex items-center gap-1 transition-colors">
+                    Change theme <i class="bi bi-arrow-right text-[10px]"></i>
+                </a>
+                <div class="absolute -right-4 -bottom-4 w-24 h-24 rounded-full bg-violet-500/5"></div>
             </div>
 
-            <div class="glass-card">
-                <div>
-                    <div class="card-label">Website Status</div>
-                    <div class="card-value"><?php echo __DOMAIN__; ?></div>
-                    <div class="status-badge">ACTIVE</div>
+            <!-- Quick Actions -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-zinc-400 text-xs font-medium uppercase tracking-wider">Quick Actions</span>
+                    <span class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center">
+                        <i class="bi bi-grid text-sky-400"></i>
+                    </span>
                 </div>
-                <p class="subtext" style="margin-top:1.5rem;">Your store is live and accepting traffic.</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <a href="<?php echo $admin_base; ?>products" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium transition-colors">
+                        <i class="bi bi-box-seam text-violet-400"></i> Products
+                    </a>
+                    <a href="<?php echo $admin_base; ?>orders" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium transition-colors">
+                        <i class="bi bi-bag text-emerald-400"></i> Orders
+                    </a>
+                    <a href="<?php echo $admin_base; ?>analytics" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium transition-colors">
+                        <i class="bi bi-graph-up text-sky-400"></i> Analytics
+                    </a>
+                    <a href="<?php echo $admin_base; ?>settings" class="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium transition-colors">
+                        <i class="bi bi-gear text-amber-400"></i> Settings
+                    </a>
+                </div>
             </div>
         </div>
 
-        <!-- What's New & Tips Carousel -->
-        <div class="carousel-wrapper" id="carousel-wrapper">
-            <div class="carousel-track" id="carousel-track">
-
+        <!-- Feature Carousel -->
+        <div class="mb-8 relative overflow-hidden rounded-xl border border-zinc-800" id="carousel-wrapper">
+            <div class="flex transition-transform duration-500 ease-in-out" id="carousel-track">
                 <!-- Slide 1: Welcome -->
-                <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=1200&q=80');">
-                    <span class="slide-badge" style="color: #a78bfa;">Getting Started</span>
-                    <h3>Welcome to <?php echo htmlspecialchars($store_name, ENT_QUOTES, 'UTF-8'); ?></h3>
-                    <p>Add products, pick a theme, connect payments, and publish. Your customers are waiting.</p>
-                    <a href="<?php echo $admin_base; ?>products" class="slide-cta" style="background: rgba(124,58,237,0.9);">
-                        Add Products <i class="bi bi-arrow-right"></i>
-                    </a>
+                <div class="w-full shrink-0 p-8 md:p-10 relative" style="background: linear-gradient(135deg, #09090b 0%, #1a103d 50%, #0d0628 100%);">
+                    <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
+                        <div class="p-4 rounded-xl bg-violet-500/10 border border-violet-500/20">
+                            <i class="bi bi-rocket-takeoff text-4xl text-violet-400"></i>
+                        </div>
+                        <div class="flex-1">
+                            <span class="text-violet-400 text-xs font-bold uppercase tracking-widest">Welcome</span>
+                            <h3 class="text-xl font-bold text-white mt-1">Welcome to <?php echo htmlspecialchars($store_name); ?></h3>
+                            <p class="text-zinc-400 text-sm mt-2 max-w-lg">Add products, pick a theme, connect payments, and publish. Your customers are waiting.</p>
+                        </div>
+                        <a href="<?php echo $admin_base; ?>products" class="shrink-0 bg-violet-600 hover:bg-violet-500 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors">
+                            Get Started <i class="bi bi-arrow-right ml-1"></i>
+                        </a>
+                    </div>
                 </div>
 
-                <!-- Slide 2: New Feature - Analytics -->
-                <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=1200&q=80');">
-                    <span class="slide-badge" style="color: #34d399;">New Feature</span>
-                    <h3>Real-Time Analytics Dashboard</h3>
-                    <p>Track page views, unique visitors, referrers, and device breakdowns with a lightweight tag.</p>
-                    <a href="<?php echo $admin_base; ?>analytics" class="slide-cta" style="background: rgba(5,150,105,0.9);">
-                        View Analytics <i class="bi bi-arrow-right"></i>
-                    </a>
+                <!-- Slide 2: Analytics -->
+                <div class="w-full shrink-0 p-8 md:p-10 relative" style="background: linear-gradient(135deg, #09090b 0%, #0d2818 50%, #061a0e 100%);">
+                    <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
+                        <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                            <i class="bi bi-graph-up-arrow text-4xl text-emerald-400"></i>
+                        </div>
+                        <div class="flex-1">
+                            <span class="text-emerald-400 text-xs font-bold uppercase tracking-widest">New Feature</span>
+                            <h3 class="text-xl font-bold text-white mt-1">Real-Time Analytics Dashboard</h3>
+                            <p class="text-zinc-400 text-sm mt-2 max-w-lg">Track page views, visitors, referrers, and device breakdowns — all without slowing your store.</p>
+                        </div>
+                        <a href="<?php echo $admin_base; ?>analytics" class="shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors">
+                            View Analytics <i class="bi bi-arrow-right ml-1"></i>
+                        </a>
+                    </div>
                 </div>
 
-                <!-- Slide 3: Tip - Product Photography -->
-                <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1200&q=80');">
-                    <span class="slide-badge" style="color: #f472b6;">Pro Tip</span>
-                    <h3>Great Photos Sell Products</h3>
-                    <p>Use natural lighting, clean backgrounds, and multiple angles. Customers buy what they can see clearly.</p>
-                    <a href="<?php echo $admin_base; ?>products" class="slide-cta" style="background: rgba(219,39,119,0.9);">
-                        Edit Products <i class="bi bi-arrow-right"></i>
-                    </a>
+                <!-- Slide 3: API -->
+                <div class="w-full shrink-0 p-8 md:p-10 relative" style="background: linear-gradient(135deg, #09090b 0%, #0d1528 50%, #060d1a 100%);">
+                    <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
+                        <div class="p-4 rounded-xl bg-sky-500/10 border border-sky-500/20">
+                            <i class="bi bi-code-slash text-4xl text-sky-400"></i>
+                        </div>
+                        <div class="flex-1">
+                            <span class="text-sky-400 text-xs font-bold uppercase tracking-widest">Developer</span>
+                            <h3 class="text-xl font-bold text-white mt-1">Public Store API & JavaScript SDK</h3>
+                            <p class="text-zinc-400 text-sm mt-2 max-w-lg">Embed your products anywhere with our drop-in SDK, or build custom integrations with the REST API.</p>
+                        </div>
+                        <a href="<?php echo $admin_base; ?>settings?tab=dev" class="shrink-0 bg-sky-600 hover:bg-sky-500 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors">
+                            Developer Settings <i class="bi bi-arrow-right ml-1"></i>
+                        </a>
+                    </div>
                 </div>
 
-                <!-- Slide 4: New Feature - API & SDK -->
-                <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&q=80');">
-                    <span class="slide-badge" style="color: #60a5fa;">New Feature</span>
-                    <h3>Public Store API & JavaScript SDK</h3>
-                    <p>Embed your products anywhere or build custom integrations. Full cart and checkout support.</p>
-                    <a href="<?php echo $admin_base; ?>settings?tab=dev" class="slide-cta" style="background: rgba(37,99,235,0.9);">
-                        Developer Settings <i class="bi bi-arrow-right"></i>
-                    </a>
+                <!-- Slide 4: Growth -->
+                <div class="w-full shrink-0 p-8 md:p-10 relative" style="background: linear-gradient(135deg, #09090b 0%, #28210d 50%, #1a1506 100%);">
+                    <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
+                        <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                            <i class="bi bi-trophy text-4xl text-amber-400"></i>
+                        </div>
+                        <div class="flex-1">
+                            <span class="text-amber-400 text-xs font-bold uppercase tracking-widest">Growth Tip</span>
+                            <h3 class="text-xl font-bold text-white mt-1">Boost Conversions With Urgency</h3>
+                            <p class="text-zinc-400 text-sm mt-2 max-w-lg">Flash sales and limited-time discounts create urgency. Pair with free delivery thresholds for maximum impact.</p>
+                        </div>
+                        <a href="<?php echo $admin_base; ?>discounts" class="shrink-0 bg-amber-600 hover:bg-amber-500 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition-colors">
+                            Create Discount <i class="bi bi-arrow-right ml-1"></i>
+                        </a>
+                    </div>
                 </div>
-
-                <!-- Slide 5: Growth Tip -->
-                <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1607082349566-187342175e2f?w=1200&q=80');">
-                    <span class="slide-badge" style="color: #fbbf24;">Growth Tip</span>
-                    <h3>Boost Conversions With Urgency</h3>
-                    <p>Flash sales and limited-time discounts create urgency. Pair with free delivery thresholds for maximum impact.</p>
-                    <a href="<?php echo $admin_base; ?>discounts" class="slide-cta" style="background: rgba(217,119,6,0.9);">
-                        Create Discount <i class="bi bi-arrow-right"></i>
-                    </a>
-                </div>
-
             </div>
 
-            <button class="carousel-nav prev" onclick="carouselPrev()"><i class="bi bi-chevron-left"></i></button>
-            <button class="carousel-nav next" onclick="carouselNext()"><i class="bi bi-chevron-right"></i></button>
-
-            <div class="carousel-dots" id="carousel-dots">
-                <button class="active" onclick="carouselGo(0)"></button>
-                <button onclick="carouselGo(1)"></button>
-                <button onclick="carouselGo(2)"></button>
-                <button onclick="carouselGo(3)"></button>
-                <button onclick="carouselGo(4)"></button>
+            <button onclick="carouselPrev()" class="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            <button onclick="carouselNext()" class="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white w-9 h-9 rounded-full flex items-center justify-center transition-colors">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+            <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2" id="carousel-dots">
+                <button onclick="carouselGo(0)" class="w-2 h-2 rounded-full bg-white transition-all"></button>
+                <button onclick="carouselGo(1)" class="w-2 h-2 rounded-full bg-white/30 transition-all"></button>
+                <button onclick="carouselGo(2)" class="w-2 h-2 rounded-full bg-white/30 transition-all"></button>
+                <button onclick="carouselGo(3)" class="w-2 h-2 rounded-full bg-white/30 transition-all"></button>
             </div>
         </div>
 
         <script>
         (function() {
-            var current = 0, total = 5;
+            var current = 0, total = 4;
             var track = document.getElementById('carousel-track');
             var dots = document.getElementById('carousel-dots').children;
             var autoplay;
-
             function update() {
                 track.style.transform = 'translateX(-' + (current * 100) + '%)';
                 for (var i = 0; i < dots.length; i++) {
-                    dots[i].className = i === current ? 'active' : '';
+                    dots[i].className = i === current ? 'w-2 h-2 rounded-full bg-white transition-all scale-125' : 'w-2 h-2 rounded-full bg-white/30 transition-all';
                 }
             }
-
             window.carouselNext = function() { current = (current + 1) % total; update(); resetAuto(); };
             window.carouselPrev = function() { current = (current - 1 + total) % total; update(); resetAuto(); };
             window.carouselGo = function(i) { current = i; update(); resetAuto(); };
-
             function resetAuto() { clearInterval(autoplay); autoplay = setInterval(window.carouselNext, 8000); }
             resetAuto();
-
-            // Swipe support for mobile
             var startX = 0;
             var wrapper = document.getElementById('carousel-wrapper');
             wrapper.addEventListener('touchstart', function(e) { startX = e.touches[0].clientX; });
@@ -408,14 +202,22 @@ $store_name = website_data('name') ?: 'My Store';
         })();
         </script>
 
-        <h3 class="section-title">Live Storefront</h3>
-        <div class="preview-container">
-            <div class="preview-header">
-                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
-                <span style="font-size: 12px; color: var(--text-muted); margin-left: 10px;"><?php echo __DOMAIN__; ?></span>
+        <!-- Live Preview -->
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+            <div class="px-5 py-3 border-b border-zinc-800 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-amber-500/60"></span>
+                        <span class="w-3 h-3 rounded-full bg-emerald-500/60"></span>
+                    </div>
+                    <span class="text-zinc-500 text-xs font-mono"><?php echo htmlspecialchars($store_domain); ?></span>
+                </div>
+                
             </div>
-            <iframe src="<?php echo __WEBSITE_URL__; ?>" style="height: 70vh; width: 100%; border: none;" frameborder="0"></iframe>
+            <iframe src="<?php echo $store_url; ?>" class="w-full border-none" style="height: 65vh;" frameborder="0"></iframe>
         </div>
 
-    </div>
-</main>
+    </main>
+
+</div>

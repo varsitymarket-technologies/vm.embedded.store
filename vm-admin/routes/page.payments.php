@@ -1,43 +1,17 @@
 <?php
 #   TITLE   : Payments Dashboard
-#   DESC    : Revenue tracking, payouts, and payment method status
-#   VERSION : 2.0.0
+#   DESC    : Revenue tracking and payment gateway status
+#   VERSION : 3.0.0
 
 $db = initiate_web_database();
 $currency = __CURRENCY_SIGN__;
 $domain = __DOMAIN__;
-
-// --- Ensure payouts table exists ---
-if ($db !== null) {
-    try {
-        $db->query("CREATE TABLE IF NOT EXISTS payouts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            amount REAL,
-            status TEXT DEFAULT 'Pending',
-            method TEXT DEFAULT 'Bank Transfer',
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-        )");
-    } catch (\Throwable $e) {}
-}
 
 // --- Helper: safe query ---
 function pq($db, $sql, $params = []) {
     if ($db === null) return [];
     try { return $db->query($sql, $params) ?: []; }
     catch (\Throwable $e) { return []; }
-}
-
-// --- Handle payout request ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
-    if ($action === 'withdraw' && $db !== null) {
-        $amount = (float)($_POST['amount'] ?? 0);
-        if ($amount > 0) {
-            $db->query("INSERT INTO payouts (amount, status, method) VALUES (?, 'Pending', 'Bank Transfer')", [$amount]);
-        }
-        header("Location: ?payout_requested=1");
-        exit;
-    }
 }
 
 // --- Load payment config from settings ---
@@ -55,6 +29,7 @@ $yoco_enabled = ($payment_config['yoco_enabled'] ?? '0') === '1';
 $yoco_mode = $payment_config['yoco_mode'] ?? 'test';
 $paypal_enabled = ($payment_config['paypal_enabled'] ?? '0') === '1';
 $paypal_env = $payment_config['paypal_env'] ?? 'sandbox';
+$active_methods = ($cod_enabled ? 1 : 0) + ($yoco_enabled ? 1 : 0) + ($paypal_enabled ? 1 : 0);
 
 // --- Stats from orders ---
 $orders = pq($db, "SELECT * FROM orders");
@@ -79,20 +54,7 @@ foreach ($orders as $o) {
 }
 $avgOrder = $totalOrders > 0 ? $grossRevenue / $totalOrders : 0;
 
-// --- Payout data ---
-$payouts_data = pq($db, "SELECT * FROM payouts ORDER BY id DESC");
-$totalPayouts = 0;
-$pendingPayouts = 0;
-$transactions = [];
-foreach ($payouts_data as $p) {
-    $pAmt = (float)$p['amount'];
-    if ($p['status'] === 'Completed') $totalPayouts += $pAmt;
-    if ($p['status'] === 'Pending') $pendingPayouts += $pAmt;
-    $transactions[] = $p;
-}
-$balance = max(0, $grossRevenue - $totalPayouts);
-
-// --- Revenue chart data (last 30 days from real orders) ---
+// --- Revenue chart data (last 30 days) ---
 $revenue_by_day = pq($db,
     "SELECT strftime('%Y-%m-%d', created_at) as date, SUM(total_amount) as total
      FROM orders WHERE status != 'cancelled' AND created_at >= date('now', '-30 days')
@@ -105,8 +67,8 @@ foreach ($revenue_by_day as $row) {
     $chart_data[] = (float) $row['total'];
 }
 
-// --- Recent orders for feed ---
-$recent_orders = pq($db, "SELECT customer_name, customer_email, total_amount, status, created_at FROM orders ORDER BY created_at DESC LIMIT 8");
+// --- Recent orders ---
+$recent_orders = pq($db, "SELECT customer_name, customer_email, total_amount, status, created_at FROM orders ORDER BY created_at DESC LIMIT 10");
 
 // --- Banking details ---
 $bank_name = defined('__BANKING_SERVICE__') ? __BANKING_SERVICE__ : '';
@@ -118,252 +80,267 @@ $status_colors = [
     'processing' => '#3b82f6',
     'completed'  => '#22c55e',
     'cancelled'  => '#ef4444',
-    'Pending'    => '#f59e0b',
-    'Completed'  => '#22c55e',
 ];
 ?>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<div class="flex flex-1 flex-col overflow-hidden">
+<div class="flex flex-1 flex-col h-screen overflow-hidden bg-[#09090b] text-zinc-100 font-sans">
     <?php @include_once "header.php"; ?>
 
-    <main class="flex-1 overflow-y-auto overflow-x-hidden bg-gray-900 p-4 md:p-6">
-
+    <main class="flex-1 overflow-y-auto">
         <!-- Header -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-            <div>
-                <h1 class="text-2xl font-black text-white">Payments</h1>
-                <p class="text-sm text-gray-400 mt-1">Revenue, payouts, and payment gateway status.</p>
+        <div class="px-8 pt-8 pb-6">
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold tracking-tight">Payments</h2>
+                    <p class="text-sm text-zinc-500 mt-1">Revenue tracking and payment gateway status</p>
+                </div>
+                <a href="settings?tab=payment" class="inline-flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                    <i class="bi bi-gear"></i> Payment Settings
+                </a>
             </div>
-            <a href="settings?tab=payment" class="inline-flex items-center gap-2 bg-gray-800 hover:bg-gray-700 border border-white/10 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors">
-                <i class="bi bi-gear"></i> Payment Settings
-            </a>
         </div>
-
-        <?php if (isset($_GET['payout_requested'])): ?>
-        <div id="payoutToast" class="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-2 rounded-full text-sm font-bold mb-4 animate-bounce">
-            <i class="bi bi-check2-circle text-lg"></i>
-            <span>Payout request submitted successfully</span>
-        </div>
-        <script>setTimeout(() => document.getElementById('payoutToast')?.remove(), 5000);</script>
-        <?php endif; ?>
 
         <!-- Stat Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="rounded-xl bg-gray-800 p-5 border border-white/5">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="w-10 h-10 bg-emerald-500/20 rounded-xl flex items-center justify-center">
-                        <i class="bi bi-cash-stack text-emerald-400"></i>
+        <div class="px-8 pb-6">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-zinc-900/60 border border-zinc-800/60 rounded-xl p-4 hover:bg-white/[0.04] transition-colors">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs text-zinc-500 font-medium">Gross Revenue</span>
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                            <i class="bi bi-cash-stack text-emerald-400 text-sm"></i>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold"><?= $currency ?><?= number_format($grossRevenue, 2) ?></p>
+                </div>
+                <div class="bg-zinc-900/60 border border-zinc-800/60 rounded-xl p-4 hover:bg-white/[0.04] transition-colors">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs text-zinc-500 font-medium">Completed Revenue</span>
+                        <div class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                            <i class="bi bi-check2-circle text-violet-400 text-sm"></i>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold"><?= $currency ?><?= number_format($completedRevenue, 2) ?></p>
+                </div>
+                <div class="bg-zinc-900/60 border border-zinc-800/60 rounded-xl p-4 hover:bg-white/[0.04] transition-colors">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs text-zinc-500 font-medium">Avg Order Value</span>
+                        <div class="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                            <i class="bi bi-receipt text-blue-400 text-sm"></i>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold"><?= $currency ?><?= number_format($avgOrder, 2) ?></p>
+                </div>
+                <div class="bg-zinc-900/60 border border-zinc-800/60 rounded-xl p-4 hover:bg-white/[0.04] transition-colors">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs text-zinc-500 font-medium">Total Orders</span>
+                        <div class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                            <i class="bi bi-bag text-amber-400 text-sm"></i>
+                        </div>
+                    </div>
+                    <p class="text-2xl font-bold"><?= $totalOrders ?></p>
+                    <div class="flex items-center gap-3 mt-1">
+                        <span class="text-[10px] text-emerald-400"><?= $completedOrders ?> completed</span>
+                        <span class="text-[10px] text-amber-400"><?= $pendingOrders ?> pending</span>
                     </div>
                 </div>
-                <p class="text-2xl font-black text-white"><?= $currency ?><?= number_format($grossRevenue, 2) ?></p>
-                <p class="text-xs text-gray-500 mt-1">Gross Revenue</p>
-            </div>
-            <div class="rounded-xl bg-gray-800 p-5 border border-white/5">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                        <i class="bi bi-receipt text-blue-400"></i>
-                    </div>
-                </div>
-                <p class="text-2xl font-black text-white"><?= $currency ?><?= number_format($avgOrder, 2) ?></p>
-                <p class="text-xs text-gray-500 mt-1">Avg Order Value</p>
-            </div>
-            <div class="rounded-xl bg-gray-800 p-5 border border-white/5">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center">
-                        <i class="bi bi-arrow-up-right text-purple-400"></i>
-                    </div>
-                </div>
-                <p class="text-2xl font-black text-white"><?= $currency ?><?= number_format($totalPayouts, 2) ?></p>
-                <p class="text-xs text-gray-500 mt-1">Total Payouts</p>
-            </div>
-            <div class="rounded-xl bg-gray-800 p-5 border border-white/5">
-                <div class="flex items-center justify-between mb-3">
-                    <div class="w-10 h-10 bg-amber-500/20 rounded-xl flex items-center justify-center">
-                        <i class="bi bi-wallet2 text-amber-400"></i>
-                    </div>
-                </div>
-                <p class="text-2xl font-black text-white"><?= $currency ?><?= number_format($balance, 2) ?></p>
-                <p class="text-xs text-gray-500 mt-1">Available Balance</p>
             </div>
         </div>
 
-        <!-- Revenue Chart + Payout Card -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-            <div class="lg:col-span-2 rounded-xl bg-gray-800 border border-white/5 p-5">
-                <h3 class="text-sm font-bold text-white uppercase tracking-wide mb-4">Revenue (Last 30 Days)</h3>
+        <!-- Revenue Chart -->
+        <div class="px-8 pb-6">
+            <div class="bg-zinc-900/40 border border-zinc-800/60 rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-5">
+                    <h3 class="text-sm font-semibold">Revenue (Last 30 Days)</h3>
+                    <span class="text-xs text-zinc-500"><?= count($chart_labels) ?> days with orders</span>
+                </div>
                 <?php if (empty($chart_data)): ?>
-                    <div class="flex flex-col items-center justify-center h-48 text-gray-600">
+                    <div class="flex flex-col items-center justify-center h-48 text-zinc-600">
                         <i class="bi bi-graph-up text-4xl mb-2"></i>
                         <p class="text-sm">No revenue data yet</p>
+                        <p class="text-xs text-zinc-700 mt-1">Revenue will appear here once orders come in</p>
                     </div>
                 <?php else: ?>
-                    <div style="height: 260px;">
+                    <div style="height: 280px;">
                         <canvas id="revenueChart"></canvas>
                     </div>
                 <?php endif; ?>
             </div>
+        </div>
 
-            <!-- Payout Card -->
-            <div class="rounded-xl bg-gradient-to-b from-purple-600/20 to-gray-800 border border-purple-500/20 p-6 relative overflow-hidden">
-                <div class="relative z-10">
-                    <p class="text-purple-300 text-xs font-bold uppercase tracking-wide">Available to Payout</p>
-                    <h2 class="text-4xl font-black text-white mt-2 mb-6"><?= $currency ?><?= number_format($balance, 2) ?></h2>
-
-                    <?php if ($pendingPayouts > 0): ?>
-                    <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2 mb-4">
-                        <p class="text-amber-400 text-xs font-bold"><i class="bi bi-clock"></i> <?= $currency ?><?= number_format($pendingPayouts, 2) ?> pending payout</p>
+        <!-- Payment Methods + Banking -->
+        <div class="px-8 pb-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <!-- Payment Methods -->
+                <div class="lg:col-span-2 bg-zinc-900/40 border border-zinc-800/60 rounded-2xl overflow-hidden">
+                    <div class="px-6 py-4 border-b border-zinc-800/60 flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                                <i class="bi bi-credit-card text-violet-400"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold">Payment Methods</h3>
+                                <p class="text-xs text-zinc-500"><?= $active_methods ?> of 3 active</p>
+                            </div>
+                        </div>
+                        <a href="settings?tab=payment" class="text-xs text-violet-400 hover:text-violet-300 transition-colors">Configure</a>
                     </div>
-                    <?php endif; ?>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <!-- COD -->
+                            <div class="rounded-xl p-4 border <?= $cod_enabled ? 'bg-emerald-500/[0.03] border-emerald-500/20' : 'bg-zinc-800/30 border-zinc-800/40 opacity-60' ?> transition-all">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-10 h-10 rounded-lg <?= $cod_enabled ? 'bg-emerald-500/15' : 'bg-zinc-700/40' ?> flex items-center justify-center">
+                                        <i class="bi bi-cash-stack <?= $cod_enabled ? 'text-emerald-400' : 'text-zinc-500' ?> text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold">Cash on Delivery</p>
+                                        <p class="text-[10px] text-zinc-500">Pay at doorstep</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full <?= $cod_enabled ? 'bg-emerald-400' : 'bg-zinc-600' ?>"></span>
+                                    <span class="text-xs font-medium <?= $cod_enabled ? 'text-emerald-400' : 'text-zinc-500' ?>">
+                                        <?= $cod_enabled ? 'Active' : 'Disabled' ?>
+                                    </span>
+                                </div>
+                            </div>
+                            <!-- YOCO -->
+                            <div class="rounded-xl p-4 border <?= $yoco_enabled ? 'bg-violet-500/[0.03] border-violet-500/20' : 'bg-zinc-800/30 border-zinc-800/40 opacity-60' ?> transition-all">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-10 h-10 rounded-lg <?= $yoco_enabled ? 'bg-violet-500/15' : 'bg-zinc-700/40' ?> flex items-center justify-center">
+                                        <i class="bi bi-credit-card-2-front <?= $yoco_enabled ? 'text-violet-400' : 'text-zinc-500' ?> text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold">YOCO</p>
+                                        <p class="text-[10px] text-zinc-500">Card payments</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full <?= $yoco_enabled ? 'bg-violet-400' : 'bg-zinc-600' ?>"></span>
+                                    <span class="text-xs font-medium <?= $yoco_enabled ? 'text-violet-400' : 'text-zinc-500' ?>">
+                                        <?= $yoco_enabled ? ($yoco_mode === 'live' ? 'Live' : 'Test Mode') : 'Disabled' ?>
+                                    </span>
+                                </div>
+                            </div>
+                            <!-- PayPal -->
+                            <div class="rounded-xl p-4 border <?= $paypal_enabled ? 'bg-blue-500/[0.03] border-blue-500/20' : 'bg-zinc-800/30 border-zinc-800/40 opacity-60' ?> transition-all">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-10 h-10 rounded-lg <?= $paypal_enabled ? 'bg-blue-500/15' : 'bg-zinc-700/40' ?> flex items-center justify-center">
+                                        <i class="bi bi-paypal <?= $paypal_enabled ? 'text-blue-400' : 'text-zinc-500' ?> text-lg"></i>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-semibold">PayPal</p>
+                                        <p class="text-[10px] text-zinc-500">Online payments</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-1.5 h-1.5 rounded-full <?= $paypal_enabled ? 'bg-blue-400' : 'bg-zinc-600' ?>"></span>
+                                    <span class="text-xs font-medium <?= $paypal_enabled ? 'text-blue-400' : 'text-zinc-500' ?>">
+                                        <?= $paypal_enabled ? ($paypal_env === 'production' ? 'Live' : 'Sandbox') : 'Disabled' ?>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    <form method="POST" class="space-y-3">
-                        <input type="hidden" name="action" value="withdraw">
+                <!-- Banking Details -->
+                <div class="bg-zinc-900/40 border border-zinc-800/60 rounded-2xl overflow-hidden">
+                    <div class="px-6 py-4 border-b border-zinc-800/60">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                                <i class="bi bi-bank text-amber-400"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-semibold">Banking Details</h3>
+                                <p class="text-xs text-zinc-500">Linked account info</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-6 space-y-3">
+                        <div class="p-3 bg-zinc-800/40 border border-zinc-700/30 rounded-xl">
+                            <label class="text-[10px] text-zinc-500 uppercase font-medium">Bank / Provider</label>
+                            <p class="font-medium text-sm mt-0.5"><?= !empty($bank_name) ? htmlspecialchars($bank_name) : '<span class="text-zinc-600">Not linked</span>' ?></p>
+                        </div>
+                        <div class="p-3 bg-zinc-800/40 border border-zinc-700/30 rounded-xl">
+                            <label class="text-[10px] text-zinc-500 uppercase font-medium">Account Number</label>
+                            <p class="font-mono text-sm mt-0.5">
+                                <?php if (!empty($bank_account)): ?>
+                                    <?= str_repeat('*', max(0, strlen($bank_account) - 4)) . substr($bank_account, -4) ?>
+                                <?php else: ?>
+                                    <span class="text-zinc-600">Not configured</span>
+                                <?php endif; ?>
+                            </p>
+                        </div>
+                        <?php if (!empty($bank_type)): ?>
+                        <div class="p-3 bg-zinc-800/40 border border-zinc-700/30 rounded-xl">
+                            <label class="text-[10px] text-zinc-500 uppercase font-medium">Account Type</label>
+                            <p class="text-sm mt-0.5"><?= htmlspecialchars($bank_type) ?></p>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders -->
+        <div class="px-8 pb-8">
+            <div class="bg-zinc-900/40 border border-zinc-800/60 rounded-2xl overflow-hidden">
+                <div class="px-6 py-4 border-b border-zinc-800/60 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-lg bg-blue-500/10 flex items-center justify-center">
+                            <i class="bi bi-receipt-cutoff text-blue-400"></i>
+                        </div>
                         <div>
-                            <label class="text-[10px] uppercase text-purple-300 font-bold">Withdrawal Amount</label>
-                            <input type="number" step="0.01" name="amount" id="withdrawAmount"
-                                class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-purple-400 transition-all mt-1"
-                                placeholder="0.00" max="<?= $balance ?>">
+                            <h3 class="text-sm font-semibold">Recent Orders</h3>
+                            <p class="text-xs text-zinc-500">Last 10 transactions</p>
                         </div>
-                        <button type="submit" id="payoutBtn"
-                                class="w-full bg-white text-black font-bold py-3 rounded-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-30 transition-all text-sm">
-                            Request Instant Payout
-                        </button>
-                    </form>
+                    </div>
+                    <a href="orders" class="text-xs text-violet-400 hover:text-violet-300 transition-colors">View all</a>
                 </div>
-                <div class="absolute -right-20 -top-20 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
-            </div>
-        </div>
-
-        <!-- Payment Methods Status + Banking Details -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-            <!-- Active Payment Methods -->
-            <div class="lg:col-span-2 rounded-xl bg-gray-800 border border-white/5 p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-sm font-bold text-white uppercase tracking-wide">Payment Methods</h3>
-                    <a href="settings?tab=payment" class="text-xs text-purple-400 hover:underline">Configure</a>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <!-- COD -->
-                    <div class="bg-white/5 rounded-xl p-4 border <?= $cod_enabled ? 'border-emerald-500/30' : 'border-white/5 opacity-50' ?>">
-                        <div class="flex items-center gap-3 mb-2">
-                            <div class="w-9 h-9 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                                <i class="bi bi-cash-stack text-emerald-400"></i>
-                            </div>
-                            <div>
-                                <p class="text-white text-sm font-bold">Cash on Delivery</p>
-                            </div>
+                <?php if (empty($recent_orders)): ?>
+                    <div class="flex flex-col items-center justify-center py-16 text-zinc-600">
+                        <div class="w-16 h-16 rounded-2xl bg-zinc-800/50 flex items-center justify-center mb-4">
+                            <i class="bi bi-cart text-2xl"></i>
                         </div>
-                        <span class="text-xs px-2 py-0.5 rounded-full <?= $cod_enabled ? 'bg-emerald-500/20 text-emerald-400' : 'bg-gray-500/20 text-gray-400' ?>">
-                            <?= $cod_enabled ? 'Active' : 'Disabled' ?>
-                        </span>
-                    </div>
-                    <!-- YOCO -->
-                    <div class="bg-white/5 rounded-xl p-4 border <?= $yoco_enabled ? 'border-purple-500/30' : 'border-white/5 opacity-50' ?>">
-                        <div class="flex items-center gap-3 mb-2">
-                            <div class="w-9 h-9 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                                <i class="bi bi-credit-card-2-front text-purple-400"></i>
-                            </div>
-                            <div>
-                                <p class="text-white text-sm font-bold">YOCO</p>
-                            </div>
-                        </div>
-                        <?php if ($yoco_enabled): ?>
-                            <span class="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400">
-                                <?= $yoco_mode === 'live' ? 'Live' : 'Test Mode' ?>
-                            </span>
-                        <?php else: ?>
-                            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-500/20 text-gray-400">Disabled</span>
-                        <?php endif; ?>
-                    </div>
-                    <!-- PayPal -->
-                    <div class="bg-white/5 rounded-xl p-4 border <?= $paypal_enabled ? 'border-blue-500/30' : 'border-white/5 opacity-50' ?>">
-                        <div class="flex items-center gap-3 mb-2">
-                            <div class="w-9 h-9 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                                <i class="bi bi-paypal text-blue-400"></i>
-                            </div>
-                            <div>
-                                <p class="text-white text-sm font-bold">PayPal</p>
-                            </div>
-                        </div>
-                        <?php if ($paypal_enabled): ?>
-                            <span class="text-xs px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400">
-                                <?= $paypal_env === 'production' ? 'Live' : 'Sandbox' ?>
-                            </span>
-                        <?php else: ?>
-                            <span class="text-xs px-2 py-0.5 rounded-full bg-gray-500/20 text-gray-400">Disabled</span>
-                        <?php endif; ?>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Banking Details -->
-            <div class="rounded-xl bg-gray-800 border border-white/5 p-5">
-                <h3 class="text-sm font-bold text-white uppercase tracking-wide mb-4">Payout Destination</h3>
-                <div class="space-y-3">
-                    <div class="p-3 bg-black/20 border border-white/5 rounded-xl">
-                        <label class="text-[10px] text-gray-500 uppercase">Bank / Provider</label>
-                        <p class="font-medium text-white text-sm"><?= !empty($bank_name) ? htmlspecialchars($bank_name) : 'Not Linked' ?></p>
-                    </div>
-                    <div class="p-3 bg-black/20 border border-white/5 rounded-xl">
-                        <label class="text-[10px] text-gray-500 uppercase">Account Number</label>
-                        <p class="font-mono text-sm text-white">
-                            <?php if (!empty($bank_account)): ?>
-                                <?= str_repeat('*', max(0, strlen($bank_account) - 4)) . substr($bank_account, -4) ?>
-                            <?php else: ?>
-                                Not configured
-                            <?php endif; ?>
-                        </p>
-                    </div>
-                    <?php if (!empty($bank_type)): ?>
-                    <div class="p-3 bg-black/20 border border-white/5 rounded-xl">
-                        <label class="text-[10px] text-gray-500 uppercase">Account Type</label>
-                        <p class="text-sm text-white"><?= htmlspecialchars($bank_type) ?></p>
-                    </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        </div>
-
-        <!-- Transactions + Recent Orders -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-            <!-- Payout Transactions -->
-            <div class="lg:col-span-2 rounded-xl bg-gray-800 border border-white/5 overflow-hidden">
-                <div class="p-5 border-b border-white/5">
-                    <h3 class="text-sm font-bold text-white uppercase tracking-wide">Payout History</h3>
-                </div>
-                <?php if (empty($transactions)): ?>
-                    <div class="flex flex-col items-center justify-center py-12 text-gray-600">
-                        <i class="bi bi-clock-history text-4xl mb-2"></i>
-                        <p class="text-sm">No payouts yet</p>
-                        <p class="text-xs text-gray-700 mt-1">Request a payout from your available balance</p>
+                        <h3 class="text-lg font-semibold text-zinc-400">No orders yet</h3>
+                        <p class="text-sm text-zinc-600 mt-1">Orders will appear here once customers start purchasing</p>
                     </div>
                 <?php else: ?>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left">
-                            <thead class="bg-white/5 text-[10px] uppercase text-gray-400">
-                                <tr>
-                                    <th class="px-5 py-3">ID</th>
-                                    <th class="px-5 py-3">Date</th>
-                                    <th class="px-5 py-3">Status</th>
-                                    <th class="px-5 py-3">Method</th>
-                                    <th class="px-5 py-3 text-right">Amount</th>
+                            <thead>
+                                <tr class="border-b border-zinc-800/60">
+                                    <th class="px-6 py-3 text-[10px] uppercase text-zinc-500 font-semibold tracking-wider">Customer</th>
+                                    <th class="px-6 py-3 text-[10px] uppercase text-zinc-500 font-semibold tracking-wider">Email</th>
+                                    <th class="px-6 py-3 text-[10px] uppercase text-zinc-500 font-semibold tracking-wider">Amount</th>
+                                    <th class="px-6 py-3 text-[10px] uppercase text-zinc-500 font-semibold tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-[10px] uppercase text-zinc-500 font-semibold tracking-wider text-right">Date</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-white/5">
-                                <?php foreach ($transactions as $tx):
-                                    $sc = $status_colors[$tx['status']] ?? '#6b7280';
+                            <tbody class="divide-y divide-zinc-800/40">
+                                <?php foreach ($recent_orders as $order):
+                                    $oc = $status_colors[$order['status']] ?? '#6b7280';
+                                    $initials = strtoupper(substr($order['customer_name'], 0, 1));
                                 ?>
-                                <tr class="hover:bg-white/5 transition-colors">
-                                    <td class="px-5 py-3 font-mono text-xs text-gray-400">TXN-<?= str_pad($tx['id'], 5, '0', STR_PAD_LEFT) ?></td>
-                                    <td class="px-5 py-3 text-xs text-gray-400"><?= date('M d, Y', strtotime($tx['created_at'])) ?></td>
-                                    <td class="px-5 py-3">
-                                        <span class="px-2 py-0.5 rounded text-[10px] font-bold" style="background: <?= $sc ?>20; color: <?= $sc ?>">
-                                            <?= htmlspecialchars($tx['status']) ?>
+                                <tr class="hover:bg-white/[0.02] transition-colors">
+                                    <td class="px-6 py-3">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-xs font-bold text-zinc-400"><?= $initials ?></div>
+                                            <span class="text-sm font-medium"><?= htmlspecialchars($order['customer_name']) ?></span>
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-3 text-sm text-zinc-500"><?= htmlspecialchars($order['customer_email'] ?? '-') ?></td>
+                                    <td class="px-6 py-3 text-sm font-semibold"><?= $currency ?><?= number_format((float)$order['total_amount'], 2) ?></td>
+                                    <td class="px-6 py-3">
+                                        <span class="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full" style="background: <?= $oc ?>15; color: <?= $oc ?>">
+                                            <span class="w-1.5 h-1.5 rounded-full" style="background: <?= $oc ?>"></span>
+                                            <?= ucfirst($order['status']) ?>
                                         </span>
                                     </td>
-                                    <td class="px-5 py-3 text-sm text-gray-300"><?= htmlspecialchars($tx['method']) ?></td>
-                                    <td class="px-5 py-3 text-right font-bold text-white"><?= $currency ?><?= number_format((float)$tx['amount'], 2) ?></td>
+                                    <td class="px-6 py-3 text-sm text-zinc-500 text-right"><?= date('M d, H:i', strtotime($order['created_at'])) ?></td>
                                 </tr>
                                 <?php endforeach; ?>
                             </tbody>
@@ -371,47 +348,22 @@ $status_colors = [
                     </div>
                 <?php endif; ?>
             </div>
-
-            <!-- Recent Orders -->
-            <div class="rounded-xl bg-gray-800 border border-white/5 p-5">
-                <h3 class="text-sm font-bold text-white uppercase tracking-wide mb-4">Recent Orders</h3>
-                <?php if (empty($recent_orders)): ?>
-                    <div class="flex flex-col items-center justify-center py-8 text-gray-600">
-                        <i class="bi bi-cart text-3xl mb-2"></i>
-                        <p class="text-sm">No orders yet</p>
-                    </div>
-                <?php else: ?>
-                    <div class="space-y-3">
-                        <?php foreach ($recent_orders as $order):
-                            $oc = $status_colors[$order['status']] ?? '#6b7280';
-                        ?>
-                        <div class="flex items-center justify-between">
-                            <div class="min-w-0">
-                                <p class="text-sm text-white font-medium truncate"><?= htmlspecialchars($order['customer_name']) ?></p>
-                                <p class="text-xs text-gray-500"><?= date('M d, H:i', strtotime($order['created_at'])) ?></p>
-                            </div>
-                            <div class="text-right flex-shrink-0 ml-3">
-                                <p class="text-sm text-white font-mono"><?= $currency ?><?= number_format((float)$order['total_amount'], 2) ?></p>
-                                <span class="text-xs px-2 py-0.5 rounded-full" style="background: <?= $oc ?>20; color: <?= $oc ?>"><?= ucfirst($order['status']) ?></span>
-                            </div>
-                        </div>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endif; ?>
-            </div>
         </div>
-
     </main>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    Chart.defaults.color = '#6b7280';
-    Chart.defaults.borderColor = 'rgba(255,255,255,0.05)';
+    Chart.defaults.color = '#52525b';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.04)';
 
     <?php if (!empty($chart_data)): ?>
     const ctx = document.getElementById('revenueChart')?.getContext('2d');
     if (ctx) {
+        const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+        gradient.addColorStop(0, 'rgba(139, 92, 246, 0.15)');
+        gradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
+
         new Chart(ctx, {
             type: 'line',
             data: {
@@ -419,51 +371,56 @@ document.addEventListener('DOMContentLoaded', () => {
                 datasets: [{
                     label: 'Revenue',
                     data: <?= json_encode($chart_data) ?>,
-                    borderColor: '#a855f7',
-                    backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                    borderColor: '#8b5cf6',
+                    backgroundColor: gradient,
                     fill: true,
-                    tension: 0.4,
-                    pointRadius: 3,
-                    pointHoverRadius: 6,
+                    tension: 0.35,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: '#8b5cf6',
+                    pointHoverBorderColor: '#fff',
+                    pointHoverBorderWidth: 2,
                     borderWidth: 2
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#18181b',
+                        borderColor: '#27272a',
+                        borderWidth: 1,
+                        titleColor: '#a1a1aa',
+                        bodyColor: '#fff',
+                        bodyFont: { weight: 'bold' },
+                        padding: 10,
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: (ctx) => '<?= $currency ?>' + ctx.parsed.y.toLocaleString()
+                        }
+                    }
+                },
                 scales: {
-                    x: { grid: { display: false } },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 10 }, maxRotation: 0 }
+                    },
                     y: {
                         beginAtZero: true,
-                        ticks: { callback: (v) => '<?= $currency ?>' + v }
+                        grid: { color: 'rgba(255,255,255,0.03)' },
+                        ticks: {
+                            font: { size: 10 },
+                            callback: (v) => '<?= $currency ?>' + v.toLocaleString()
+                        }
                     }
                 }
             }
         });
     }
     <?php endif; ?>
-
-    // Payout form validation
-    const withdrawInput = document.getElementById('withdrawAmount');
-    const payoutBtn = document.getElementById('payoutBtn');
-    if (withdrawInput && payoutBtn) {
-        const maxBalance = <?= (float)$balance ?>;
-        withdrawInput.addEventListener('input', () => {
-            const val = parseFloat(withdrawInput.value) || 0;
-            payoutBtn.disabled = val <= 0 || val > maxBalance;
-        });
-        payoutBtn.disabled = true;
-
-        payoutBtn.closest('form').addEventListener('submit', (e) => {
-            const val = parseFloat(withdrawInput.value) || 0;
-            if (val <= 0 || val > maxBalance) {
-                e.preventDefault();
-                return;
-            }
-            payoutBtn.disabled = true;
-            payoutBtn.textContent = 'Processing...';
-        });
-    }
 });
 </script>
