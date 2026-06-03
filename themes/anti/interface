@@ -778,6 +778,118 @@
             document.getElementById('checkout-modal').classList.remove('open');
         }
 
+        function openAuthModal(initialMode = 'login') {
+            const modal = document.getElementById('auth-modal');
+            if (!modal) return;
+            modal.classList.add('open');
+            document.body.classList.add('overflow-hidden');
+            setAuthMode(initialMode);
+            modal.querySelectorAll('[data-err]').forEach(el => { el.textContent = ''; el.classList.add('hidden'); });
+            const activeMode = modal.querySelector(initialMode === 'register' ? '.auth-mode-register' : '.auth-mode-login');
+            activeMode?.querySelector('input')?.focus();
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            if (!modal) return;
+            modal.classList.remove('open');
+            document.body.classList.remove('overflow-hidden');
+        }
+
+        function setAuthMode(mode) {
+            const modal = document.getElementById('auth-modal');
+            if (!modal) return;
+            modal.querySelectorAll('.auth-tab').forEach(btn => {
+                const active = btn.dataset.tab === mode;
+                btn.classList.toggle('text-white', active);
+                btn.classList.toggle('text-brand-mute', !active);
+                btn.classList.toggle('border-white', active);
+                btn.classList.toggle('border-transparent', !active);
+            });
+            modal.querySelector('.auth-mode-login').classList.toggle('hidden', mode !== 'login');
+            modal.querySelector('.auth-mode-register').classList.toggle('hidden', mode !== 'register');
+        }
+
+        function wireAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            if (!modal) return;
+
+            modal.querySelectorAll('.auth-tab').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modal.querySelectorAll('[data-err]').forEach(el => { el.textContent = ''; el.classList.add('hidden'); });
+                    setAuthMode(btn.dataset.tab);
+                });
+            });
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeAuthModal();
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && modal.classList.contains('open')) closeAuthModal();
+            });
+
+            const loginForm = modal.querySelector('[data-form="login"]');
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = loginForm.querySelector('button[type="submit"]');
+                if (btn.disabled) return;
+                const errEl = loginForm.querySelector('[data-err="login"]');
+                errEl.classList.add('hidden');
+                btn.disabled = true;
+                btn.dataset.originalText = btn.textContent;
+                btn.textContent = 'Signing in...';
+                try {
+                    const fd = new FormData(loginForm);
+                    const result = await login(fd.get('email'), fd.get('password'));
+                    if (result.ok) {
+                        closeAuthModal();
+                        showView('dashboard');
+                    } else {
+                        errEl.textContent = result.error;
+                        errEl.classList.remove('hidden');
+                        btn.disabled = false;
+                        btn.textContent = btn.dataset.originalText;
+                    }
+                } catch (err) {
+                    errEl.textContent = 'Sign-in failed.';
+                    errEl.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.textContent = btn.dataset.originalText;
+                }
+            });
+
+            const registerForm = modal.querySelector('[data-form="register"]');
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = registerForm.querySelector('button[type="submit"]');
+                if (btn.disabled) return;
+                const errEl = registerForm.querySelector('[data-err="register"]');
+                errEl.classList.add('hidden');
+                btn.disabled = true;
+                btn.dataset.originalText = btn.textContent;
+                btn.textContent = 'Creating...';
+                try {
+                    const fd = new FormData(registerForm);
+                    const result = await register(fd.get('email'), fd.get('password'), fd.get('name'));
+                    if (result.ok) {
+                        closeAuthModal();
+                        showView('dashboard');
+                    } else {
+                        errEl.textContent = result.error;
+                        errEl.classList.remove('hidden');
+                        btn.disabled = false;
+                        btn.textContent = btn.dataset.originalText;
+                    }
+                } catch (err) {
+                    errEl.textContent = 'Could not create account.';
+                    errEl.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.textContent = btn.dataset.originalText;
+                }
+            });
+        }
+
         /**
          * Discount Logic
          */
@@ -974,10 +1086,10 @@
         }
 
         function handleAccountClick() {
-            if (userSession) {
+            if (isLoggedIn()) {
                 showView('dashboard');
             } else {
-                showView('account');
+                openAuthModal('login');
             }
         }
 
