@@ -1,0 +1,8 @@
+Handle,Title,Body (HTML),Vendor,Type,Tags,Published,Option1 Name,Option1 Value,Option2 Name,Option2 Value,Option3 Name,Option3 Value,Variant SKU,Variant Inventory Qty,Variant Price,Image Src,Image Position,Variant Image,Status
+classic-tee,Classic Tee,<p>A <b>soft</b> cotton tee.</p>,Acme,Apparel,casual,TRUE,Size,Small,Color,Red,,,SKU-001,5,19.99,https://cdn.example.com/tee-front.jpg,1,,active
+classic-tee,,,,,,,Size,Small,Color,Blue,,,SKU-002,8,19.99,,2,https://cdn.example.com/tee-blue.jpg,active
+classic-tee,,,,,,,Size,Large,Color,Red,,,SKU-003,3,21.99,,,,active
+classic-tee,,,,,,,,,,,,,,,,https://cdn.example.com/tee-back.jpg,3,,active
+mug,Coffee Mug,<p>Ceramic 12oz.</p>,Acme,Drinkware,kitchen,TRUE,Title,Default Title,,,,,SKU-004,12,9.50,https://cdn.example.com/mug.jpg,1,,active
+no-type,Mystery Item,<p>Uncategorized goodie.</p>,Acme,,misc,TRUE,Title,Default Title,,,,,SKU-005,1,5.00,,,,active
+bad-price,Broken Product,<p>Has a bad price.</p>,Acme,Apparel,broken,TRUE,Title,Default Title,,,,,SKU-006,2,NOT_A_NUMBER,,,,active
