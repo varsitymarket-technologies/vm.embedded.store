@@ -127,17 +127,7 @@
     </div>
 
     <!-- ACCOUNT/LOGIN VIEW -->
-    <div id="view-account" class="view hidden pt-40 pb-40 px-6 max-w-lg mx-auto text-center">
-        <h1 class="text-4xl font-bold text-white mb-4">Welcome</h1>
-        <p class="text-brand-mute mb-10">Sign in to manage your orders and preferences.</p>
-        <div class="bg-brand-card border border-brand-border p-8 rounded-2xl shadow-2xl">
-            <input type="email" id="login-email" placeholder="Email Address" class="w-full bg-brand-bg border border-brand-border p-4 rounded-xl text-white outline-none focus:border-white transition-colors mb-4">
-            <button onclick="login()" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-colors mb-4 transform active:scale-[0.98]">Login to Account</button>
-            <p class="text-[10px] text-brand-mute uppercase tracking-widest">Secure 1-click access</p>
-        </div>
-    </div>
-
-    <!-- DASHBOARD VIEW -->
+<!-- DASHBOARD VIEW -->
     <div id="view-dashboard" class="view hidden pt-40 pb-40 px-6 max-w-7xl mx-auto">
         <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 border-b border-brand-border pb-8">
             <div>
@@ -1097,7 +1087,7 @@
             
             // Update Nav account status
             const accountNav = document.getElementById('nav-account');
-            accountNav.style.opacity = (viewId !== 'shop' && viewId !== 'account') ? '1' : '';
+            accountNav.style.opacity = (viewId !== 'shop') ? '1' : '';
             if (viewId === 'search') {
                 setTimeout(() => document.getElementById('search-input').focus(), 100);
             }
@@ -1407,10 +1397,9 @@
         filterCollection('all'); // Initialize collection view
         renderCart();
         updateCartIndicator();
-        
-        if (userSession) {
-            document.getElementById('nav-account').textContent = 'Profile';
-        }
+
+        wireAuthModal();
+        bootCustomer();
 
     </script>
 </body>
