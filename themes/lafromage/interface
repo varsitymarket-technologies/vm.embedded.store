@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SPECIMEN // ARCHIVE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;900&family=JetBrains+Mono:wght@300&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        archive: {
+                            paper: '#F5F5F5',
+                            ink: '#1A1A1A',
+                            line: '#E0E0E0'
+                        }
+                    },
+                    fontFamily: {
+                        display: ['"Inter"', 'sans-serif'],
+                        mono: ['"JetBrains Mono"', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #F5F5F5; color: #1A1A1A; font-family: 'JetBrains Mono', monospace; overflow-x: hidden; }
+        
+        /* Thin borders like a blueprint */
+        .specimen-border { border: 0.5px solid #E0E0E0; }
+        
+        /* Subtle reveal animations */
+        .reveal { animation: specReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes specReveal { 
+            from { opacity: 0; transform: translateY(20px); filter: blur(5px); } 
+            to { opacity: 1; transform: translateY(0); filter: blur(0); } 
+        }
+
+        /* Hover Reveal Logic */
+        .specimen-card .info { opacity: 0; transition: opacity 0.4s ease; }
+        .specimen-card:hover .info { opacity: 1; }
+        .specimen-card img { transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .specimen-card:hover img { transform: scale(1.03); }
+
+        .hidden { display: none !important; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #1A1A1A; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <nav class="fixed top-0 left-0 w-full z-50 mix-blend-difference px-10 py-8 flex justify-between items-baseline">
+        <a href="#home" class="font-display font-black text-2xl tracking-tighter text-archive-ink">S//P</a>
+        <div class="flex space-x-12 text-[10px] uppercase tracking-[0.4em] font-bold">
+            <a href="#shop" class="hover:line-through">Catalog</a>
+            <a href="#cart" class="hover:line-through">Index [<span class="js-cart-count">0</span>]</a>
+        </div>
+    </nav>
+
+    <main id="app-root" class="pt-32 min-h-screen"></main>
+
+    <footer class="p-20 mt-40 specimen-border border-t">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start space-y-10 md:space-y-0">
+            <div class="max-w-xs">
+                <p class="font-display font-black text-4xl mb-4">SPECIMEN.</p>
+                <p class="text-[9px] leading-loose opacity-40">A study in textile permanence and anatomical geometry. All items are produced in numbered sequences.</p>
+            </div>
+            <div class="text-[9px] uppercase space-y-2 opacity-40">
+                <p>VarsityMarket_Terminal_v4.0</p>
+                <p>© 2026 Permanent Collection</p>
+            </div>
+        </div>
+    </footer>
+
+    <template id="tpl-home">
+        <section class="max-w-7xl mx-auto px-10 py-20 reveal">
+            <div class="mb-40">
+                <h1 class="font-display font-thin text-[12vw] leading-none tracking-tighter">THE <br> <span class="font-black">COLLECTION</span></h1>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-20 items-end">
+                <div class="aspect-[3/4] bg-archive-line overflow-hidden">
+                    <img src="https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?q=80&w=800" class="w-full h-full object-cover grayscale opacity-80">
+                </div>
+                <div class="pb-20">
+                    <p class="text-xs leading-loose mb-10 opacity-60 max-w-sm">
+                        Objects intended for the void. We focus on the architecture of the garment, stripping away the unnecessary until only the specimen remains.
+                    </p>
+                    <a href="#shop" class="font-display font-black text-3xl border-b-2 border-archive-ink pb-2 hover:bg-archive-ink hover:text-archive-paper transition-all px-4">BROWSE_ARCHIVE</a>
+                </div>
+            </div>
+        </section>
+    </template>
+
+    <template id="tpl-shop">
+        <section class="max-w-7xl mx-auto px-10 py-20">
+            <div class="flex justify-between items-end mb-20">
+                <h2 class="font-display font-black text-6xl uppercase italic">The Catalog</h2>
+                <span class="text-[10px] opacity-30 font-bold uppercase tracking-[0.5em]">Issue_001</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 js-product-grid"></div>
+        </section>
+    </template>
+
+    <template id="tpl-product-card">
+        <div class="specimen-card flex flex-col group cursor-pointer js-prod-link">
+            <div class="aspect-[4/5] bg-archive-line mb-6 overflow-hidden relative specimen-border">
+                <img src="" alt="" class="w-full h-full object-cover grayscale">
+                <div class="absolute inset-0 bg-archive-paper/80 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    <span class="text-[10px] font-bold tracking-[0.4em]">VIEW_ARTIFACT</span>
+                </div>
+            </div>
+            <div class="info flex justify-between items-start">
+                <div>
+                    <h3 class="font-display font-black text-xl uppercase js-title"></h3>
+                    <p class="text-[9px] opacity-40 uppercase js-category"></p>
+                </div>
+                <span class="font-bold text-sm js-price"></span>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-product">
+        <section class="max-w-7xl mx-auto px-10 py-20 grid grid-cols-1 lg:grid-cols-2 gap-24 reveal">
+            <div class="aspect-[3/4] bg-archive-line specimen-border overflow-hidden">
+                <img src="" class="w-full h-full object-cover grayscale js-detail-img">
+            </div>
+            <div class="flex flex-col justify-between">
+                <div class="space-y-12">
+                    <header>
+                        <p class="text-[10px] opacity-30 mb-2 js-detail-id"></p>
+                        <h1 class="font-display font-black text-7xl uppercase leading-none js-detail-title"></h1>
+                    </header>
+                    
+                    <p class="text-xs leading-loose opacity-60 js-detail-desc"></p>
+                    
+                    <div class="grid grid-cols-2 gap-10 pt-10 border-t border-archive-line">
+                        <div class="space-y-2">
+                            <p class="text-[9px] font-black opacity-30 uppercase">Composition</p>
+                            <p class="text-[10px]">100% ORGANIC COTTON</p>
+                        </div>
+                        <div class="space-y-2">
+                            <p class="text-[9px] font-black opacity-30 uppercase">Origin</p>
+                            <p class="text-[10px]">VERIFIED FACILITY // 01</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-20 flex items-center justify-between">
+                    <span class="font-display font-black text-4xl js-detail-price"></span>
+                    <button class="bg-archive-ink text-archive-paper px-12 py-6 font-display font-black uppercase text-sm hover:scale-105 transition-transform js-add-btn">
+                        Add_To_Archive
+                    </button>
+                </div>
+            </div>
+        </section>
+    </template>
+
+    <template id="tpl-cart">
+        <section class="max-w-4xl mx-auto px-10 py-20 min-h-[60vh] reveal">
+            <h1 class="font-display font-black text-6xl uppercase mb-20 italic">The_Index</h1>
+            <div class="js-cart-container space-y-px bg-archive-line specimen-border"></div>
+        </section>
+    </template>
+
+    <script>
+        const DB = {
+            currency: 'USD',
+            products: [
+                { id: 1, title: 'Void Tee', price: 85, category: 'Apparel', img: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?q=80&w=800', desc: 'A heavy-weight staple with a structural drop shoulder. Engineered for silhouettes that defy seasonal trends.' },
+                { id: 2, title: 'Monolith Trouser', price: 240, category: 'Apparel', img: 'https://images.unsplash.com/photo-1594633312681-425c7b97ccd1?q=80&w=800', desc: 'High-density canvas with an anatomical taper. Hidden seam pockets and reinforced internal structure.' },
+                { id: 3, title: 'Archive Shell', price: 410, category: 'Outerwear', img: 'https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?q=80&w=800', desc: 'Water-repellent technical membrane. Matte finish with zero external branding. An artifact of utility.' },
+                { id: 4, title: 'Specimen Cap', price: 60, category: 'Accessory', img: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=800', desc: 'Unstructured 6-panel with adjustable metal hardware. Minimalist crown height.' }
+            ]
+        };
+
+        class SpecimenEngine {
+            constructor() {
+                this.root = document.getElementById('app-root');
+                this.cart = JSON.parse(localStorage.getItem('specimen_cart')) || [];
+                this.initRouter();
+                this.updateCartCount();
+            }
+
+            initRouter() {
+                window.addEventListener('hashchange', () => this.route());
+                this.route();
+            }
+
+            route() {
+                const hash = window.location.hash.slice(1) || 'home';
+                const [view, id] = hash.split('/');
+                this.root.innerHTML = '';
+                
+                switch(view) {
+                    case 'shop': this.renderShop(); break;
+                    case 'product': this.renderProduct(id); break;
+                    case 'cart': this.renderCart(); break;
+                    default: this.renderTemplate('tpl-home'); break;
+                }
+                window.scrollTo(0, 0);
+            }
+
+            renderTemplate(templateId, callback = null) {
+                const tpl = document.getElementById(templateId);
+                const clone = tpl.content.cloneNode(true);
+                this.root.appendChild(clone);
+                if (callback) callback.call(this, this.root);
+            }
+
+            renderShop() {
+                this.renderTemplate('tpl-shop', (view) => {
+                    const grid = view.querySelector('.js-product-grid');
+                    const prodTpl = document.getElementById('tpl-product-card');
+                    DB.products.forEach(p => {
+                        const card = prodTpl.content.cloneNode(true);
+                        card.querySelector('.js-prod-link').onclick = () => window.location.hash = `product/${p.id}`;
+                        card.querySelector('.js-title').textContent = p.title;
+                        card.querySelector('.js-category').textContent = p.category;
+                        card.querySelector('.js-price').textContent = `${p.price} ${DB.currency}`;
+                        card.querySelector('img').src = p.img;
+                        grid.appendChild(card);
+                    });
+                });
+            }
+
+            renderProduct(id) {
+                const product = DB.products.find(p => p.id == id);
+                if (!product) return;
+                this.renderTemplate('tpl-product', (view) => {
+                    view.querySelector('.js-detail-title').textContent = product.title;
+                    view.querySelector('.js-detail-price').textContent = `${product.price} ${DB.currency}`;
+                    view.querySelector('.js-detail-desc').textContent = product.desc;
+                    view.querySelector('.js-detail-id').textContent = `SPECIMEN_REF_${product.id.toString().padStart(3, '0')}`;
+                    view.querySelector('.js-detail-img').src = product.img;
+                    view.querySelector('.js-add-btn').onclick = () => {
+                        this.cartAdd(product);
+                        window.location.hash = 'cart';
+                    };
+                });
+            }
+
+            renderCart() {
+                this.renderTemplate('tpl-cart', (mainView) => {
+                    const container = mainView.querySelector('.js-cart-container');
+                    if (this.cart.length === 0) {
+                        container.innerHTML = `<div class="p-20 bg-archive-paper text-center opacity-30 text-[10px] tracking-[0.5em]">Index_Empty</div>`;
+                        return;
+                    }
+                    this.cart.forEach((item, index) => {
+                        const row = document.createElement('div');
+                        row.className = "p-10 bg-archive-paper flex justify-between items-center group";
+                        row.innerHTML = `
+                            <div class="flex items-center space-x-8">
+                                <span class="text-[9px] opacity-20 font-black">0${index+1}</span>
+                                <h3 class="font-display font-black text-2xl uppercase">${item.title}</h3>
+                            </div>
+                            <div class="flex items-center space-x-12">
+                                <span class="font-bold text-sm">${item.price} ${DB.currency}</span>
+                                <button class="text-[9px] font-black hover:line-through js-remove">PURGE</button>
+                            </div>
+                        `;
+                        row.querySelector('.js-remove').onclick = () => { this.cart.splice(index, 1); this.cartSave(); this.renderCart(); };
+                        container.appendChild(row);
+                    });
+                });
+            }
+
+            cartAdd(product) {
+                const existing = this.cart.find(item => item.id === product.id);
+                if (!existing) this.cart.push({ ...product, qty: 1 });
+                this.cartSave();
+            }
+
+            cartSave() {
+                localStorage.setItem('specimen_cart', JSON.stringify(this.cart));
+                this.updateCartCount();
+            }
+
+            updateCartCount() {
+                const count = this.cart.length;
+                document.querySelectorAll('.js-cart-count').forEach(el => el.textContent = count);
+            }
+        }
+
+        /* ════════════════════
+           CANONICAL DATA LAYER — fetchStore → api.php?state=X, getMockData fallback, MOCK shape
+        ════════════════════ */
+        const __CATS = [...new Set(DB.products.map(p => p.category).filter(Boolean))].map((name, i) => ({ id: i + 1, name }));
+        const MOCK = {
+            site: { name: "LAFROMAGE", currency: DB.currency || "R", domain: window.location.hostname },
+            categories: __CATS,
+            products: DB.products.map((p, i) => ({
+                ...p,
+                id: p.id != null ? p.id : i + 1,
+                name: p.name || p.title || "",
+                image: p.image || p.img || "",
+                description: p.description || p.desc || "",
+                stock: p.stock != null ? p.stock : 12,
+                category_id: (__CATS.find(c => c.name === p.category) || {}).id || null
+            })),
+            discounts: [
+                { id: 1, code: "WELCOME10", percentage: 10, active: 1 },
+                { id: 2, code: "DROP20", percentage: 20, active: 1 }
+            ]
+        };
+        async function fetchStore(state, params = {}) {
+            const url = new URL("api.php", window.location.href);
+            url.searchParams.set("state", state);
+            for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+            const headers = {};
+            const token = localStorage.getItem('vm_customer_token');
+            if (token) headers['X-Customer-Token'] = token;
+            try {
+                const res = await fetch(url, { signal: AbortSignal.timeout(4000), headers });
+                if (!res.ok) throw new Error(res.status);
+                return await res.json();
+            } catch {
+                return getMockData(state, params);
+            }
+        }
+
+        async function postStore(state, body = {}) {
+            const url = new URL("api.php", window.location.href);
+            url.searchParams.set("state", state);
+            const headers = { 'Content-Type': 'application/json' };
+            const token = localStorage.getItem('vm_customer_token');
+            if (token) headers['X-Customer-Token'] = token;
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(body),
+                    signal: AbortSignal.timeout(8000)
+                });
+                const data = await res.json().catch(() => ({}));
+                return { ok: res.ok && (data.ok !== false), status: res.status, data, error: data.error || null };
+            } catch (e) {
+                return { ok: false, status: 0, data: {}, error: e.message };
+            }
+        }
+        function getMockData(state, params = {}) {
+            switch (state) {
+                case "site": return MOCK.site;
+                case "products": return MOCK.products;
+                case "product": return MOCK.products.find(p => p.id == params.id) || null;
+                case "categories": return MOCK.categories;
+                case "products_by_category": return MOCK.products.filter(p => p.category_id == params.category_id);
+                case "search": {
+                    const q = (params.q || "").toLowerCase();
+                    return MOCK.products.filter(p => (p.name || "").toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q));
+                }
+                case "discounts": return MOCK.discounts;
+                case "orders": return [];
+                default: return [];
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try { const __d = await fetchStore('products'); DB.products = __d.map(p => ({ ...p, title: p.title || p.name || '', img: p.img || p.image || '', desc: p.desc || p.description || '', category: p.category || ((MOCK.categories.find(c => c.id == p.category_id) || {}).name) || '' })); } catch {}
+            window.App = new SpecimenEngine();
+        });
+    </script>
+</body>
+</html>
