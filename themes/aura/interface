@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AURA | High Perfumery & Essentials</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Inter:wght@200;300;400;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #FFFFFF; color: #111111; font-weight: 300; }
+        .font-serif { font-family: 'Cormorant Garamond', serif; }
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeIn 0.8s ease-out forwards; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Delicate input fields */
+        .shopify-input { 
+            border: none;
+            border-bottom: 1px solid #E5E5E5; 
+            background-color: transparent;
+            border-radius: 0;
+            transition: border-color 0.4s ease;
+        }
+        .shopify-input:focus { 
+            outline: none; 
+            border-bottom-color: #111111; 
+        }
+        
+        /* Subtle image hover fade */
+        .product-card img {
+            transition: opacity 0.5s ease;
+        }
+        .product-card:hover img {
+            opacity: 0.85;
+        }
+
+        /* Custom scrollbar for an elegant feel */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #FFFFFF; }
+        ::-webkit-scrollbar-thumb { background: #E5E5E5; }
+        ::-webkit-scrollbar-thumb:hover { background: #A3A3A3; }
+    </style>
+
+    <!-- D.3.1: customer auth helper (vm-customer.js from same dir as api.php) -->
+    <script src="vm-customer.js" defer></script>
+    <script>
+        // Toggle data-customer + sync aura's nav icon on auth events.
+        window.addEventListener('vm:customer-loaded', function () {
+            document.body.dataset.customer = 'logged-in';
+            if (window.app && app.auth && typeof app.auth.updateIcon === 'function') app.auth.updateIcon();
+        });
+        window.addEventListener('vm:customer-login', function () {
+            document.body.dataset.customer = 'logged-in';
+            if (window.app && app.auth && typeof app.auth.updateIcon === 'function') app.auth.updateIcon();
+        });
+        window.addEventListener('vm:customer-logout', function () {
+            document.body.dataset.customer = 'logged-out';
+            if (window.app && app.auth && typeof app.auth.updateIcon === 'function') app.auth.updateIcon();
+        });
+    </script>
+</head>
+<body class="antialiased min-h-screen flex flex-col justify-between selection:bg-neutral-200 selection:text-black">
+
+    <div class="bg-white text-[#111111] border-b border-[#E5E5E5] py-2 text-[10px] uppercase tracking-[0.2em] text-center font-light">
+        Complimentary shipping on all international collections
+    </div>
+
+    <header class="sticky top-0 bg-white/80 backdrop-blur-md z-40 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-8 h-24 flex items-center justify-between">
+            
+            <nav class="hidden md:flex items-center space-x-12 text-[11px] uppercase tracking-[0.15em] text-neutral-500">
+                <a href="#shop" onclick="app.router.navigate('shop')" class="hover:text-black transition-colors duration-300">The Collection</a>
+                <a href="#about" onclick="app.router.navigate('about')" class="hover:text-black transition-colors duration-300">Maison</a>
+            </nav>
+
+            <a href="#home" onclick="app.router.navigate('home')" class="font-serif text-3xl font-light tracking-[0.1em] text-black absolute left-1/2 transform -translate-x-1/2">
+                AURA
+            </a>
+
+            <div class="flex items-center space-x-6 text-neutral-500">
+                <button class="hover:text-black transition-colors duration-300" onclick="app.ui.toggleSearchOverlay()" aria-label="Search">
+                    <span class="text-[11px] uppercase tracking-[0.15em] hidden md:block">Search</span>
+                    <i data-lucide="search" class="w-4 h-4 stroke-[1] md:hidden"></i>
+                </button>
+                <button class="hover:text-black transition-colors duration-300 relative flex items-center" onclick="app.ui.toggleCartDrawer()" aria-label="Cart">
+                    <span class="text-[11px] uppercase tracking-[0.15em] hidden md:block">Tote (<span id="global-cart-count-text">0</span>)</span>
+                    <div class="md:hidden relative">
+                        <i data-lucide="shopping-bag" class="w-4 h-4 stroke-[1]"></i>
+                        <span id="global-cart-count" class="absolute -top-1.5 -right-1.5 text-[9px] text-white bg-black w-3.5 h-3.5 rounded-full flex items-center justify-center transition-all transform scale-0">0</span>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+
+        <section id="view-home" class="view-section active">
+            <div class="max-w-7xl mx-auto px-4 sm:px-8 py-8 sm:py-12">
+                <div class="relative w-full aspect-[4/5] sm:aspect-[21/9] bg-neutral-50 overflow-hidden group cursor-pointer" onclick="app.router.navigate('shop')">
+                    <img src="https://images.unsplash.com/photo-1615529328331-f8917597711f?q=80&w=2000&auto=format&fit=crop" class="w-full h-full object-cover opacity-90 transition-transform duration-[2s] group-hover:scale-105" alt="Aura Perfume Editorial">
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-center p-6 bg-black/5">
+                        <h1 class="font-serif text-5xl sm:text-7xl text-white font-light tracking-wide drop-shadow-sm mb-6">Santal & Silica</h1>
+                        <span class="text-white text-[10px] uppercase tracking-[0.2em] border-b border-white pb-1 hover:opacity-70 transition-opacity">Discover the new essence</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="max-w-4xl mx-auto px-4 py-24 sm:py-32 text-center space-y-8">
+                <h2 class="font-serif text-3xl sm:text-4xl font-light text-black leading-snug">
+                    "Perfume is the unseen, unforgettable, <br class="hidden sm:block">
+                    <span class="italic">ultimate accessory."</span>
+                </h2>
+                <p class="text-[13px] text-neutral-500 leading-relaxed max-w-xl mx-auto font-light">
+                    Formulated in Grasse, bottled in minimalist architecture. We strip away the unnecessary to reveal the absolute core of the olfactory experience. Rare ingredients, uncompromised purity.
+                </p>
+            </div>
+        </section>
+
+        <section id="view-shop" class="view-section max-w-7xl mx-auto px-4 sm:px-8 py-16">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 space-y-4 md:space-y-0 border-b border-[#E5E5E5] pb-8">
+                <div>
+                    <h2 class="font-serif text-4xl text-black font-light">The Collection</h2>
+                    <p id="catalog-count-string" class="text-neutral-400 text-[11px] uppercase tracking-[0.15em] mt-3"></p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <select id="catalog-sort" onchange="app.store.sortCatalog(this.value)" class="text-[11px] uppercase tracking-[0.15em] bg-transparent text-neutral-600 border-none cursor-pointer focus:outline-none focus:ring-0">
+                        <option value="featured">Featured</option>
+                        <option value="price-low">Price: Ascending</option>
+                        <option value="price-high">Price: Descending</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="shop-items-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-20">
+                </div>
+        </section>
+
+        <section id="view-product" class="view-section max-w-7xl mx-auto px-4 sm:px-8 py-16">
+            <div id="product-detail-target" class="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24 items-start">
+                </div>
+        </section>
+
+        <section id="view-about" class="view-section max-w-3xl mx-auto px-4 py-24 sm:py-32 space-y-16">
+            <div class="text-center space-y-6">
+                <span class="text-[10px] uppercase tracking-[0.2em] text-neutral-400">Our Heritage</span>
+                <h2 class="font-serif text-4xl sm:text-5xl font-light text-black">A study in reduction.</h2>
+            </div>
+            <div class="aspect-[4/3] w-full bg-neutral-50 overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1629198688000-71f23e745b6e?q=80&w=1200&auto=format&fit=crop" class="w-full h-full object-cover grayscale opacity-80" alt="Laboratory">
+            </div>
+            <div class="text-[13px] text-neutral-600 leading-loose font-light space-y-6">
+                <p>Aura was born from a desire to escape the noise of traditional luxury. We do not believe in excessive packaging, celebrity endorsements, or fleeting seasonal trends.</p>
+                <p>Instead, we invest entirely in the juice. We collaborate directly with independent harvesters across the globe to source the highest grade absolutes and resins. Each object we produce is designed to be a permanent, quiet fixture in your daily ritual.</p>
+            </div>
+        </section>
+
+        <section id="view-faq" class="view-section max-w-2xl mx-auto px-4 py-24 sm:py-32">
+            <h2 class="font-serif text-3xl font-light text-center mb-16">Client Care</h2>
+            <div class="border-t border-[#E5E5E5]">
+                <div class="py-6 border-b border-[#E5E5E5]">
+                    <button onclick="app.ui.toggleAccordion(this)" class="w-full flex justify-between items-center text-left text-[13px] font-medium text-black tracking-wide focus:outline-none">
+                        <span>Shipping & Handling</span>
+                        <i data-lucide="plus" class="w-3 h-3 text-neutral-400 transform transition-transform duration-500"></i>
+                    </button>
+                    <div class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out text-neutral-500 text-[13px] leading-relaxed font-light">
+                        <p class="pt-4 pb-2">Orders are prepared with meticulous care and dispatched within 48 hours. Complimentary express shipping is provided for all collections globally.</p>
+                    </div>
+                </div>
+                <div class="py-6 border-b border-[#E5E5E5]">
+                    <button onclick="app.ui.toggleAccordion(this)" class="w-full flex justify-between items-center text-left text-[13px] font-medium text-black tracking-wide focus:outline-none">
+                        <span>Returns & Exchanges</span>
+                        <i data-lucide="plus" class="w-3 h-3 text-neutral-400 transform transition-transform duration-500"></i>
+                    </button>
+                    <div class="max-h-0 overflow-hidden transition-all duration-500 ease-in-out text-neutral-500 text-[13px] leading-relaxed font-light">
+                        <p class="pt-4 pb-2">Unopened items in their original cellophane may be returned within 14 days. Due to the intimate nature of fragrance, opened vessels cannot be accepted.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-contact" class="view-section max-w-xl mx-auto px-4 py-24 sm:py-32 text-center">
+            <h2 class="font-serif text-3xl font-light mb-4">Concierge</h2>
+            <p class="text-[13px] text-neutral-500 font-light mb-12">For personalized fragrance profiling or order inquiries.</p>
+            
+            <form onsubmit="app.ui.handleContactSubmit(event)" class="space-y-8 text-left">
+                <input type="text" required placeholder="Name" class="w-full py-3 text-[13px] font-light shopify-input">
+                <input type="email" required placeholder="Email Address" class="w-full py-3 text-[13px] font-light shopify-input">
+                <textarea required rows="1" placeholder="Message" class="w-full py-3 text-[13px] font-light shopify-input resize-none h-12 transition-all focus:h-24"></textarea>
+                <div class="pt-4">
+                    <button type="submit" class="w-full border border-black text-black py-4 text-[11px] uppercase tracking-[0.15em] hover:bg-black hover:text-white transition-colors duration-500">Submit Inquiry</button>
+                </div>
+            </form>
+        </section>
+
+        <section id="view-checkout" class="view-section max-w-5xl mx-auto px-4 py-16">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24">
+                <div class="space-y-12">
+                    <h2 class="font-serif text-3xl font-light">Secure Checkout</h2>
+                    <div class="flex items-center space-x-4 text-[10px] uppercase tracking-[0.2em]">
+                        <span id="step-nav-1" class="text-black transition-colors">1. Delivery</span>
+                        <span class="text-neutral-300">/</span>
+                        <span id="step-nav-2" class="text-neutral-400 transition-colors">2. Payment</span>
+                    </div>
+                    <form id="checkout-form" onsubmit="app.checkout.handleStepSubmit(event)" class="space-y-8">
+                        <div id="checkout-step-container" class="min-h-[200px]"></div>
+                        <div class="flex items-center justify-between pt-8 border-t border-[#E5E5E5]">
+                            <a href="#shop" onclick="app.router.navigate('shop')" class="text-[11px] text-neutral-500 hover:text-black uppercase tracking-[0.1em] transition-colors">Return</a>
+                            <button type="submit" class="bg-black text-white px-8 py-4 text-[10px] uppercase tracking-[0.2em] hover:bg-neutral-800 transition-colors">
+                                Continue
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="bg-neutral-50 p-8 sm:p-12 self-start">
+                    <h3 class="text-[11px] uppercase tracking-[0.15em] mb-8 text-neutral-500 border-b border-[#E5E5E5] pb-4">Order Summary</h3>
+                    <div id="checkout-summary-items" class="space-y-6 max-h-[400px] overflow-y-auto pr-2 mb-8"></div>
+                    <div class="space-y-4 pt-6 border-t border-[#E5E5E5] text-[13px] font-light text-black">
+                        <div class="flex justify-between text-neutral-500"><span>Shipping</span><span>Complimentary</span></div>
+                        <div class="flex justify-between items-center pt-4">
+                            <span class="text-[11px] uppercase tracking-[0.15em]">Total</span>
+                            <span id="chk-total" class="font-serif text-xl">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="cart-drawer-overlay" class="fixed inset-0 bg-white/50 backdrop-blur-sm z-50 pointer-events-none opacity-0 transition-all duration-500" onclick="app.ui.toggleCartDrawer()">
+        <div class="absolute right-0 top-0 h-full w-full max-w-[400px] bg-white border-l border-[#E5E5E5] p-6 sm:p-10 flex flex-col justify-between pointer-events-auto transform translate-x-full transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]" onclick="event.stopPropagation()">
+            <div class="flex flex-col min-h-0 flex-grow">
+                <div class="flex items-center justify-between mb-10">
+                    <h3 class="text-[11px] uppercase tracking-[0.2em] text-black">Your Tote</h3>
+                    <button onclick="app.ui.toggleCartDrawer()" class="text-neutral-400 hover:text-black transition-colors"><i data-lucide="x" class="w-4 h-4 stroke-[1]"></i></button>
+                </div>
+                <div id="cart-drawer-items" class="flex-grow overflow-y-auto space-y-8 pr-2"></div>
+            </div>
+            <div class="pt-8 border-t border-[#E5E5E5] bg-white">
+                <div class="flex justify-between items-end mb-6">
+                    <span class="text-[10px] uppercase tracking-[0.15em] text-neutral-500">Subtotal</span>
+                    <span id="cart-drawer-subtotal" class="font-serif text-xl">$0.00</span>
+                </div>
+                <button onclick="app.checkout.initiateCheckout()" class="w-full py-4 bg-black text-white text-[10px] uppercase tracking-[0.2em] hover:bg-neutral-800 transition-colors">Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="search-overlay" class="fixed inset-0 bg-white z-50 hidden flex-col items-center justify-center p-4">
+        <button onclick="app.ui.toggleSearchOverlay()" class="absolute top-8 right-8 text-neutral-400 hover:text-black transition-colors"><i data-lucide="x" class="w-6 h-6 stroke-[1]"></i></button>
+        <div class="w-full max-w-2xl">
+            <input type="text" id="live-search-input" oninput="app.store.handleSearch(this.value)" placeholder="Type to search..." class="w-full bg-transparent py-4 text-3xl font-serif font-light text-center border-b border-[#E5E5E5] focus:outline-none focus:border-black placeholder-neutral-300 text-black">
+            <div id="search-results-output" class="mt-12 space-y-6 max-h-[50vh] overflow-y-auto px-4"></div>
+        </div>
+    </div>
+
+    <div id="toast-notif" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 translate-y-10 bg-black text-white text-[10px] uppercase tracking-[0.15em] py-3 px-6 shadow-sm z-50 opacity-0 transition-all duration-500 pointer-events-none whitespace-nowrap">
+        <span id="toast-notif-message">Item added</span>
+    </div>
+
+    <footer class="border-t border-[#E5E5E5] pt-20 pb-10 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-8 grid grid-cols-1 md:grid-cols-3 gap-16 mb-20 text-[11px] font-light text-neutral-500 uppercase tracking-[0.15em]">
+            <div class="space-y-4">
+                <a href="#shop" onclick="app.router.navigate('shop')" class="block hover:text-black transition-colors">Shop</a>
+                <a href="#about" onclick="app.router.navigate('about')" class="block hover:text-black transition-colors">Maison</a>
+            </div>
+            <div class="space-y-4">
+                <a href="#faq" onclick="app.router.navigate('faq')" class="block hover:text-black transition-colors">Client Care</a>
+                <a href="#contact" onclick="app.router.navigate('contact')" class="block hover:text-black transition-colors">Concierge</a>
+            </div>
+            <div>
+                <p class="mb-4 text-black">Newsletter</p>
+                <form onsubmit="event.preventDefault(); app.ui.triggerToast('Subscribed');" class="flex border-b border-[#E5E5E5] pb-2 group">
+                    <input type="email" placeholder="Email Address" required class="w-full bg-transparent focus:outline-none text-black placeholder-neutral-300">
+                    <button type="submit" class="text-neutral-300 group-hover:text-black transition-colors"><i data-lucide="arrow-right" class="w-4 h-4 stroke-[1]"></i></button>
+                </form>
+            </div>
+        </div>
+        <div class="text-center text-[10px] text-neutral-400 uppercase tracking-[0.2em]">
+            &copy; 2026 AURA PARFUMS. ALL RIGHTS RESERVED.
+        </div>
+    </footer>
+
+    <script>
+        /**
+         * Luxury product dataset
+         */
+        const __SEED = [
+            { id: 'aura-01', name: 'Bergamot & Santal', price: 210.00, category: 'EAU DE PARFUM', images: ['https://images.unsplash.com/photo-1594035910387-fea47794261f?q=80&w=800&auto=format&fit=crop'], desc: 'A crisp opening of Calabrian bergamot gives way to a profound, creamy heart of Australian sandalwood. A scent of quiet confidence and extreme clarity.', notes: 'Bergamot, Violet Leaf, Sandalwood, Ambergris' },
+            { id: 'aura-02', name: 'Fig Tree', price: 85.00, category: 'BOUGIE', images: ['https://images.unsplash.com/photo-1603006905003-be475563bc59?q=80&w=800&auto=format&fit=crop'], desc: 'Hand-poured vegan wax infused with the essence of a sun-baked Mediterranean fig grove. Green leaves, milky sap, and warm bark.', notes: 'Fig Leaf, Cedarwood, Vetiver' },
+            { id: 'aura-03', name: 'Hinoki Body Wash', price: 45.00, category: 'ESSENTIALS', images: ['https://images.unsplash.com/photo-1620916566398-39f1143ab7be?q=80&w=800&auto=format&fit=crop'], desc: 'A gentle, sulfate-free lather designed to cleanse while leaving a trace of Japanese cypress and crushed pine needles on the skin.', notes: 'Hinoki Wood, Frankincense, Oakmoss' },
+            { id: 'aura-04', name: 'Rose Absolute', price: 160.00, category: 'EAU DE PARFUM', images: ['https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?q=80&w=800&auto=format&fit=crop'], desc: 'Not your traditional floral. A dark, slightly metallic Damask rose anchored by heavy oud and black pepper. Unapologetic and deeply sensual.', notes: 'Black Pepper, Damascena Rose, Oud, Patchouli' }
+        ];
+
+        /* ════════════════════
+           CANONICAL DATA LAYER — fetchStore → api.php?state=X, getMockData fallback, MOCK shape
+        ════════════════════ */
+        const __CATS = [...new Set(__SEED.map(p => p.category).filter(Boolean))].map((name, i) => ({ id: i + 1, name }));
+        const MOCK = {
+            site: { name: "AURA", currency: "R", domain: window.location.hostname },
+            categories: __CATS,
+            products: __SEED.map((p, i) => ({
+                ...p,
+                id: p.id != null ? p.id : i + 1,
+                image: p.image || (Array.isArray(p.images) ? p.images[0] : "") || "",
+                description: p.description || p.desc || "",
+                stock: p.stock != null ? p.stock : 12,
+                category_id: (__CATS.find(c => c.name === p.category) || {}).id || null
+            })),
+            discounts: [
+                { id: 1, code: "WELCOME10", percentage: 10, active: 1 },
+                { id: 2, code: "DROP20", percentage: 20, active: 1 }
+            ]
+        };
+
+        async function fetchStore(state, params = {}) {
+            const url = new URL("api.php", window.location.href);
+            url.searchParams.set("state", state);
+            for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+            try {
+                const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+                if (!res.ok) throw new Error(res.status);
+                return await res.json();
+            } catch {
+                return getMockData(state, params);
+            }
+        }
+
+        function getMockData(state, params = {}) {
+            switch (state) {
+                case "site": return MOCK.site;
+                case "products": return MOCK.products;
+                case "product": return MOCK.products.find(p => p.id == params.id) || null;
+                case "categories": return MOCK.categories;
+                case "products_by_category": return MOCK.products.filter(p => p.category_id == params.category_id);
+                case "search": {
+                    const q = (params.q || "").toLowerCase();
+                    return MOCK.products.filter(p => (p.name || "").toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q));
+                }
+                case "discounts": return MOCK.discounts;
+                case "orders": return [];
+                default: return [];
+            }
+        }
+
+        let INVENTORY_DB = [];
+
+        const app = {
+            state: { cart: [], activeFilter: 'all', currentSort: 'featured', activeCheckoutStep: 1 },
+            init: async function() {
+                const __d = await fetchStore('products');
+                INVENTORY_DB = __d.map(p => ({ ...p, images: p.images || (p.image ? [p.image] : []), desc: p.desc || p.description || '', category: p.category || ((MOCK.categories.find(c => c.id == p.category_id) || {}).name) || '' }));
+                this.router.init(); this.store.renderCatalog(); this.cart.loadAndSync(); lucide.createIcons();
+            }
+        };
+
+        // --- ROUTER ---
+        app.router = {
+            init: function() {
+                window.addEventListener('popstate', () => this.evalRoute(window.location.hash));
+                this.evalRoute(window.location.hash || '#home');
+            },
+            navigate: function(view, params = null) {
+                let hash = `#${view}`;
+                if (params) hash += `?${new URLSearchParams(params).toString()}`;
+                history.pushState(null, null, hash);
+                this.evalRoute(hash);
+            },
+            evalRoute: function(hashString) {
+                const parts = hashString.split('?');
+                const view = parts[0] || '#home';
+                const queryParams = parts[1] ? Object.fromEntries(new URLSearchParams(parts[1])) : {};
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                const targetView = document.getElementById(`view-${view.replace('#', '')}`);
+                if (targetView) targetView.classList.add('active');
+                if (view === '#shop') { app.store.filterCatalog('all'); } 
+                else if (view === '#product' && queryParams.id) { app.store.renderProductDetail(queryParams.id); } 
+                else if (view === '#checkout') { app.checkout.renderCurrentStep(); }
+                window.scrollTo({top:0, behavior: 'smooth'});
+            }
+        };
+
+        // --- STORE / CATALOG ---
+        app.store = {
+            renderCatalog: function(itemsToRender = INVENTORY_DB) {
+                const grid = document.getElementById('shop-items-grid');
+                if (!grid) return;
+                grid.innerHTML = itemsToRender.map(item => `
+                    <div class="product-card group cursor-pointer" onclick="app.router.navigate('product', {id: '${item.id}'})">
+                        <div class="aspect-[3/4] w-full overflow-hidden bg-neutral-50 mb-6 relative">
+                            <img src="${item.images[0]}" alt="${item.name}" class="w-full h-full object-cover">
+                        </div>
+                        <div class="text-center space-y-2">
+                            <h3 class="font-serif text-xl text-black">${item.name}</h3>
+                            <p class="text-[11px] text-neutral-400 uppercase tracking-[0.15em]">${item.category}</p>
+                            <p class="text-[13px] text-black font-light">$${item.price.toFixed(2)}</p>
+                        </div>
+                    </div>`).join('');
+                document.getElementById('catalog-count-string').innerText = `${itemsToRender.length} objects`;
+            },
+            filterCatalog: function(cat) { app.state.activeFilter = cat; this.renderCatalog(cat === 'all' ? INVENTORY_DB : INVENTORY_DB.filter(i => i.category === cat)); },
+            sortCatalog: function(criteria) {
+                let sorted = [...INVENTORY_DB];
+                if (criteria === 'price-low') sorted.sort((a,b) => a.price - b.price);
+                if (criteria === 'price-high') sorted.sort((a,b) => b.price - a.price);
+                this.renderCatalog(sorted);
+            },
+            renderProductDetail: function(id) {
+                const item = INVENTORY_DB.find(p => p.id === id);
+                if (!item) return;
+                document.getElementById('product-detail-target').innerHTML = `
+                    <div class="aspect-[4/5] w-full bg-neutral-50 overflow-hidden">
+                        <img src="${item.images[0]}" alt="${item.name}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex flex-col pt-8 md:pt-16">
+                        <span class="text-[10px] text-neutral-400 uppercase tracking-[0.2em] mb-4">${item.category}</span>
+                        <h1 class="font-serif text-4xl sm:text-5xl text-black mb-4">${item.name}</h1>
+                        <p class="text-xl font-serif text-black mb-10">$${item.price.toFixed(2)}</p>
+                        
+                        <p class="text-[13px] text-neutral-500 leading-relaxed font-light mb-12">${item.desc}</p>
+                        
+                        <div class="border-t border-[#E5E5E5] mb-12">
+                            <div class="py-4 border-b border-[#E5E5E5] flex justify-between text-[11px] uppercase tracking-[0.1em]">
+                                <span class="text-neutral-400">Olfactory Notes</span>
+                                <span class="text-black text-right">${item.notes}</span>
+                            </div>
+                            <div class="py-4 border-b border-[#E5E5E5] flex justify-between text-[11px] uppercase tracking-[0.1em]">
+                                <span class="text-neutral-400">Volume</span>
+                                <span class="text-black">50 ML / 1.7 FL OZ</span>
+                            </div>
+                        </div>
+
+                        <button onclick="app.cart.addItem('${item.id}')" class="w-full py-4 border border-black text-black text-[11px] uppercase tracking-[0.2em] hover:bg-black hover:text-white transition-colors duration-500">
+                            Add to Tote
+                        </button>
+                    </div>`;
+            },
+            handleSearch: function(term) {
+                const out = document.getElementById('search-results-output');
+                if (!term) { out.innerHTML = ''; return; }
+                out.innerHTML = INVENTORY_DB.filter(i => i.name.toLowerCase().includes(term.toLowerCase())).map(i => `
+                    <div onclick="app.ui.toggleSearchOverlay(); app.router.navigate('product', {id: '${i.id}'})" class="flex items-center justify-between cursor-pointer border-b border-[#E5E5E5] pb-4 group">
+                        <div class="flex items-center space-x-6">
+                            <img src="${i.images[0]}" class="w-16 h-20 object-cover bg-neutral-50">
+                            <div>
+                                <span class="block font-serif text-xl text-black group-hover:text-neutral-500 transition-colors">${i.name}</span>
+                                <span class="block text-[10px] text-neutral-400 uppercase tracking-[0.1em] mt-1">${i.category}</span>
+                            </div>
+                        </div>
+                        <span class="text-[13px] text-black font-light">$${i.price}</span>
+                    </div>`).join('');
+            }
+        };
+
+        // --- CART ---
+        app.cart = {
+            loadAndSync: function() { const stored = localStorage.getItem('aura_cart'); if (stored) app.state.cart = JSON.parse(stored); this.updateUI(); },
+            addItem: function(id) {
+                const prod = INVENTORY_DB.find(p => p.id === id);
+                const exist = app.state.cart.find(item => item.product.id === id);
+                if (exist) exist.qty += 1; else app.state.cart.push({ product: prod, qty: 1 });
+                this.sync(); app.ui.triggerToast(`${prod.name} added`); app.ui.toggleCartDrawer(true);
+            },
+            updateQty: function(id, val) { const item = app.state.cart.find(i => i.product.id === id); if (!item) return; item.qty += val; if (item.qty <= 0) app.state.cart = app.state.cart.filter(i => i.product.id !== id); this.sync(); },
+            sync: function() { localStorage.setItem('aura_cart', JSON.stringify(app.state.cart)); this.updateUI(); },
+            updateUI: function() {
+                const drawerContainer = document.getElementById('cart-drawer-items');
+                const badgeMobile = document.getElementById('global-cart-count');
+                const badgeText = document.getElementById('global-cart-count-text');
+                const subtotalText = document.getElementById('cart-drawer-subtotal');
+                const totalItems = app.state.cart.reduce((sum, i) => sum + i.qty, 0);
+                const subtotal = app.state.cart.reduce((sum, i) => sum + (i.product.price * i.qty), 0);
+                
+                badgeText.innerText = totalItems;
+                if (totalItems > 0) { badgeMobile.classList.remove('scale-0'); badgeMobile.innerText = totalItems; } else { badgeMobile.classList.add('scale-0'); }
+                
+                subtotalText.innerText = `$${subtotal.toFixed(2)}`;
+                if (app.state.cart.length === 0) { 
+                    drawerContainer.innerHTML = `<div class="text-center text-neutral-400 py-12 text-[11px] uppercase tracking-[0.15em]">Your tote is empty.</div>`; 
+                } else {
+                    drawerContainer.innerHTML = app.state.cart.map(item => `
+                        <div class="flex space-x-6">
+                            <img src="${item.product.images[0]}" class="w-20 h-24 object-cover bg-neutral-50">
+                            <div class="flex flex-col justify-between py-1 flex-grow">
+                                <div>
+                                    <h4 class="font-serif text-lg text-black leading-none">${item.product.name}</h4>
+                                    <p class="text-[10px] text-neutral-400 uppercase tracking-[0.1em] mt-2">${item.product.category}</p>
+                                </div>
+                                <div class="flex items-center justify-between mt-4">
+                                    <div class="flex items-center space-x-4 border border-[#E5E5E5] px-3 py-1">
+                                        <button onclick="app.cart.updateQty('${item.product.id}', -1)" class="text-neutral-400 hover:text-black text-[12px]">&minus;</button>
+                                        <span class="text-[11px] text-black w-3 text-center">${item.qty}</span>
+                                        <button onclick="app.cart.updateQty('${item.product.id}', 1)" class="text-neutral-400 hover:text-black text-[12px]">&plus;</button>
+                                    </div>
+                                    <span class="text-[13px] text-black font-light">$${(item.product.price * item.qty).toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>`).join('');
+                }
+            }
+        };
+
+        // --- CHECKOUT ---
+        app.checkout = {
+            initiateCheckout: function() { if(!app.state.cart.length) return; app.ui.toggleCartDrawer(false); app.router.navigate('checkout'); },
+            renderCurrentStep: function() {
+                const container = document.getElementById('checkout-step-container');
+                const sub = app.state.cart.reduce((sum, i) => sum + (i.product.price * i.qty), 0);
+                document.getElementById('chk-total').innerText = `$${sub.toFixed(2)}`;
+                document.getElementById('checkout-summary-items').innerHTML = app.state.cart.map(i => `
+                    <div class="flex space-x-4">
+                        <img src="${i.product.images[0]}" class="w-16 h-20 object-cover bg-white">
+                        <div class="flex-grow flex justify-between py-1">
+                            <div>
+                                <span class="block font-serif text-lg text-black">${i.product.name}</span>
+                                <span class="block text-[10px] text-neutral-400 uppercase tracking-[0.1em] mt-1">QTY: ${i.qty}</span>
+                            </div>
+                            <span class="text-[13px] text-black font-light">$${(i.product.price * i.qty).toFixed(2)}</span>
+                        </div>
+                    </div>`).join('');
+                
+                document.getElementById('step-nav-1').className = app.state.activeCheckoutStep === 1 ? "text-black" : "text-neutral-400";
+                document.getElementById('step-nav-2').className = app.state.activeCheckoutStep === 2 ? "text-black" : "text-neutral-400";
+
+                if (app.state.activeCheckoutStep === 1) { 
+                    container.innerHTML = `
+                        <input type="email" required placeholder="Email Address" class="w-full py-4 text-[13px] mb-6 shopify-input">
+                        <input type="text" required placeholder="Full Name" class="w-full py-4 text-[13px] mb-6 shopify-input"/>
+                        <input type="text" required placeholder="Shipping Address" class="w-full py-4 text-[13px] shopify-input"/>
+                    `; 
+                } else if (app.state.activeCheckoutStep === 2) { 
+                    container.innerHTML = `
+                        <p class="text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-6">Payment Information</p>
+                        <input type="text" required placeholder="Card Number" class="w-full py-4 text-[13px] mb-6 shopify-input">
+                        <div class="grid grid-cols-2 gap-6">
+                            <input type="text" required placeholder="MM/YY" class="w-full py-4 text-[13px] shopify-input">
+                            <input type="text" required placeholder="CVC" class="w-full py-4 text-[13px] shopify-input">
+                        </div>
+                    `; 
+                }
+            },
+            handleStepSubmit: function(e) { 
+                e.preventDefault(); 
+                if(app.state.activeCheckoutStep < 2) { 
+                    app.state.activeCheckoutStep += 1; 
+                    this.renderCurrentStep(); 
+                } else { 
+                    app.state.cart = []; 
+                    app.cart.sync(); 
+                    app.state.activeCheckoutStep = 1; 
+                    app.ui.triggerToast("Order Placed Successfully"); 
+                    app.router.navigate('home'); 
+                } 
+            }
+        };
+
+        // --- UI UTILS ---
+        app.ui = {
+            toggleCartDrawer: function(forceOpen = null) {
+                const overlay = document.getElementById('cart-drawer-overlay');
+                const inner = overlay.firstElementChild;
+                if (forceOpen === true) { 
+                    overlay.classList.remove('opacity-0', 'pointer-events-none'); 
+                    inner.classList.remove('translate-x-full'); 
+                    return; 
+                }
+                if (forceOpen === false) { 
+                    overlay.classList.add('opacity-0', 'pointer-events-none'); 
+                    inner.classList.add('translate-x-full'); 
+                    return; 
+                }
+                overlay.classList.toggle('opacity-0'); 
+                overlay.classList.toggle('pointer-events-none');
+                inner.classList.toggle('translate-x-full');
+            },
+            toggleSearchOverlay: function() { 
+                const s = document.getElementById('search-overlay'); 
+                s.classList.toggle('hidden'); 
+                s.classList.toggle('flex'); 
+                if(!s.classList.contains('hidden')) {
+                    setTimeout(() => document.getElementById('live-search-input').focus(), 100);
+                }
+            },
+            toggleAccordion: function(btn) { 
+                const icon = btn.querySelector('i');
+                const panel = btn.nextElementSibling; 
+                if (panel.style.maxHeight && panel.style.maxHeight !== '0px') { 
+                    panel.style.maxHeight = '0px'; 
+                    icon.style.transform = 'rotate(0deg)';
+                } else { 
+                    panel.style.maxHeight = panel.scrollHeight + "px"; 
+                    icon.style.transform = 'rotate(45deg)';
+                } 
+            },
+            handleContactSubmit: function(e) { 
+                e.preventDefault(); 
+                e.target.reset(); 
+                this.triggerToast("Message Sent"); 
+            },
+            triggerToast: function(msg) {
+                const t = document.getElementById('toast-notif'); 
+                document.getElementById('toast-notif-message').innerText = msg;
+                t.classList.remove('opacity-0', 'translate-y-10', 'pointer-events-none');
+                setTimeout(() => { 
+                    t.classList.add('opacity-0', 'translate-y-10', 'pointer-events-none'); 
+                }, 3000);
+            }
+        };
+
+        // Change header background on scroll
+        window.addEventListener('scroll', () => {
+            const header = document.querySelector('header');
+            if(window.scrollY > 10) {
+                header.classList.add('shadow-sm');
+            } else {
+                header.classList.remove('shadow-sm');
+            }
+        });
+
+        window.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
