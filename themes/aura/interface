@@ -1000,6 +1000,10 @@
             }
         };
 
+        // D.3.1: expose app on window so the head snippet's event listeners
+        // can reach into app.auth.updateIcon when vm:customer-loaded fires.
+        window.app = app;
+
         window.addEventListener('DOMContentLoaded', () => app.init());
     </script>
 </body>
