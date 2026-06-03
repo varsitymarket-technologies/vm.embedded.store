@@ -1132,99 +1132,144 @@
             showView('shop');
         }
 
-        function renderDashboardUI() {
-            if (!userSession) return showView('account');
-            
-            document.getElementById('dash-user-email').textContent = userSession.email;
-            const userOrders = userHistory.filter(o => o.email === userSession.email);
-            const totalSpent = userOrders.reduce((sum, o) => sum + o.total, 0);
-            
-            document.getElementById('dash-total-orders').textContent = userOrders.length;
-            document.getElementById('dash-total-spent').textContent = `$${totalSpent.toFixed(2)}`;
-            
+        async function renderDashboardUI() {
+            if (!isLoggedIn()) { openAuthModal('login'); return; }
+
+            document.getElementById('dash-user-email').textContent = customerAuth.user.email || '';
+
+            let orders = [];
+            try { orders = await fetchStore('customer_my_orders'); } catch { orders = []; }
+            if (!Array.isArray(orders)) orders = [];
+
+            const totalSpent = orders.reduce((sum, o) => sum + Number(o.total_amount || o.total || 0), 0);
+            document.getElementById('dash-total-orders').textContent = orders.length;
+            document.getElementById('dash-total-spent').textContent = '$' + totalSpent.toFixed(2);
+
             const recentContainer = document.getElementById('dash-recent-orders');
-            if (userOrders.length === 0) {
+            if (orders.length === 0) {
                 recentContainer.innerHTML = '<p class="text-brand-mute italic mt-4">No recent orders.</p>';
                 return;
             }
-            
-            recentContainer.innerHTML = userOrders.slice(-3).reverse().map(o => `
-                <div onclick="openOrder(${o.id})" class="bg-brand-card border border-brand-border p-6 rounded-2xl hover:border-white/50 transition-colors cursor-pointer flex justify-between items-center group shadow-md">
+            recentContainer.innerHTML = orders.slice(0, 3).map(o => {
+                const id = o.id;
+                const total = Number(o.total_amount || o.total || 0).toFixed(2);
+                const status = (o.status || 'Processing').toString();
+                const date = (o.created_at || '').toString().substring(0, 10);
+                return `
+                <div onclick="openOrder(${id})" class="bg-brand-card border border-brand-border p-6 rounded-2xl hover:border-white/50 transition-colors cursor-pointer flex justify-between items-center group shadow-md">
                     <div>
-                        <p class="text-white font-bold text-lg mb-1 group-hover:text-white transition-colors">Order #${o.id}</p>
-                        <p class="text-xs text-brand-mute uppercase tracking-widest">${o.status}</p>
+                        <p class="text-white font-bold text-lg mb-1 group-hover:text-white transition-colors">Order #${id}</p>
+                        <p class="text-xs text-brand-mute uppercase tracking-widest">${status}</p>
                     </div>
                     <div class="text-right">
-                        <p class="text-white font-bold text-lg mb-1">$${o.total.toFixed(2)}</p>
-                        <p class="text-xs text-brand-mute">${o.date}</p>
+                        <p class="text-white font-bold text-lg mb-1">$${total}</p>
+                        <p class="text-xs text-brand-mute">${date}</p>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
-        function renderOrdersUI() {
-            if (!userSession) return showView('account');
-            const userOrders = userHistory.filter(o => o.email === userSession.email).reverse();
+        async function renderOrdersUI() {
+            if (!isLoggedIn()) { openAuthModal('login'); return; }
+
+            let orders = [];
+            try { orders = await fetchStore('customer_my_orders'); } catch { orders = []; }
+            if (!Array.isArray(orders)) orders = [];
+
             const container = document.getElementById('orders-list');
-            
-            if (userOrders.length === 0) {
+            if (orders.length === 0) {
                 container.innerHTML = '<div class="text-center py-32 border border-brand-border border-dashed rounded-3xl"><p class="text-brand-mute font-medium text-lg">No history found.</p></div>';
                 return;
             }
-            
-            container.innerHTML = userOrders.map(o => `
-                <div onclick="openOrder(${o.id})" class="bg-brand-card border border-brand-border p-6 md:p-8 rounded-2xl hover:border-white transition-colors cursor-pointer flex flex-col md:flex-row justify-between md:items-center gap-6 shadow-xl">
+
+            container.innerHTML = orders.map(o => {
+                const id = o.id;
+                const total = Number(o.total_amount || o.total || 0).toFixed(2);
+                const status = (o.status || 'Processing').toString();
+                const date = (o.created_at || '').toString().substring(0, 10);
+                return `
+                <div onclick="openOrder(${id})" class="bg-brand-card border border-brand-border p-6 md:p-8 rounded-2xl hover:border-white transition-colors cursor-pointer flex flex-col md:flex-row justify-between md:items-center gap-6 shadow-xl">
                     <div>
-                        <p class="text-2xl text-white font-bold mb-2">Order #${o.id}</p>
-                        <p class="text-sm text-brand-mute">${o.date}</p>
+                        <p class="text-2xl text-white font-bold mb-2">Order #${id}</p>
+                        <p class="text-sm text-brand-mute">${date}</p>
                     </div>
                     <div class="flex items-center gap-8 justify-between md:justify-end">
                         <div class="text-right flex flex-col items-end">
-                            <p class="text-2xl text-white font-bold mb-2">$${o.total.toFixed(2)}</p>
-                            <span class="inline-block bg-brand-bg border border-brand-border px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-brand-mute">${o.status}</span>
+                            <p class="text-2xl text-white font-bold mb-2">$${total}</p>
+                            <span class="inline-block bg-brand-bg border border-brand-border px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-brand-mute">${status}</span>
                         </div>
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-brand-mute"><polyline points="9 18 15 12 9 6"></polyline></svg>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
-        function openOrder(orderId) {
-            currentOrderView = userHistory.find(o => o.id === orderId);
-            if (!currentOrderView) return;
-            
+        async function openOrder(orderId) {
+            if (!isLoggedIn()) { openAuthModal('login'); return; }
+
+            let orders = [];
+            try { orders = await fetchStore('customer_my_orders'); } catch { orders = []; }
+            if (!Array.isArray(orders)) orders = [];
+
+            currentOrderView = orders.find(o => Number(o.id) === Number(orderId));
+            if (!currentOrderView) {
+                showView('orders');
+                return;
+            }
+
+            const total = Number(currentOrderView.total_amount || currentOrderView.total || 0).toFixed(2);
+            const status = (currentOrderView.status || 'Processing').toString();
+            const date = (currentOrderView.created_at || '').toString().substring(0, 10);
+
             document.getElementById('detail-id').textContent = currentOrderView.id;
-            document.getElementById('detail-date').textContent = currentOrderView.date;
-            document.getElementById('detail-status').textContent = currentOrderView.status;
-            document.getElementById('detail-subtotal').textContent = `$${currentOrderView.total.toFixed(2)}`;
-            document.getElementById('detail-total').textContent = `$${currentOrderView.total.toFixed(2)}`;
-            
-            document.getElementById('detail-items').innerHTML = currentOrderView.items.map(item => `
+            document.getElementById('detail-date').textContent = date;
+            document.getElementById('detail-status').textContent = status;
+            document.getElementById('detail-subtotal').textContent = '$' + total;
+            document.getElementById('detail-total').textContent = '$' + total;
+
+            let items = [];
+            try {
+                items = typeof currentOrderView.items === 'string'
+                    ? JSON.parse(currentOrderView.items)
+                    : (Array.isArray(currentOrderView.items) ? currentOrderView.items : []);
+            } catch { items = []; }
+            currentOrderView._items = items;
+
+            document.getElementById('detail-items').innerHTML = items.map(item => `
                 <div class="flex gap-6 items-center bg-brand-card p-6 rounded-2xl border border-brand-border shadow-md">
                     <div class="w-20 h-20 bg-brand-bg rounded-xl overflow-hidden flex-shrink-0 border border-brand-border">
-                        <img src="${item.img}" class="w-full h-full object-cover">
+                        <img src="${item.img || item.image || ''}" class="w-full h-full object-cover">
                     </div>
                     <div class="flex-grow">
-                        <h4 class="text-lg font-bold text-white mb-1">${item.name}</h4>
-                        <p class="text-sm text-brand-mute uppercase tracking-widest font-semibold">Qty: ${item.quantity}</p>
+                        <h4 class="text-lg font-bold text-white mb-1">${item.name || item.title || 'Item'}</h4>
+                        <p class="text-sm text-brand-mute uppercase tracking-widest font-semibold">Qty: ${item.quantity || item.qty || 1}</p>
                     </div>
                     <div class="text-lg font-bold text-white">
-                        $${(item.price * item.quantity).toFixed(2)}
+                        $${(Number(item.price || 0) * Number(item.quantity || item.qty || 1)).toFixed(2)}
                     </div>
                 </div>
             `).join('');
-            
+
             showView('order-detail');
         }
 
         function reorderCurrent() {
-            if(!currentOrderView) return;
-            currentOrderView.items.forEach(orderItem => {
+            if (!currentOrderView || !Array.isArray(currentOrderView._items)) return;
+            currentOrderView._items.forEach(orderItem => {
                 const existing = cart.find(c => c.id === orderItem.id);
+                const addQty = orderItem.quantity || orderItem.qty || 1;
                 if (existing) {
-                    existing.quantity += orderItem.quantity;
+                    existing.quantity = (existing.quantity || 1) + addQty;
                 } else {
-                    cart.push({ ...orderItem });
+                    cart.push({
+                        id: orderItem.id,
+                        name: orderItem.name || orderItem.title || 'Item',
+                        price: Number(orderItem.price || 0),
+                        quantity: addQty,
+                        img: orderItem.img || orderItem.image || ''
+                    });
                 }
             });
             saveCart();
