@@ -670,6 +670,60 @@
             updateCartIndicator();
         }
 
+        function isLoggedIn() {
+            return !!(customerAuth && customerAuth.user);
+        }
+
+        function applyCustomerToDom() {
+            document.body.dataset.customer = isLoggedIn() ? 'in' : 'out';
+            const nav = document.getElementById('nav-account');
+            if (!nav) return;
+            if (isLoggedIn()) {
+                const name = (customerAuth.user.name || customerAuth.user.email || 'Account').toString();
+                nav.textContent = name.length > 12 ? name.substring(0, 12) + '…' : name;
+            } else {
+                nav.textContent = 'Account';
+            }
+        }
+
+        async function bootCustomer() {
+            applyCustomerToDom();
+
+            if (!customerAuth.token) {
+                document.dispatchEvent(new CustomEvent('vm:customer-logout'));
+                return;
+            }
+            try {
+                const res = await fetch(new URL("api.php?state=customer_me", window.location.href), {
+                    headers: { 'X-Customer-Token': customerAuth.token },
+                    signal: AbortSignal.timeout(4000)
+                });
+                if (res.status === 401) {
+                    localStorage.removeItem('vm_customer_token');
+                    localStorage.removeItem('vm_customer_cache');
+                    customerAuth.user = null;
+                    customerAuth.token = null;
+                    applyCustomerToDom();
+                    document.dispatchEvent(new CustomEvent('vm:customer-logout'));
+                    const cur = document.querySelector('.view:not(.hidden)')?.id || '';
+                    if (cur === 'view-dashboard' || cur === 'view-orders' || cur === 'view-order-detail') {
+                        showView('shop');
+                    }
+                    return;
+                }
+                if (!res.ok) throw new Error('boot failed: ' + res.status);
+                const data = await res.json();
+                if (data && data.ok && data.customer) {
+                    customerAuth.user = data.customer;
+                    localStorage.setItem('vm_customer_cache', JSON.stringify(data.customer));
+                    applyCustomerToDom();
+                    document.dispatchEvent(new CustomEvent('vm:customer-login', { detail: data.customer }));
+                }
+            } catch (e) {
+                // Network failure: keep cached user, do not log out.
+            }
+        }
+
         /**
          * UI Toggles
          */
