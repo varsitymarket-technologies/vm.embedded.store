@@ -227,6 +227,49 @@
         </section>
     </template>
 
+    <template id="tpl-checkout">
+        <section class="max-w-3xl mx-auto px-10 py-20 min-h-[60vh] reveal">
+            <h1 class="font-display font-black text-6xl uppercase mb-20 italic">Commit_Transmission</h1>
+
+            <div class="chk-guest hidden space-y-8">
+                <p class="text-[10px] tracking-[0.5em] uppercase opacity-60">Transmission_Requires_Identification</p>
+                <p class="text-sm opacity-60">A record must be initiated before this archive can be committed.</p>
+                <a href="#account" class="inline-block bg-archive-ink text-archive-paper px-12 py-4 font-display font-black uppercase text-sm hover:scale-105 transition-transform">
+                    Return_To_Archive
+                </a>
+            </div>
+
+            <form class="chk-form hidden space-y-12 js-checkout-form">
+                <div class="space-y-6">
+                    <p class="text-[10px] tracking-[0.5em] uppercase opacity-40">Destination</p>
+                    <input type="text" name="addr_street" placeholder="STREET" required
+                        class="w-full bg-transparent specimen-border px-6 py-4 font-mono text-sm uppercase tracking-wider placeholder:opacity-30 focus:outline-none focus:border-archive-ink">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <input type="text" name="addr_city" placeholder="CITY" required
+                            class="bg-transparent specimen-border px-6 py-4 font-mono text-sm uppercase tracking-wider placeholder:opacity-30 focus:outline-none focus:border-archive-ink">
+                        <input type="text" name="addr_postal" placeholder="POSTAL" required
+                            class="bg-transparent specimen-border px-6 py-4 font-mono text-sm uppercase tracking-wider placeholder:opacity-30 focus:outline-none focus:border-archive-ink">
+                        <input type="text" name="addr_country" placeholder="COUNTRY" required
+                            class="bg-transparent specimen-border px-6 py-4 font-mono text-sm uppercase tracking-wider placeholder:opacity-30 focus:outline-none focus:border-archive-ink">
+                    </div>
+                </div>
+
+                <div class="space-y-4 pt-10 border-t border-archive-line">
+                    <p class="text-[10px] tracking-[0.5em] uppercase opacity-40">Inventory</p>
+                    <p class="text-sm js-chk-summary"></p>
+                </div>
+
+                <div class="flex justify-between items-center pt-10 border-t border-archive-line">
+                    <span class="font-display font-black text-3xl js-chk-total"></span>
+                    <button type="submit" class="bg-archive-ink text-archive-paper px-12 py-6 font-display font-black uppercase text-sm hover:scale-105 transition-transform">
+                        Commit_Order
+                    </button>
+                </div>
+                <p class="js-error text-[10px] uppercase tracking-[0.3em] text-red-700 hidden"></p>
+            </form>
+        </section>
+    </template>
+
     <script>
         const DB = {
             currency: 'USD',
@@ -267,6 +310,7 @@
                     case 'product': this.renderProduct(id); break;
                     case 'cart': this.renderCart(); break;
                     case 'account': this.renderAccount(); break;
+                    case 'checkout': this.renderCheckout(); break;
                     default: this.renderTemplate('tpl-home'); break;
                 }
                 window.scrollTo(0, 0);
@@ -579,6 +623,71 @@
                         '<span>' + total + '</span>' +
                         '<span class="font-bold">' + status + '</span>';
                     ordersEl.appendChild(row);
+                });
+            }
+
+            renderCheckout() {
+                this.renderTemplate('tpl-checkout', (view) => {
+                    const guestEl = view.querySelector('.chk-guest');
+                    const formEl = view.querySelector('.chk-form');
+
+                    if (!this.isLoggedIn()) {
+                        guestEl.classList.remove('hidden');
+                        return;
+                    }
+                    if (this.cart.length === 0) {
+                        guestEl.classList.remove('hidden');
+                        guestEl.querySelector('p:nth-of-type(2)').textContent = 'The archive is empty. Curate items before transmission.';
+                        const link = guestEl.querySelector('a');
+                        link.setAttribute('href', '#shop');
+                        link.textContent = 'Return_To_Catalog';
+                        return;
+                    }
+
+                    formEl.classList.remove('hidden');
+                    const total = this.cart.reduce((sum, it) => sum + ((Number(it.price) || 0) * (it.qty || 1)), 0);
+                    const itemCount = this.cart.reduce((sum, it) => sum + (it.qty || 1), 0);
+                    view.querySelector('.js-chk-summary').textContent =
+                        itemCount + ' specimen' + (itemCount === 1 ? '' : 's') + ' from your archive.';
+                    view.querySelector('.js-chk-total').textContent = total + ' ' + DB.currency;
+
+                    const errEl = view.querySelector('.js-error');
+                    const setError = (msg) => {
+                        if (msg) { errEl.textContent = msg; errEl.classList.remove('hidden'); }
+                        else { errEl.textContent = ''; errEl.classList.add('hidden'); }
+                    };
+
+                    formEl.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        setError('');
+                        const fd = new FormData(formEl);
+                        const user = this.auth.user || {};
+                        const payload = {
+                            name: user.name || 'CUSTOMER',
+                            email: user.email || '',
+                            total: total,
+                            items: this.cart.map(i => ({
+                                id: i.id,
+                                title: i.title || i.name,
+                                price: i.price,
+                                qty: i.qty || 1
+                            })),
+                            // Address fields included but not currently persisted by state=order.
+                            addr_street: fd.get('addr_street'),
+                            addr_city: fd.get('addr_city'),
+                            addr_postal: fd.get('addr_postal'),
+                            addr_country: fd.get('addr_country')
+                        };
+                        const result = await postStore('order', payload);
+                        const ok = result.ok || (result.data && result.data.success === true);
+                        if (ok) {
+                            this.cart = [];
+                            this.cartSave();
+                            window.location.hash = 'account';
+                        } else {
+                            setError(result.error || (result.data && result.data.error) || 'TRANSMISSION_REJECTED');
+                        }
+                    });
                 });
             }
         }
