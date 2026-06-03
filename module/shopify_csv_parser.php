@@ -64,10 +64,7 @@ function parse_shopify_csv(string $filePath): array
         if ($row === [null] || count(array_filter($row, fn($v) => $v !== null && $v !== '')) === 0) {
             continue;
         }
-        $get = function (string $col) use ($row, $idx) {
-            return isset($idx[$col]) && isset($row[$idx[$col]]) ? (string)$row[$idx[$col]] : '';
-        };
-        $handleVal = trim($get('Handle'));
+        $handleVal = isset($idx['Handle'], $row[$idx['Handle']]) ? trim((string)$row[$idx['Handle']]) : '';
         if ($handleVal === '') {
             continue;
         }

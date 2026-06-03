@@ -64,11 +64,8 @@ eq('', $rows[4]['category'], 'empty Type → empty category string');
 
 // --- Test 8: image-only row (empty Variant Price) is skipped ---
 // classic-tee has an image-only 4th row that should NOT appear in $rows
-foreach ($rows as $r) {
-    if ($r['name'] === 'Classic Tee' && $r['price'] === 0.0) {
-        eq('skipped', 'emitted', 'image-only row should be skipped, not emitted');
-    }
-}
+$names = array_column($rows, 'name');
+eq(false, in_array('Classic Tee', $names, true), 'image-only row is not emitted (bare "Classic Tee" without variant suffix absent)');
 
 // --- Test 9: bad price flagged with parse_error ---
 eq('Broken Product', $rows[5]['name'], 'bad-price row still emitted');
