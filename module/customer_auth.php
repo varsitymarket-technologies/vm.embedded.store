@@ -76,6 +76,11 @@ function customer_login(database_manager $db, string $email, string $password, ?
     $email = strtolower(trim($email));
     $row = $db->query("SELECT * FROM customers WHERE email = ? LIMIT 1", [$email]);
     if (empty($row)) {
+        // Constant-time guard: run a bcrypt verify against a dummy hash so
+        // response timing does not reveal whether the email is registered.
+        // The dummy hash is a syntactically valid bcrypt string that no
+        // password can match.
+        password_verify($password, '$2y$10$abcdefghijklmnopqrstuuMUCnyN4ALxqMR3jE3X6h5MXxn5gqNHi');
         return ['ok' => false, 'error' => 'Invalid email or password'];
     }
     $customer = $row[0];
@@ -88,6 +93,10 @@ function customer_login(database_manager $db, string $email, string $password, ?
         }
     }
 
+    // Per-account lockout: a known trade-off. An attacker who knows the
+    // victim's email can deliberately lock the account for 15 minutes by
+    // submitting 5 wrong passwords. Mitigation is IP-based rate limiting,
+    // which is out of scope for sub-project A.
     if (!password_verify($password, $customer['password_hash'])) {
         $newCount = (int)$customer['failed_login_attempts'] + 1;
         $db->query("UPDATE customers SET failed_login_attempts = ? WHERE id = ?",
@@ -178,6 +187,11 @@ function customer_create_session(database_manager $db, int $customerId, ?string 
 
 function customer_backfill_orders(database_manager $db, int $customerId, string $email): void
 {
+    // LOWER() on both sides is defensive: callers pass an already-normalized
+    // email, but orders.customer_email is a regular TEXT column (no NOCASE
+    // collation) so the column side must be lowered to match case-insensitively
+    // against historical rows that may have mixed-case emails. The LOWER on the
+    // parameter side is harmless and signals intent.
     $db->query(
         "UPDATE orders SET customer_id = ?
           WHERE LOWER(customer_email) = LOWER(?) AND customer_id IS NULL",
