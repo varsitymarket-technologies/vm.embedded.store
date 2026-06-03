@@ -168,6 +168,63 @@
         </section>
     </template>
 
+    <template id="tpl-account">
+        <section class="max-w-2xl mx-auto px-10 py-20 min-h-[60vh] reveal">
+            <h1 class="font-display font-black text-6xl uppercase mb-20 italic">The_Archive</h1>
+
+            <div class="acc-login space-y-8">
+                <p class="text-[10px] tracking-[0.5em] uppercase opacity-40">Record_Lookup</p>
+                <form class="js-login-form space-y-6" data-form="login">
+                    <input type="email" name="email" placeholder="EMAIL" required
+                        class="w-full bg-transparent specimen-border px-6 py-4 font-mono text-sm uppercase tracking-wider placeholder:opacity-30 focus:outline-none focus:border-archive-ink">
+                    <input type="password" name="password" placeholder="PASSWORD" required
+                        class="w-full bg-transparent specimen-border px-6 py-4 font-mono text-sm uppercase tracking-wider placeholder:opacity-30 focus:outline-none focus:border-archive-ink">
+                    <button type="submit" class="bg-archive-ink text-archive-paper px-12 py-4 font-display font-black uppercase text-sm hover:scale-105 transition-transform">
+                        Transmit
+                    </button>
+                    <p class="js-error text-[10px] uppercase tracking-[0.3em] text-red-700 hidden" data-err="login"></p>
+                </form>
+                <p class="text-[10px] uppercase tracking-[0.4em] opacity-60">
+                    No_Record? <a href="#" class="font-bold hover:line-through" data-action="show-register">Initiate_New</a>
+                </p>
+            </div>
+
+            <div class="acc-register space-y-8 hidden">
+                <p class="text-[10px] tracking-[0.5em] uppercase opacity-40">Initiate_Record</p>
+                <form class="js-register-form space-y-6" data-form="register">
+                    <input type="text" name="name" placeholder="DISPLAY NAME"
+                        class="w-full bg-transparent specimen-border px-6 py-4 font-mono text-sm uppercase tracking-wider placeholder:opacity-30 focus:outline-none focus:border-archive-ink">
+                    <input type="email" name="email" placeholder="EMAIL" required
+                        class="w-full bg-transparent specimen-border px-6 py-4 font-mono text-sm uppercase tracking-wider placeholder:opacity-30 focus:outline-none focus:border-archive-ink">
+                    <input type="password" name="password" placeholder="PASSWORD (8+ CHARS)" required minlength="8"
+                        class="w-full bg-transparent specimen-border px-6 py-4 font-mono text-sm uppercase tracking-wider placeholder:opacity-30 focus:outline-none focus:border-archive-ink">
+                    <button type="submit" class="bg-archive-ink text-archive-paper px-12 py-4 font-display font-black uppercase text-sm hover:scale-105 transition-transform">
+                        Initiate_Record
+                    </button>
+                    <p class="js-error text-[10px] uppercase tracking-[0.3em] text-red-700 hidden" data-err="register"></p>
+                </form>
+                <p class="text-[10px] uppercase tracking-[0.4em] opacity-60">
+                    Existing_Record? <a href="#" class="font-bold hover:line-through" data-action="show-login">Sign_In</a>
+                </p>
+            </div>
+
+            <div class="acc-dashboard space-y-12 hidden">
+                <div class="space-y-2">
+                    <p class="text-[10px] tracking-[0.5em] uppercase opacity-40">Record_Holder</p>
+                    <h2 class="font-display font-black text-4xl uppercase js-acc-name"></h2>
+                    <p class="text-[10px] uppercase tracking-[0.3em] opacity-60 js-acc-email"></p>
+                </div>
+                <div class="pt-10 border-t border-archive-line space-y-6">
+                    <p class="text-[10px] tracking-[0.5em] uppercase opacity-40">Recent_Transmissions</p>
+                    <div class="js-orders-list space-y-px bg-archive-line specimen-border"></div>
+                </div>
+                <button type="button" class="js-logout-btn text-[10px] uppercase tracking-[0.5em] font-bold hover:line-through pt-10">
+                    Terminate_Session
+                </button>
+            </div>
+        </section>
+    </template>
+
     <script>
         const DB = {
             currency: 'USD',
@@ -207,6 +264,7 @@
                     case 'shop': this.renderShop(); break;
                     case 'product': this.renderProduct(id); break;
                     case 'cart': this.renderCart(); break;
+                    case 'account': this.renderAccount(); break;
                     default: this.renderTemplate('tpl-home'); break;
                 }
                 window.scrollTo(0, 0);
@@ -384,6 +442,104 @@
                 localStorage.removeItem('vm_customer_cache');
                 this.applyCustomerToDom();
                 document.dispatchEvent(new CustomEvent('vm:customer-logout'));
+            }
+
+            renderAccount() {
+                this.renderTemplate('tpl-account', (view) => {
+                    const showSection = (which) => {
+                        view.querySelector('.acc-login').classList.toggle('hidden', which !== 'login');
+                        view.querySelector('.acc-register').classList.toggle('hidden', which !== 'register');
+                        view.querySelector('.acc-dashboard').classList.toggle('hidden', which !== 'dashboard');
+                    };
+                    const setError = (which, msg) => {
+                        const el = view.querySelector('[data-err="' + which + '"]');
+                        if (!el) return;
+                        if (msg) { el.textContent = msg; el.classList.remove('hidden'); }
+                        else { el.textContent = ''; el.classList.add('hidden'); }
+                    };
+
+                    if (this.isLoggedIn()) {
+                        showSection('dashboard');
+                        this.renderDashboard(view);
+                    } else {
+                        showSection('login');
+                    }
+
+                    view.querySelectorAll('[data-action="show-register"]').forEach(el => {
+                        el.addEventListener('click', (e) => { e.preventDefault(); setError('login', ''); showSection('register'); });
+                    });
+                    view.querySelectorAll('[data-action="show-login"]').forEach(el => {
+                        el.addEventListener('click', (e) => { e.preventDefault(); setError('register', ''); showSection('login'); });
+                    });
+
+                    const loginForm = view.querySelector('[data-form="login"]');
+                    if (loginForm) {
+                        loginForm.addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            setError('login', '');
+                            const fd = new FormData(loginForm);
+                            const result = await this.login(fd.get('email'), fd.get('password'));
+                            if (result.ok) { showSection('dashboard'); this.renderDashboard(view); }
+                            else setError('login', result.error);
+                        });
+                    }
+
+                    const registerForm = view.querySelector('[data-form="register"]');
+                    if (registerForm) {
+                        registerForm.addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            setError('register', '');
+                            const fd = new FormData(registerForm);
+                            const result = await this.register(fd.get('email'), fd.get('password'), fd.get('name'));
+                            if (result.ok) { showSection('dashboard'); this.renderDashboard(view); }
+                            else setError('register', result.error);
+                        });
+                    }
+
+                    const logoutBtn = view.querySelector('.js-logout-btn');
+                    if (logoutBtn) {
+                        logoutBtn.addEventListener('click', async () => {
+                            await this.logout();
+                            showSection('login');
+                        });
+                    }
+                });
+            }
+
+            async renderDashboard(view) {
+                const root = view || this.root;
+                const user = this.auth.user || {};
+                const nameEl = root.querySelector('.js-acc-name');
+                const emailEl = root.querySelector('.js-acc-email');
+                if (nameEl) nameEl.textContent = (user.name || 'UNNAMED_RECORD').toUpperCase();
+                if (emailEl) emailEl.textContent = user.email || '';
+
+                const ordersEl = root.querySelector('.js-orders-list');
+                if (!ordersEl) return;
+                ordersEl.innerHTML = '<div class="p-6 bg-archive-paper text-[10px] tracking-[0.4em] opacity-30">FETCHING_LOG...</div>';
+
+                let orders = [];
+                try { orders = await fetchStore('customer_my_orders'); } catch { orders = []; }
+                if (!Array.isArray(orders)) orders = [];
+                ordersEl.innerHTML = '';
+                if (orders.length === 0) {
+                    ordersEl.innerHTML = '<div class="p-8 bg-archive-paper text-[10px] tracking-[0.5em] opacity-30 text-center">NO_TRANSMISSIONS_ON_RECORD</div>';
+                    return;
+                }
+                orders.slice(0, 5).forEach((order) => {
+                    const row = document.createElement('div');
+                    row.className = 'p-6 bg-archive-paper flex justify-between items-center text-[10px] uppercase tracking-[0.3em]';
+                    const id = order.id || order.order_id || '?';
+                    const total = order.total_amount != null ? order.total_amount : (order.total || '?');
+                    const status = (order.status || 'pending').toString();
+                    const created = (order.created_at || '').toString().substring(0, 10);
+                    row.innerHTML =
+                        '<span class="opacity-40">#' + String(id).padStart(4, '0') + '</span>' +
+                        '<span>' + created + '</span>' +
+                        '<span>' + total + '</span>' +
+                        '<span class="font-bold">' + status + '</span>';
+                    ordersEl.appendChild(row);
+                });
             }
         }
 
