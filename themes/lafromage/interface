@@ -183,8 +183,14 @@
             constructor() {
                 this.root = document.getElementById('app-root');
                 this.cart = JSON.parse(localStorage.getItem('specimen_cart')) || [];
+                this.auth = {
+                    user: null,
+                    token: localStorage.getItem('vm_customer_token')
+                };
+                this.searchDebounceTimer = null;
                 this.initRouter();
                 this.updateCartCount();
+                this.bootCustomer();
             }
 
             initRouter() {
@@ -285,6 +291,61 @@
             updateCartCount() {
                 const count = this.cart.length;
                 document.querySelectorAll('.js-cart-count').forEach(el => el.textContent = count);
+            }
+
+            isLoggedIn() {
+                return !!(this.auth && this.auth.user);
+            }
+
+            applyCustomerToDom() {
+                document.body.dataset.customer = this.isLoggedIn() ? 'in' : 'out';
+                const link = document.querySelector('nav a[href="#account"]');
+                if (!link) return;
+                if (this.isLoggedIn()) {
+                    const name = (this.auth.user.name || this.auth.user.email || 'ACCOUNT').toString();
+                    link.textContent = name.substring(0, 8).toUpperCase();
+                } else {
+                    link.textContent = 'ARCHIVE';
+                }
+            }
+
+            async bootCustomer() {
+                const cached = localStorage.getItem('vm_customer_cache');
+                if (cached) {
+                    try { this.auth.user = JSON.parse(cached); } catch { this.auth.user = null; }
+                }
+                this.applyCustomerToDom();
+
+                if (!this.auth.token) {
+                    document.dispatchEvent(new CustomEvent('vm:customer-logout'));
+                    return;
+                }
+                try {
+                    const res = await fetch(new URL("api.php?state=customer_me", window.location.href), {
+                        headers: { 'X-Customer-Token': this.auth.token },
+                        signal: AbortSignal.timeout(4000)
+                    });
+                    if (res.status === 401) {
+                        localStorage.removeItem('vm_customer_token');
+                        localStorage.removeItem('vm_customer_cache');
+                        this.auth.user = null;
+                        this.auth.token = null;
+                        this.applyCustomerToDom();
+                        document.dispatchEvent(new CustomEvent('vm:customer-logout'));
+                        if ((window.location.hash || '').startsWith('#account')) this.route();
+                        return;
+                    }
+                    if (!res.ok) throw new Error('boot failed: ' + res.status);
+                    const data = await res.json();
+                    if (data && data.ok && data.customer) {
+                        this.auth.user = data.customer;
+                        localStorage.setItem('vm_customer_cache', JSON.stringify(data.customer));
+                        this.applyCustomerToDom();
+                        document.dispatchEvent(new CustomEvent('vm:customer-login', { detail: data.customer }));
+                    }
+                } catch (e) {
+                    // Network failure: keep cached user (if any), do not log out.
+                }
             }
         }
 
