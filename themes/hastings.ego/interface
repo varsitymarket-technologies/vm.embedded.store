@@ -514,6 +514,23 @@
             line-height: 1.625;
         }
     </style>
+
+    <!-- D.5: customer auth helper (vm-customer.js from same dir as api.php) -->
+    <script src="vm-customer.js" defer></script>
+    <script>
+        window.addEventListener('vm:customer-loaded', function () {
+            document.body.dataset.customer = 'logged-in';
+            if (window.app && app.auth && typeof app.auth.renderState === 'function') app.auth.renderState();
+        });
+        window.addEventListener('vm:customer-login', function () {
+            document.body.dataset.customer = 'logged-in';
+            if (window.app && app.auth && typeof app.auth.renderState === 'function') app.auth.renderState();
+        });
+        window.addEventListener('vm:customer-logout', function () {
+            document.body.dataset.customer = 'logged-out';
+            if (window.app && app.auth && typeof app.auth.renderState === 'function') app.auth.renderState();
+        });
+    </script>
 </head>
 <body>
 
