@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANTI CLOTHING</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'brand-bg': '#050505',
+                        'brand-card': '#111111',
+                        'brand-border': '#222222',
+                        'brand-text': '#E5E5E5',
+                        'brand-mute': '#888888',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style type="text/css">
+        body { 
+            background-color: #050505; 
+            color: #E5E5E5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #222; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #333; }
+
+        /* Cart Drawer Animation */
+        .cart-drawer {
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .cart-drawer.open {
+            transform: translateX(0);
+        }
+
+        /* Modal Blur */
+        .modal-overlay {
+            backdrop-filter: blur(8px);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Hover Zoom */
+        .img-zoom:hover img {
+            transform: scale(1.08);
+        }
+
+        /* Button Pulse */
+        .btn-active:active {
+            transform: scale(0.96);
+        }
+
+        /* View Toggling */
+        .view { display: block; animation: fadeIn 0.4s ease; }
+        .view.hidden { display: none; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="font-sans antialiased">
+
+    <!-- NAVIGATION -->
+    <nav class="fixed top-0 w-full z-50 border-b border-brand-border bg-brand-bg/80 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" class="text-xl font-bold tracking-tighter text-white">ANTI<span class="text-white/40">.CLOTHING</span></a>
+            
+            <div class="flex items-center gap-8 text-sm font-medium">
+                <a href="#" onclick="showView('search')" class="hover:text-white transition-colors" title="Search">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </a>
+                <a href="#" onclick="showView('shop')" class="hover:text-white transition-colors hidden md:block" id="nav-shop">Home</a>
+                <a href="#" onclick="showView('collection')" class="hover:text-white transition-colors">Catalog</a>
+                <a href="#" onclick="showView('blog')" class="hidden md:block hover:text-white transition-colors">Journal</a>
+                <a href="#" onclick="handleAccountClick()" id="nav-account" class="hover:text-white transition-colors">Account</a>
+                <button onclick="toggleCart()" class="relative group">
+                    <span class="hover:text-white transition-colors">Cart</span>
+                    <span id="cart-dot" class="absolute -top-1 -right-3 w-4 h-4 bg-white text-black text-[10px] font-bold rounded-full flex items-center justify-center transform scale-0 transition-transform duration-300">0</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT VIEWS -->
+    <div id="view-shop" class="view">
+        <!-- HERO -->
+        <header class="pt-40 pb-20 px-6 max-w-7xl mx-auto">
+            <div class="max-w-2xl">
+                <h1 class="text-6xl md:text-8xl font-bold tracking-tight leading-none text-white mb-6">ESSENTIALS FOR THE MODERN ERA.</h1>
+                <p class="text-lg text-brand-mute leading-relaxed max-w-md">Precision crafted, minimalist essentials designed to elevate your digital and physical space.</p>
+            </div>
+        </header>
+
+        <!-- PRODUCT GRID -->
+        <main id="shop" class="max-w-7xl mx-auto px-6 pb-40">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="catalog-container">
+                <!-- Products injected by JS -->
+            </div>
+        </main>
+    </div>
+
+    <!-- ACCOUNT/LOGIN VIEW -->
+    <div id="view-account" class="view hidden pt-40 pb-40 px-6 max-w-lg mx-auto text-center">
+        <h1 class="text-4xl font-bold text-white mb-4">Welcome</h1>
+        <p class="text-brand-mute mb-10">Sign in to manage your orders and preferences.</p>
+        <div class="bg-brand-card border border-brand-border p-8 rounded-2xl shadow-2xl">
+            <input type="email" id="login-email" placeholder="Email Address" class="w-full bg-brand-bg border border-brand-border p-4 rounded-xl text-white outline-none focus:border-white transition-colors mb-4">
+            <button onclick="login()" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-colors mb-4 transform active:scale-[0.98]">Login to Account</button>
+            <p class="text-[10px] text-brand-mute uppercase tracking-widest">Secure 1-click access</p>
+        </div>
+    </div>
+
+    <!-- DASHBOARD VIEW -->
+    <div id="view-dashboard" class="view hidden pt-40 pb-40 px-6 max-w-7xl mx-auto">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-12 border-b border-brand-border pb-8">
+            <div>
+                <h1 class="text-4xl md:text-6xl font-bold text-white mb-2">Welcome back.</h1>
+                <p class="text-xl text-brand-mute" id="dash-user-email">guest</p>
+            </div>
+            <button onclick="logout()" class="text-sm font-semibold uppercase tracking-widest text-brand-mute hover:text-white mt-4 md:mt-0">Sign Out</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+            <div class="bg-brand-card border border-brand-border p-8 rounded-2xl shadow-xl transition-all hover:border-white/20">
+                <p class="text-[10px] font-bold uppercase tracking-widest text-brand-mute mb-2">Total Orders</p>
+                <p class="text-4xl font-bold text-white" id="dash-total-orders">0</p>
+            </div>
+            <div class="bg-brand-card border border-brand-border p-8 rounded-2xl shadow-xl transition-all hover:border-white/20">
+                <p class="text-[10px] font-bold uppercase tracking-widest text-brand-mute mb-2">Total Spent</p>
+                <p class="text-4xl font-bold text-white" id="dash-total-spent">$0.00</p>
+            </div>
+            <div class="bg-brand-card border border-brand-border p-8 rounded-2xl shadow-xl relative overflow-hidden transition-all hover:border-white/20">
+                <div class="absolute -right-4 -bottom-4 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
+                <p class="text-[10px] font-bold uppercase tracking-widest text-brand-mute mb-2">Member Status</p>
+                <p class="text-4xl font-bold text-white" id="dash-member-status">VIP</p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-12">
+            <div class="lg:col-span-2">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-white">Recent Orders</h2>
+                    <button onclick="showView('orders')" class="text-sm font-medium text-brand-mute hover:text-white transition-colors">View All &rarr;</button>
+                </div>
+                <div id="dash-recent-orders" class="space-y-4">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+            <div>
+                <h2 class="text-2xl font-bold text-white mb-6">Support & Service</h2>
+                <div class="bg-brand-card border border-brand-border p-8 rounded-2xl shadow-xl space-y-6">
+                    <div>
+                        <h3 class="text-white font-medium mb-1">Need help with an order?</h3>
+                        <p class="text-sm text-brand-mute mb-6">Our premium support team is available 24/7 to assist you.</p>
+                        <button onclick="alert('Support initiated. A representative will contact you via email shortly.')" class="w-full bg-brand-bg border border-brand-border text-white py-4 rounded-xl hover:border-white transition-colors text-sm font-semibold active:scale-[0.98]">Contact Concierge</button>
+                    </div>
+                    <hr class="border-brand-border">
+                    <div class="space-y-4">
+                        <h3 class="text-[10px] font-bold uppercase tracking-widest text-brand-mute">Self-Service</h3>
+                        <a href="#" class="block text-sm text-brand-mute hover:text-white transition-colors">Track a Package</a>
+                        <a href="#" class="block text-sm text-brand-mute hover:text-white transition-colors">Start a Return</a>
+                        <a href="#" class="block text-sm text-brand-mute hover:text-white transition-colors">Warranty Policy</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ORDERS VIEW -->
+    <div id="view-orders" class="view hidden pt-40 pb-40 px-6 max-w-5xl mx-auto">
+        <div class="flex items-center gap-6 mb-12">
+            <button onclick="showView('dashboard')" class="w-12 h-12 rounded-full border border-brand-border flex items-center justify-center bg-brand-card hover:bg-white hover:text-black transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            </button>
+            <h1 class="text-4xl md:text-5xl font-bold text-white">Order History</h1>
+        </div>
+        <div id="orders-list" class="space-y-4">
+            <!-- Injected via JS -->
+        </div>
+    </div>
+
+    <!-- ORDER DETAIL VIEW -->
+    <div id="view-order-detail" class="view hidden pt-40 pb-40 px-6 max-w-5xl mx-auto">
+        <div class="flex justify-between items-start mb-12 border-b border-brand-border pb-8">
+            <div class="flex items-center gap-6">
+                <button onclick="showView('orders')" class="w-12 h-12 rounded-full border border-brand-border flex items-center justify-center bg-brand-card hover:bg-white hover:text-black transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                </button>
+                <div>
+                    <h1 class="text-4xl md:text-5xl font-bold text-white">Order #<span id="detail-id"></span></h1>
+                    <p class="text-brand-mute mt-2">Placed on <span id="detail-date" class="text-white"></span></p>
+                </div>
+            </div>
+            <button onclick="reorderCurrent()" class="hidden md:flex bg-white text-black font-bold py-4 px-8 rounded-full hover:bg-gray-200 transition-colors items-center gap-3 active:scale-[0.98]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                Reorder All
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div class="md:col-span-2">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-brand-mute mb-6">Items</h3>
+                <div id="detail-items" class="space-y-4">
+                    <!-- Injected via JS -->
+                </div>
+            </div>
+            <div>
+                <div class="bg-brand-card border border-brand-border p-8 rounded-2xl shadow-xl mb-6">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-brand-mute mb-6">Summary</h3>
+                    <div class="space-y-4 mb-8">
+                        <div class="flex justify-between text-sm"><span class="text-brand-mute">Subtotal</span><span class="text-white font-medium" id="detail-subtotal">$0.00</span></div>
+                        <div class="flex justify-between text-sm"><span class="text-brand-mute">Shipping</span><span class="text-white font-medium">FREE</span></div>
+                    </div>
+                    <div class="pt-6 border-t border-brand-border flex justify-between items-center text-xl font-bold text-white">
+                        <span>Total</span><span id="detail-total">$0.00</span>
+                    </div>
+                </div>
+                <div class="bg-brand-card border border-brand-border p-8 rounded-2xl shadow-xl">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-brand-mute mb-4">Status</h3>
+                    <p class="text-3xl font-bold text-white tracking-tight" id="detail-status">Processing</p>
+                    <div class="mt-6 w-full bg-brand-bg rounded-full h-2 overflow-hidden border border-brand-border">
+                        <div class="bg-white h-full w-1/3 rounded-full"></div>
+                    </div>
+                    <p class="text-xs text-brand-mute mt-4">We are preparing your order. You will receive an update shortly.</p>
+                </div>
+            </div>
+        </div>
+        
+        <button onclick="reorderCurrent()" class="w-full mt-10 md:hidden bg-white text-black font-bold py-5 rounded-full shadow-2xl active:scale-[0.98] transition-transform flex justify-center items-center gap-2">
+            Reorder All
+        </button>
+    </div>
+
+    <!-- PRODUCT PDP VIEW -->
+    <div id="view-product" class="view hidden pt-32 pb-40 px-6 max-w-7xl mx-auto">
+        <div class="flex items-center gap-6 mb-8 text-sm text-brand-mute font-medium">
+            <a href="#" onclick="showView('collection')" class="hover:text-white transition-colors">Catalog</a>
+            <span>/</span>
+            <span class="text-white" id="pdp-category">Category</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-16 mb-20">
+            <div class="bg-brand-card rounded-3xl overflow-hidden aspect-square border border-brand-border">
+                <img id="pdp-img" src="" class="w-full h-full object-cover">
+            </div>
+            <div class="flex flex-col justify-center">
+                <h1 id="pdp-name" class="text-5xl font-bold text-white mb-4">Product Name</h1>
+                <p id="pdp-price" class="text-2xl text-brand-mute mb-8">$0.00</p>
+                <div class="mb-8">
+                    <p class="text-xs font-bold uppercase tracking-widest text-brand-mute mb-3">Color Options</p>
+                    <div class="flex gap-3">
+                        <button class="w-10 h-10 rounded-full bg-[#111111] border-2 border-brand-border hover:border-white focus:border-white focus:scale-110 transition-all"></button>
+                        <button class="w-10 h-10 rounded-full bg-[#444444] border-2 border-brand-border hover:border-white focus:border-white focus:scale-110 transition-all"></button>
+                        <button class="w-10 h-10 rounded-full bg-[#E5E5E5] border-2 border-brand-border hover:border-white focus:border-white focus:scale-110 transition-all"></button>
+                    </div>
+                </div>
+                <div class="mb-10">
+                    <p class="text-xs font-bold uppercase tracking-widest text-brand-mute mb-3">Quantity</p>
+                    <div class="flex items-center gap-6 bg-brand-bg w-max px-2 py-2 rounded-full border border-brand-border shadow-inner">
+                        <button onclick="changePdpQty(-1)" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-brand-card transition-colors text-white"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+                        <span id="pdp-qty" class="text-lg font-bold text-white w-4 text-center">1</span>
+                        <button onclick="changePdpQty(1)" class="w-10 h-10 rounded-full flex items-center justify-center hover:bg-brand-card transition-colors text-white"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></button>
+                    </div>
+                </div>
+                <button id="pdp-add" onclick="addPdpToCart()" class="w-full bg-white text-black font-bold py-5 rounded-full hover:bg-gray-200 transition-transform active:scale-[0.98] mb-12 shadow-2xl">
+                    Add to Bag
+                </button>
+                <div class="space-y-6 bg-brand-card border border-brand-border p-8 rounded-3xl">
+                    <h3 class="text-sm font-bold uppercase tracking-widest text-white">Details</h3>
+                    <p id="pdp-desc" class="text-brand-mute leading-relaxed text-sm">...</p>
+                </div>
+            </div>
+        </div>
+        <div class="border-t border-brand-border pt-20">
+            <h2 class="text-3xl font-bold text-white mb-10">Customer Insights</h2>
+            <div id="pdp-reviews" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- COLLECTION VIEW -->
+    <div id="view-collection" class="view hidden pt-40 pb-40 px-6 max-w-7xl mx-auto">
+        <h1 class="text-5xl md:text-7xl font-bold text-white mb-6">The Collection</h1>
+        <p class="text-lg text-brand-mute mb-12 max-w-2xl">Browse our entire range of premium, minimalist essentials curated for modern life.</p>
+        
+        <div class="flex gap-4 mb-12 overflow-x-auto pb-4 no-scrollbar border-b border-brand-border" id="collection-filters">
+            <button onclick="filterCollection('all')" id="filter-all" class="filter-btn text-white font-bold border-b-2 border-white pb-3 whitespace-nowrap">All Items</button>
+            <button onclick="filterCollection('Tech')" id="filter-Tech" class="filter-btn text-brand-mute hover:text-white pb-3 whitespace-nowrap transition-colors border-b-2 border-transparent hover:border-brand-mute">Tech</button>
+            <button onclick="filterCollection('Accessories')" id="filter-Accessories" class="filter-btn text-brand-mute hover:text-white pb-3 whitespace-nowrap transition-colors border-b-2 border-transparent hover:border-brand-mute">Accessories</button>
+            <button onclick="filterCollection('Home')" id="filter-Home" class="filter-btn text-brand-mute hover:text-white pb-3 whitespace-nowrap transition-colors border-b-2 border-transparent hover:border-brand-mute">Home Office</button>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-12" id="collection-grid">
+            <!-- Injected via JS -->
+        </div>
+    </div>
+
+    <!-- ABOUT VIEW -->
+    <div id="view-about" class="view hidden pt-40 pb-40 px-6 max-w-4xl mx-auto text-center">
+        <h1 class="text-5xl md:text-7xl font-bold text-white mb-8">Our Philosophy</h1>
+        <img src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=1200&auto=format&fit=crop" class="w-full h-[400px] object-cover rounded-3xl mb-12 grayscale-[0.2]">
+        <div class="text-left space-y-6 text-lg text-brand-mute leading-relaxed">
+            <p><strong class="text-white">ANTI.CLOTHING</strong> was founded on a simple principle: technology and daily essentials should blend seamlessly into our environments without fighting for attention.</p>
+            <p>Every product in our collection is carefully selected or crafted to meet rigorous standards of minimalism, utility, and longevity. We strip away the unnecessary so you can focus on what matters.</p>
+        </div>
+    </div>
+
+    <!-- CONTACT VIEW -->
+    <div id="view-contact" class="view hidden pt-40 pb-40 px-6 max-w-3xl mx-auto">
+        <h1 class="text-5xl font-bold text-white mb-4">Get in Touch</h1>
+        <p class="text-xl text-brand-mute mb-12">Our concierge team is available worldwide.</p>
+        <form onsubmit="event.preventDefault(); alert('Message sent!'); showView('shop');" class="bg-brand-card border border-brand-border p-10 rounded-3xl space-y-8 shadow-2xl">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-brand-mute mb-3">Name</label>
+                    <input type="text" required class="w-full bg-brand-bg border border-brand-border p-4 rounded-xl text-white outline-none focus:border-white transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-brand-mute mb-3">Email</label>
+                    <input type="email" required class="w-full bg-brand-bg border border-brand-border p-4 rounded-xl text-white outline-none focus:border-white transition-colors">
+                </div>
+            </div>
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-widest text-brand-mute mb-3">Inquiry Type</label>
+                <select class="w-full bg-brand-bg border border-brand-border p-4 rounded-xl text-white outline-none focus:border-white transition-colors appearance-none">
+                    <option>Order Support</option>
+                    <option>Product Question</option>
+                    <option>Press & Media</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-widest text-brand-mute mb-3">Message</label>
+                <textarea required rows="5" class="w-full bg-brand-bg border border-brand-border p-4 rounded-xl text-white outline-none focus:border-white transition-colors"></textarea>
+            </div>
+            <button class="w-full bg-white text-black font-bold py-5 rounded-full hover:bg-gray-200 transition-transform active:scale-[0.98]">Send Message</button>
+        </form>
+    </div>
+
+    <!-- FAQ VIEW -->
+    <div id="view-faq" class="view hidden pt-40 pb-40 px-6 max-w-3xl mx-auto">
+        <h1 class="text-5xl font-bold text-white mb-12">FAQ</h1>
+        <div class="space-y-4">
+            <div class="bg-brand-card border border-brand-border p-8 rounded-3xl shadow-xl">
+                <h3 class="text-lg font-bold text-white mb-2">What is your return policy?</h3>
+                <p class="text-brand-mute">We accept returns within 30 days of standard delivery. Items must be in original condition and packaging. Customized items are final sale.</p>
+            </div>
+            <div class="bg-brand-card border border-brand-border p-8 rounded-3xl shadow-xl">
+                <h3 class="text-lg font-bold text-white mb-2">How long does shipping take?</h3>
+                <p class="text-brand-mute">Premium Express ensures delivery within 1-2 business days. Standard Delivery takes 3-5 business days depending on location.</p>
+            </div>
+            <div class="bg-brand-card border border-brand-border p-8 rounded-3xl shadow-xl">
+                <h3 class="text-lg font-bold text-white mb-2">Do you ship internationally?</h3>
+                <p class="text-brand-mute">Yes, we deliver worldwide across 150+ countries. International shipping rates and relevant duties are calculated securely at checkout.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- POLICIES VIEW -->
+    <div id="view-policies" class="view hidden pt-40 pb-40 px-6 max-w-4xl mx-auto">
+        <h1 class="text-5xl font-bold text-white mb-12">Legal Policies</h1>
+        <div class="space-y-12 text-brand-mute">
+            <section class="space-y-4 bg-brand-card p-10 rounded-3xl border border-brand-border">
+                <h2 class="text-2xl font-bold text-white">Terms of Service</h2>
+                <p>Welcome to ANTI CLOTHING. By accessing this premium storefront, you agree to our standard terms and conditions regarding digital commerce.</p>
+                <p>All content remains the intellectual property of VMTECH. Unauthorized reproduction of our minimalist assets is explicitly prohibited.</p>
+            </section>
+            <section class="space-y-4 bg-brand-card p-10 rounded-3xl border border-brand-border">
+                <h2 class="text-2xl font-bold text-white">Privacy Policy</h2>
+                <p>We believe your data is your own. We only collect essential information required to fulfill orders and improve our platform.</p>
+                <p>We do not sell your personal data to third-party advertising brokers at any point.</p>
+            </section>
+        </div>
+    </div>
+
+    <!-- BLOG VIEW -->
+    <div id="view-blog" class="view hidden pt-40 pb-40 px-6 max-w-7xl mx-auto">
+        <h1 class="text-5xl md:text-7xl font-bold text-white mb-6">The Journal</h1>
+        <p class="text-xl text-brand-mute mb-16">Thoughts on modern design and intentional living.</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+            <div class="group cursor-pointer" onclick="alert('Article opening...')">
+                <div class="h-80 bg-brand-card rounded-3xl overflow-hidden mb-6 border border-brand-border">
+                    <img src="https://images.unsplash.com/photo-1542451542907-6cf80ff362d6?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover grayscale-[0.3] group-hover:scale-105 transition-transform duration-700">
+                </div>
+                <p class="text-xs font-bold uppercase tracking-widest text-brand-mute mb-3">Design · April 25</p>
+                <h2 class="text-3xl font-bold text-white mb-3">Workspace Minimalism</h2>
+                <p class="text-brand-mute">Why less visual clutter leads to more profound creative outcomes.</p>
+            </div>
+            <div class="group cursor-pointer" onclick="alert('Article opening...')">
+                <div class="h-80 bg-brand-card rounded-3xl overflow-hidden mb-6 border border-brand-border">
+                    <img src="https://images.unsplash.com/photo-1517849845537-4d257902454a?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover grayscale-[0.3] group-hover:scale-105 transition-transform duration-700">
+                </div>
+                <p class="text-xs font-bold uppercase tracking-widest text-brand-mute mb-3">Lifestyle · April 12</p>
+                <h2 class="text-3xl font-bold text-white mb-3">The Intentional Wardrobe</h2>
+                <p class="text-brand-mute">Building a foundation of core pieces that outlast seasonal trends.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEARCH VIEW -->
+    <div id="view-search" class="view hidden pt-32 pb-40 px-6 max-w-7xl mx-auto">
+        <div class="max-w-3xl mx-auto mb-16">
+            <div class="relative">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="absolute left-6 top-6 text-brand-mute"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <input type="text" id="search-input" onkeyup="handleSearch()" placeholder="Search products..." class="w-full bg-brand-card border border-brand-border py-6 pl-16 pr-6 rounded-3xl text-2xl text-white outline-none focus:border-white transition-colors">
+            </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="search-results">
+            <!-- Injected via JS -->
+        </div>
+    </div>
+
+    <!-- 404 VIEW -->
+    <div id="view-404" class="view hidden pt-40 pb-40 px-6 max-w-2xl mx-auto text-center h-[70vh] flex flex-col justify-center items-center">
+        <h1 class="text-9xl font-bold text-brand-border mb-4">404</h1>
+        <h2 class="text-3xl font-bold text-white mb-6">Signal lost.</h2>
+        <p class="text-brand-mute mb-10">The destination you're looking for doesn't exist in our current collection.</p>
+        <button onclick="showView('shop')" class="bg-white text-black font-bold py-4 px-10 rounded-full hover:bg-gray-200 transition-colors">Return Home</button>
+    </div>
+
+    <!-- CART DRAWER -->
+    <div id="drawer-overlay" onclick="toggleCart()" class="fixed inset-0 bg-black/60 z-[60] opacity-0 pointer-events-none transition-opacity duration-300"></div>
+    <div id="cart-drawer" class="cart-drawer fixed top-0 right-0 h-full w-full md:w-[450px] bg-brand-bg border-l border-brand-border z-[70] flex flex-col shadow-2xl">
+        <div class="p-6 border-b border-brand-border flex justify-between items-center bg-brand-card">
+            <h2 class="text-xl font-semibold text-white">Your Bag</h2>
+            <button onclick="toggleCart()" class="text-brand-mute hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+        </div>
+        
+        <div id="cart-items" class="flex-grow overflow-y-auto p-6 space-y-6">
+            <!-- Items injected by JS -->
+        </div>
+
+        <div class="p-6 border-t border-brand-border bg-brand-card space-y-4">
+            <div class="flex border border-brand-border rounded-xl overflow-hidden mb-4">
+                <input type="text" id="discount-code" placeholder="Discount Code" class="w-full bg-brand-bg px-4 py-3 text-sm text-white outline-none focus:border-white transition-colors uppercase">
+                <button onclick="applyDiscount()" class="bg-brand-border text-white px-4 text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-colors">Apply</button>
+            </div>
+            <div class="space-y-2 text-sm text-brand-mute border-b border-brand-border pb-4 mb-4">
+                <div class="flex justify-between"><span>Subtotal</span><span id="subtotal" class="text-white">$0.00</span></div>
+                <div class="flex justify-between" id="discount-row" style="display:none;"><span class="text-green-400">Discount (<span id="discount-label"></span>)</span><span class="text-green-400" id="discount-amount">-$0.00</span></div>
+                <div class="flex justify-between"><span>Shipping</span><span class="text-white">Calculated at checkout</span></div>
+            </div>
+            <div class="flex justify-between items-center text-lg font-bold text-white mb-6">
+                <span>Total</span><span id="cart-drawer-total">$0.00</span>
+            </div>
+            <button onclick="openCheckout()" class="w-full bg-white text-black font-bold py-4 rounded-full transition-transform active:scale-[0.98]">
+                Check out
+            </button>
+        </div>
+    </div>
+
+    <!-- CHECKOUT MODAL -->
+    <div id="checkout-modal" class="modal-overlay fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 overflow-y-auto">
+        <div class="bg-brand-bg border border-brand-border w-full max-w-2xl rounded-2xl p-8 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-start mb-10">
+                <div>
+                    <h2 class="text-3xl font-bold text-white mb-2">Checkout</h2>
+                    <p class="text-brand-mute">Continue as Guest</p>
+                </div>
+                <button onclick="closeCheckout()" class="p-2 hover:bg-brand-border rounded-full transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <form onsubmit="handleCheckout(event)" class="space-y-8">
+                <!-- Shipping Info -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-semibold uppercase tracking-widest text-brand-mute">Shipping Details</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="email" placeholder="Email Address" required class="w-full bg-brand-card border border-brand-border p-4 rounded-xl text-white outline-none focus:border-white transition-colors">
+                        <input type="text" placeholder="Full Name" required class="w-full bg-brand-card border border-brand-border p-4 rounded-xl text-white outline-none focus:border-white transition-colors">
+                    </div>
+                    <input type="text" placeholder="Shipping Address" required class="w-full bg-brand-card border border-brand-border p-4 rounded-xl text-white outline-none focus:border-white transition-colors">
+                </div>
+
+                <!-- Payment Mockup -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-semibold uppercase tracking-widest text-brand-mute">Payment</h3>
+                    <div class="bg-brand-card border border-brand-border p-4 rounded-xl">
+                        <div class="flex items-center gap-4 mb-4 pb-4 border-b border-brand-border text-brand-mute text-xs">
+                            <span class="flex-grow">Card Number</span>
+                            <span>Exp</span>
+                            <span>CVV</span>
+                        </div>
+                        <div class="flex gap-4">
+                            <input type="text" placeholder="XXXX XXXX XXXX XXXX" required class="bg-transparent text-white outline-none w-full tracking-widest">
+                            <input type="text" placeholder="MM/YY" required class="bg-transparent text-white outline-none w-16 text-center">
+                            <input type="text" placeholder="***" required class="bg-transparent text-white outline-none w-12 text-center">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-6 border-t border-brand-border">
+                    <div class="flex justify-between items-center mb-6">
+                        <span class="text-brand-mute">Grand Total</span>
+                        <span id="final-total" class="text-2xl font-bold text-white">$0.00</span>
+                    </div>
+                    <button type="submit" class="w-full bg-white text-black font-bold py-5 rounded-full hover:bg-gray-200 transition-colors">
+                        Complete Order
+                    </button>
+                    <p class="text-center text-[10px] text-brand-mute mt-4 uppercase tracking-tighter">Your payment information is handled securely</p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="py-20 px-6 border-t border-brand-border">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
+            <div>
+                <h3 class="text-white font-bold mb-4">VMTECH</h3>
+                <p class="text-sm text-brand-mute max-w-xs">Building high-performance e-commerce experiences for the modern world.</p>
+            </div>
+            <div class="flex gap-20">
+                <div class="space-y-4">
+                    <h4 class="text-xs font-bold uppercase text-brand-mute tracking-widest">About</h4>
+                    <ul class="text-sm space-y-2">
+                        <li><a href="#" onclick="showView('about')" class="hover:text-white transition-colors">Our Story</a></li>
+                        <li><a href="#" onclick="showView('policies')" class="hover:text-white transition-colors">Legal & Privacy</a></li>
+                    </ul>
+                </div>
+                <div class="space-y-4">
+                    <h4 class="text-xs font-bold uppercase text-brand-mute tracking-widest">Support</h4>
+                    <ul class="text-sm space-y-2">
+                        <li><a href="#" onclick="showView('faq')" class="hover:text-white transition-colors">FAQ & Shipping</a></li>
+                        <li><a href="#" onclick="showView('contact')" class="hover:text-white transition-colors">Contact Us</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script type="text/javascript">
+        /**
+         * VMTECH Webstore Core Logic
+         * High-performance cart management and rendering
+         */
+
+        // One-time migration from legacy mock auth (pre-D.4 anti port).
+        try { localStorage.removeItem('vm_user_session'); } catch {}
+        try { localStorage.removeItem('vm_user_history'); } catch {}
+
+        let PRODUCTS = [
+            { id: 101, name: 'Minimalist Clock', price: 120.00, category: 'Home', img: 'https://images.unsplash.com/photo-1509114397022-ed747cca3f65?q=80&w=800&auto=format&fit=crop', desc: 'A striking statement piece stripped of numerals or unnecessary markings. Precision quartz movement ensures silent, perfect timing.', reviews: [{name:'Alex R.', text:'Beautiful addition to my wall.'}] },
+            { id: 102, name: 'Graphite Backpack', price: 245.00, category: 'Accessories', img: 'https://images.unsplash.com/photo-1547949003-9792a18a2601?q=80&w=800&auto=format&fit=crop', desc: 'Constructed from weather-proof ballistic nylon. Features a dedicated laptop sleeve and concealed organizational pockets.', reviews: [{name:'Jordan M.', text:'Perfect for commuting.'}] },
+            { id: 103, name: 'Sleek Keyboard', price: 180.00, category: 'Tech', img: 'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?q=80&w=800&auto=format&fit=crop', desc: 'Low-profile mechanical switches housed in an aerospace-grade aluminum chassis. Connects up to 3 devices seamlessly via Bluetooth.', reviews: [{name:'Casey T.', text:'Typing feels amazing.'}, {name:'Sam W.', text:'Worth every penny.'}] },
+            { id: 104, name: 'Pure Water Bottle', price: 45.00, category: 'Accessories', img: 'https://images.unsplash.com/photo-1602143399827-bd95efef29a0?q=80&w=800&auto=format&fit=crop', desc: 'Double-walled vacuum insulated stainless steel. Keeps drinks cold for 24 hours or hot for 12 hours. Pure hydration, zero condensation.', reviews: [{name:'Taylor B.', text:'Stays cold all day long.'}] },
+            { id: 105, name: 'Oak Desk Lamp', price: 160.00, category: 'Home', img: 'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?q=80&w=800&auto=format&fit=crop', desc: 'Warm LED lighting integrated into a solid oak arm. Adjustable brightness and color temperature for optimal focus.', reviews: [] },
+            { id: 106, name: 'Linen Notebook', price: 32.00, category: 'Accessories', img: 'https://images.unsplash.com/photo-1531346878377-a5be20888e57?q=80&w=800&auto=format&fit=crop', desc: '140 pages of premium 100gsm dot-grid paper. Bound in a durable, tactile linen cover that ages gracefully.', reviews: [{name:'Drew V.', text:'Paper holds ink beautifully without bleeding.'}] },
+            { id: 107, name: 'Analog Camera', price: 480.00, category: 'Tech', img: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?q=80&w=800&auto=format&fit=crop', desc: 'Fully manual 35mm film camera. Recalibrate your creative eye with mechanical precision and timeless aesthetics.', reviews: [{name:'Morgan F.', text:'A joy to shoot with.'}] },
+            { id: 108, name: 'Matte Ceramic Mug', price: 28.00, category: 'Home', img: 'https://images.unsplash.com/photo-1514228742587-6b1558fbedcf?q=80&w=800&auto=format&fit=crop', desc: 'Hand-thrown ceramic mug finished with a proprietary matte black glaze. Ergonomic handle and heat-retaining thickness.', reviews: [{name:'Jamie S.', text:'My go-to morning mug now.'}] }
+        ];
+
+        /* ════════════════════
+           CANONICAL DATA LAYER — fetchStore → api.php?state=X, getMockData fallback, MOCK shape
+        ════════════════════ */
+        const __CATS = [...new Set(PRODUCTS.map(p => p.category).filter(Boolean))].map((name, i) => ({ id: i + 1, name }));
+        const MOCK = {
+            site: { name: "ANTI", currency: "R", domain: window.location.hostname },
+            categories: __CATS,
+            products: PRODUCTS.map((p, i) => ({
+                ...p,
+                id: p.id != null ? p.id : i + 1,
+                name: p.name || p.title || "",
+                image: p.image || p.img || "",
+                description: p.description || p.desc || "",
+                stock: p.stock != null ? p.stock : 12,
+                category_id: (__CATS.find(c => c.name === p.category) || {}).id || null
+            })),
+            discounts: [
+                { id: 1, code: "WELCOME10", percentage: 10, active: 1 },
+                { id: 2, code: "DROP20", percentage: 20, active: 1 }
+            ]
+        };
+        async function fetchStore(state, params = {}) {
+            const url = new URL("api.php", window.location.href);
+            url.searchParams.set("state", state);
+            for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+            const headers = {};
+            const token = localStorage.getItem('vm_customer_token');
+            if (token) headers['X-Customer-Token'] = token;
+            try {
+                const res = await fetch(url, { signal: AbortSignal.timeout(4000), headers });
+                if (!res.ok) throw new Error(res.status);
+                return await res.json();
+            } catch {
+                return getMockData(state, params);
+            }
+        }
+
+        async function postStore(state, body = {}) {
+            const url = new URL("api.php", window.location.href);
+            url.searchParams.set("state", state);
+            const headers = { 'Content-Type': 'application/json' };
+            const token = localStorage.getItem('vm_customer_token');
+            if (token) headers['X-Customer-Token'] = token;
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(body),
+                    signal: AbortSignal.timeout(8000)
+                });
+                const data = await res.json().catch(() => ({}));
+                return { ok: res.ok && (data.ok !== false), status: res.status, data, error: data.error || null };
+            } catch (e) {
+                return { ok: false, status: 0, data: {}, error: e.message };
+            }
+        }
+        function getMockData(state, params = {}) {
+            switch (state) {
+                case "site": return MOCK.site;
+                case "products": return MOCK.products;
+                case "product": return MOCK.products.find(p => p.id == params.id) || null;
+                case "categories": return MOCK.categories;
+                case "products_by_category": return MOCK.products.filter(p => p.category_id == params.category_id);
+                case "search": {
+                    const q = (params.q || "").toLowerCase();
+                    return MOCK.products.filter(p => (p.name || "").toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q));
+                }
+                case "discounts": return MOCK.discounts;
+                case "orders": return [];
+                default: return [];
+            }
+        }
+
+        // STATE Logic
+        let cart = JSON.parse(localStorage.getItem('vm_cart')) || [];
+        let userHistory = JSON.parse(localStorage.getItem('vm_user_history')) || [];
+        let userSession = JSON.parse(localStorage.getItem('vm_user_session')) || null;
+        let currentOrderView = null;
+        let currentDiscount = null; // {code: 'VM10', percent: 10}
+        
+        let activePdpProduct = null;
+        let activePdpQty = 1;
+
+        function saveCart() {
+            localStorage.setItem('vm_cart', JSON.stringify(cart));
+            renderCart();
+            updateCartIndicator();
+        }
+
+        /**
+         * UI Toggles
+         */
+        function toggleCart() {
+            const drawer = document.getElementById('cart-drawer');
+            const overlay = document.getElementById('drawer-overlay');
+            drawer.classList.toggle('open');
+            overlay.classList.toggle('opacity-0');
+            overlay.classList.toggle('pointer-events-none');
+            document.body.classList.toggle('overflow-hidden');
+        }
+
+        function openCheckout() {
+            if(cart.length === 0) return alert("Your bag is empty.");
+            document.getElementById('checkout-modal').classList.add('open');
+            document.getElementById('final-total').textContent = calculateTotal();
+            toggleCart();
+        }
+
+        function closeCheckout() {
+            document.getElementById('checkout-modal').classList.remove('open');
+        }
+
+        /**
+         * Discount Logic
+         */
+        function applyDiscount() {
+            const code = document.getElementById('discount-code').value.toUpperCase();
+            if (code === 'VIP20') {
+                currentDiscount = { code: 'VIP20', percent: 20 };
+                alert("Discount applied: 20% off");
+            } else if (code === 'WELCOME') {
+                currentDiscount = { code: 'WELCOME', percent: 10 };
+                alert("Discount applied: 10% off");
+            } else {
+                alert("Invalid or expired discount code.");
+                return;
+            }
+            renderCart();
+        }
+
+        /**
+         * Cart Operations
+         */
+        function addToCart(productId) {
+            const product = PRODUCTS.find(p => p.id === productId);
+            const existing = cart.find(item => item.id === productId);
+
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+
+            saveCart();
+            toggleCart();
+        }
+
+        function updateQuantity(productId, delta) {
+            const item = cart.find(i => i.id === productId);
+            if (!item) return;
+
+            item.quantity += delta;
+            if (item.quantity <= 0) {
+                cart = cart.filter(i => i.id !== productId);
+            }
+            saveCart();
+        }
+
+        function setupCatalog() {
+            const container = document.getElementById('catalog-container');
+            container.innerHTML = PRODUCTS.map(p => `
+                <div onclick="openPDP(${p.id})" class="cursor-pointer group border border-brand-border rounded-2xl overflow-hidden bg-brand-card transition-colors hover:border-white/20">
+                    <div class="img-zoom h-80 overflow-hidden relative">
+                        <img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover grayscale-[0.2] transition-transform duration-700">
+                    </div>
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-1">
+                            <h3 class="font-medium text-white">${p.name}</h3>
+                            <span class="text-brand-mute">$${p.price.toFixed(2)}</span>
+                        </div>
+                        <p class="text-[10px] uppercase tracking-widest text-brand-mute font-semibold">${p.category}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function calculateTotal() {
+            let subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            if (currentDiscount) {
+                let discountAmt = (subtotal * currentDiscount.percent) / 100;
+                return `$${(subtotal - discountAmt).toFixed(2)}`;
+            }
+            return `$${subtotal.toFixed(2)}`;
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+            const subtotalEl = document.getElementById('subtotal');
+            
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="h-full flex flex-col items-center justify-center text-center">
+                    <p class="text-brand-mute text-sm mb-4">Your bag is empty.</p>
+                    <button onclick="toggleCart()" class="text-xs uppercase tracking-widest font-bold text-white underline">Start Shopping</button>
+                </div>`;
+                subtotalEl.textContent = '$0.00';
+                return;
+            }
+
+            container.innerHTML = cart.map(item => `
+                <div class="flex gap-4 items-center">
+                    <div class="w-20 h-20 bg-brand-border rounded-lg overflow-hidden flex-shrink-0">
+                        <img src="${item.img}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-grow">
+                        <h4 class="text-sm font-medium text-white">${item.name}</h4>
+                        <p class="text-xs text-brand-mute">$${item.price.toFixed(2)}</p>
+                        <div class="flex items-center gap-3 mt-2">
+                            <button onclick="updateQuantity(${item.id}, -1)" class="w-6 h-6 border border-brand-border rounded flex items-center justify-center hover:border-white transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            </button>
+                            <span class="text-xs font-bold text-white w-4 text-center">${item.quantity}</span>
+                            <button onclick="updateQuantity(${item.id}, 1)" class="w-6 h-6 border border-brand-border rounded flex items-center justify-center hover:border-white transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-sm font-semibold text-white">
+                        $${(item.price * item.quantity).toFixed(2)}
+                    </div>
+                </div>
+            `).join('');
+
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+            
+            if(currentDiscount) {
+                document.getElementById('discount-row').style.display = 'flex';
+                document.getElementById('discount-label').textContent = currentDiscount.code;
+                document.getElementById('discount-amount').textContent = `-$${((subtotal * currentDiscount.percent) / 100).toFixed(2)}`;
+            } else {
+                document.getElementById('discount-row').style.display = 'none';
+            }
+            
+            document.getElementById('cart-drawer-total').textContent = calculateTotal();
+        }
+
+        function updateCartIndicator() {
+            const dot = document.getElementById('cart-dot');
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            dot.textContent = totalItems;
+            if (totalItems > 0) {
+                dot.classList.remove('scale-0');
+                dot.classList.add('scale-100');
+            } else {
+                dot.classList.remove('scale-100');
+                dot.classList.add('scale-0');
+            }
+        }
+
+        function handleCheckout(e) {
+            e.preventDefault();
+            
+            // Get email if provided in form
+            const emailInput = document.querySelector('input[type="email"]').value;
+            const userEmail = userSession ? userSession.email : (emailInput || 'guest@example.com');
+            
+            const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const totalDiscount = currentDiscount ? (subtotal * currentDiscount.percent / 100) : 0;
+            const finalP = subtotal - totalDiscount;
+            
+            const newOrder = {
+                id: Math.floor(Math.random() * 90000) + 10000,
+                email: userEmail,
+                date: new Date().toLocaleDateString(),
+                status: 'Processing',
+                items: [...cart],
+                total: finalP
+            };
+            
+            userHistory.push(newOrder);
+            localStorage.setItem('vm_user_history', JSON.stringify(userHistory));
+
+            alert("Order confirmed! Thank you for choosing VMTECH.");
+            cart = [];
+            saveCart();
+            closeCheckout();
+            currentDiscount = null; // reset discount
+            
+            // If logged in, go to dashboard, else shop
+            if(userSession && userSession.email === userEmail) {
+                showView('dashboard');
+            } else {
+                showView('shop');
+            }
+        }
+
+        // --- SPA VIEWS & ROUTING ---
+        function showView(viewId) {
+            if (!document.getElementById('view-' + viewId)) {
+                viewId = '404';
+            }
+            document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+            document.getElementById('view-' + viewId).classList.remove('hidden');
+            
+            // Update Nav account status
+            const accountNav = document.getElementById('nav-account');
+            accountNav.style.opacity = (viewId !== 'shop' && viewId !== 'account') ? '1' : '';
+            if (viewId === 'search') {
+                setTimeout(() => document.getElementById('search-input').focus(), 100);
+            }
+            if (viewId === 'dashboard') renderDashboardUI();
+            if (viewId === 'orders') renderOrdersUI();
+            
+            window.scrollTo(0, 0);
+        }
+
+        function handleAccountClick() {
+            if (userSession) {
+                showView('dashboard');
+            } else {
+                showView('account');
+            }
+        }
+
+        function login() {
+            const email = document.getElementById('login-email').value;
+            if (email && email.includes('@')) {
+                userSession = { email };
+                localStorage.setItem('vm_user_session', JSON.stringify(userSession));
+                document.getElementById('nav-account').textContent = 'Profile';
+                showView('dashboard');
+            } else {
+                alert('Please enter a valid email.');
+            }
+        }
+
+        function logout() {
+            userSession = null;
+            localStorage.removeItem('vm_user_session');
+            document.getElementById('nav-account').textContent = 'Account';
+            showView('shop');
+        }
+
+        function renderDashboardUI() {
+            if (!userSession) return showView('account');
+            
+            document.getElementById('dash-user-email').textContent = userSession.email;
+            const userOrders = userHistory.filter(o => o.email === userSession.email);
+            const totalSpent = userOrders.reduce((sum, o) => sum + o.total, 0);
+            
+            document.getElementById('dash-total-orders').textContent = userOrders.length;
+            document.getElementById('dash-total-spent').textContent = `$${totalSpent.toFixed(2)}`;
+            
+            const recentContainer = document.getElementById('dash-recent-orders');
+            if (userOrders.length === 0) {
+                recentContainer.innerHTML = '<p class="text-brand-mute italic mt-4">No recent orders.</p>';
+                return;
+            }
+            
+            recentContainer.innerHTML = userOrders.slice(-3).reverse().map(o => `
+                <div onclick="openOrder(${o.id})" class="bg-brand-card border border-brand-border p-6 rounded-2xl hover:border-white/50 transition-colors cursor-pointer flex justify-between items-center group shadow-md">
+                    <div>
+                        <p class="text-white font-bold text-lg mb-1 group-hover:text-white transition-colors">Order #${o.id}</p>
+                        <p class="text-xs text-brand-mute uppercase tracking-widest">${o.status}</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-white font-bold text-lg mb-1">$${o.total.toFixed(2)}</p>
+                        <p class="text-xs text-brand-mute">${o.date}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderOrdersUI() {
+            if (!userSession) return showView('account');
+            const userOrders = userHistory.filter(o => o.email === userSession.email).reverse();
+            const container = document.getElementById('orders-list');
+            
+            if (userOrders.length === 0) {
+                container.innerHTML = '<div class="text-center py-32 border border-brand-border border-dashed rounded-3xl"><p class="text-brand-mute font-medium text-lg">No history found.</p></div>';
+                return;
+            }
+            
+            container.innerHTML = userOrders.map(o => `
+                <div onclick="openOrder(${o.id})" class="bg-brand-card border border-brand-border p-6 md:p-8 rounded-2xl hover:border-white transition-colors cursor-pointer flex flex-col md:flex-row justify-between md:items-center gap-6 shadow-xl">
+                    <div>
+                        <p class="text-2xl text-white font-bold mb-2">Order #${o.id}</p>
+                        <p class="text-sm text-brand-mute">${o.date}</p>
+                    </div>
+                    <div class="flex items-center gap-8 justify-between md:justify-end">
+                        <div class="text-right flex flex-col items-end">
+                            <p class="text-2xl text-white font-bold mb-2">$${o.total.toFixed(2)}</p>
+                            <span class="inline-block bg-brand-bg border border-brand-border px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest text-brand-mute">${o.status}</span>
+                        </div>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-brand-mute"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openOrder(orderId) {
+            currentOrderView = userHistory.find(o => o.id === orderId);
+            if (!currentOrderView) return;
+            
+            document.getElementById('detail-id').textContent = currentOrderView.id;
+            document.getElementById('detail-date').textContent = currentOrderView.date;
+            document.getElementById('detail-status').textContent = currentOrderView.status;
+            document.getElementById('detail-subtotal').textContent = `$${currentOrderView.total.toFixed(2)}`;
+            document.getElementById('detail-total').textContent = `$${currentOrderView.total.toFixed(2)}`;
+            
+            document.getElementById('detail-items').innerHTML = currentOrderView.items.map(item => `
+                <div class="flex gap-6 items-center bg-brand-card p-6 rounded-2xl border border-brand-border shadow-md">
+                    <div class="w-20 h-20 bg-brand-bg rounded-xl overflow-hidden flex-shrink-0 border border-brand-border">
+                        <img src="${item.img}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="flex-grow">
+                        <h4 class="text-lg font-bold text-white mb-1">${item.name}</h4>
+                        <p class="text-sm text-brand-mute uppercase tracking-widest font-semibold">Qty: ${item.quantity}</p>
+                    </div>
+                    <div class="text-lg font-bold text-white">
+                        $${(item.price * item.quantity).toFixed(2)}
+                    </div>
+                </div>
+            `).join('');
+            
+            showView('order-detail');
+        }
+
+        function reorderCurrent() {
+            if(!currentOrderView) return;
+            currentOrderView.items.forEach(orderItem => {
+                const existing = cart.find(c => c.id === orderItem.id);
+                if (existing) {
+                    existing.quantity += orderItem.quantity;
+                } else {
+                    cart.push({ ...orderItem });
+                }
+            });
+            saveCart();
+            showView('shop');
+            toggleCart();
+        }
+
+        // --- NEW SPA FEATURES ROUTING ---
+        
+        function openPDP(productId) {
+            activePdpProduct = PRODUCTS.find(p => p.id === productId);
+            if(!activePdpProduct) return showView('404');
+            
+            activePdpQty = 1;
+            document.getElementById('pdp-img').src = activePdpProduct.img;
+            document.getElementById('pdp-name').textContent = activePdpProduct.name;
+            document.getElementById('pdp-price').textContent = `$${activePdpProduct.price.toFixed(2)}`;
+            document.getElementById('pdp-desc').textContent = activePdpProduct.desc;
+            document.getElementById('pdp-category').textContent = activePdpProduct.category;
+            document.getElementById('pdp-qty').textContent = activePdpQty;
+            
+            const reviewContainer = document.getElementById('pdp-reviews');
+            if (activePdpProduct.reviews && activePdpProduct.reviews.length > 0) {
+                reviewContainer.innerHTML = activePdpProduct.reviews.map(r => `
+                    <div class="bg-brand-card p-6 rounded-2xl border border-brand-border h-full">
+                        <div class="flex text-white gap-1 mb-4">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                        </div>
+                        <p class="text-sm text-brand-mute leading-relaxed">"${r.text}"</p>
+                        <p class="text-xs font-bold text-white mt-4 uppercase tracking-widest">${r.name}</p>
+                    </div>
+                `).join('');
+            } else {
+                reviewContainer.innerHTML = '<p class="text-brand-mute text-sm">No reviews yet for this product.</p>';
+            }
+            
+            showView('product');
+        }
+
+        function changePdpQty(delta) {
+            activePdpQty += delta;
+            if (activePdpQty < 1) activePdpQty = 1;
+            document.getElementById('pdp-qty').textContent = activePdpQty;
+        }
+
+        function addPdpToCart() {
+            if(!activePdpProduct) return;
+            const existing = cart.find(item => item.id === activePdpProduct.id);
+            if (existing) {
+                existing.quantity += activePdpQty;
+            } else {
+                cart.push({ ...activePdpProduct, quantity: activePdpQty });
+            }
+            saveCart();
+            toggleCart();
+        }
+
+        function renderCollectionList(items, containerId) {
+            const container = document.getElementById(containerId);
+            if(items.length === 0) {
+                container.innerHTML = '<p class="text-brand-mute text-lg col-span-full">No products found matching these criteria.</p>';
+                return;
+            }
+            container.innerHTML = items.map(p => `
+                <div onclick="openPDP(${p.id})" class="cursor-pointer group">
+                    <div class="img-zoom h-96 rounded-3xl overflow-hidden bg-brand-card mb-6 border border-brand-border">
+                        <img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover grayscale-[0.2] transition-transform duration-700">
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-2">${p.name}</h3>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-400 font-semibold uppercase tracking-widest">${p.category}</span>
+                            <span class="text-white">$${p.price.toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function filterCollection(category) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('text-white', 'border-white');
+                btn.classList.add('text-brand-mute', 'border-transparent');
+            });
+            document.getElementById('filter-' + category)?.classList.remove('text-brand-mute', 'border-transparent');
+            document.getElementById('filter-' + category)?.classList.add('text-white', 'border-white');
+            
+            const filtered = category === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.category === category);
+            renderCollectionList(filtered, 'collection-grid');
+        }
+
+        function handleSearch() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const results = PRODUCTS.filter(p => p.name.toLowerCase().includes(query) || p.desc.toLowerCase().includes(query) || p.category.toLowerCase().includes(query));
+            renderCollectionList(results, 'search-results');
+        }
+
+        // Hydrate via canonical data contract (api.php → mock fallback), then re-render
+        (async () => {
+            try {
+                const __d = await fetchStore('products');
+                PRODUCTS = __d.map(p => ({ ...p, name: p.name || p.title || '', img: p.img || p.image || '', desc: p.desc || p.description || '', category: p.category || ((MOCK.categories.find(c => c.id == p.category_id) || {}).name) || '' }));
+                filterCollection('all');
+            } catch {}
+        })();
+
+        // Initialize App
+        setupCatalog();
+        filterCollection('all'); // Initialize collection view
+        renderCart();
+        updateCartIndicator();
+        
+        if (userSession) {
+            document.getElementById('nav-account').textContent = 'Profile';
+        }
+
+    </script>
+</body>
+</html>
