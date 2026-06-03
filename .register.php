@@ -68,5 +68,12 @@ function sync_themes() {
     file_put_contents($local_root."records.json",$manifest_json);
 }
 
-$e = sync_themes(); 
+// Suspend theme sync during sub-project D. Local edits to themes/<name>/
+// must survive across requests. Re-enable by removing or flipping
+// VM_SUSPEND_THEME_SYNC after D ships (or deleting .theme-sync-suspended).
+$suspend = getenv('VM_SUSPEND_THEME_SYNC')
+    || file_exists(__DIR__ . '/.theme-sync-suspended');
+if (!$suspend) {
+    $e = sync_themes();
+} 
 ?>

@@ -21,3 +21,4 @@
 build/
 sites/
 themes/
+.theme-sync-suspended
