@@ -37,11 +37,15 @@ class database_manager
             $dbFileName = __DATABASE_SOURCE__ ; 
         }
 
-        // Define the database path relative to the script's execution directory
-        if (file_exists($dbFileName)){
+        // Define the database path relative to the script's execution directory.
+        // If the path is absolute (starts with / on Unix or has a drive letter
+        // on Windows), use it as-is even if the file does not yet exist.
+        $isAbsolute = (substr($dbFileName, 0, 1) === '/')
+                   || (strlen($dbFileName) >= 2 && $dbFileName[1] === ':');
+        if ($isAbsolute || file_exists($dbFileName)){
             $this->dbPath = $dbFileName;
         }else{
-            $this->dbPath = __DIR__ . DIRECTORY_SEPARATOR . $dbFileName;   
+            $this->dbPath = __DIR__ . DIRECTORY_SEPARATOR . $dbFileName;
         }
         $this->connect(); // Establish database connection
     }
