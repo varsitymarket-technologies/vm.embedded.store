@@ -96,6 +96,48 @@ $db->query($sql_orders);
 $db->query($sql_settings);
 //echo "Table 'settings' checked/created.\n";
 
+// 6. Customers Table (sub-project A)
+$sql_customers = "CREATE TABLE IF NOT EXISTS customers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    password_hash TEXT NOT NULL,
+    name TEXT,
+    phone TEXT,
+    email_verified INTEGER NOT NULL DEFAULT 0,
+    failed_login_attempts INTEGER NOT NULL DEFAULT 0,
+    locked_until DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)";
+$db->query($sql_customers);
+$db->query("CREATE INDEX IF NOT EXISTS idx_customers_email ON customers(email)");
+
+// 7. Customer Sessions Table (bearer tokens)
+$sql_customer_sessions = "CREATE TABLE IF NOT EXISTS customer_sessions (
+    token TEXT PRIMARY KEY,
+    customer_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_used_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    expires_at DATETIME NOT NULL,
+    user_agent TEXT,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+)";
+$db->query($sql_customer_sessions);
+$db->query("CREATE INDEX IF NOT EXISTS idx_sessions_customer ON customer_sessions(customer_id)");
+
+// 8. Idempotently add customer_id to orders
+$order_cols = $db->query("PRAGMA table_info(orders)");
+$has_customer_id = false;
+foreach ($order_cols as $col) {
+    if (($col['name'] ?? '') === 'customer_id') {
+        $has_customer_id = true;
+        break;
+    }
+}
+if (!$has_customer_id) {
+    $db->query("ALTER TABLE orders ADD COLUMN customer_id INTEGER REFERENCES customers(id)");
+}
+$db->query("CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id)");
+
 #$sql = "INSERT INTO `products` (`name`,`description`,`price`,`image`) VALUES ('Shoes','Voluptas facere animi explicabo non quis magni recusandae. Numquam debitis pariatur omnis facere unde. Laboriosam minus amet nesciunt est. Et saepe eos maxime tempore quasi deserunt ab. ','300','/img/demo-shoes.jpg'); ";
 #$db->query($sql); 
 
