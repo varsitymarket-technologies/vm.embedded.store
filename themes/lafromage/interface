@@ -659,33 +659,52 @@
 
                     formEl.addEventListener('submit', async (e) => {
                         e.preventDefault();
+                        const submitBtn = formEl.querySelector('button[type="submit"]');
+                        if (submitBtn && submitBtn.disabled) return;
                         setError('');
-                        const fd = new FormData(formEl);
-                        const user = this.auth.user || {};
-                        const payload = {
-                            name: user.name || 'CUSTOMER',
-                            email: user.email || '',
-                            total: total,
-                            items: this.cart.map(i => ({
-                                id: i.id,
-                                title: i.title || i.name,
-                                price: i.price,
-                                qty: i.qty || 1
-                            })),
-                            // Address fields included but not currently persisted by state=order.
-                            addr_street: fd.get('addr_street'),
-                            addr_city: fd.get('addr_city'),
-                            addr_postal: fd.get('addr_postal'),
-                            addr_country: fd.get('addr_country')
-                        };
-                        const result = await postStore('order', payload);
-                        const ok = result.ok || (result.data && result.data.success === true);
-                        if (ok) {
-                            this.cart = [];
-                            this.cartSave();
-                            window.location.hash = 'account';
-                        } else {
-                            setError(result.error || (result.data && result.data.error) || 'TRANSMISSION_REJECTED');
+                        if (submitBtn) {
+                            submitBtn.disabled = true;
+                            submitBtn.dataset.originalText = submitBtn.textContent;
+                            submitBtn.textContent = 'COMMITTING...';
+                        }
+                        try {
+                            const fd = new FormData(formEl);
+                            const user = this.auth.user || {};
+                            const payload = {
+                                name: user.name || 'CUSTOMER',
+                                email: user.email || '',
+                                total: total,
+                                items: this.cart.map(i => ({
+                                    id: i.id,
+                                    title: i.title || i.name,
+                                    price: i.price,
+                                    qty: i.qty || 1
+                                })),
+                                // Address fields included but not currently persisted by state=order.
+                                addr_street: fd.get('addr_street'),
+                                addr_city: fd.get('addr_city'),
+                                addr_postal: fd.get('addr_postal'),
+                                addr_country: fd.get('addr_country')
+                            };
+                            const result = await postStore('order', payload);
+                            const ok = result.ok || (result.data && result.data.success === true);
+                            if (ok) {
+                                this.cart = [];
+                                this.cartSave();
+                                window.location.hash = 'account';
+                            } else {
+                                setError(result.error || (result.data && result.data.error) || 'TRANSMISSION_REJECTED');
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                    submitBtn.textContent = submitBtn.dataset.originalText || 'Commit_Order';
+                                }
+                            }
+                        } catch (err) {
+                            setError('TRANSMISSION_REJECTED');
+                            if (submitBtn) {
+                                submitBtn.disabled = false;
+                                submitBtn.textContent = submitBtn.dataset.originalText || 'Commit_Order';
+                            }
                         }
                     });
                 });
