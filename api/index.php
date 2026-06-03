@@ -7,7 +7,7 @@
 #   RELEASE : 2026/05/15
 
 // CORS headers set after origin check below
-header("Access-Control-Allow-Headers: Authorization, Content-Type, X-API-Key");
+header("Access-Control-Allow-Headers: Authorization, Content-Type, X-API-Key, X-Customer-Token");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Content-Type: application/json; charset=UTF-8");
 
@@ -136,6 +136,13 @@ if (empty($api_key)) {
     exit;
 }
 
+// --- Customer token (optional, additive — never replaces store API key) ---
+function extract_customer_token(): ?string {
+    $tok = $_SERVER['HTTP_X_CUSTOMER_TOKEN'] ?? '';
+    $tok = is_string($tok) ? trim($tok) : '';
+    return $tok === '' ? null : $tok;
+}
+
 // Verify API key against private database
 $key_record = $private_db->query("SELECT * FROM api_keys WHERE api_key = ? AND active = 1 LIMIT 1", [$api_key]);
 
@@ -167,6 +174,7 @@ if (!file_exists($public_db_path)) {
 
 @include_once dirname(__FILE__) . "/../module/database.php";
 $db = new database_manager($public_db_path);
+@include_once dirname(__FILE__) . "/../module/customer_auth.php";
 
 // --- Helper: enrich cart items with product details ---
 function enrich_cart($items_json, $public_db) {
@@ -434,6 +442,19 @@ if ($method === 'GET') {
         } else {
             echo json_encode(["success" => true, "data" => $cart_data]);
         }
+    }
+
+    // --- Customer auth: GET customer_me ---
+    elseif ($request == "customer_me") {
+        $token = extract_customer_token();
+        $customer = customer_resolve_token($db, $token);
+        if ($customer === null) {
+            http_response_code(401);
+            echo json_encode(["ok" => false, "error" => "Invalid or expired token"]);
+            exit;
+        }
+        echo json_encode(["ok" => true, "customer" => $customer]);
+        exit;
     }
 
     else {
@@ -755,6 +776,40 @@ elseif ($method === 'POST') {
                 "redirect_url" => $redirect_url
             ]
         ]);
+    }
+
+    // --- Customer auth: POST customer_register ---
+    elseif ($request == "customer_register") {
+        $email = $input['email'] ?? '';
+        $password = $input['password'] ?? '';
+        $name = $input['name'] ?? null;
+        $phone = $input['phone'] ?? null;
+        $result = customer_register($db, $email, $password, $name, $phone);
+        if (!$result['ok']) {
+            http_response_code(400);
+        }
+        echo json_encode($result);
+        exit;
+    }
+
+    // --- Customer auth: POST customer_login ---
+    elseif ($request == "customer_login") {
+        $email = $input['email'] ?? '';
+        $password = $input['password'] ?? '';
+        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+        $result = customer_login($db, $email, $password, $userAgent);
+        if (!$result['ok']) {
+            http_response_code(stripos($result['error'] ?? '', 'locked') !== false ? 429 : 401);
+        }
+        echo json_encode($result);
+        exit;
+    }
+
+    // --- Customer auth: POST customer_logout ---
+    elseif ($request == "customer_logout") {
+        $token = extract_customer_token();
+        echo json_encode(customer_logout($db, $token));
+        exit;
     }
 
     else {
