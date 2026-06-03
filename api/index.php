@@ -175,6 +175,7 @@ if (!file_exists($public_db_path)) {
 @include_once dirname(__FILE__) . "/../module/database.php";
 $db = new database_manager($public_db_path);
 @include_once dirname(__FILE__) . "/../module/customer_auth.php";
+@include_once dirname(__FILE__) . "/../module/customer_account.php";
 
 // --- Helper: enrich cart items with product details ---
 function enrich_cart($items_json, $public_db) {
@@ -454,6 +455,32 @@ if ($method === 'GET') {
             exit;
         }
         echo json_encode(["ok" => true, "customer" => $customer]);
+        exit;
+    }
+
+    // --- Customer account: GET customer_my_orders ---
+    elseif ($request == "customer_my_orders") {
+        $token = extract_customer_token();
+        $customer = customer_resolve_token($db, $token);
+        if ($customer === null) {
+            http_response_code(401);
+            echo json_encode(["ok" => false, "error" => "Invalid or expired token"]);
+            exit;
+        }
+        echo json_encode(customer_my_orders($db, (int)$customer['id']));
+        exit;
+    }
+
+    // --- Customer account: GET customer_addresses ---
+    elseif ($request == "customer_addresses") {
+        $token = extract_customer_token();
+        $customer = customer_resolve_token($db, $token);
+        if ($customer === null) {
+            http_response_code(401);
+            echo json_encode(["ok" => false, "error" => "Invalid or expired token"]);
+            exit;
+        }
+        echo json_encode(customer_addresses_list($db, (int)$customer['id']));
         exit;
     }
 
@@ -810,6 +837,131 @@ elseif ($method === 'POST') {
     elseif ($request == "customer_logout") {
         $token = extract_customer_token();
         echo json_encode(customer_logout($db, $token));
+        exit;
+    }
+
+    // --- Customer account: POST customer_update_profile ---
+    elseif ($request == "customer_update_profile") {
+        $token = extract_customer_token();
+        $customer = customer_resolve_token($db, $token);
+        if ($customer === null) {
+            http_response_code(401);
+            echo json_encode(["ok" => false, "error" => "Invalid or expired token"]);
+            exit;
+        }
+        $name = $input['name'] ?? null;
+        $phone = $input['phone'] ?? null;
+        $result = customer_update_profile($db, (int)$customer['id'], $name, $phone);
+        if (!$result['ok']) {
+            http_response_code(400);
+        }
+        echo json_encode($result);
+        exit;
+    }
+
+    // --- Customer account: POST customer_change_password ---
+    elseif ($request == "customer_change_password") {
+        $token = extract_customer_token();
+        $customer = customer_resolve_token($db, $token);
+        if ($customer === null) {
+            http_response_code(401);
+            echo json_encode(["ok" => false, "error" => "Invalid or expired token"]);
+            exit;
+        }
+        $currentPw = $input['current_password'] ?? '';
+        $newPw = $input['new_password'] ?? '';
+        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+        $result = customer_change_password($db, (int)$customer['id'], $currentPw, $newPw, $userAgent);
+        if (!$result['ok']) {
+            http_response_code(stripos($result['error'] ?? '', 'current password') !== false ? 401 : 400);
+        }
+        echo json_encode($result);
+        exit;
+    }
+
+    // --- Customer account: POST customer_address_create ---
+    elseif ($request == "customer_address_create") {
+        $token = extract_customer_token();
+        $customer = customer_resolve_token($db, $token);
+        if ($customer === null) {
+            http_response_code(401);
+            echo json_encode(["ok" => false, "error" => "Invalid or expired token"]);
+            exit;
+        }
+        $result = customer_address_create($db, (int)$customer['id'], is_array($input) ? $input : []);
+        if (!$result['ok']) {
+            http_response_code(400);
+        }
+        echo json_encode($result);
+        exit;
+    }
+
+    // --- Customer account: POST customer_address_update ---
+    elseif ($request == "customer_address_update") {
+        $token = extract_customer_token();
+        $customer = customer_resolve_token($db, $token);
+        if ($customer === null) {
+            http_response_code(401);
+            echo json_encode(["ok" => false, "error" => "Invalid or expired token"]);
+            exit;
+        }
+        $addressId = (int)($input['id'] ?? 0);
+        if ($addressId <= 0) {
+            http_response_code(400);
+            echo json_encode(["ok" => false, "error" => "id is required"]);
+            exit;
+        }
+        $result = customer_address_update($db, (int)$customer['id'], $addressId, $input);
+        if (!$result['ok']) {
+            http_response_code(stripos($result['error'] ?? '', 'not found') !== false ? 404 : 400);
+        }
+        echo json_encode($result);
+        exit;
+    }
+
+    // --- Customer account: POST customer_address_delete ---
+    elseif ($request == "customer_address_delete") {
+        $token = extract_customer_token();
+        $customer = customer_resolve_token($db, $token);
+        if ($customer === null) {
+            http_response_code(401);
+            echo json_encode(["ok" => false, "error" => "Invalid or expired token"]);
+            exit;
+        }
+        $addressId = (int)($input['id'] ?? 0);
+        if ($addressId <= 0) {
+            http_response_code(400);
+            echo json_encode(["ok" => false, "error" => "id is required"]);
+            exit;
+        }
+        $result = customer_address_delete($db, (int)$customer['id'], $addressId);
+        if (!$result['ok']) {
+            http_response_code(stripos($result['error'] ?? '', 'not found') !== false ? 404 : 400);
+        }
+        echo json_encode($result);
+        exit;
+    }
+
+    // --- Customer account: POST customer_address_set_default ---
+    elseif ($request == "customer_address_set_default") {
+        $token = extract_customer_token();
+        $customer = customer_resolve_token($db, $token);
+        if ($customer === null) {
+            http_response_code(401);
+            echo json_encode(["ok" => false, "error" => "Invalid or expired token"]);
+            exit;
+        }
+        $addressId = (int)($input['id'] ?? 0);
+        if ($addressId <= 0) {
+            http_response_code(400);
+            echo json_encode(["ok" => false, "error" => "id is required"]);
+            exit;
+        }
+        $result = customer_address_set_default($db, (int)$customer['id'], $addressId);
+        if (!$result['ok']) {
+            http_response_code(stripos($result['error'] ?? '', 'not found') !== false ? 404 : 400);
+        }
+        echo json_encode($result);
         exit;
     }
 
