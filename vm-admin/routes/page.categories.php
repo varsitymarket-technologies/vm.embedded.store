@@ -30,8 +30,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     } elseif ($action === 'delete_category') {
         $id = $_POST['id'] ?? 0;
-        $sql = "DELETE FROM categories WHERE id = ?";
-        $db->query($sql, [$id]);
+        // Detach products before deleting: products.category_id REFERENCES
+        // categories(id) with no ON DELETE action, and FK enforcement is
+        // enabled per-connection, so a raw DELETE would fail when the
+        // category has products. Null the link first to preserve the
+        // pre-FK-enforcement behavior (orphan products with NULL category).
+        $db->query("UPDATE products SET category_id = NULL WHERE category_id = ?", [$id]);
+        $db->query("DELETE FROM categories WHERE id = ?", [$id]);
 
         echo "<script>window.location.href = window.location.href;</script>";
         exit;

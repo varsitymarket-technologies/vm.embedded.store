@@ -306,7 +306,9 @@ additionally read `X-Customer-Token` where stated.
 
 **Failures:**
 - 401 `{ "ok": false, "error": "Invalid email or password" }`
-- 429 `{ "ok": false, "error": "Account temporarily locked. Try again later." }`
+- 429 `{ "ok": false, "error": "Account temporarily locked. Try again later.", "code": "locked" }`
+
+The `code` field is a structured marker the API layer uses to decide between 429 and 401 without pattern-matching on the error message. Clients may also key UI behavior off `code` rather than parsing `error`.
 
 ### `GET ?state=customer_me`
 
