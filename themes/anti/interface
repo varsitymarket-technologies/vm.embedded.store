@@ -950,22 +950,42 @@
             }
         }
 
-        function login() {
-            const email = document.getElementById('login-email').value;
-            if (email && email.includes('@')) {
-                userSession = { email };
-                localStorage.setItem('vm_user_session', JSON.stringify(userSession));
-                document.getElementById('nav-account').textContent = 'Profile';
-                showView('dashboard');
-            } else {
-                alert('Please enter a valid email.');
+        async function login(email, password) {
+            const result = await postStore('customer_login', { email, password });
+            if (result.ok && result.data.token && result.data.customer) {
+                customerAuth.token = result.data.token;
+                customerAuth.user = result.data.customer;
+                localStorage.setItem('vm_customer_token', result.data.token);
+                localStorage.setItem('vm_customer_cache', JSON.stringify(result.data.customer));
+                applyCustomerToDom();
+                document.dispatchEvent(new CustomEvent('vm:customer-login', { detail: result.data.customer }));
+                return { ok: true };
             }
+            return { ok: false, error: result.error || 'Sign-in failed. Check your email and password.' };
         }
 
-        function logout() {
-            userSession = null;
-            localStorage.removeItem('vm_user_session');
-            document.getElementById('nav-account').textContent = 'Account';
+        async function register(email, password, name) {
+            const result = await postStore('customer_register', { email, password, name });
+            if (result.ok && result.data.token && result.data.customer) {
+                customerAuth.token = result.data.token;
+                customerAuth.user = result.data.customer;
+                localStorage.setItem('vm_customer_token', result.data.token);
+                localStorage.setItem('vm_customer_cache', JSON.stringify(result.data.customer));
+                applyCustomerToDom();
+                document.dispatchEvent(new CustomEvent('vm:customer-login', { detail: result.data.customer }));
+                return { ok: true };
+            }
+            return { ok: false, error: result.error || 'Could not create account.' };
+        }
+
+        async function logout() {
+            try { await postStore('customer_logout', {}); } catch {}
+            customerAuth.token = null;
+            customerAuth.user = null;
+            localStorage.removeItem('vm_customer_token');
+            localStorage.removeItem('vm_customer_cache');
+            applyCustomerToDom();
+            document.dispatchEvent(new CustomEvent('vm:customer-logout'));
             showView('shop');
         }
 
