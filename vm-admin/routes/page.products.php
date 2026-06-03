@@ -46,6 +46,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
+        if (($_FILES['file']['size'] ?? 0) > 20 * 1024 * 1024) {
+            echo json_encode(['ok' => false, 'error' => 'File exceeds 20 MB limit']);
+            exit;
+        }
+
         $tmp = $_FILES['file']['tmp_name'];
         $parsed = parse_shopify_csv($tmp);
         if (!$parsed['ok']) {
@@ -95,6 +100,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
+        if (($_FILES['file']['size'] ?? 0) > 20 * 1024 * 1024) {
+            echo json_encode(['ok' => false, 'error' => 'File exceeds 20 MB limit']);
+            exit;
+        }
+
         $tmp = $_FILES['file']['tmp_name'];
         $parsed = parse_shopify_csv($tmp);
         if (!$parsed['ok']) {
@@ -138,28 +148,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $counts['errors'][] = ['name' => $row['name'], 'reason' => $row['parse_error']];
                     continue;
                 }
-                try {
-                    $categoryId = $resolveCategory($row['category']);
-                    $existing = $db->query(
-                        "SELECT id FROM products WHERE LOWER(name) = LOWER(?) LIMIT 1",
-                        [$row['name']]
-                    );
-                    if (!empty($existing)) {
-                        $db->query(
-                            "UPDATE products SET description = ?, price = ?, stock = ?, image = ?, category_id = ? WHERE id = ?",
-                            [$row['description'], $row['price'], $row['stock'], $row['image'], $categoryId, $existing[0]['id']]
-                        );
-                        $counts['updated']++;
-                    } else {
-                        $db->query(
-                            "INSERT INTO products (name, description, price, stock, image, category_id) VALUES (?, ?, ?, ?, ?, ?)",
-                            [$row['name'], $row['description'], $row['price'], $row['stock'], $row['image'], $categoryId]
-                        );
-                        $counts['inserted']++;
-                    }
-                } catch (Throwable $e) {
+                // database_manager::query() swallows PDOExceptions and returns [];
+                // DB errors during INSERT/UPDATE are logged via trigger_error() but
+                // cannot be detected here. Counts may slightly overstate on DB failure.
+
+                $categoryId = $resolveCategory($row['category']);
+                if ($categoryId === null && $row['category'] !== '') {
                     $counts['skipped']++;
-                    $counts['errors'][] = ['name' => $row['name'], 'reason' => $e->getMessage()];
+                    $counts['errors'][] = [
+                        'name'   => $row['name'],
+                        'reason' => 'Could not resolve or create category: ' . $row['category'],
+                    ];
+                    continue;
+                }
+
+                $existing = $db->query(
+                    "SELECT id FROM products WHERE LOWER(name) = LOWER(?) LIMIT 1",
+                    [$row['name']]
+                );
+                if (!empty($existing)) {
+                    $db->query(
+                        "UPDATE products SET description = ?, price = ?, stock = ?, image = ?, category_id = ? WHERE id = ?",
+                        [$row['description'], $row['price'], $row['stock'], $row['image'], $categoryId, $existing[0]['id']]
+                    );
+                    $counts['updated']++;
+                } else {
+                    $db->query(
+                        "INSERT INTO products (name, description, price, stock, image, category_id) VALUES (?, ?, ?, ?, ?, ?)",
+                        [$row['name'], $row['description'], $row['price'], $row['stock'], $row['image'], $categoryId]
+                    );
+                    $counts['inserted']++;
                 }
             }
             $db->query("COMMIT");
