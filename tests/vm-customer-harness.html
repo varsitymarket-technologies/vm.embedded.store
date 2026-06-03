@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>vm-customer.js test harness</title>
+<style>
+    body { font-family: -apple-system, sans-serif; max-width: 760px; margin: 40px auto; padding: 0 20px; }
+    h1 { font-size: 18px; margin-bottom: 4px; }
+    .meta { color: #666; font-size: 12px; margin-bottom: 24px; }
+    .row { padding: 8px 12px; border-radius: 6px; margin: 4px 0; font-size: 13px; font-family: ui-monospace, monospace; }
+    .pass { background: #e6f7eb; color: #1f6f3a; }
+    .fail { background: #fde7e7; color: #8a1f1f; }
+    .info { background: #f0f0f0; color: #444; }
+    button { padding: 8px 14px; background: #222; color: #fff; border: 0; border-radius: 6px; cursor: pointer; }
+    input { padding: 6px 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
+    label { display: block; margin: 8px 0 4px; color: #555; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<h1>vm-customer.js test harness</h1>
+<p class="meta">Loads <code>skel/vm-customer.js</code> from this repo and exercises every method. Manual verification — no test framework.</p>
+
+<label>API base URL (POST/GET against this; defaults to a same-origin api.php)</label>
+<input type="text" id="apiBase" value="" placeholder="e.g. http://localhost:8016/sites/debug.com/api.php" size="60">
+<br><br>
+<button onclick="runAll()">Run all tests</button>
+
+<div id="results" style="margin-top: 16px;"></div>
+
+<!-- Inline override BEFORE the vm-customer.js script -->
+<script>
+    // Pre-set the base from the input before vm-customer.js initializes
+    (function () {
+        const params = new URLSearchParams(window.location.search);
+        const fromQs = params.get('api');
+        if (fromQs) {
+            window.VM_CUSTOMER_API_BASE = fromQs;
+            document.getElementById('apiBase').value = fromQs;
+        }
+    })();
+</script>
+<script src="../skel/vm-customer.js" defer></script>
+
+<script>
+const out = document.getElementById('results');
+function row(cls, msg) {
+    const div = document.createElement('div');
+    div.className = 'row ' + cls;
+    div.textContent = msg;
+    out.appendChild(div);
+}
+function pass(msg) { row('pass', 'PASS  ' + msg); }
+function fail(msg) { row('fail', 'FAIL  ' + msg); }
+function info(msg) { row('info', '----  ' + msg); }
+
+async function runAll() {
+    out.innerHTML = '';
+    const inputBase = document.getElementById('apiBase').value.trim();
+    if (inputBase) {
+        // Override at runtime by updating the URL the helper resolves to.
+        // Note: vmCustomer captured BASE at script load. To re-route, we
+        // reload the page with ?api=... .
+        if (window.VM_CUSTOMER_API_BASE !== inputBase) {
+            window.location.search = '?api=' + encodeURIComponent(inputBase);
+            return;
+        }
+    }
+
+    if (typeof window.vmCustomer === 'undefined') {
+        fail('vmCustomer global missing — vm-customer.js did not load');
+        return;
+    }
+
+    const email = 'harness-' + Date.now() + '@x.com';
+    info('Test email: ' + email);
+
+    // 1. Initial state — not logged in
+    if (vmCustomer.isLoggedIn()) {
+        info('Was already logged in — clearing first');
+        await vmCustomer.logout();
+    }
+    if (!vmCustomer.isLoggedIn()) pass('initial state: isLoggedIn=false');
+    else fail('initial state: still logged in after logout');
+
+    // 2. Register
+    try {
+        const r = await vmCustomer.register(email, 'harnesspass1', 'Harness', '555');
+        if (r.ok && r.token && r.token.length === 64) pass('register: ok=true + 64-char token');
+        else fail('register: unexpected response: ' + JSON.stringify(r));
+    } catch (e) {
+        fail('register threw: ' + e.message);
+        return;
+    }
+
+    // 3. isLoggedIn + cached
+    if (vmCustomer.isLoggedIn()) pass('after register: isLoggedIn=true');
+    else fail('after register: isLoggedIn=false');
+    const cached = vmCustomer.cached();
+    if (cached && cached.email === email) pass('after register: cached customer matches');
+    else fail('after register: cached missing or wrong: ' + JSON.stringify(cached));
+
+    // 4. me()
+    try {
+        const r = await vmCustomer.me();
+        if (r.ok && r.customer.email === email) pass('me: returns the registered customer');
+        else fail('me: unexpected: ' + JSON.stringify(r));
+    } catch (e) { fail('me threw: ' + e.message); }
+
+    // 5. myOrders empty
+    try {
+        const r = await vmCustomer.myOrders();
+        if (r.ok && Array.isArray(r.orders) && r.orders.length === 0) pass('myOrders: empty [] for new customer');
+        else fail('myOrders: unexpected: ' + JSON.stringify(r));
+    } catch (e) { fail('myOrders threw: ' + e.message); }
+
+    // 6. updateProfile
+    try {
+        const r = await vmCustomer.updateProfile('Updated Name', '999');
+        if (r.ok && r.customer.name === 'Updated Name' && r.customer.phone === '999') pass('updateProfile: name + phone reflected');
+        else fail('updateProfile: unexpected: ' + JSON.stringify(r));
+    } catch (e) { fail('updateProfile threw: ' + e.message); }
+
+    // 7. changePassword wrong current
+    try {
+        await vmCustomer.changePassword('WRONG', 'newpassword2');
+        fail('changePassword wrong: should have thrown');
+    } catch (e) {
+        // 400 (NOT 401): the X-Customer-Token is valid; the body field is wrong.
+        // 401 would trigger auto-logout, which is incorrect for this case.
+        if (e.status === 400) pass('changePassword wrong current: throws with status=400 (no auto-logout)');
+        else fail('changePassword wrong: wrong error: status=' + e.status + ' code=' + e.code);
+    }
+
+    // 8. changePassword happy + token swap
+    const oldToken = vmCustomer.token();
+    try {
+        const r = await vmCustomer.changePassword('harnesspass1', 'newpassword2');
+        if (r.ok && r.token && r.token !== oldToken && r.token.length === 64) pass('changePassword: new token issued (!= old)');
+        else fail('changePassword: unexpected: ' + JSON.stringify(r));
+        if (vmCustomer.token() === r.token) pass('changePassword: localStorage updated with new token');
+        else fail('changePassword: localStorage did not update token');
+    } catch (e) { fail('changePassword threw: ' + e.message); }
+
+    // 9. logout
+    try {
+        await vmCustomer.logout();
+        if (!vmCustomer.isLoggedIn() && !vmCustomer.token()) pass('logout: localStorage cleared');
+        else fail('logout: state not cleared');
+    } catch (e) { fail('logout threw: ' + e.message); }
+
+    // 10. me after logout
+    try {
+        await vmCustomer.me();
+        fail('me after logout: should have thrown');
+    } catch (e) {
+        if (e.code === 'unauthenticated') pass('me after logout: throws unauthenticated');
+        else fail('me after logout: unexpected error: ' + e.message + ' (code=' + e.code + ')');
+    }
+
+    info('Done.');
+}
+
+// Auto-run on load if api= query param is present
+window.addEventListener('vm:customer-loaded', function (e) {
+    info('Event: vm:customer-loaded → ' + (e.detail && e.detail.customer ? e.detail.customer.email : '?'));
+});
+window.addEventListener('vm:customer-login', function (e) {
+    info('Event: vm:customer-login → ' + (e.detail && e.detail.customer ? e.detail.customer.email : '?'));
+});
+window.addEventListener('vm:customer-logout', function () {
+    info('Event: vm:customer-logout');
+});
+</script>
+
+</body>
+</html>

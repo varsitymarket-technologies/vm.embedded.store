@@ -365,7 +365,11 @@ elseif ($method === 'POST') {
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
         $result = customer_change_password($db, (int)$customer['id'], $currentPw, $newPw, $userAgent);
         if (!$result['ok']) {
-            http_response_code(stripos($result['error'] ?? '', 'current password') !== false ? 401 : 400);
+            // Both wrong-current-password and short-new-password are 400:
+            // the X-Customer-Token IS valid (the user IS authenticated);
+            // the body fields are wrong. Returning 401 here would trigger
+            // the vm-customer.js auto-logout path, which is incorrect.
+            http_response_code(400);
         }
         echo json_encode($result);
         exit;
