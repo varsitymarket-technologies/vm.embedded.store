@@ -109,7 +109,7 @@ $sql_customers = "CREATE TABLE IF NOT EXISTS customers (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 )";
 $db->query($sql_customers);
-$db->query("CREATE INDEX IF NOT EXISTS idx_customers_email ON customers(email)");
+$db->query("CREATE INDEX IF NOT EXISTS idx_customers_email ON customers(email COLLATE NOCASE)");
 
 // 7. Customer Sessions Table (bearer tokens)
 $sql_customer_sessions = "CREATE TABLE IF NOT EXISTS customer_sessions (

@@ -63,6 +63,9 @@ class database_manager
             $this->pdo = new PDO("sqlite:" . $this->dbPath);
             // Set error mode to exceptions for better error handling
             $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            // Enable foreign key constraint enforcement (off by default in SQLite,
+            // per-connection setting that is not persisted in the DB file).
+            $this->pdo->exec("PRAGMA foreign_keys = ON");
             return TRUE; // Return true on successful connection
         } catch (PDOException $e) {
             // Catch and display any connection errors
