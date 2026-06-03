@@ -477,6 +477,37 @@
         </div>
     </div>
 
+    <!-- AUTH MODAL -->
+    <div id="auth-modal" class="modal-overlay fixed inset-0 z-[80] bg-black/60 flex items-center justify-center px-6">
+        <div class="bg-brand-card border border-brand-border rounded-3xl shadow-2xl w-full max-w-md p-10 relative">
+            <button onclick="closeAuthModal()" type="button" class="absolute top-6 right-6 text-brand-mute hover:text-white text-2xl leading-none">×</button>
+
+            <div class="flex gap-2 mb-8 border-b border-brand-border">
+                <button data-tab="login" type="button" class="auth-tab text-white font-bold pb-4 px-4 border-b-2 border-white">Sign In</button>
+                <button data-tab="register" type="button" class="auth-tab text-brand-mute pb-4 px-4 border-b-2 border-transparent hover:text-white transition-colors">Create</button>
+            </div>
+
+            <div class="auth-mode-login">
+                <form class="space-y-4 js-login-form" data-form="login">
+                    <input type="email" name="email" placeholder="Email Address" required class="w-full bg-brand-bg border border-brand-border p-4 rounded-xl text-white outline-none focus:border-white transition-colors">
+                    <input type="password" name="password" placeholder="Password" required class="w-full bg-brand-bg border border-brand-border p-4 rounded-xl text-white outline-none focus:border-white transition-colors">
+                    <button type="submit" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-colors transform active:scale-[0.98]">Sign In →</button>
+                    <p class="text-xs text-red-400 hidden js-login-error" data-err="login"></p>
+                </form>
+            </div>
+
+            <div class="auth-mode-register hidden">
+                <form class="space-y-4 js-register-form" data-form="register">
+                    <input type="text" name="name" placeholder="Display Name" class="w-full bg-brand-bg border border-brand-border p-4 rounded-xl text-white outline-none focus:border-white transition-colors">
+                    <input type="email" name="email" placeholder="Email Address" required class="w-full bg-brand-bg border border-brand-border p-4 rounded-xl text-white outline-none focus:border-white transition-colors">
+                    <input type="password" name="password" placeholder="Password (8+ characters)" required minlength="8" class="w-full bg-brand-bg border border-brand-border p-4 rounded-xl text-white outline-none focus:border-white transition-colors">
+                    <button type="submit" class="w-full bg-white text-black font-bold py-4 rounded-xl hover:bg-gray-200 transition-colors transform active:scale-[0.98]">Create Account →</button>
+                    <p class="text-xs text-red-400 hidden js-register-error" data-err="register"></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- CHECKOUT MODAL -->
     <div id="checkout-modal" class="modal-overlay fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 overflow-y-auto">
         <div class="bg-brand-bg border border-brand-border w-full max-w-2xl rounded-2xl p-8 max-h-[90vh] overflow-y-auto">
