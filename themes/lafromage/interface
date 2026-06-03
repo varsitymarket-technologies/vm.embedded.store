@@ -270,6 +270,17 @@
         </section>
     </template>
 
+    <template id="tpl-search">
+        <section class="max-w-7xl mx-auto px-10 py-20 reveal">
+            <div class="flex justify-between items-end mb-12">
+                <h2 class="font-display font-black text-6xl uppercase italic">Query_The_Archive</h2>
+            </div>
+            <input type="search" class="js-search-input w-full bg-transparent specimen-border border-b-2 border-transparent border-b-archive-ink py-4 font-mono text-xl uppercase tracking-wider placeholder:opacity-30 focus:outline-none mb-12" placeholder="SEARCH...">
+            <p class="text-[10px] tracking-[0.5em] uppercase opacity-40 mb-12 js-search-meta">Awaiting_Query</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 js-search-grid"></div>
+        </section>
+    </template>
+
     <script>
         const DB = {
             currency: 'USD',
@@ -311,6 +322,7 @@
                     case 'cart': this.renderCart(); break;
                     case 'account': this.renderAccount(); break;
                     case 'checkout': this.renderCheckout(); break;
+                    case 'search': this.renderSearch(); break;
                     default: this.renderTemplate('tpl-home'); break;
                 }
                 window.scrollTo(0, 0);
@@ -323,19 +335,26 @@
                 if (callback) callback.call(this, this.root);
             }
 
+            renderProductCard(product, grid) {
+                const prodTpl = document.getElementById('tpl-product-card');
+                const card = prodTpl.content.cloneNode(true);
+                const link = card.querySelector('.js-prod-link');
+                if (link) link.onclick = () => window.location.hash = `product/${product.id}`;
+                const title = card.querySelector('.js-title');
+                if (title) title.textContent = product.title || product.name || '';
+                const cat = card.querySelector('.js-category');
+                if (cat) cat.textContent = product.category || '';
+                const price = card.querySelector('.js-price');
+                if (price) price.textContent = `${product.price} ${DB.currency}`;
+                const img = card.querySelector('img');
+                if (img) img.src = product.img || product.image || '';
+                grid.appendChild(card);
+            }
+
             renderShop() {
                 this.renderTemplate('tpl-shop', (view) => {
                     const grid = view.querySelector('.js-product-grid');
-                    const prodTpl = document.getElementById('tpl-product-card');
-                    DB.products.forEach(p => {
-                        const card = prodTpl.content.cloneNode(true);
-                        card.querySelector('.js-prod-link').onclick = () => window.location.hash = `product/${p.id}`;
-                        card.querySelector('.js-title').textContent = p.title;
-                        card.querySelector('.js-category').textContent = p.category;
-                        card.querySelector('.js-price').textContent = `${p.price} ${DB.currency}`;
-                        card.querySelector('img').src = p.img;
-                        grid.appendChild(card);
-                    });
+                    DB.products.forEach(p => this.renderProductCard(p, grid));
                 });
             }
 
@@ -707,6 +726,41 @@
                             }
                         }
                     });
+                });
+            }
+
+            renderSearch() {
+                this.renderTemplate('tpl-search', (view) => {
+                    const input = view.querySelector('.js-search-input');
+                    const grid = view.querySelector('.js-search-grid');
+                    const meta = view.querySelector('.js-search-meta');
+                    const run = async (q) => {
+                        const query = (q || '').trim();
+                        if (!query) {
+                            grid.innerHTML = '';
+                            meta.textContent = 'AWAITING_QUERY';
+                            return;
+                        }
+                        meta.textContent = 'QUERYING...';
+                        let results = [];
+                        try { results = await fetchStore('search', { q: query }); } catch { results = []; }
+                        if (!Array.isArray(results)) results = [];
+                        grid.innerHTML = '';
+                        meta.textContent = 'RESULTS [' + results.length + ']';
+                        results.forEach(p => this.renderProductCard({
+                            id: p.id,
+                            title: p.title || p.name,
+                            price: p.price,
+                            category: p.category || '',
+                            img: p.img || p.image
+                        }, grid));
+                    };
+                    input.addEventListener('input', (e) => {
+                        clearTimeout(this.searchDebounceTimer);
+                        const v = e.target.value;
+                        this.searchDebounceTimer = setTimeout(() => run(v), 250);
+                    });
+                    input.focus();
                 });
             }
         }
