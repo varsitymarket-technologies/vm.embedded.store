@@ -319,6 +319,8 @@
                         return;
                     }
                     this.cart.forEach((item, index) => {
+                        const qty = item.qty || 1;
+                        const lineTotal = (Number(item.price) || 0) * qty;
                         const row = document.createElement('div');
                         row.className = "p-10 bg-archive-paper flex justify-between items-center group";
                         row.innerHTML = `
@@ -326,20 +328,56 @@
                                 <span class="text-[9px] opacity-20 font-black">0${index+1}</span>
                                 <h3 class="font-display font-black text-2xl uppercase">${item.title}</h3>
                             </div>
-                            <div class="flex items-center space-x-12">
-                                <span class="font-bold text-sm">${item.price} ${DB.currency}</span>
-                                <button class="text-[9px] font-black hover:line-through js-remove">PURGE</button>
+                            <div class="flex items-center space-x-10">
+                                <div class="flex items-center space-x-3 specimen-border px-3 py-1">
+                                    <button class="text-xs font-black hover:line-through js-qty-down" type="button">-</button>
+                                    <span class="text-xs font-mono w-6 text-center js-qty">${qty}</span>
+                                    <button class="text-xs font-black hover:line-through js-qty-up" type="button">+</button>
+                                </div>
+                                <span class="font-bold text-sm js-line-total">${lineTotal} ${DB.currency}</span>
+                                <button class="text-[9px] font-black hover:line-through js-remove" type="button">PURGE</button>
                             </div>
                         `;
-                        row.querySelector('.js-remove').onclick = () => { this.cart.splice(index, 1); this.cartSave(); this.renderCart(); };
+                        row.querySelector('.js-qty-down').onclick = () => {
+                            const current = item.qty || 1;
+                            if (current <= 1) return;
+                            item.qty = current - 1;
+                            this.cartSave();
+                            this.renderCart();
+                        };
+                        row.querySelector('.js-qty-up').onclick = () => {
+                            item.qty = (item.qty || 1) + 1;
+                            this.cartSave();
+                            this.renderCart();
+                        };
+                        row.querySelector('.js-remove').onclick = () => {
+                            this.cart.splice(index, 1);
+                            this.cartSave();
+                            this.renderCart();
+                        };
                         container.appendChild(row);
                     });
+
+                    const total = this.cart.reduce((sum, it) => sum + ((Number(it.price) || 0) * (it.qty || 1)), 0);
+                    const footer = document.createElement('div');
+                    footer.className = 'mt-10 specimen-border p-8 flex justify-between items-center';
+                    footer.innerHTML = `
+                        <span class="text-[10px] tracking-[0.5em] uppercase opacity-60">Subtotal: <span class="font-bold ml-4">${total} ${DB.currency}</span></span>
+                        <a href="#checkout" class="bg-archive-ink text-archive-paper px-12 py-4 font-display font-black uppercase text-sm hover:scale-105 transition-transform">
+                            Proceed_To_Transmission
+                        </a>
+                    `;
+                    mainView.querySelector('section').appendChild(footer);
                 });
             }
 
             cartAdd(product) {
                 const existing = this.cart.find(item => item.id === product.id);
-                if (!existing) this.cart.push({ ...product, qty: 1 });
+                if (existing) {
+                    existing.qty = (existing.qty || 1) + 1;
+                } else {
+                    this.cart.push({ ...product, qty: 1 });
+                }
                 this.cartSave();
             }
 
@@ -349,7 +387,7 @@
             }
 
             updateCartCount() {
-                const count = this.cart.length;
+                const count = this.cart.reduce((sum, it) => sum + (it.qty || 1), 0);
                 document.querySelectorAll('.js-cart-count').forEach(el => el.textContent = count);
             }
 
