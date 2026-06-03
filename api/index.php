@@ -486,6 +486,7 @@ if ($method === 'GET') {
 // =====================
 elseif ($method === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
+    if (!is_array($input)) { $input = []; }   // guard against null / non-array body
 
     if ($request == "order") {
         $customer_name = $input['name'] ?? '';
@@ -799,7 +800,7 @@ elseif ($method === 'POST') {
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
         $result = customer_login($db, $email, $password, $userAgent);
         if (!$result['ok']) {
-            http_response_code(stripos($result['error'] ?? '', 'locked') !== false ? 429 : 401);
+            http_response_code(($result['code'] ?? '') === 'locked' ? 429 : 401);
         }
         echo json_encode($result);
         exit;

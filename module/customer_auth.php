@@ -89,7 +89,11 @@ function customer_login(database_manager $db, string $email, string $password, ?
     if (!empty($customer['locked_until'])) {
         $lockedUntil = strtotime($customer['locked_until']);
         if ($lockedUntil !== false && $lockedUntil > time()) {
-            return ['ok' => false, 'error' => 'Account temporarily locked. Try again later.'];
+            return [
+                'ok' => false,
+                'error' => 'Account temporarily locked. Try again later.',
+                'code' => 'locked',
+            ];
         }
     }
 
