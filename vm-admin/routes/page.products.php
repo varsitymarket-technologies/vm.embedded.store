@@ -732,7 +732,13 @@ foreach ($products as $p) {
 
         // Close modal on Escape key
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeModal();
+            if (e.key !== 'Escape') return;
+            const importModal = document.getElementById('importModal');
+            if (importModal && !importModal.classList.contains('hidden')) {
+                closeImportModal();
+            } else {
+                closeModal();
+            }
         });
 
         // --- Client-side Filtering ---
@@ -859,6 +865,7 @@ foreach ($products as $p) {
                 fd.append('action', 'preview_shopify_import');
                 fd.append('file', importFile);
                 const res = await fetch(window.location.href, { method: 'POST', body: fd, credentials: 'same-origin' });
+                if (!res.ok) throw new Error('Server error ' + res.status);
                 const data = await res.json();
                 if (!data.ok) { importShowUploadError(data.error || 'Failed to parse CSV'); return; }
                 importRenderPreview(data);
@@ -893,13 +900,14 @@ foreach ($products as $p) {
                     </td>
                     <td class="px-2 py-1.5 align-top">${r.category ? esc(r.category) : '<span class="text-gray-600 italic">—</span>'}</td>
                     <td class="px-2 py-1.5 align-top text-right tabular-nums">${r.price != null ? Number(r.price).toFixed(2) : '—'}</td>
-                    <td class="px-2 py-1.5 align-top text-right tabular-nums">${r.stock != null ? r.stock : '—'}</td>
+                    <td class="px-2 py-1.5 align-top text-right tabular-nums">${r.stock != null ? esc(r.stock) : '—'}</td>
                 `;
                 body.appendChild(tr);
             });
         }
 
         async function importConfirm() {
+            if (!importFile) return;
             const btn = document.getElementById('importConfirmBtn');
             const label = document.getElementById('importConfirmLabel');
             btn.disabled = true;
@@ -909,6 +917,7 @@ foreach ($products as $p) {
                 fd.append('action', 'commit_shopify_import');
                 fd.append('file', importFile);
                 const res = await fetch(window.location.href, { method: 'POST', body: fd, credentials: 'same-origin' });
+                if (!res.ok) throw new Error('Server error ' + res.status);
                 const data = await res.json();
                 if (!data.ok) {
                     importShowUploadError(data.error || 'Import failed');
@@ -963,11 +972,13 @@ foreach ($products as $p) {
                     e.preventDefault(); e.stopPropagation();
                     dz.classList.add('ring-2', 'ring-purple-500/40');
                 }));
-                ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => {
+                dz.addEventListener('dragleave', e => {
                     e.preventDefault(); e.stopPropagation();
                     dz.classList.remove('ring-2', 'ring-purple-500/40');
-                }));
+                });
                 dz.addEventListener('drop', e => {
+                    e.preventDefault(); e.stopPropagation();
+                    dz.classList.remove('ring-2', 'ring-purple-500/40');
                     const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
                     if (f) importHandleFile(f);
                 });
