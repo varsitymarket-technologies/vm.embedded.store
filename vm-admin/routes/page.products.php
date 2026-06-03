@@ -775,4 +775,202 @@ foreach ($products as $p) {
         if (searchInput) searchInput.addEventListener('input', filterProducts);
         if (categoryFilter) categoryFilter.addEventListener('change', filterProducts);
         if (stockFilter) stockFilter.addEventListener('change', filterProducts);
+
+        // --- Shopify Import Modal ---
+        const importMaxBytes = 20 * 1024 * 1024;
+        let importFile = null;
+
+        function importSwitchState(stateId) {
+            ['importStateUpload', 'importStatePreview', 'importStateResult'].forEach(id => {
+                document.getElementById(id).classList.toggle('hidden', id !== stateId);
+            });
+            document.getElementById('importBackBtn').classList.toggle('hidden', stateId !== 'importStatePreview');
+            document.getElementById('importCancelBtn').classList.toggle('hidden', stateId === 'importStateResult');
+            document.getElementById('importConfirmBtn').classList.toggle('hidden', stateId !== 'importStatePreview');
+            document.getElementById('importDoneBtn').classList.toggle('hidden', stateId !== 'importStateResult');
+        }
+
+        function openImportModal() {
+            const modal = document.getElementById('importModal');
+            const backdrop = document.getElementById('importBackdrop');
+            const panel = document.getElementById('importPanel');
+            importResetUploadState();
+            importSwitchState('importStateUpload');
+            modal.classList.remove('hidden');
+            requestAnimationFrame(() => {
+                backdrop.classList.remove('opacity-0');
+                backdrop.classList.add('opacity-100');
+                panel.classList.remove('scale-95', 'opacity-0');
+                panel.classList.add('scale-100', 'opacity-100');
+            });
+        }
+
+        function closeImportModal() {
+            const modal = document.getElementById('importModal');
+            const backdrop = document.getElementById('importBackdrop');
+            const panel = document.getElementById('importPanel');
+            backdrop.classList.remove('opacity-100');
+            backdrop.classList.add('opacity-0');
+            panel.classList.remove('scale-100', 'opacity-100');
+            panel.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        function importResetUploadState() {
+            importFile = null;
+            const input = document.getElementById('importFileInput');
+            if (input) input.value = '';
+            const err = document.getElementById('importUploadError');
+            err.classList.add('hidden');
+            err.textContent = '';
+        }
+
+        function importGoToUpload() {
+            importResetUploadState();
+            importSwitchState('importStateUpload');
+        }
+
+        function importShowUploadError(msg) {
+            const err = document.getElementById('importUploadError');
+            err.textContent = msg;
+            err.classList.remove('hidden');
+        }
+
+        function importValidateFile(file) {
+            if (!file) return 'No file selected';
+            if (file.size > importMaxBytes) return 'File is larger than 20 MB';
+            const name = (file.name || '').toLowerCase();
+            if (!name.endsWith('.csv')) return 'Only .csv files are accepted';
+            return null;
+        }
+
+        function importHandleFile(file) {
+            const err = importValidateFile(file);
+            if (err) { importShowUploadError(err); return; }
+            importFile = file;
+            importRequestPreview();
+        }
+
+        async function importRequestPreview() {
+            const dz = document.getElementById('importDropzone');
+            dz.classList.add('opacity-50', 'pointer-events-none');
+            try {
+                const fd = new FormData();
+                fd.append('action', 'preview_shopify_import');
+                fd.append('file', importFile);
+                const res = await fetch(window.location.href, { method: 'POST', body: fd, credentials: 'same-origin' });
+                const data = await res.json();
+                if (!data.ok) { importShowUploadError(data.error || 'Failed to parse CSV'); return; }
+                importRenderPreview(data);
+                importSwitchState('importStatePreview');
+            } catch (e) {
+                importShowUploadError('Network error: ' + e.message);
+            } finally {
+                dz.classList.remove('opacity-50', 'pointer-events-none');
+            }
+        }
+
+        function importRenderPreview(data) {
+            document.getElementById('importSummaryInsert').textContent = data.summary.insert;
+            document.getElementById('importSummaryUpdate').textContent = data.summary.update;
+            document.getElementById('importSummarySkip').textContent = data.summary.skip;
+
+            const body = document.getElementById('importPreviewBody');
+            body.innerHTML = '';
+            const badge = {
+                insert: '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-green-500/10 text-green-400 ring-1 ring-green-500/20 text-[10px] font-semibold uppercase">Insert</span>',
+                update: '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 ring-1 ring-blue-500/20 text-[10px] font-semibold uppercase">Update</span>',
+                skip:   '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-gray-500/10 text-gray-400 ring-1 ring-gray-500/20 text-[10px] font-semibold uppercase">Skip</span>',
+            };
+            const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+            data.rows.forEach(r => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-2 py-1.5 align-top">${badge[r.action] || ''}</td>
+                    <td class="px-2 py-1.5 align-top text-white">
+                        ${esc(r.name)}
+                        ${r.reason ? `<div class="text-[10px] text-gray-500 mt-0.5">${esc(r.reason)}</div>` : ''}
+                    </td>
+                    <td class="px-2 py-1.5 align-top">${r.category ? esc(r.category) : '<span class="text-gray-600 italic">—</span>'}</td>
+                    <td class="px-2 py-1.5 align-top text-right tabular-nums">${r.price != null ? Number(r.price).toFixed(2) : '—'}</td>
+                    <td class="px-2 py-1.5 align-top text-right tabular-nums">${r.stock != null ? r.stock : '—'}</td>
+                `;
+                body.appendChild(tr);
+            });
+        }
+
+        async function importConfirm() {
+            const btn = document.getElementById('importConfirmBtn');
+            const label = document.getElementById('importConfirmLabel');
+            btn.disabled = true;
+            label.textContent = 'Importing…';
+            try {
+                const fd = new FormData();
+                fd.append('action', 'commit_shopify_import');
+                fd.append('file', importFile);
+                const res = await fetch(window.location.href, { method: 'POST', body: fd, credentials: 'same-origin' });
+                const data = await res.json();
+                if (!data.ok) {
+                    importShowUploadError(data.error || 'Import failed');
+                    importSwitchState('importStateUpload');
+                    return;
+                }
+                importRenderResult(data.counts);
+                importSwitchState('importStateResult');
+            } catch (e) {
+                importShowUploadError('Network error: ' + e.message);
+                importSwitchState('importStateUpload');
+            } finally {
+                btn.disabled = false;
+                label.textContent = 'Confirm Import';
+            }
+        }
+
+        function importRenderResult(counts) {
+            const detail = `${counts.inserted} new, ${counts.updated} updated, ${counts.skipped} skipped`;
+            document.getElementById('importResultDetail').textContent = detail;
+            const errBlock = document.getElementById('importResultErrors');
+            const errList = document.getElementById('importResultErrorList');
+            errList.innerHTML = '';
+            if (counts.errors && counts.errors.length > 0) {
+                counts.errors.forEach(e => {
+                    const li = document.createElement('li');
+                    li.textContent = `${e.name}: ${e.reason}`;
+                    errList.appendChild(li);
+                });
+                errBlock.classList.remove('hidden');
+            } else {
+                errBlock.classList.add('hidden');
+            }
+        }
+
+        function importFinish() {
+            window.location.reload();
+        }
+
+        // Wire up file input + drag-and-drop on the dropzone.
+        (function importInit() {
+            const input = document.getElementById('importFileInput');
+            const dz = document.getElementById('importDropzone');
+            if (input) {
+                input.addEventListener('change', e => {
+                    const f = e.target.files && e.target.files[0];
+                    if (f) importHandleFile(f);
+                });
+            }
+            if (dz) {
+                ['dragenter', 'dragover'].forEach(ev => dz.addEventListener(ev, e => {
+                    e.preventDefault(); e.stopPropagation();
+                    dz.classList.add('ring-2', 'ring-purple-500/40');
+                }));
+                ['dragleave', 'drop'].forEach(ev => dz.addEventListener(ev, e => {
+                    e.preventDefault(); e.stopPropagation();
+                    dz.classList.remove('ring-2', 'ring-purple-500/40');
+                }));
+                dz.addEventListener('drop', e => {
+                    const f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+                    if (f) importHandleFile(f);
+                });
+            }
+        })();
         </script>
