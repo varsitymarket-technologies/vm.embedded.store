@@ -41,8 +41,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'preview_shopify_import') {
         header('Content-Type: application/json');
 
-        if (empty($_FILES['file']) || ($_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+        if (empty($_FILES['file'])) {
             echo json_encode(['ok' => false, 'error' => 'No file uploaded']);
+            exit;
+        }
+        $uploadErr = $_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE;
+        if ($uploadErr !== UPLOAD_ERR_OK) {
+            $message = 'Upload failed';
+            if ($uploadErr === UPLOAD_ERR_INI_SIZE || $uploadErr === UPLOAD_ERR_FORM_SIZE) {
+                $message = 'File exceeds the server upload size limit';
+            } elseif ($uploadErr === UPLOAD_ERR_NO_FILE) {
+                $message = 'No file uploaded';
+            } elseif ($uploadErr === UPLOAD_ERR_PARTIAL) {
+                $message = 'Upload was interrupted before completion';
+            }
+            echo json_encode(['ok' => false, 'error' => $message]);
             exit;
         }
 
@@ -95,8 +108,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($action === 'commit_shopify_import') {
         header('Content-Type: application/json');
 
-        if (empty($_FILES['file']) || ($_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+        if (empty($_FILES['file'])) {
             echo json_encode(['ok' => false, 'error' => 'No file uploaded']);
+            exit;
+        }
+        $uploadErr = $_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE;
+        if ($uploadErr !== UPLOAD_ERR_OK) {
+            $message = 'Upload failed';
+            if ($uploadErr === UPLOAD_ERR_INI_SIZE || $uploadErr === UPLOAD_ERR_FORM_SIZE) {
+                $message = 'File exceeds the server upload size limit';
+            } elseif ($uploadErr === UPLOAD_ERR_NO_FILE) {
+                $message = 'No file uploaded';
+            } elseif ($uploadErr === UPLOAD_ERR_PARTIAL) {
+                $message = 'Upload was interrupted before completion';
+            }
+            echo json_encode(['ok' => false, 'error' => $message]);
             exit;
         }
 
@@ -899,8 +925,8 @@ foreach ($products as $p) {
                         ${r.reason ? `<div class="text-[10px] text-gray-500 mt-0.5">${esc(r.reason)}</div>` : ''}
                     </td>
                     <td class="px-2 py-1.5 align-top">${r.category ? esc(r.category) : '<span class="text-gray-600 italic">—</span>'}</td>
-                    <td class="px-2 py-1.5 align-top text-right tabular-nums">${r.price != null ? Number(r.price).toFixed(2) : '—'}</td>
-                    <td class="px-2 py-1.5 align-top text-right tabular-nums">${r.stock != null ? esc(r.stock) : '—'}</td>
+                    <td class="px-2 py-1.5 align-top text-right tabular-nums">${r.price != null && r.action !== 'skip' ? Number(r.price).toFixed(2) : '—'}</td>
+                    <td class="px-2 py-1.5 align-top text-right tabular-nums">${r.stock != null && r.action !== 'skip' ? esc(r.stock) : '—'}</td>
                 `;
                 body.appendChild(tr);
             });
@@ -920,6 +946,7 @@ foreach ($products as $p) {
                 if (!res.ok) throw new Error('Server error ' + res.status);
                 const data = await res.json();
                 if (!data.ok) {
+                    importResetUploadState();
                     importShowUploadError(data.error || 'Import failed');
                     importSwitchState('importStateUpload');
                     return;
@@ -927,6 +954,7 @@ foreach ($products as $p) {
                 importRenderResult(data.counts);
                 importSwitchState('importStateResult');
             } catch (e) {
+                importResetUploadState();
                 importShowUploadError('Network error: ' + e.message);
                 importSwitchState('importStateUpload');
             } finally {
