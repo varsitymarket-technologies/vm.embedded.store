@@ -1,4 +1,6 @@
 <?php
+@include_once dirname(dirname(dirname(__FILE__))) . "/module/shopify_csv_parser.php";
+
 $db = initiate_web_database();
 
 // Handle Form Submissions
@@ -34,6 +36,140 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db->query($sql, [$name, $description, $price, $stock, $image, $category_id, $id]);
 
         echo "<script>window.location.href = window.location.href;</script>";
+        exit;
+
+    } elseif ($action === 'preview_shopify_import') {
+        header('Content-Type: application/json');
+
+        if (empty($_FILES['file']) || ($_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            echo json_encode(['ok' => false, 'error' => 'No file uploaded']);
+            exit;
+        }
+
+        $tmp = $_FILES['file']['tmp_name'];
+        $parsed = parse_shopify_csv($tmp);
+        if (!$parsed['ok']) {
+            echo json_encode(['ok' => false, 'error' => $parsed['error']]);
+            exit;
+        }
+
+        $summary = ['insert' => 0, 'update' => 0, 'skip' => 0];
+        $previewRows = [];
+        foreach ($parsed['rows'] as $row) {
+            if ($row['parse_error'] !== null) {
+                $action_for_row = 'skip';
+                $reason = $row['parse_error'];
+            } else {
+                $existing = $db->query(
+                    "SELECT id FROM products WHERE LOWER(name) = LOWER(?) LIMIT 1",
+                    [$row['name']]
+                );
+                $action_for_row = !empty($existing) ? 'update' : 'insert';
+                $reason = null;
+            }
+            $summary[$action_for_row]++;
+            $previewRows[] = [
+                'action'   => $action_for_row,
+                'name'     => $row['name'],
+                'category' => $row['category'],
+                'price'    => $row['price'],
+                'stock'    => $row['stock'],
+                'image'    => $row['image'],
+                'reason'   => $reason,
+            ];
+        }
+
+        if (count($previewRows) === 0) {
+            echo json_encode(['ok' => false, 'error' => 'No rows found in CSV']);
+            exit;
+        }
+
+        echo json_encode(['ok' => true, 'summary' => $summary, 'rows' => $previewRows]);
+        exit;
+
+    } elseif ($action === 'commit_shopify_import') {
+        header('Content-Type: application/json');
+
+        if (empty($_FILES['file']) || ($_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
+            echo json_encode(['ok' => false, 'error' => 'No file uploaded']);
+            exit;
+        }
+
+        $tmp = $_FILES['file']['tmp_name'];
+        $parsed = parse_shopify_csv($tmp);
+        if (!$parsed['ok']) {
+            echo json_encode(['ok' => false, 'error' => $parsed['error']]);
+            exit;
+        }
+
+        $counts = ['inserted' => 0, 'updated' => 0, 'skipped' => 0, 'errors' => []];
+
+        // Cache category id lookups by lower-cased name to avoid repeat SELECTs.
+        $categoryCache = [];
+        $resolveCategory = function (string $catName) use ($db, &$categoryCache) {
+            $catName = trim($catName);
+            if ($catName === '') return null;
+            $key = strtolower($catName);
+            if (array_key_exists($key, $categoryCache)) return $categoryCache[$key];
+
+            $existing = $db->query(
+                "SELECT id FROM categories WHERE LOWER(name) = LOWER(?) LIMIT 1",
+                [$catName]
+            );
+            if (!empty($existing)) {
+                $categoryCache[$key] = (int)$existing[0]['id'];
+                return $categoryCache[$key];
+            }
+            $db->query("INSERT INTO categories (name) VALUES (?)", [$catName]);
+            // Look the new id up (database_manager doesn't expose lastInsertId).
+            $row = $db->query(
+                "SELECT id FROM categories WHERE LOWER(name) = LOWER(?) ORDER BY id DESC LIMIT 1",
+                [$catName]
+            );
+            $categoryCache[$key] = !empty($row) ? (int)$row[0]['id'] : null;
+            return $categoryCache[$key];
+        };
+
+        $db->query("BEGIN TRANSACTION");
+        try {
+            foreach ($parsed['rows'] as $row) {
+                if ($row['parse_error'] !== null) {
+                    $counts['skipped']++;
+                    $counts['errors'][] = ['name' => $row['name'], 'reason' => $row['parse_error']];
+                    continue;
+                }
+                try {
+                    $categoryId = $resolveCategory($row['category']);
+                    $existing = $db->query(
+                        "SELECT id FROM products WHERE LOWER(name) = LOWER(?) LIMIT 1",
+                        [$row['name']]
+                    );
+                    if (!empty($existing)) {
+                        $db->query(
+                            "UPDATE products SET description = ?, price = ?, stock = ?, image = ?, category_id = ? WHERE id = ?",
+                            [$row['description'], $row['price'], $row['stock'], $row['image'], $categoryId, $existing[0]['id']]
+                        );
+                        $counts['updated']++;
+                    } else {
+                        $db->query(
+                            "INSERT INTO products (name, description, price, stock, image, category_id) VALUES (?, ?, ?, ?, ?, ?)",
+                            [$row['name'], $row['description'], $row['price'], $row['stock'], $row['image'], $categoryId]
+                        );
+                        $counts['inserted']++;
+                    }
+                } catch (Throwable $e) {
+                    $counts['skipped']++;
+                    $counts['errors'][] = ['name' => $row['name'], 'reason' => $e->getMessage()];
+                }
+            }
+            $db->query("COMMIT");
+        } catch (Throwable $e) {
+            $db->query("ROLLBACK");
+            echo json_encode(['ok' => false, 'error' => 'Import failed: ' . $e->getMessage()]);
+            exit;
+        }
+
+        echo json_encode(['ok' => true, 'counts' => $counts]);
         exit;
 
     } elseif ($action === 'delete_product') {
