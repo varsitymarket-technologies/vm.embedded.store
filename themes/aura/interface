@@ -270,6 +270,85 @@
         </div>
     </div>
 
+    <!-- D.3.1: Auth modal overlay -->
+    <div id="auth-modal" class="fixed inset-0 bg-white z-50 hidden flex-col items-center justify-start overflow-y-auto p-6">
+        <div class="w-full max-w-md mx-auto pt-12 pb-24">
+            <div class="flex items-center justify-between mb-12">
+                <a href="#home" onclick="app.auth.close(); app.router.navigate('home')" class="font-serif text-2xl font-light tracking-[0.1em] text-black">AURA</a>
+                <button onclick="app.auth.close()" aria-label="Close" class="text-neutral-500 hover:text-black transition-colors">
+                    <i data-lucide="x" class="w-5 h-5 stroke-[1]"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center justify-center gap-8 mb-10 text-[11px] uppercase tracking-[0.15em]">
+                <button id="auth-tab-login"    onclick="app.auth.switchTab('login')"    class="auth-tab pb-2">Sign In</button>
+                <button id="auth-tab-register" onclick="app.auth.switchTab('register')" class="auth-tab pb-2">Create</button>
+                <button id="auth-tab-forgot"   onclick="app.auth.switchTab('forgot')"   class="auth-tab pb-2">Forgot</button>
+            </div>
+
+            <div id="auth-panel-login" class="auth-panel">
+                <form onsubmit="event.preventDefault(); app.auth.submitLogin()" class="space-y-6">
+                    <div>
+                        <label class="block text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">Email</label>
+                        <input type="email" id="auth-login-email" required class="w-full bg-transparent border-b border-[#E5E5E5] py-2 text-black focus:outline-none focus:border-black transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">Password</label>
+                        <input type="password" id="auth-login-pass" required class="w-full bg-transparent border-b border-[#E5E5E5] py-2 text-black focus:outline-none focus:border-black transition-colors">
+                    </div>
+                    <div id="auth-login-error" class="hidden text-[11px] text-red-600 mt-2"></div>
+                    <button type="submit" class="w-full bg-black text-white text-[11px] uppercase tracking-[0.15em] py-3 mt-4 hover:bg-neutral-800 transition-colors">Sign In</button>
+                </form>
+            </div>
+
+            <div id="auth-panel-register" class="auth-panel hidden">
+                <form onsubmit="event.preventDefault(); app.auth.submitRegister()" class="space-y-6">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">First Name</label>
+                            <input type="text" id="auth-reg-fname" required class="w-full bg-transparent border-b border-[#E5E5E5] py-2 text-black focus:outline-none focus:border-black transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">Last Name</label>
+                            <input type="text" id="auth-reg-lname" class="w-full bg-transparent border-b border-[#E5E5E5] py-2 text-black focus:outline-none focus:border-black transition-colors">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">Email</label>
+                        <input type="email" id="auth-reg-email" required class="w-full bg-transparent border-b border-[#E5E5E5] py-2 text-black focus:outline-none focus:border-black transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">Password</label>
+                        <input type="password" id="auth-reg-pass" required minlength="8" class="w-full bg-transparent border-b border-[#E5E5E5] py-2 text-black focus:outline-none focus:border-black transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">Confirm Password</label>
+                        <input type="password" id="auth-reg-pass2" required minlength="8" class="w-full bg-transparent border-b border-[#E5E5E5] py-2 text-black focus:outline-none focus:border-black transition-colors">
+                    </div>
+                    <div id="auth-reg-error" class="hidden text-[11px] text-red-600 mt-2"></div>
+                    <button type="submit" class="w-full bg-black text-white text-[11px] uppercase tracking-[0.15em] py-3 mt-4 hover:bg-neutral-800 transition-colors">Create Account</button>
+                </form>
+            </div>
+
+            <div id="auth-panel-forgot" class="auth-panel hidden">
+                <form onsubmit="event.preventDefault(); app.auth.submitForgot()" class="space-y-6">
+                    <p class="text-[11px] text-neutral-500 mb-4 leading-relaxed">Enter the email associated with your account and we'll send a reset link when this feature becomes available.</p>
+                    <div>
+                        <label class="block text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">Email</label>
+                        <input type="email" id="auth-forgot-email" required class="w-full bg-transparent border-b border-[#E5E5E5] py-2 text-black focus:outline-none focus:border-black transition-colors">
+                    </div>
+                    <button type="submit" class="w-full bg-black text-white text-[11px] uppercase tracking-[0.15em] py-3 mt-4 hover:bg-neutral-800 transition-colors">Send Reset</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .auth-tab { color: rgb(115 115 115); border-bottom: 1px solid transparent; transition: all 0.3s; }
+        .auth-tab.active { color: #000; border-bottom-color: #000; }
+        #auth-modal.is-open { display: flex; }
+    </style>
+
     <div id="toast-notif" class="fixed bottom-8 left-1/2 transform -translate-x-1/2 translate-y-10 bg-black text-white text-[10px] uppercase tracking-[0.15em] py-3 px-6 shadow-sm z-50 opacity-0 transition-all duration-500 pointer-events-none whitespace-nowrap">
         <span id="toast-notif-message">Item added</span>
     </div>
