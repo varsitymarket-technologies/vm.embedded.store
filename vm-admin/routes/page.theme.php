@@ -132,23 +132,29 @@ $standard_count = count(array_filter($all_themes, fn($t) => $t['type'] === 'Stan
                     <h2 class="text-2xl font-bold tracking-tight">Themes</h2>
                     <p class="text-sm text-zinc-500 mt-1">Choose a design template for your store</p>
                 </div>
-                <?php if ($active_theme && $active_theme !== '__custom__'): ?>
-                    <div class="flex items-center gap-2 text-sm">
-                        <span class="text-zinc-500">Active:</span>
-                        <span class="inline-flex items-center gap-1.5 bg-violet-500/10 text-violet-400 border border-violet-500/20 px-3 py-1 rounded-full text-xs font-semibold">
-                            <i class="bi bi-check-circle-fill text-[10px]"></i>
-                            <?php echo ucwords(str_replace(['_', '-', '.'], ' ', $active_theme)); ?>
-                        </span>
-                    </div>
-                <?php elseif ($custom_is_active): ?>
-                    <div class="flex items-center gap-2 text-sm">
-                        <span class="text-zinc-500">Active:</span>
-                        <span class="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-semibold">
-                            <i class="bi bi-file-earmark-code text-[10px]"></i>
-                            Custom HTML File
-                        </span>
-                    </div>
-                <?php endif; ?>
+                <div class="flex items-center gap-3 flex-wrap">
+                    <?php if ($active_theme && $active_theme !== '__custom__'): ?>
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="text-zinc-500">Active:</span>
+                            <span class="inline-flex items-center gap-1.5 bg-violet-500/10 text-violet-400 border border-violet-500/20 px-3 py-1 rounded-full text-xs font-semibold">
+                                <i class="bi bi-check-circle-fill text-[10px]"></i>
+                                <?php echo ucwords(str_replace(['_', '-', '.'], ' ', $active_theme)); ?>
+                            </span>
+                        </div>
+                    <?php elseif ($custom_is_active): ?>
+                        <div class="flex items-center gap-2 text-sm">
+                            <span class="text-zinc-500">Active:</span>
+                            <span class="inline-flex items-center gap-1.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 px-3 py-1 rounded-full text-xs font-semibold">
+                                <i class="bi bi-file-earmark-code text-[10px]"></i>
+                                Custom HTML File
+                            </span>
+                        </div>
+                    <?php endif; ?>
+                    <button type="button" onclick="openThemeUploadModal()" class="inline-flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700/60 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+                        <i class="bi bi-cloud-upload"></i>
+                        <?php echo $has_custom_file ? 'Manage Custom Theme' : 'Upload Custom Theme'; ?>
+                    </button>
+                </div>
             </div>
         </div>
 
@@ -190,100 +196,6 @@ $standard_count = count(array_filter($all_themes, fn($t) => $t['type'] === 'Stan
                         </div>
                     </div>
                     <p class="text-2xl font-bold"><?php echo $premium_count; ?></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Custom Theme Upload Section -->
-        <div class="px-8 pb-6">
-            <div class="bg-zinc-900/40 border border-zinc-800/60 rounded-2xl overflow-hidden">
-                <div class="px-6 py-4 border-b border-zinc-800/60 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                            <i class="bi bi-cloud-arrow-up text-amber-400"></i>
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-semibold">Custom Theme</h3>
-                            <p class="text-xs text-zinc-500">Import your own HTML store design</p>
-                        </div>
-                    </div>
-                    <?php if ($has_custom_file): ?>
-                        <div class="flex items-center gap-2">
-                            <?php if (!$custom_is_active): ?>
-                                <form method="POST" class="inline">
-                                    <input type="hidden" name="action" value="upload_custom">
-                                    <input type="hidden" name="html_content" value="__reactivate__">
-                                    <button type="button" onclick="activateCustom()" class="text-xs bg-violet-600 hover:bg-violet-500 text-white px-3 py-1.5 rounded-lg transition-colors font-medium">
-                                        Activate
-                                    </button>
-                                </form>
-                            <?php else: ?>
-                                <span class="text-xs text-emerald-400 font-medium flex items-center gap-1">
-                                    <i class="bi bi-check-circle-fill"></i> Active
-                                </span>
-                            <?php endif; ?>
-                            <form method="POST" class="inline" onsubmit="return confirm('Remove custom theme and switch to default?')">
-                                <input type="hidden" name="action" value="remove_custom">
-                                <button type="submit" class="text-xs text-zinc-500 hover:text-red-400 px-2 py-1.5 rounded-lg transition-colors">
-                                    <i class="bi bi-trash3"></i>
-                                </button>
-                            </form>
-                        </div>
-                    <?php endif; ?>
-                </div>
-
-                <div class="p-6">
-                    <?php if ($has_custom_file && $custom_is_active): ?>
-                        <!-- Active custom file indicator -->
-                        <div class="file-card flex items-center gap-4 bg-zinc-800/40 border border-zinc-700/40 rounded-xl p-4 mb-4">
-                            <div class="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
-                                <i class="bi bi-file-earmark-code text-amber-400 text-xl"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium truncate">Local HTML File</p>
-                                <p class="text-xs text-zinc-500 mt-0.5">Custom imported design &middot; Currently active</p>
-                            </div>
-                            <a href="/vm-admin/<?php echo __DOMAIN__; ?>/builder" class="text-xs bg-zinc-700 hover:bg-zinc-600 text-white px-3 py-1.5 rounded-lg transition-colors font-medium flex items-center gap-1.5">
-                                <i class="bi bi-pencil-square"></i> Edit in Builder
-                            </a>
-                        </div>
-                    <?php endif; ?>
-
-                    <!-- Drop Zone -->
-                    <input type="file" id="fileInput" accept=".html,.htm" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none">
-                    <div id="dropZone" class="drop-zone border-2 border-dashed border-zinc-700/60 rounded-xl p-8 text-center cursor-pointer hover:border-zinc-600">
-                        <div class="drop-icon w-14 h-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center mx-auto mb-4">
-                            <i class="bi bi-file-earmark-arrow-up text-zinc-400 text-2xl"></i>
-                        </div>
-                        <p class="text-sm font-medium text-zinc-300 mb-1">Drop your HTML file here</p>
-                        <p class="text-xs text-zinc-500">or click to browse &middot; Single .html file</p>
-                    </div>
-
-                    <!-- File preview (hidden by default) -->
-                    <div id="filePreview" class="hidden mt-4">
-                        <div class="file-card flex items-center gap-4 bg-zinc-800/40 border border-zinc-700/40 rounded-xl p-4">
-                            <div class="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center flex-shrink-0">
-                                <i class="bi bi-file-earmark-code text-violet-400 text-xl"></i>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <p id="fileName" class="text-sm font-medium truncate"></p>
-                                <p id="fileSize" class="text-xs text-zinc-500 mt-0.5"></p>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button onclick="clearFile()" class="text-xs text-zinc-500 hover:text-red-400 p-1.5 rounded-lg transition-colors">
-                                    <i class="bi bi-x-lg"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <form id="uploadForm" method="POST" class="mt-3 flex justify-end">
-                            <input type="hidden" name="action" value="upload_custom">
-                            <input type="hidden" name="html_content" id="htmlContentInput" value="">
-                            <button type="submit" class="text-sm bg-violet-600 hover:bg-violet-500 text-white px-5 py-2 rounded-lg transition-colors font-medium flex items-center gap-2">
-                                <i class="bi bi-cloud-arrow-up"></i>
-                                Import &amp; Activate
-                            </button>
-                        </form>
-                    </div>
                 </div>
             </div>
         </div>
@@ -386,6 +298,115 @@ $standard_count = count(array_filter($all_themes, fn($t) => $t['type'] === 'Stan
             </div>
         </div>
     </main>
+</div>
+
+<!-- Custom Theme Modal -->
+<div id="themeUploadModal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="themeUploadTitle">
+    <div class="flex items-center justify-center min-h-screen px-4 py-6">
+        <div id="themeUploadBackdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeThemeUploadModal()"></div>
+
+        <div id="themeUploadPanel" class="relative w-full max-w-2xl bg-zinc-900 rounded-2xl shadow-2xl shadow-black/40 border border-zinc-800/60 transform transition-all duration-300 scale-95 opacity-0 max-h-[90vh] flex flex-col">
+
+            <!-- Modal Header -->
+            <div class="flex justify-between items-center px-6 pt-6 pb-4 border-b border-zinc-800/60">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                        <i class="bi bi-cloud-arrow-up text-amber-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-semibold text-white" id="themeUploadTitle">Custom Theme</h3>
+                        <p class="text-xs text-zinc-500">Import your own HTML store design</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeThemeUploadModal()" class="h-8 w-8 rounded-lg flex items-center justify-center text-zinc-400 hover:text-white hover:bg-white/5 transition-all duration-150">
+                    <i class="bi bi-x-lg text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body (scrollable) -->
+            <div class="px-6 py-5 space-y-5 overflow-y-auto" style="max-height: calc(90vh - 140px);">
+
+                <?php if ($has_custom_file): ?>
+                    <!-- Current custom theme card -->
+                    <div class="file-card flex items-center gap-4 bg-zinc-800/40 border border-zinc-700/40 rounded-xl p-4">
+                        <div class="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                            <i class="bi bi-file-earmark-code text-amber-400 text-xl"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-white truncate">Local HTML File</p>
+                            <p class="text-xs text-zinc-500 mt-0.5">
+                                Custom imported design &middot;
+                                <?php echo $custom_is_active ? 'Currently active' : 'Inactive'; ?>
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <?php if ($custom_is_active): ?>
+                                <span class="text-xs text-emerald-400 font-medium flex items-center gap-1">
+                                    <i class="bi bi-check-circle-fill"></i> Active
+                                </span>
+                            <?php else: ?>
+                                <button type="button" onclick="activateCustom()" class="text-xs bg-violet-600 hover:bg-violet-500 text-white px-3 py-1.5 rounded-lg transition-colors font-medium">
+                                    Activate
+                                </button>
+                            <?php endif; ?>
+                            <a href="/vm-admin/<?php echo __DOMAIN__; ?>/builder" class="text-xs bg-zinc-700 hover:bg-zinc-600 text-white px-3 py-1.5 rounded-lg transition-colors font-medium flex items-center gap-1.5">
+                                <i class="bi bi-pencil-square"></i> Edit in Builder
+                            </a>
+                            <form method="POST" class="inline" onsubmit="return confirm('Remove custom theme and switch to default?')">
+                                <input type="hidden" name="action" value="remove_custom">
+                                <button type="submit" class="text-xs text-zinc-500 hover:text-red-400 px-2 py-1.5 rounded-lg transition-colors" title="Remove">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="text-xs uppercase tracking-widest text-zinc-600 font-semibold pt-2">Replace with new file</div>
+                <?php endif; ?>
+
+                <!-- Drop Zone -->
+                <input type="file" id="fileInput" accept=".html,.htm" style="position:absolute;width:0;height:0;opacity:0;pointer-events:none">
+                <div id="dropZone" class="drop-zone border-2 border-dashed border-zinc-700/60 rounded-xl p-8 text-center cursor-pointer hover:border-zinc-600">
+                    <div class="drop-icon w-14 h-14 rounded-2xl bg-zinc-800/80 flex items-center justify-center mx-auto mb-4">
+                        <i class="bi bi-file-earmark-arrow-up text-zinc-400 text-2xl"></i>
+                    </div>
+                    <p class="text-sm font-medium text-zinc-300 mb-1">Drop your HTML file here</p>
+                    <p class="text-xs text-zinc-500">or click to browse &middot; Single .html file</p>
+                </div>
+
+                <!-- File preview (hidden by default) -->
+                <div id="filePreview" class="hidden">
+                    <div class="file-card flex items-center gap-4 bg-zinc-800/40 border border-zinc-700/40 rounded-xl p-4">
+                        <div class="w-12 h-12 rounded-xl bg-violet-500/10 flex items-center justify-center flex-shrink-0">
+                            <i class="bi bi-file-earmark-code text-violet-400 text-xl"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p id="fileName" class="text-sm font-medium text-white truncate"></p>
+                            <p id="fileSize" class="text-xs text-zinc-500 mt-0.5"></p>
+                        </div>
+                        <button type="button" onclick="clearFile()" class="text-xs text-zinc-500 hover:text-red-400 p-1.5 rounded-lg transition-colors">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                    <form id="uploadForm" method="POST" class="mt-3 flex justify-end">
+                        <input type="hidden" name="action" value="upload_custom">
+                        <input type="hidden" name="html_content" id="htmlContentInput" value="">
+                        <button type="submit" class="text-sm bg-violet-600 hover:bg-violet-500 text-white px-5 py-2 rounded-lg transition-colors font-medium flex items-center gap-2">
+                            <i class="bi bi-cloud-arrow-up"></i>
+                            Import &amp; Activate
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-4 border-t border-zinc-800/60 flex justify-end">
+                <button type="button" onclick="closeThemeUploadModal()" class="px-4 py-2 rounded-lg border border-zinc-700/60 text-sm font-medium text-zinc-300 hover:text-white hover:bg-white/5 transition-all duration-150">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
