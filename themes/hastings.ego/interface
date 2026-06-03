@@ -830,5 +830,163 @@
 }
 heroShinker();
     </script>
+
+    <script>
+        // D.5: inline customer auth + minimal account-view router.
+        // Other data-view links (shop, cart, etc.) remain non-functional
+        // until store.js is restored or those views are ported separately.
+        (function () {
+            const VIEW_CONTAINER_SELECTOR = '#app-root';
+            const app = window.app || (window.app = {});
+
+            function renderTemplate(tplId) {
+                const tpl = document.getElementById(tplId);
+                const container = document.querySelector(VIEW_CONTAINER_SELECTOR);
+                if (!tpl || !container) return;
+                container.innerHTML = '';
+                container.appendChild(tpl.content.cloneNode(true));
+            }
+
+            // Minimal router: intercept only data-view="account" clicks.
+            document.addEventListener('click', function (e) {
+                const trigger = e.target.closest('[data-view]');
+                if (!trigger) return;
+                const view = trigger.getAttribute('data-view');
+                if (view !== 'account') return;
+                e.preventDefault();
+                renderTemplate('tpl-account');
+                app.auth.renderState();
+            });
+
+            // Delegated handlers inside the rendered tpl-account fragment.
+            document.addEventListener('click', function (e) {
+                const action = e.target.closest('[data-action]');
+                if (action) {
+                    const which = action.getAttribute('data-action');
+                    if (which === 'show-register') return app.auth.showSection('register');
+                    if (which === 'show-login')    return app.auth.showSection('login');
+                }
+                const logoutBtn = e.target.closest('.js-logout');
+                if (logoutBtn) { e.preventDefault(); app.auth.doLogout(); }
+            });
+
+            document.addEventListener('submit', function (e) {
+                const form = e.target.closest('[data-form]');
+                if (!form) return;
+                e.preventDefault();
+                const which = form.getAttribute('data-form');
+                if (which === 'login') app.auth.submitLogin(form);
+                else if (which === 'register') app.auth.submitRegister(form);
+            });
+
+            function showError(name, msg) {
+                const el = document.querySelector('[data-err="' + name + '"]');
+                if (!el) return;
+                el.textContent = msg || '';
+                el.style.display = msg ? '' : 'none';
+            }
+
+            app.auth = {
+                getUser: function () {
+                    if (!window.vmCustomer || !vmCustomer.isLoggedIn()) return null;
+                    const c = vmCustomer.cached();
+                    if (!c) return null;
+                    const parts = (c.name || '').trim().split(/\s+/).filter(Boolean);
+                    return {
+                        email: c.email,
+                        fname: parts[0] || '',
+                        lname: parts.slice(1).join(' '),
+                        joinDate: c.created_at || ''
+                    };
+                },
+                isLoggedIn: function () {
+                    return !!window.vmCustomer && vmCustomer.isLoggedIn();
+                },
+                showSection: function (which) {
+                    const login = document.getElementById('acc-login');
+                    const register = document.getElementById('acc-register');
+                    const dash = document.getElementById('acc-dashboard');
+                    if (!login || !register || !dash) return;
+                    login.style.display    = (which === 'login')    ? '' : 'none';
+                    register.style.display = (which === 'register') ? '' : 'none';
+                    dash.style.display     = (which === 'dashboard')? '' : 'none';
+                    showError('login', '');
+                    showError('register', '');
+                },
+                renderState: function () {
+                    const login = document.getElementById('acc-login');
+                    if (!login) return;  // account template not currently mounted; no-op
+                    if (this.isLoggedIn()) {
+                        this.showSection('dashboard');
+                        this.renderDashboard();
+                    } else {
+                        this.showSection('login');
+                    }
+                },
+                submitLogin: async function (form) {
+                    showError('login', '');
+                    const email = form.querySelector('.js-email').value.trim();
+                    const pass  = form.querySelector('.js-pass').value;
+                    if (!email || !pass) { showError('login', 'Email and password required.'); return; }
+                    try {
+                        await vmCustomer.login(email, pass);
+                        // vm:customer-login event runs renderState() via head listener.
+                    } catch (e) {
+                        showError('login', (e && e.code === 'locked')
+                            ? 'Account temporarily locked. Try again in a few minutes.'
+                            : ((e && e.message) || 'Sign-in failed'));
+                    }
+                },
+                submitRegister: async function (form) {
+                    showError('register', '');
+                    const fname = document.getElementById('acc-reg-fname').value.trim();
+                    const lname = document.getElementById('acc-reg-lname').value.trim();
+                    const email = document.getElementById('acc-reg-email').value.trim();
+                    const pass  = document.getElementById('acc-reg-pass').value;
+                    if (!fname || !email || !pass) { showError('register', 'Please fill all required fields.'); return; }
+                    if (pass.length < 8) { showError('register', 'Password must be at least 8 characters.'); return; }
+                    const name = (fname + ' ' + lname).trim();
+                    try {
+                        await vmCustomer.register(email, pass, name, null);
+                        // vm:customer-login event runs renderState() via head listener.
+                    } catch (e) {
+                        showError('register', (e && e.message) || 'Sign-up failed');
+                    }
+                },
+                doLogout: async function () {
+                    try { await vmCustomer.logout(); } catch (e) { /* cleared locally regardless */ }
+                    // vm:customer-logout event runs renderState() via head listener.
+                },
+                renderDashboard: async function () {
+                    const u = this.getUser();
+                    if (!u) { this.renderState(); return; }
+                    const fnameEl = document.querySelector('.js-greet-fname');
+                    const emailEl = document.querySelector('.js-greet-email');
+                    if (fnameEl) fnameEl.textContent = u.fname || 'friend';
+                    if (emailEl) emailEl.textContent = u.email || '';
+                    const list = document.querySelector('.js-orders-list');
+                    if (!list) return;
+                    list.textContent = 'Loading…';
+                    try {
+                        const r = await vmCustomer.myOrders();
+                        const orders = (r.orders || []).slice(0, 5);
+                        if (!orders.length) { list.textContent = 'No orders yet.'; return; }
+                        list.innerHTML = '';
+                        orders.forEach(function (o) {
+                            const row = document.createElement('div');
+                            row.className = 'order-row';
+                            row.style.cssText = 'padding:0.5em 0;border-bottom:1px solid rgba(0,0,0,0.08);';
+                            const total = (o.total_amount != null ? Number(o.total_amount) : 0).toFixed(2);
+                            const dateStr = o.created_at ? String(o.created_at).split(' ')[0] : '—';
+                            row.textContent = '#' + o.id + '  ·  ' + dateStr + '  ·  $' + total + '  ·  ' + (o.status || 'pending');
+                            list.appendChild(row);
+                        });
+                    } catch (e) {
+                        list.textContent = 'Failed to load orders.';
+                    }
+                }
+            };
+        })();
+    </script>
 </body>
 </html>
