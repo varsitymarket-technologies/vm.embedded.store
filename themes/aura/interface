@@ -207,6 +207,95 @@
             </form>
         </section>
 
+        <!-- D.3.1: account view -->
+        <section id="view-account" class="view-section max-w-5xl mx-auto px-4 sm:px-8 py-16">
+            <div class="flex items-end justify-between border-b border-[#E5E5E5] pb-6 mb-12">
+                <div>
+                    <p class="text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-1">Account</p>
+                    <h1 id="acc-greeting" class="font-serif text-3xl font-light text-black">Welcome</h1>
+                </div>
+                <button onclick="app.auth.doLogout()" class="text-[11px] uppercase tracking-[0.15em] text-neutral-500 hover:text-black transition-colors">Sign Out</button>
+            </div>
+
+            <div class="flex items-center gap-10 mb-12 text-[11px] uppercase tracking-[0.15em] border-b border-[#E5E5E5]">
+                <button id="acc-tab-overview" onclick="app.auth.activateTab('overview')" class="acc-tab pb-3">Overview</button>
+                <button id="acc-tab-profile"  onclick="app.auth.activateTab('profile')"  class="acc-tab pb-3">Profile</button>
+                <button id="acc-tab-orders"   onclick="app.auth.activateTab('orders')"   class="acc-tab pb-3">Orders</button>
+                <button id="acc-tab-password" onclick="app.auth.activateTab('password')" class="acc-tab pb-3">Password</button>
+            </div>
+
+            <div id="acc-panel-overview" class="acc-panel">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                    <div>
+                        <p class="text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">Name</p>
+                        <p id="acc-ov-name" class="font-serif text-xl text-black">—</p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">Email</p>
+                        <p id="acc-ov-email" class="text-sm text-black break-all">—</p>
+                    </div>
+                    <div>
+                        <p class="text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">Member Since</p>
+                        <p id="acc-ov-joined" class="text-sm text-black">—</p>
+                    </div>
+                </div>
+                <button onclick="app.auth.activateTab('profile')" class="text-[11px] uppercase tracking-[0.15em] text-black border-b border-black pb-1 hover:text-neutral-600 hover:border-neutral-600 transition-colors">Edit profile</button>
+            </div>
+
+            <div id="acc-panel-profile" class="acc-panel hidden">
+                <form onsubmit="event.preventDefault(); app.auth.saveProfile()" class="space-y-8 max-w-xl">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">First Name</label>
+                            <input type="text" id="acc-fname" class="w-full bg-transparent border-b border-[#E5E5E5] py-2 text-black focus:outline-none focus:border-black transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">Last Name</label>
+                            <input type="text" id="acc-lname" class="w-full bg-transparent border-b border-[#E5E5E5] py-2 text-black focus:outline-none focus:border-black transition-colors">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">Email</label>
+                        <input type="email" id="acc-email" readonly title="Email is the account identifier and cannot be changed here" class="w-full bg-neutral-100 border-b border-[#E5E5E5] py-2 text-neutral-500 cursor-not-allowed">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">Phone (optional)</label>
+                        <input type="tel" id="acc-phone" class="w-full bg-transparent border-b border-[#E5E5E5] py-2 text-black focus:outline-none focus:border-black transition-colors">
+                    </div>
+                    <button type="submit" class="bg-black text-white text-[11px] uppercase tracking-[0.15em] py-3 px-10 hover:bg-neutral-800 transition-colors">Save</button>
+                </form>
+            </div>
+
+            <div id="acc-panel-orders" class="acc-panel hidden">
+                <div id="acc-orders-list">
+                    <p class="text-[11px] uppercase tracking-[0.15em] text-neutral-500 py-12 text-center">Loading…</p>
+                </div>
+            </div>
+
+            <div id="acc-panel-password" class="acc-panel hidden">
+                <form onsubmit="event.preventDefault(); app.auth.changePassword()" class="space-y-6 max-w-md">
+                    <div>
+                        <label class="block text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">Current Password</label>
+                        <input type="password" id="acc-pw-cur" required class="w-full bg-transparent border-b border-[#E5E5E5] py-2 text-black focus:outline-none focus:border-black transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">New Password</label>
+                        <input type="password" id="acc-pw-new" required minlength="8" class="w-full bg-transparent border-b border-[#E5E5E5] py-2 text-black focus:outline-none focus:border-black transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] uppercase tracking-[0.15em] text-neutral-500 mb-2">Confirm New Password</label>
+                        <input type="password" id="acc-pw-conf" required minlength="8" class="w-full bg-transparent border-b border-[#E5E5E5] py-2 text-black focus:outline-none focus:border-black transition-colors">
+                    </div>
+                    <button type="submit" class="bg-black text-white text-[11px] uppercase tracking-[0.15em] py-3 px-10 hover:bg-neutral-800 transition-colors">Change Password</button>
+                </form>
+            </div>
+        </section>
+
+        <style>
+            .acc-tab { color: rgb(115 115 115); border-bottom: 1px solid transparent; transition: all 0.3s; }
+            .acc-tab.active { color: #000; border-bottom-color: #000; }
+        </style>
+
         <section id="view-checkout" class="view-section max-w-5xl mx-auto px-4 py-16">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-16 lg:gap-24">
                 <div class="space-y-12">
