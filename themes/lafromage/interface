@@ -331,6 +331,7 @@
             renderTemplate(templateId, callback = null) {
                 const tpl = document.getElementById(templateId);
                 const clone = tpl.content.cloneNode(true);
+                this.root.innerHTML = '';
                 this.root.appendChild(clone);
                 if (callback) callback.call(this, this.root);
             }
