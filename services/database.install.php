@@ -138,6 +138,26 @@ if (!$has_customer_id) {
 }
 $db->query("CREATE INDEX IF NOT EXISTS idx_orders_customer ON orders(customer_id)");
 
+// 9. Customer Addresses Table (sub-project B)
+$sql_customer_addresses = "CREATE TABLE IF NOT EXISTS customer_addresses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id INTEGER NOT NULL,
+    label TEXT,
+    recipient_name TEXT NOT NULL,
+    line1 TEXT NOT NULL,
+    line2 TEXT,
+    city TEXT NOT NULL,
+    region TEXT,
+    postal_code TEXT,
+    country TEXT NOT NULL,
+    phone TEXT,
+    is_default INTEGER NOT NULL DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+)";
+$db->query($sql_customer_addresses);
+$db->query("CREATE INDEX IF NOT EXISTS idx_addresses_customer ON customer_addresses(customer_id)");
+
 #$sql = "INSERT INTO `products` (`name`,`description`,`price`,`image`) VALUES ('Shoes','Voluptas facere animi explicabo non quis magni recusandae. Numquam debitis pariatur omnis facere unde. Laboriosam minus amet nesciunt est. Et saepe eos maxime tempore quasi deserunt ab. ','300','/img/demo-shoes.jpg'); ";
 #$db->query($sql); 
 
