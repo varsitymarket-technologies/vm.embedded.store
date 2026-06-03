@@ -58,7 +58,9 @@
     <nav class="fixed top-0 left-0 w-full z-50 mix-blend-difference px-10 py-8 flex justify-between items-baseline">
         <a href="#home" class="font-display font-black text-2xl tracking-tighter text-archive-ink">S//P</a>
         <div class="flex space-x-12 text-[10px] uppercase tracking-[0.4em] font-bold">
+            <a href="#search" class="hover:line-through">Search</a>
             <a href="#shop" class="hover:line-through">Catalog</a>
+            <a href="#account" class="hover:line-through">Archive</a>
             <a href="#cart" class="hover:line-through">Index [<span class="js-cart-count">0</span>]</a>
         </div>
     </nav>
