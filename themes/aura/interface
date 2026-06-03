@@ -557,9 +557,19 @@
                 document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
                 const targetView = document.getElementById(`view-${view.replace('#', '')}`);
                 if (targetView) targetView.classList.add('active');
-                if (view === '#shop') { app.store.filterCatalog('all'); } 
-                else if (view === '#product' && queryParams.id) { app.store.renderProductDetail(queryParams.id); } 
+                if (view === '#shop') { app.store.filterCatalog('all'); }
+                else if (view === '#product' && queryParams.id) { app.store.renderProductDetail(queryParams.id); }
                 else if (view === '#checkout') { app.checkout.renderCurrentStep(); }
+                else if (view === '#account') {
+                    if (!app.auth || !app.auth.isLoggedIn()) {
+                        if (app.auth) app.auth.open('login');
+                        const homeView = document.getElementById('view-home');
+                        if (targetView) targetView.classList.remove('active');
+                        if (homeView) homeView.classList.add('active');
+                    } else {
+                        app.auth.renderDashboard();
+                    }
+                }
                 window.scrollTo({top:0, behavior: 'smooth'});
             }
         };
@@ -800,6 +810,195 @@
                 header.classList.remove('shadow-sm');
             }
         });
+
+        // D.3.1: customer auth + account handlers (all delegate to vmCustomer)
+        app.auth = {
+            getUser: function () {
+                if (!window.vmCustomer || !vmCustomer.isLoggedIn()) return null;
+                const c = vmCustomer.cached();
+                if (!c) return null;
+                const parts = (c.name || '').trim().split(/\s+/).filter(Boolean);
+                return {
+                    email: c.email,
+                    fname: parts[0] || '',
+                    lname: parts.slice(1).join(' '),
+                    phone: c.phone || '',
+                    joinDate: c.created_at || ''
+                };
+            },
+            isLoggedIn: function () { return !!window.vmCustomer && vmCustomer.isLoggedIn(); },
+
+            iconClick: function () {
+                if (this.isLoggedIn()) app.router.navigate('account');
+                else this.open('login');
+            },
+            updateIcon: function () {
+                const label = document.getElementById('auth-icon-label');
+                if (!label) return;
+                const u = this.getUser();
+                label.textContent = u && u.fname ? u.fname : 'Account';
+            },
+
+            open: function (tab) {
+                this.switchTab(tab || 'login');
+                const m = document.getElementById('auth-modal');
+                m.classList.add('is-open');
+                document.body.style.overflow = 'hidden';
+                if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
+            },
+            close: function () {
+                const m = document.getElementById('auth-modal');
+                m.classList.remove('is-open');
+                document.body.style.overflow = '';
+                ['auth-login-error', 'auth-reg-error'].forEach(function (id) {
+                    const el = document.getElementById(id);
+                    if (el) { el.textContent = ''; el.classList.add('hidden'); }
+                });
+            },
+            switchTab: function (tab) {
+                ['login', 'register', 'forgot'].forEach(function (t) {
+                    const btn = document.getElementById('auth-tab-' + t);
+                    const pan = document.getElementById('auth-panel-' + t);
+                    if (btn) btn.classList.toggle('active', t === tab);
+                    if (pan) pan.classList.toggle('hidden', t !== tab);
+                });
+            },
+
+            submitLogin: async function () {
+                const email = document.getElementById('auth-login-email').value.trim();
+                const pass = document.getElementById('auth-login-pass').value;
+                const errEl = document.getElementById('auth-login-error');
+                errEl.classList.add('hidden');
+                if (!email || !pass) { errEl.textContent = 'Email and password required.'; errEl.classList.remove('hidden'); return; }
+                try {
+                    await vmCustomer.login(email, pass);
+                    this.close();
+                    const u = this.getUser();
+                    app.ui.triggerToast('Welcome, ' + ((u && u.fname) || 'friend'));
+                    app.router.navigate('account');
+                } catch (e) {
+                    errEl.textContent = (e && e.code === 'locked')
+                        ? 'Account temporarily locked. Try again in a few minutes.'
+                        : ((e && e.message) || 'Sign-in failed');
+                    errEl.classList.remove('hidden');
+                }
+            },
+            submitRegister: async function () {
+                const fname = document.getElementById('auth-reg-fname').value.trim();
+                const lname = document.getElementById('auth-reg-lname').value.trim();
+                const email = document.getElementById('auth-reg-email').value.trim();
+                const pass  = document.getElementById('auth-reg-pass').value;
+                const pass2 = document.getElementById('auth-reg-pass2').value;
+                const errEl = document.getElementById('auth-reg-error');
+                errEl.classList.add('hidden');
+                if (!fname || !email || !pass) { errEl.textContent = 'Please fill in all required fields.'; errEl.classList.remove('hidden'); return; }
+                if (pass !== pass2) { errEl.textContent = 'Passwords do not match.'; errEl.classList.remove('hidden'); return; }
+                if (pass.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.classList.remove('hidden'); return; }
+                const name = (fname + ' ' + lname).trim();
+                try {
+                    await vmCustomer.register(email, pass, name, null);
+                    this.close();
+                    app.ui.triggerToast('Welcome, ' + fname);
+                    app.router.navigate('account');
+                } catch (e) {
+                    errEl.textContent = (e && e.message) || 'Sign-up failed';
+                    errEl.classList.remove('hidden');
+                }
+            },
+            submitForgot: function () {
+                app.ui.triggerToast('Reset link sent (placeholder)');
+                this.switchTab('login');
+            },
+            doLogout: async function () {
+                try { await vmCustomer.logout(); } catch (e) { /* cleared locally regardless */ }
+                app.ui.triggerToast('Signed out');
+                app.router.navigate('home');
+            },
+
+            activateTab: function (name) {
+                ['overview', 'profile', 'orders', 'password'].forEach(function (t) {
+                    const btn = document.getElementById('acc-tab-' + t);
+                    const pan = document.getElementById('acc-panel-' + t);
+                    if (btn) btn.classList.toggle('active', t === name);
+                    if (pan) pan.classList.toggle('hidden', t !== name);
+                });
+                if (name === 'orders') app.auth.hydrateOrders();
+            },
+            renderDashboard: async function () {
+                if (!this.isLoggedIn()) { this.open('login'); return; }
+                const u = this.getUser();
+                if (!u) { this.open('login'); return; }
+                document.getElementById('acc-greeting').textContent = 'Welcome, ' + ((u.fname) || 'friend');
+                document.getElementById('acc-ov-name').textContent  = (u.fname + ' ' + u.lname).trim() || '—';
+                document.getElementById('acc-ov-email').textContent = u.email || '—';
+                document.getElementById('acc-ov-joined').textContent = u.joinDate ? u.joinDate.split(' ')[0] : '—';
+                document.getElementById('acc-fname').value = u.fname || '';
+                document.getElementById('acc-lname').value = u.lname || '';
+                document.getElementById('acc-email').value = u.email || '';
+                document.getElementById('acc-phone').value = u.phone || '';
+                this.activateTab('overview');
+            },
+            hydrateOrders: async function () {
+                const wrap = document.getElementById('acc-orders-list');
+                wrap.innerHTML = '<p class="text-[11px] uppercase tracking-[0.15em] text-neutral-500 py-12 text-center">Loading…</p>';
+                try {
+                    const r = await vmCustomer.myOrders();
+                    const orders = (r.orders || []);
+                    if (!orders.length) {
+                        wrap.innerHTML = '<p class="text-[11px] uppercase tracking-[0.15em] text-neutral-500 py-12 text-center">No orders yet. <a href="#shop" onclick="app.router.navigate(\'shop\')" class="text-black border-b border-black pb-0.5">Start shopping →</a></p>';
+                        return;
+                    }
+                    wrap.innerHTML = '<div class="space-y-4">' + orders.map(function (o) {
+                        const total = (o.total_amount != null ? o.total_amount : 0).toFixed(2);
+                        const dateStr = o.created_at ? String(o.created_at).split(' ')[0] : '—';
+                        const status = o.status || 'pending';
+                        return '<div class="flex items-center justify-between border-b border-[#E5E5E5] pb-4">' +
+                                  '<div><p class="text-[11px] uppercase tracking-[0.15em] text-neutral-500">Order</p>' +
+                                  '<p class="font-serif text-lg text-black">#' + o.id + '</p></div>' +
+                                  '<div class="text-right"><p class="text-[11px] uppercase tracking-[0.15em] text-neutral-500">' + dateStr + '</p>' +
+                                  '<p class="text-sm text-black">$' + total + ' &middot; ' + status + '</p></div>' +
+                               '</div>';
+                    }).join('') + '</div>';
+                } catch (e) {
+                    wrap.innerHTML = '<p class="text-[11px] uppercase tracking-[0.15em] text-red-600 py-12 text-center">Failed to load orders.</p>';
+                }
+            },
+            saveProfile: async function () {
+                const fname = document.getElementById('acc-fname').value.trim();
+                const lname = document.getElementById('acc-lname').value.trim();
+                const phone = document.getElementById('acc-phone').value.trim();
+                const name = (fname + ' ' + lname).trim();
+                try {
+                    await vmCustomer.updateProfile(name || null, phone || null);
+                    const u = this.getUser();
+                    if (u) {
+                        document.getElementById('acc-greeting').textContent = 'Welcome, ' + ((u.fname) || 'friend');
+                        document.getElementById('acc-ov-name').textContent = (u.fname + ' ' + u.lname).trim() || '—';
+                    }
+                    this.updateIcon();
+                    app.ui.triggerToast('Profile updated');
+                } catch (e) {
+                    app.ui.triggerToast((e && e.message) || 'Update failed');
+                }
+            },
+            changePassword: async function () {
+                const cur = document.getElementById('acc-pw-cur').value;
+                const nw  = document.getElementById('acc-pw-new').value;
+                const conf = document.getElementById('acc-pw-conf').value;
+                if (!cur || !nw || !conf) { app.ui.triggerToast('All password fields required'); return; }
+                if (nw.length < 8) { app.ui.triggerToast('New password must be 8+ chars'); return; }
+                if (nw !== conf) { app.ui.triggerToast('Passwords do not match'); return; }
+                try {
+                    await vmCustomer.changePassword(cur, nw);
+                    ['acc-pw-cur','acc-pw-new','acc-pw-conf'].forEach(function (id) {
+                        const el = document.getElementById(id); if (el) el.value = '';
+                    });
+                    app.ui.triggerToast('Password updated');
+                } catch (e) {
+                    app.ui.triggerToast((e && e.message) || 'Failed to change password');
+                }
+            }
+        };
 
         window.addEventListener('DOMContentLoaded', () => app.init());
     </script>
