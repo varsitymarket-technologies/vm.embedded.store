@@ -39,6 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
 
     } elseif ($action === 'preview_shopify_import') {
+        while (ob_get_level() > 0) { ob_end_clean(); }
         header('Content-Type: application/json');
 
         if (empty($_FILES['file'])) {
@@ -106,6 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
 
     } elseif ($action === 'commit_shopify_import') {
+        while (ob_get_level() > 0) { ob_end_clean(); }
         header('Content-Type: application/json');
 
         if (empty($_FILES['file'])) {
