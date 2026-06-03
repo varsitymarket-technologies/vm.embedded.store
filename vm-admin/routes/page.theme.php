@@ -525,4 +525,35 @@ function applyFilters() {
 
     emptyState.classList.toggle('hidden', visible > 0);
 }
+
+// --- Custom Theme Modal ---
+function openThemeUploadModal() {
+    const modal = document.getElementById('themeUploadModal');
+    const backdrop = document.getElementById('themeUploadBackdrop');
+    const panel = document.getElementById('themeUploadPanel');
+    modal.classList.remove('hidden');
+    requestAnimationFrame(() => {
+        backdrop.classList.remove('opacity-0');
+        backdrop.classList.add('opacity-100');
+        panel.classList.remove('scale-95', 'opacity-0');
+        panel.classList.add('scale-100', 'opacity-100');
+    });
+}
+
+function closeThemeUploadModal() {
+    const modal = document.getElementById('themeUploadModal');
+    const backdrop = document.getElementById('themeUploadBackdrop');
+    const panel = document.getElementById('themeUploadPanel');
+    backdrop.classList.remove('opacity-100');
+    backdrop.classList.add('opacity-0');
+    panel.classList.remove('scale-100', 'opacity-100');
+    panel.classList.add('scale-95', 'opacity-0');
+    setTimeout(() => { modal.classList.add('hidden'); }, 300);
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key !== 'Escape') return;
+    const m = document.getElementById('themeUploadModal');
+    if (m && !m.classList.contains('hidden')) closeThemeUploadModal();
+});
 </script>
