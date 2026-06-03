@@ -654,11 +654,13 @@
 
         // STATE Logic
         let cart = JSON.parse(localStorage.getItem('vm_cart')) || [];
-        let userHistory = JSON.parse(localStorage.getItem('vm_user_history')) || [];
-        let userSession = JSON.parse(localStorage.getItem('vm_user_session')) || null;
+        let customerAuth = {
+            user: (() => { try { return JSON.parse(localStorage.getItem('vm_customer_cache') || 'null'); } catch { return null; } })(),
+            token: localStorage.getItem('vm_customer_token')
+        };
         let currentOrderView = null;
         let currentDiscount = null; // {code: 'VM10', percent: 10}
-        
+
         let activePdpProduct = null;
         let activePdpQty = 1;
 
