@@ -2490,8 +2490,11 @@
 
                 <!-- Addresses -->
                 <div class="dash-panel" id="panel-addresses">
-                    <div class="dash-title">Addresses</div>
-                    <div class="dash-sub">Saved Shipping &amp; Billing Addresses</div>
+                    <div class="dash-title">
+                        Addresses
+                        <span style="font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--ash);background:rgba(120,120,120,0.08);padding:3px 8px;border-radius:99px;margin-left:8px;vertical-align:middle;">Sync coming soon</span>
+                    </div>
+                    <div class="dash-sub">Saved Shipping &amp; Billing Addresses &middot; <em style="color:var(--ash);">stored locally for now</em></div>
                     <div style="margin-bottom:20px;"><button onclick="showAddrForm()" class="btn btn-outline">+ Add New
                             Address</button></div>
                     <div id="addr-form-wrap"
@@ -2548,7 +2551,8 @@
                                     class="form-input" id="acc-lname"></div>
                         </div>
                         <div class="form-group"><label class="form-label">Email</label><input type="email"
-                                class="form-input" id="acc-email"></div>
+                                class="form-input" id="acc-email" readonly
+                                title="Email is the account identifier and cannot be changed here"></div>
                         <div class="form-group"><label class="form-label">Phone (optional)</label><input type="tel"
                                 class="form-input" id="acc-phone" placeholder="+27 000 000 0000"></div>
                         <button onclick="saveAccountInfo()" class="btn btn-dark">Save Changes</button>
@@ -2570,6 +2574,11 @@
                         <button onclick="savePrefs()" class="btn btn-outline" style="margin-top:18px;">Save
                             Preferences</button>
                     </div>
+                    <!-- D.2: Danger Zone hidden. No customer_delete_account
+                         endpoint exists; the old button only logged out
+                         locally, which was misleading UX. Re-enable when a
+                         delete endpoint ships and confirmDeleteAccount()
+                         is re-added in the JS section.
                     <div class="acc-section" style="border:1.5px solid rgba(192,57,43,0.18);">
                         <div class="acc-section-title" style="color:var(--warn);">Danger Zone</div>
                         <p style="font-size:13px;color:var(--ash);margin-bottom:14px;line-height:1.65;">Permanently
@@ -2580,6 +2589,7 @@
                             onmouseout="this.style.background='none';this.style.color='var(--warn)'">Delete
                             Account</button>
                     </div>
+                    -->
                 </div>
 
                 <!-- Security -->
@@ -2793,11 +2803,28 @@
         /* ════════════════════════════════════
            AUTH (localStorage mock)
         ════════════════════════════════════ */
+        // D.2: auth adapter delegating to vm-customer.js. The returned shape
+        // matches what austin's existing render code expects: fname/lname
+        // (split from backend's single name field), email, phone, joinDate,
+        // and orders (hydrated separately by hydrateOrdersForDashboard()).
         const auth = {
-            getUser() { try { return JSON.parse(localStorage.getItem('aus_user')); } catch { return null; } },
-            setUser(u) { localStorage.setItem('aus_user', JSON.stringify(u)); },
-            clearUser() { localStorage.removeItem('aus_user'); },
-            isLoggedIn() { return !!this.getUser(); }
+            getUser() {
+                if (!window.vmCustomer || !vmCustomer.isLoggedIn()) return null;
+                const c = vmCustomer.cached();
+                if (!c) return null;
+                const parts = (c.name || '').trim().split(/\s+/).filter(Boolean);
+                return {
+                    email: c.email,
+                    fname: parts[0] || '',
+                    lname: parts.slice(1).join(' '),
+                    phone: c.phone || '',
+                    joinDate: c.created_at || '',
+                    orders: window.__aus_orders__ || []
+                };
+            },
+            isLoggedIn() { return !!window.vmCustomer && vmCustomer.isLoggedIn(); }
+            // setUser + clearUser deleted — call sites now go through
+            // vmCustomer.updateProfile / vmCustomer.logout directly.
         };
 
         /* ════════════════════════════════════
@@ -3164,12 +3191,13 @@
             };
             try { const url = new URL('api.php?state=order', window.location.href); await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(5000) }); } catch { }
 
-            const u = auth.getUser();
-            if (u) {
-                u.orders = u.orders || [];
-                u.orders.unshift({ id: orderId, date: new Date().toLocaleDateString(), total: cart.subtotal(), status: 'processing', items: cart.items });
-                auth.setUser(u);
-            }
+            // D.2: removed the client-side push to u.orders. With real auth,
+            // orders come from vmCustomer.myOrders() which reads the backend.
+            // Currently state=order does not stamp customer_id from the
+            // X-Customer-Token header — a logged-in customer's new order
+            // lands as a guest order and won't appear in the dashboard
+            // until the order handler is updated to read the bearer.
+            // Tracked as a follow-up in the D.2 spec.
 
             document.getElementById('co-order-ref').textContent = `Order Reference: ${orderId}`;
             currentStep = 4; showCoStep(4);
@@ -3323,40 +3351,45 @@
             document.getElementById(`tab-${tab}`)?.classList?.add('active');
         }
 
-        function doLogin() {
+        async function doLogin() {
             const email = document.getElementById('login-email').value.trim();
             const pass = document.getElementById('login-pass').value;
             if (!email || !pass) { showToast('Please enter your email and password', 'error'); return; }
-            let users = JSON.parse(localStorage.getItem('aus_users') || '[]');
-            const user = users.find(u => u.email === email && u.password === pass);
-            if (!user) {
-                const newUser = { email, password: pass, fname: 'Member', lname: '', phone: '', orders: [], joinDate: new Date().toLocaleDateString() };
-                users.push(newUser); localStorage.setItem('aus_users', JSON.stringify(users));
-                auth.setUser(newUser);
-            } else { auth.setUser(user); }
-            closeAuthModal();
-            showToast(`Welcome back, ${auth.getUser().fname}!`);
-            updateAccountBtn();
-            router.nav('dashboard');
+            try {
+                await vmCustomer.login(email, pass);
+                // vm:customer-login event fires; updateAccountBtn runs from the head listener.
+                closeAuthModal();
+                const u = auth.getUser();
+                showToast('Welcome back, ' + (u && u.fname ? u.fname : 'friend') + '!');
+                router.nav('dashboard');
+            } catch (e) {
+                if (e && e.code === 'locked') {
+                    showToast('Account temporarily locked. Try again in a few minutes.', 'error');
+                } else {
+                    showToast((e && e.message) || 'Sign-in failed', 'error');
+                }
+            }
         }
 
-        function doRegister() {
+        async function doRegister() {
             const fname = document.getElementById('reg-fname').value.trim();
             const lname = document.getElementById('reg-lname').value.trim();
             const email = document.getElementById('reg-email').value.trim();
-            const pass = document.getElementById('reg-pass').value;
+            const pass  = document.getElementById('reg-pass').value;
             const pass2 = document.getElementById('reg-pass2').value;
             if (!fname || !email || !pass) { showToast('Please fill in all fields', 'error'); return; }
-            if (pass !== pass2) { showToast('Passwords do not match', 'error'); return; }
+            if (pass !== pass2)  { showToast('Passwords do not match', 'error'); return; }
             if (pass.length < 8) { showToast('Password must be at least 8 characters', 'error'); return; }
-            const newUser = { email, password: pass, fname, lname, phone: '', orders: [], joinDate: new Date().toLocaleDateString() };
-            let users = JSON.parse(localStorage.getItem('aus_users') || '[]');
-            if (users.find(u => u.email === email)) { showToast('An account with this email already exists', 'error'); return; }
-            users.push(newUser); localStorage.setItem('aus_users', JSON.stringify(users));
-            auth.setUser(newUser); closeAuthModal();
-            showToast(`Welcome to Austin, ${fname}!`);
-            updateAccountBtn();
-            router.nav('dashboard');
+            const name = (fname + ' ' + lname).trim();
+            try {
+                await vmCustomer.register(email, pass, name, null);
+                // vm:customer-login event fires; updateAccountBtn runs from the head listener.
+                closeAuthModal();
+                showToast('Welcome to Austin, ' + fname + '!');
+                router.nav('dashboard');
+            } catch (e) {
+                showToast((e && e.message) || 'Sign-up failed', 'error');
+            }
         }
 
         function doForgot() {
@@ -3366,8 +3399,10 @@
             switchTab('login');
         }
 
-        function doLogout() {
-            auth.clearUser(); updateAccountBtn();
+        async function doLogout() {
+            try { await vmCustomer.logout(); }
+            catch (e) { /* helper clears local state regardless */ }
+            // vm:customer-logout event runs updateAccountBtn() from the head listener.
             showToast('You have been signed out', 'info');
             router.nav('home');
         }
@@ -3379,24 +3414,26 @@
             else { btn.style.color = 'var(--ash)'; btn.title = 'Account'; }
         }
 
-        function confirmDeleteAccount() {
-            if (confirm('Are you sure you want to permanently delete your account? This cannot be undone.')) {
-                auth.clearUser(); updateAccountBtn();
-                showToast('Account deleted', 'info');
-                router.nav('home');
-            }
-        }
+        // D.2: confirmDeleteAccount removed — no customer_delete_account
+        // endpoint exists. The button it bound to is hidden in markup. When
+        // a delete endpoint ships in a future phase, re-add the function
+        // and un-comment the button (lines 2544-2553).
 
         /* ════════════════════════════════════
            DASHBOARD
         ════════════════════════════════════ */
-        function renderDashboard() {
+        async function renderDashboard() {
+            if (!auth.isLoggedIn()) { openAuthModal('login'); return; }
+            // Hydrate orders from the API BEFORE reading auth.getUser(), so
+            // u.orders (which adapter reads from window.__aus_orders__) is populated.
+            await hydrateOrdersForDashboard();
             const u = auth.getUser();
             if (!u) { openAuthModal('login'); return; }
 
-            document.getElementById('sb-name').textContent = `${u.fname} ${u.lname}`.trim();
+            document.getElementById('sb-name').textContent = (u.fname + ' ' + u.lname).trim();
             document.getElementById('sb-email').textContent = u.email;
-            document.getElementById('sb-avatar').textContent = `${u.fname.charAt(0)}${u.lname ? u.lname.charAt(0) : ''}`.toUpperCase();
+            document.getElementById('sb-avatar').textContent =
+                (u.fname.charAt(0) + (u.lname ? u.lname.charAt(0) : '')).toUpperCase();
             document.getElementById('dash-first').textContent = u.fname;
 
             document.getElementById('acc-fname').value = u.fname || '';
@@ -3406,12 +3443,32 @@
 
             const userOrders = u.orders || [];
             document.getElementById('st-orders').textContent = userOrders.length;
-            document.getElementById('st-spent').textContent = fmt(userOrders.reduce((s, o) => s + (o.total || 0), 0));
+            document.getElementById('st-spent').textContent = fmt(userOrders.reduce(function (s, o) { return s + (o.total || 0); }, 0));
             document.getElementById('st-wish').textContent = wishlist.items.length;
             document.getElementById('st-addr').textContent = addresses.list.length;
 
             renderOverviewOrders(userOrders);
             switchPanel('overview');
+        }
+
+        // D.2: pull orders from the API and stash on window.__aus_orders__
+        // in the shape austin's render code already expects
+        // ({ id, total, status, date, items }).
+        async function hydrateOrdersForDashboard() {
+            try {
+                const r = await vmCustomer.myOrders();
+                window.__aus_orders__ = (r.orders || []).map(function (o) {
+                    return {
+                        id: o.id,
+                        total: o.total_amount,
+                        status: o.status,
+                        date: o.created_at,
+                        items: o.items || []
+                    };
+                });
+            } catch (e) {
+                window.__aus_orders__ = [];
+            }
         }
 
         function renderOverviewOrders(orders) {
@@ -3502,39 +3559,45 @@
         async function qAddWish(id) { const p = await fetchStore('product', { id }); if (p && p.stock > 0) { cart.add(p, 1); openCart(); } else showToast('Out of stock', 'error'); }
         function rmWish(id) { const p = wishlist.items.find(i => i.id === id); if (p) wishlist.toggle(p); renderWishlist(); }
 
-        function saveAccountInfo() {
-            const u = auth.getUser(); if (!u) return;
-            u.fname = document.getElementById('acc-fname').value.trim();
-            u.lname = document.getElementById('acc-lname').value.trim();
-            u.email = document.getElementById('acc-email').value.trim();
-            u.phone = document.getElementById('acc-phone').value.trim();
-            auth.setUser(u);
-            document.getElementById('sb-name').textContent = `${u.fname} ${u.lname}`.trim();
-            document.getElementById('sb-email').textContent = u.email;
-            document.getElementById('sb-avatar').textContent = `${u.fname.charAt(0)}${u.lname ? u.lname.charAt(0) : ''}`.toUpperCase();
-            let users = JSON.parse(localStorage.getItem('aus_users') || '[]');
-            const idx = users.findIndex(x => x.email === u.email);
-            if (idx > -1) { users[idx] = u; localStorage.setItem('aus_users', JSON.stringify(users)); }
-            showToast('Profile updated');
+        async function saveAccountInfo() {
+            const fname = document.getElementById('acc-fname').value.trim();
+            const lname = document.getElementById('acc-lname').value.trim();
+            const phone = document.getElementById('acc-phone').value.trim();
+            const name = (fname + ' ' + lname).trim();
+            try {
+                await vmCustomer.updateProfile(name || null, phone || null);
+                // helper updates vm_customer_cache; pull from there for re-render
+                const u = auth.getUser();
+                if (u) {
+                    document.getElementById('sb-name').textContent = (u.fname + ' ' + u.lname).trim();
+                    document.getElementById('sb-avatar').textContent =
+                        (u.fname.charAt(0) + (u.lname ? u.lname.charAt(0) : '')).toUpperCase();
+                }
+                showToast('Profile updated');
+            } catch (e) {
+                showToast((e && e.message) || 'Update failed', 'error');
+            }
         }
 
         function savePrefs() { showToast('Preferences saved'); }
 
-        function changePassword() {
+        async function changePassword() {
             const cur = document.getElementById('pw-cur').value;
-            const nw = document.getElementById('pw-new').value;
+            const nw  = document.getElementById('pw-new').value;
             const conf = document.getElementById('pw-conf').value;
             if (!cur || !nw || !conf) { showToast('Please fill all password fields', 'error'); return; }
-            if (nw.length < 8) { showToast('New password must be at least 8 characters', 'error'); return; }
-            if (nw !== conf) { showToast('Passwords do not match', 'error'); return; }
-            const u = auth.getUser(); if (!u) return;
-            if (u.password !== cur) { showToast('Current password is incorrect', 'error'); return; }
-            u.password = nw; auth.setUser(u);
-            let users = JSON.parse(localStorage.getItem('aus_users') || '[]');
-            const idx = users.findIndex(x => x.email === u.email);
-            if (idx > -1) { users[idx] = u; localStorage.setItem('aus_users', JSON.stringify(users)); }
-            ['pw-cur', 'pw-new', 'pw-conf'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-            showToast('Password updated');
+            if (nw.length < 8)  { showToast('New password must be at least 8 characters', 'error'); return; }
+            if (nw !== conf)    { showToast('Passwords do not match', 'error'); return; }
+            try {
+                await vmCustomer.changePassword(cur, nw);
+                ['pw-cur', 'pw-new', 'pw-conf'].forEach(function (id) {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
+                showToast('Password updated');
+            } catch (e) {
+                showToast((e && e.message) || 'Failed to change password', 'error');
+            }
         }
 
         /* ════════════════════════════════════
