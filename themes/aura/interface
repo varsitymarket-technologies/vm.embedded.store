@@ -89,6 +89,13 @@
                     <span class="text-[11px] uppercase tracking-[0.15em] hidden md:block">Search</span>
                     <i data-lucide="search" class="w-4 h-4 stroke-[1] md:hidden"></i>
                 </button>
+                <button id="auth-icon-btn"
+                        class="hover:text-black transition-colors duration-300 flex items-center"
+                        onclick="app.auth.iconClick()"
+                        aria-label="Account">
+                    <span class="text-[11px] uppercase tracking-[0.15em] hidden md:block" id="auth-icon-label">Account</span>
+                    <i data-lucide="user" class="w-4 h-4 stroke-[1] md:hidden"></i>
+                </button>
                 <button class="hover:text-black transition-colors duration-300 relative flex items-center" onclick="app.ui.toggleCartDrawer()" aria-label="Cart">
                     <span class="text-[11px] uppercase tracking-[0.15em] hidden md:block">Tote (<span id="global-cart-count-text">0</span>)</span>
                     <div class="md:hidden relative">
