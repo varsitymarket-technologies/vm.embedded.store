@@ -1028,40 +1028,62 @@
             }
         }
 
-        function handleCheckout(e) {
+        async function handleCheckout(e) {
             e.preventDefault();
-            
-            // Get email if provided in form
-            const emailInput = document.querySelector('input[type="email"]').value;
-            const userEmail = userSession ? userSession.email : (emailInput || 'guest@example.com');
-            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            if (submitBtn && submitBtn.disabled) return;
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.dataset.originalText = submitBtn.textContent;
+                submitBtn.textContent = 'Placing order...';
+            }
+
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
             const totalDiscount = currentDiscount ? (subtotal * currentDiscount.percent / 100) : 0;
             const finalP = subtotal - totalDiscount;
-            
-            const newOrder = {
-                id: Math.floor(Math.random() * 90000) + 10000,
-                email: userEmail,
-                date: new Date().toLocaleDateString(),
-                status: 'Processing',
-                items: [...cart],
-                total: finalP
-            };
-            
-            userHistory.push(newOrder);
-            localStorage.setItem('vm_user_history', JSON.stringify(userHistory));
 
-            alert("Order confirmed! Thank you for choosing VMTECH.");
-            cart = [];
-            saveCart();
-            closeCheckout();
-            currentDiscount = null; // reset discount
-            
-            // If logged in, go to dashboard, else shop
-            if(userSession && userSession.email === userEmail) {
-                showView('dashboard');
-            } else {
-                showView('shop');
+            const emailInput = document.querySelector('#checkout-modal input[type="email"]')?.value || '';
+            const user = customerAuth.user || {};
+            const payload = {
+                name: user.name || 'CUSTOMER',
+                email: user.email || emailInput || 'guest@example.com',
+                total: finalP,
+                items: cart.map(c => ({
+                    id: c.id,
+                    name: c.name,
+                    price: c.price,
+                    quantity: c.quantity,
+                    img: c.img
+                }))
+            };
+
+            try {
+                const result = await postStore('order', payload);
+                const ok = result.ok || (result.data && result.data.success === true);
+                if (ok) {
+                    cart = [];
+                    saveCart();
+                    closeCheckout();
+                    currentDiscount = null;
+                    if (isLoggedIn()) {
+                        showView('dashboard');
+                    } else {
+                        showView('shop');
+                    }
+                    alert('Order confirmed. Thank you.');
+                } else {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = submitBtn.dataset.originalText || 'Place Order';
+                    }
+                    alert(result.error || (result.data && result.data.error) || 'Order could not be placed. Please try again.');
+                }
+            } catch (err) {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = submitBtn.dataset.originalText || 'Place Order';
+                }
+                alert('Order could not be placed. Please try again.');
             }
         }
 
