@@ -1,0 +1,2884 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OAKLYN — Curated Living</title>
+    <meta name="description"
+        content="OAKLYN is a curated lifestyle brand offering premium apparel, accessories, and home goods for the modern aesthetic." />
+    <meta property="og:title" content="OAKLYN — Curated Living" />
+    <meta property="og:description" content="Curated objects for a considered life." />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400&family=Jost:wght@200;300;400;500&display=swap"
+        rel="stylesheet" />
+
+    <style>
+        :root {
+            --ivory: #f5f0e8;
+            --cream: #ede7d9;
+            --espresso: #2a1e14;
+            --bark: #5c3d2e;
+            --gold: #c8a96e;
+            --gold-lt: #e8d5a8;
+            --stone: #9a8f82;
+            --white: #fdfaf5;
+        }
+
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Jost', sans-serif;
+            background: var(--ivory);
+            color: var(--espresso);
+            font-weight: 300;
+            letter-spacing: 0.01em;
+            overflow-x: hidden;
+        }
+
+        /* ── TYPOGRAPHY ── */
+        .font-serif {
+            font-family: 'Cormorant Garamond', serif;
+        }
+
+        .font-mono {
+            font-family: 'DM Mono', monospace;
+        }
+
+        /* ── VIEWS ── */
+        .view-section {
+            display: none;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        /* ── ANNOUNCEMENT BAR ── */
+        #announcement-bar {
+            background: var(--espresso);
+            color: var(--gold-lt);
+            text-align: center;
+            padding: 10px 16px;
+            font-size: 11px;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+            font-family: 'DM Mono', monospace;
+        }
+
+        /* ── HEADER ── */
+        #site-header {
+            background: var(--white);
+            border-bottom: 1px solid var(--cream);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        #site-header nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 68px;
+        }
+
+        .nav-logo {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
+            font-weight: 500;
+            letter-spacing: 0.12em;
+            color: var(--espresso);
+            text-decoration: none;
+            text-transform: uppercase;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            font-size: 11px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--bark);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: var(--espresso);
+        }
+
+        .nav-icons {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .nav-icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--espresso);
+            font-size: 18px;
+            position: relative;
+            padding: 4px;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -4px;
+            right: -6px;
+            background: var(--gold);
+            color: var(--espresso);
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 9px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'DM Mono', monospace;
+            font-weight: 400;
+            display: none;
+        }
+
+        .hamburger {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            flex-direction: column;
+            gap: 5px;
+            padding: 4px;
+        }
+
+        .hamburger span {
+            display: block;
+            width: 22px;
+            height: 1.5px;
+            background: var(--espresso);
+            transition: all 0.3s;
+        }
+
+        /* ── MOBILE NAV ── */
+        #mobile-nav {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: var(--espresso);
+            color: var(--ivory);
+            padding: 40px 32px;
+        }
+
+        #mobile-nav.open {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #mobile-nav .mob-close {
+            align-self: flex-end;
+            background: none;
+            border: none;
+            color: var(--gold-lt);
+            font-size: 24px;
+            cursor: pointer;
+            margin-bottom: 40px;
+        }
+
+        #mobile-nav a {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px;
+            font-weight: 300;
+            color: var(--ivory);
+            text-decoration: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 16px 0;
+            letter-spacing: 0.05em;
+        }
+
+        /* ── CART DRAWER ── */
+        #cart-drawer-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(42, 30, 20, 0.5);
+            z-index: 300;
+        }
+
+        #cart-drawer-overlay.open {
+            display: block;
+        }
+
+        #cart-drawer {
+            position: fixed;
+            top: 0;
+            right: -480px;
+            width: 100%;
+            max-width: 480px;
+            height: 100%;
+            background: var(--white);
+            z-index: 301;
+            display: flex;
+            flex-direction: column;
+            transition: right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: -8px 0 40px rgba(42, 30, 20, 0.15);
+        }
+
+        #cart-drawer.open {
+            right: 0;
+        }
+
+        .drawer-header {
+            padding: 28px 32px;
+            border-bottom: 1px solid var(--cream);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .drawer-header h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            font-weight: 400;
+            letter-spacing: 0.08em;
+        }
+
+        .drawer-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            color: var(--bark);
+        }
+
+        .drawer-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 32px;
+        }
+
+        .drawer-footer {
+            padding: 24px 32px;
+            border-top: 1px solid var(--cream);
+        }
+
+        /* ── SEARCH OVERLAY ── */
+        #search-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(245, 240, 232, 0.97);
+            z-index: 400;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 120px;
+        }
+
+        #search-overlay.open {
+            display: flex;
+        }
+
+        .search-inner {
+            width: 100%;
+            max-width: 680px;
+            padding: 0 24px;
+        }
+
+        .search-inner input {
+            width: 100%;
+            border: none;
+            border-bottom: 2px solid var(--espresso);
+            background: transparent;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px;
+            color: var(--espresso);
+            padding: 16px 0;
+            outline: none;
+            letter-spacing: 0.04em;
+        }
+
+        .search-inner input::placeholder {
+            color: var(--stone);
+        }
+
+        #search-close {
+            position: absolute;
+            top: 32px;
+            right: 40px;
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--espresso);
+        }
+
+        #search-results {
+            margin-top: 32px;
+        }
+
+        /* ── TOAST ── */
+        #toast-container {
+            position: fixed;
+            bottom: 32px;
+            right: 32px;
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            pointer-events: none;
+        }
+
+        .toast {
+            padding: 14px 22px;
+            border-radius: 2px;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            pointer-events: auto;
+            animation: toastIn 0.3s ease;
+        }
+
+        .toast.success {
+            background: var(--espresso);
+            color: var(--gold-lt);
+        }
+
+        .toast.error {
+            background: #7a2020;
+            color: #fddede;
+        }
+
+        .toast.info {
+            background: var(--bark);
+            color: var(--ivory);
+        }
+
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── BTN STYLES ── */
+        .btn-primary {
+            display: inline-block;
+            background: var(--espresso);
+            color: var(--gold-lt);
+            padding: 14px 36px;
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-family: 'DM Mono', monospace;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s, color 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-primary:hover {
+            background: var(--bark);
+        }
+
+        .btn-outline {
+            display: inline-block;
+            border: 1px solid var(--espresso);
+            color: var(--espresso);
+            padding: 13px 36px;
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-family: 'DM Mono', monospace;
+            cursor: pointer;
+            background: transparent;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+
+        .btn-outline:hover {
+            background: var(--espresso);
+            color: var(--gold-lt);
+        }
+
+        .btn-gold {
+            display: inline-block;
+            background: var(--gold);
+            color: var(--espresso);
+            padding: 14px 36px;
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-family: 'DM Mono', monospace;
+            cursor: pointer;
+            border: none;
+            transition: background 0.2s;
+        }
+
+        .btn-gold:hover {
+            background: var(--gold-lt);
+        }
+
+        /* ── PRODUCT CARD ── */
+        .product-card {
+            background: var(--white);
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 16px 48px rgba(42, 30, 20, 0.1);
+        }
+
+        .product-card-img {
+            width: 100%;
+            aspect-ratio: 3/4;
+            object-fit: cover;
+            display: block;
+            background: var(--cream);
+        }
+
+        .product-card-img-placeholder {
+            width: 100%;
+            aspect-ratio: 3/4;
+            background: var(--cream);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--stone);
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            font-family: 'DM Mono', monospace;
+        }
+
+        .product-card-body {
+            padding: 16px 20px 20px;
+        }
+
+        .product-card-cat {
+            font-size: 9px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--stone);
+            font-family: 'DM Mono', monospace;
+            margin-bottom: 6px;
+        }
+
+        .product-card-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            font-weight: 400;
+            color: var(--espresso);
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+
+        .product-card-price {
+            font-family: 'DM Mono', monospace;
+            font-size: 12px;
+            color: var(--bark);
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: var(--gold);
+            color: var(--espresso);
+            font-size: 9px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            font-family: 'DM Mono', monospace;
+            padding: 4px 10px;
+        }
+
+        /* ── SECTION HEADING ── */
+        .section-eyebrow {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: var(--stone);
+            margin-bottom: 12px;
+        }
+
+        .section-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(32px, 5vw, 56px);
+            font-weight: 300;
+            color: var(--espresso);
+            line-height: 1.1;
+        }
+
+        /* ── FORM ── */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-family: 'DM Mono', monospace;
+            color: var(--stone);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            border: 1px solid var(--cream);
+            background: var(--white);
+            padding: 12px 16px;
+            font-family: 'Jost', sans-serif;
+            font-size: 14px;
+            color: var(--espresso);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            border-color: var(--espresso);
+        }
+
+        .form-input::placeholder {
+            color: var(--stone);
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            background: var(--espresso);
+            color: var(--ivory);
+            padding: 64px 32px 32px;
+            margin-top: 80px;
+        }
+
+        .footer-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 48px;
+            margin-bottom: 48px;
+        }
+
+        .footer-col h4 {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 20px;
+        }
+
+        .footer-col a {
+            display: block;
+            color: rgba(245, 240, 232, 0.6);
+            font-size: 13px;
+            margin-bottom: 10px;
+            text-decoration: none;
+            letter-spacing: 0.04em;
+            transition: color 0.2s;
+        }
+
+        .footer-col a:hover {
+            color: var(--gold-lt);
+        }
+
+        .footer-brand {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32px;
+            font-weight: 300;
+            letter-spacing: 0.12em;
+            color: var(--white);
+            margin-bottom: 12px;
+        }
+
+        .footer-tagline {
+            font-size: 12px;
+            color: var(--stone);
+            letter-spacing: 0.08em;
+        }
+
+        .footer-bottom {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--stone);
+            font-family: 'DM Mono', monospace;
+        }
+
+        /* ── ACCORDION ── */
+        .accordion-item {
+            border-bottom: 1px solid var(--cream);
+        }
+
+        .accordion-btn {
+            width: 100%;
+            background: none;
+            border: none;
+            text-align: left;
+            padding: 20px 0;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .accordion-q {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            font-weight: 400;
+            color: var(--espresso);
+        }
+
+        .accordion-icon {
+            font-size: 20px;
+            color: var(--gold);
+            transition: transform 0.3s;
+            flex-shrink: 0;
+        }
+
+        .accordion-item.open .accordion-icon {
+            transform: rotate(45deg);
+        }
+
+        .accordion-body {
+            display: none;
+            padding: 0 0 20px;
+            color: var(--bark);
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .accordion-item.open .accordion-body {
+            display: block;
+        }
+
+        /* ── CHECKOUT STEPS ── */
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 32px;
+        }
+
+        .step-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            border: 1px solid var(--cream);
+            color: var(--stone);
+            transition: all 0.3s;
+            flex-shrink: 0;
+        }
+
+        .step-dot.active {
+            background: var(--espresso);
+            color: var(--gold-lt);
+            border-color: var(--espresso);
+        }
+
+        .step-dot.done {
+            background: var(--gold);
+            color: var(--espresso);
+            border-color: var(--gold);
+        }
+
+        .step-line {
+            flex: 1;
+            height: 1px;
+            background: var(--cream);
+        }
+
+        /* ── TRACKING TIMELINE ── */
+        .track-step {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            padding-bottom: 24px;
+            position: relative;
+        }
+
+        .track-step-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: var(--cream);
+            border: 2px solid var(--stone);
+            flex-shrink: 0;
+            margin-top: 3px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .track-step.done .track-step-dot {
+            background: var(--gold);
+            border-color: var(--gold);
+        }
+
+        .track-step::after {
+            content: '';
+            position: absolute;
+            left: 6px;
+            top: 16px;
+            bottom: 0;
+            width: 2px;
+            background: var(--cream);
+        }
+
+        .track-step:last-child::after {
+            display: none;
+        }
+
+        /* ── HERO ── */
+        .hero-bg {
+            background: linear-gradient(135deg, var(--espresso) 0%, var(--bark) 50%, #3d2517 100%);
+            min-height: 92vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-bg::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c8a96e' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .hero-text {
+            padding: 80px 80px 80px 10%;
+            color: var(--ivory);
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-eyebrow {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--gold);
+            margin-bottom: 24px;
+        }
+
+        .hero-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(52px, 7vw, 96px);
+            font-weight: 300;
+            line-height: 1.0;
+            margin-bottom: 28px;
+        }
+
+        .hero-title em {
+            font-style: italic;
+            color: var(--gold);
+        }
+
+        .hero-sub {
+            font-size: 15px;
+            color: rgba(245, 240, 232, 0.65);
+            line-height: 1.7;
+            margin-bottom: 40px;
+            max-width: 380px;
+            letter-spacing: 0.03em;
+        }
+
+        .hero-img-col {
+            height: 92vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-img-col img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.85;
+        }
+
+        .hero-img-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, rgba(92, 61, 46, 0.3) 0%, rgba(42, 30, 20, 0.6) 100%), url('https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=900') center/cover;
+        }
+
+        /* ── VALUE PROPS ── */
+        .value-bar {
+            background: var(--espresso);
+            padding: 24px 32px;
+        }
+
+        .value-bar-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .value-prop {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--gold-lt);
+        }
+
+        .value-prop-icon {
+            font-size: 18px;
+            color: var(--gold);
+            flex-shrink: 0;
+        }
+
+        .value-prop-text {
+            font-size: 11px;
+            letter-spacing: 0.1em;
+        }
+
+        /* ── COLLECTION CARD ── */
+        .collection-card {
+            position: relative;
+            overflow: hidden;
+            aspect-ratio: 4/5;
+            cursor: pointer;
+        }
+
+        .collection-card img,
+        .collection-card-bg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+
+        .collection-card:hover img,
+        .collection-card:hover .collection-card-bg {
+            transform: scale(1.04);
+        }
+
+        .collection-card-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(42, 30, 20, 0.7) 0%, transparent 60%);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 32px;
+        }
+
+        .collection-card-overlay h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
+            color: var(--white);
+            font-weight: 300;
+            letter-spacing: 0.05em;
+        }
+
+        .collection-card-overlay span {
+            font-family: 'DM Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            color: var(--gold);
+            text-transform: uppercase;
+        }
+
+        /* ── TRUST BADGES ── */
+        .trust-badge {
+            text-align: center;
+            padding: 32px 24px;
+        }
+
+        .trust-badge-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+            color: var(--gold);
+        }
+
+        .trust-badge h4 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 18px;
+            font-weight: 400;
+            margin-bottom: 6px;
+        }
+
+        .trust-badge p {
+            font-size: 12px;
+            color: var(--stone);
+            line-height: 1.6;
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 1024px) {
+            .hero-bg {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+
+            .hero-img-col {
+                display: none;
+            }
+
+            .hero-text {
+                padding: 80px 32px;
+                text-align: center;
+            }
+
+            .hero-sub {
+                margin: 0 auto 40px;
+            }
+
+            .footer-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .value-bar-inner {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
+
+            .value-bar-inner {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-text {
+                padding: 64px 24px;
+            }
+        }
+
+        /* ── PAGE INNER ── */
+        .page-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 32px;
+        }
+
+        .page-section {
+            padding: 80px 0;
+        }
+
+        @media (max-width: 640px) {
+            .page-inner {
+                padding: 0 20px;
+            }
+
+            .page-section {
+                padding: 56px 0;
+            }
+        }
+
+        /* ── SKELETON ── */
+        .skeleton {
+            background: linear-gradient(90deg, var(--cream) 25%, var(--ivory) 50%, var(--cream) 75%);
+            background-size: 400% 100%;
+            animation: shimmer 1.4s ease infinite;
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: 100% 0
+            }
+
+            100% {
+                background-position: -100% 0
+            }
+        }
+
+        /* ── SALE BADGE ── */
+        .sale-badge {
+            background: var(--bark);
+            color: var(--gold-lt);
+            padding: 4px 12px;
+            font-family: 'DM Mono', monospace;
+            font-size: 9px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        /* ── QTY CONTROL ── */
+        .qty-ctrl {
+            display: flex;
+            align-items: center;
+            border: 1px solid var(--cream);
+        }
+
+        .qty-btn {
+            background: none;
+            border: none;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            font-size: 16px;
+            color: var(--espresso);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .qty-btn:hover {
+            background: var(--cream);
+        }
+
+        .qty-val {
+            width: 44px;
+            text-align: center;
+            font-family: 'DM Mono', monospace;
+            font-size: 13px;
+        }
+
+        /* ── DISCOUNT BADGE ── */
+        .discount-card {
+            background: var(--white);
+            border: 1px dashed var(--gold);
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .discount-code {
+            font-family: 'DM Mono', monospace;
+            font-size: 16px;
+            letter-spacing: 0.15em;
+            color: var(--espresso);
+        }
+
+        .discount-pct {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 28px;
+            font-weight: 300;
+            color: var(--gold);
+        }
+
+        /* ── BREADCRUMB ── */
+        .breadcrumb {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            font-size: 11px;
+            font-family: 'DM Mono', monospace;
+            letter-spacing: 0.1em;
+            color: var(--stone);
+            margin-bottom: 32px;
+        }
+
+        .breadcrumb a {
+            color: var(--stone);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .breadcrumb a:hover {
+            color: var(--espresso);
+        }
+
+        .breadcrumb span {
+            color: var(--gold);
+        }
+
+        /* ── SCROLL REVEAL ── */
+        .reveal {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ══ ANNOUNCEMENT BAR ══ -->
+    <div id="announcement-bar">
+        ✦ Free shipping on orders over R500 &nbsp;·&nbsp; Use code WELCOME10 for 10% off &nbsp;·&nbsp; New arrivals
+        every Friday ✦
+    </div>
+
+    <!-- ══ HEADER ══ -->
+    <div id="site-header">
+        <nav>
+            <a href="#home" class="nav-logo">OAKLYN</a>
+            <div class="nav-links">
+                <a href="#shop">Shop</a>
+                <a href="#collections">Collections</a>
+                <a href="#sale">Sale</a>
+                <a href="#about">About</a>
+                <a href="#contact">Contact</a>
+            </div>
+            <div class="nav-icons">
+                <button class="nav-icon-btn" id="search-toggle" title="Search">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5"
+                        viewBox="0 0 24 24">
+                        <circle cx="11" cy="11" r="7" />
+                        <path d="m21 21-4.35-4.35" />
+                    </svg>
+                </button>
+                <button class="nav-icon-btn" id="cart-toggle" title="Cart">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.5"
+                        viewBox="0 0 24 24">
+                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <path d="M16 10a4 4 0 0 1-8 0" />
+                    </svg>
+                    <span class="cart-badge" id="cart-badge" data-cart-count>0</span>
+                </button>
+                <button class="hamburger" id="hamburger-btn" aria-label="Menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </nav>
+    </div>
+
+    <!-- ══ MOBILE NAV ══ -->
+    <div id="mobile-nav">
+        <button class="mob-close" id="mob-close">✕</button>
+        <a href="#home">Home</a>
+        <a href="#shop">Shop</a>
+        <a href="#collections">Collections</a>
+        <a href="#sale">Sale</a>
+        <a href="#about">About</a>
+        <a href="#contact">Contact</a>
+        <a href="#faq">FAQ</a>
+        <a href="#track">Track Order</a>
+    </div>
+
+    <!-- ══ CART DRAWER ══ -->
+    <div id="cart-drawer-overlay"></div>
+    <div id="cart-drawer">
+        <div class="drawer-header">
+            <h2>Your Cart</h2>
+            <button class="drawer-close" id="cart-drawer-close">✕</button>
+        </div>
+        <div class="drawer-items" id="cart-drawer-items"></div>
+        <div class="drawer-footer">
+            <div style="display:flex; justify-content:space-between; margin-bottom:16px;">
+                <span
+                    style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--stone)">Subtotal</span>
+                <span style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;"
+                    id="cart-drawer-subtotal">R0.00</span>
+            </div>
+            <a href="#checkout" class="btn-primary" style="width:100%;text-align:center;display:block;"
+                id="drawer-checkout-btn">Proceed to Checkout</a>
+            <a href="#shop" class="btn-outline"
+                style="width:100%;text-align:center;display:block;margin-top:10px;">Continue Shopping</a>
+        </div>
+    </div>
+
+    <!-- ══ SEARCH OVERLAY ══ -->
+    <div id="search-overlay">
+        <button id="search-close">✕</button>
+        <div class="search-inner">
+            <input type="text" id="search-input" placeholder="Search products…" autocomplete="off" />
+            <div id="search-results"></div>
+        </div>
+    </div>
+
+    <!-- ══ TOAST ══ -->
+    <div id="toast-container"></div>
+
+    <!-- ══════════════════════════════════
+     PAGE VIEWS
+═══════════════════════════════════ -->
+
+    <!-- 1. HOME -->
+    <template id="page-home">
+        <div id="page-home-hash"></div>
+    </template>
+    <section id="view-home" class="view-section active">
+
+        <!-- Hero -->
+        <div class="hero-bg">
+            <div class="hero-text">
+                <p class="hero-eyebrow">Curated Living — SS 2026</p>
+                <h1 class="hero-title">Objects of<br><em>Intention</em></h1>
+                <p class="hero-sub">Premium apparel and objects selected for the considered life. Timeless craft, modern
+                    sensibility.</p>
+                <div style="display:flex;gap:16px;flex-wrap:wrap;">
+                    <a href="#shop" class="btn-gold">Shop the Collection</a>
+                    <a href="#about" class="btn-outline" style="color:var(--gold-lt);border-color:var(--gold-lt)">Our
+                        Story</a>
+                </div>
+            </div>
+            <div class="hero-img-col">
+                <div class="hero-img-placeholder"></div>
+            </div>
+        </div>
+
+        <!-- Value Props -->
+        <div class="value-bar">
+            <div class="value-bar-inner">
+                <div class="value-prop"><span class="value-prop-icon">🚚</span><span class="value-prop-text">Free
+                        shipping over R500</span></div>
+                <div class="value-prop"><span class="value-prop-icon">↩</span><span class="value-prop-text">30-day easy
+                        returns</span></div>
+                <div class="value-prop"><span class="value-prop-icon">🔒</span><span class="value-prop-text">Secure
+                        checkout</span></div>
+                <div class="value-prop"><span class="value-prop-icon">✦</span><span class="value-prop-text">Ethically
+                        sourced</span></div>
+            </div>
+        </div>
+
+        <!-- Featured Products -->
+        <div class="page-section">
+            <div class="page-inner">
+                <div
+                    style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:40px;flex-wrap:wrap;gap:16px;">
+                    <div>
+                        <p class="section-eyebrow">New In</p>
+                        <h2 class="section-title">Featured Pieces</h2>
+                    </div>
+                    <a href="#shop" class="btn-outline">View All</a>
+                </div>
+                <div id="home-products" style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Collections -->
+        <div class="page-section" style="background:var(--cream);padding-top:80px;padding-bottom:80px;">
+            <div class="page-inner">
+                <p class="section-eyebrow" style="text-align:center;">By Category</p>
+                <h2 class="section-title" style="text-align:center;margin-bottom:48px;">Shop by Collection</h2>
+                <div id="home-collections" style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;">
+                    <!-- Filled by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Social Proof -->
+        <div class="page-section">
+            <div class="page-inner">
+                <p class="section-eyebrow" style="text-align:center;">Why OAKLYN</p>
+                <h2 class="section-title" style="text-align:center;margin-bottom:48px;">Crafted with Purpose</h2>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0;border:1px solid var(--cream);">
+                    <div class="trust-badge" style="border-right:1px solid var(--cream);">
+                        <div class="trust-badge-icon">🌿</div>
+                        <h4>Sustainably Sourced</h4>
+                        <p>Every material traceable from origin. We work only with certified ethical suppliers.</p>
+                    </div>
+                    <div class="trust-badge" style="border-right:1px solid var(--cream);">
+                        <div class="trust-badge-icon">✦</div>
+                        <h4>Designed to Last</h4>
+                        <p>Investment pieces built with intention. No fast fashion — only enduring quality.</p>
+                    </div>
+                    <div class="trust-badge">
+                        <div class="trust-badge-icon">🤝</div>
+                        <h4>Community First</h4>
+                        <p>Every purchase supports independent artisans and local production networks.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Newsletter -->
+        <div style="background:var(--espresso);padding:80px 32px;">
+            <div style="max-width:560px;margin:0 auto;text-align:center;">
+                <p
+                    style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.25em;color:var(--gold);text-transform:uppercase;margin-bottom:16px;">
+                    Stay Connected</p>
+                <h2
+                    style="font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;color:var(--white);margin-bottom:16px;">
+                    The OAKLYN EFFECT</h2>
+                <p style="color:rgba(245,240,232,0.6);font-size:14px;margin-bottom:32px;line-height:1.7;">New arrivals,
+                    studio stories, and considered guides — delivered fortnightly.</p>
+                <div style="display:flex;gap:0;">
+                    <input type="email" placeholder="Your email address" id="newsletter-input"
+                        style="flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(200,169,110,0.3);color:var(--white);padding:14px 20px;font-family:'Jost',sans-serif;font-size:14px;outline:none;" />
+                    <button onclick="subscribeNewsletter()" class="btn-gold"
+                        style="white-space:nowrap;">Subscribe</button>
+                </div>
+            </div>
+        </div>
+
+    </section>
+
+    <!-- 2. SHOP -->
+    <template id="page-shop">
+        <div id="page-shop-hash"></div>
+    </template>
+    <section id="view-shop" class="view-section">
+        <div class="page-section" style="padding-top:48px;">
+            <div class="page-inner">
+                <div style="display:flex;gap:40px;align-items:flex-start;flex-wrap:wrap;">
+                    <!-- Sidebar -->
+                    <div style="width:220px;flex-shrink:0;">
+                        <h3
+                            style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--stone);margin-bottom:20px;">
+                            Filter</h3>
+                        <div id="shop-categories-filter">
+                            <button onclick="shopFilter(null)" class="shop-cat-btn" data-id="null"
+                                style="display:block;width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:8px 0;font-size:13px;font-family:'Jost',sans-serif;border-bottom:1px solid var(--cream);color:var(--espresso);">All
+                                Products</button>
+                        </div>
+                        <div style="margin-top:24px;">
+                            <h3
+                                style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--stone);margin-bottom:16px;">
+                                Sort</h3>
+                            <select id="shop-sort" onchange="renderShop()"
+                                style="width:100%;padding:10px;border:1px solid var(--cream);background:var(--white);font-family:'Jost',sans-serif;font-size:13px;color:var(--espresso);outline:none;">
+                                <option value="default">Featured</option>
+                                <option value="price-asc">Price: Low to High</option>
+                                <option value="price-desc">Price: High to Low</option>
+                            </select>
+                        </div>
+                    </div>
+                    <!-- Grid -->
+                    <div style="flex:1;min-width:0;">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;">
+                            <h1 style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;">All
+                                Products</h1>
+                            <span id="shop-count"
+                                style="font-family:'DM Mono',monospace;font-size:11px;color:var(--stone);letter-spacing:0.1em;"></span>
+                        </div>
+                        <div id="shop-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. PRODUCT DETAIL -->
+    <template id="page-product">
+        <div id="page-product-hash"></div>
+    </template>
+    <section id="view-product" class="view-section">
+        <div class="page-section" style="padding-top:48px;">
+            <div class="page-inner">
+                <div class="breadcrumb">
+                    <a href="#home">Home</a><span>/</span>
+                    <a href="#shop">Shop</a><span>/</span>
+                    <span id="product-breadcrumb-name" style="color:var(--espresso);"></span>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;flex-wrap:wrap;">
+                    <div>
+                        <div id="product-img-wrap"
+                            style="position:relative;overflow:hidden;aspect-ratio:3/4;background:var(--cream);">
+                            <img id="product-main-img" src="" alt=""
+                                style="width:100%;height:100%;object-fit:cover;display:block;" />
+                        </div>
+                    </div>
+                    <div>
+                        <p id="product-cat-label"
+                            style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--stone);margin-bottom:12px;">
+                        </p>
+                        <h1 id="product-name"
+                            style="font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;line-height:1.2;margin-bottom:16px;">
+                        </h1>
+                        <p id="product-price"
+                            style="font-family:'DM Mono',monospace;font-size:18px;color:var(--bark);margin-bottom:20px;">
+                        </p>
+                        <p id="product-stock-badge" style="margin-bottom:24px;"></p>
+                        <p id="product-desc"
+                            style="font-size:14px;line-height:1.8;color:var(--bark);margin-bottom:32px;"></p>
+                        <div style="display:flex;gap:16px;align-items:center;margin-bottom:24px;flex-wrap:wrap;">
+                            <div class="qty-ctrl">
+                                <button class="qty-btn" onclick="changeQty(-1)">−</button>
+                                <span class="qty-val" id="product-qty">1</span>
+                                <button class="qty-btn" onclick="changeQty(1)">+</button>
+                            </div>
+                            <button class="btn-primary" id="add-to-cart-btn" onclick="addCurrentToCart()">Add to
+                                Cart</button>
+                        </div>
+                        <div
+                            style="border-top:1px solid var(--cream);padding-top:24px;display:flex;gap:24px;font-size:12px;color:var(--stone);font-family:'DM Mono',monospace;letter-spacing:0.08em;">
+                            <span>🚚 Free shipping over R500</span>
+                            <span>↩ 30-day returns</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Related Products -->
+                <div style="margin-top:80px;">
+                    <p class="section-eyebrow">You May Also Like</p>
+                    <h2 class="section-title" style="margin-bottom:40px;">Related Products</h2>
+                    <div id="related-products" style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. COLLECTIONS -->
+    <template id="page-collections">
+        <div id="page-collections-hash"></div>
+    </template>
+    <section id="view-collections" class="view-section">
+        <div class="page-section" style="padding-top:48px;">
+            <div class="page-inner">
+                <p class="section-eyebrow">Browse</p>
+                <h1 class="section-title" style="margin-bottom:48px;">Collections</h1>
+                <div id="collections-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:24px;"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. SALE -->
+    <template id="page-sale">
+        <div id="page-sale-hash"></div>
+    </template>
+    <section id="view-sale" class="view-section">
+        <div class="page-section" style="padding-top:48px;">
+            <div class="page-inner">
+                <div style="text-align:center;margin-bottom:56px;">
+                    <p class="section-eyebrow">Offers</p>
+                    <h1 class="section-title" style="margin-bottom:16px;">Sale & Promotions</h1>
+                    <p style="color:var(--stone);font-size:14px;">Active discount codes — click to copy</p>
+                </div>
+                <div id="sale-discounts"
+                    style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-bottom:56px;"></div>
+                <h2 style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;margin-bottom:32px;">
+                    All Products</h2>
+                <div id="sale-products" style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. CART -->
+    <template id="page-cart">
+        <div id="page-cart-hash"></div>
+    </template>
+    <section id="view-cart" class="view-section">
+        <div class="page-section" style="padding-top:48px;">
+            <div class="page-inner">
+                <h1 style="font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;margin-bottom:48px;">
+                    Your Cart</h1>
+                <div style="display:grid;grid-template-columns:1fr 360px;gap:48px;align-items:start;flex-wrap:wrap;">
+                    <div id="cart-page-items"></div>
+                    <div style="background:var(--white);padding:32px;border:1px solid var(--cream);">
+                        <h3
+                            style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--cream);">
+                            Order Summary</h3>
+                        <div style="margin-bottom:16px;">
+                            <div class="form-group">
+                                <label class="form-label">Discount Code</label>
+                                <div style="display:flex;gap:0;">
+                                    <input type="text" id="discount-input" class="form-input" placeholder="Enter code"
+                                        style="flex:1;" />
+                                    <button onclick="applyDiscount()" class="btn-primary"
+                                        style="white-space:nowrap;padding:12px 20px;">Apply</button>
+                                </div>
+                                <p id="discount-result"
+                                    style="font-size:12px;margin-top:8px;font-family:'DM Mono',monospace;letter-spacing:0.08em;">
+                                </p>
+                            </div>
+                        </div>
+                        <div style="border-top:1px solid var(--cream);padding-top:20px;">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:13px;">
+                                <span>Subtotal</span><span id="cart-subtotal-display">R0.00</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;margin-bottom:12px;font-size:13px;">
+                                <span>Shipping</span><span style="color:var(--stone);">Calculated at checkout</span>
+                            </div>
+                            <div id="cart-discount-line"
+                                style="display:none;flex;justify-content:space-between;margin-bottom:12px;font-size:13px;color:var(--bark);">
+                                <span id="cart-discount-label">Discount</span><span
+                                    id="cart-discount-amount">-R0.00</span>
+                            </div>
+                            <div
+                                style="display:flex;justify-content:space-between;margin-top:16px;padding-top:16px;border-top:1px solid var(--cream);">
+                                <span
+                                    style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;">Total</span>
+                                <span id="cart-total-display"
+                                    style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;">R0.00</span>
+                            </div>
+                        </div>
+                        <a href="#checkout" class="btn-primary"
+                            style="width:100%;text-align:center;display:block;margin-top:24px;">Proceed to Checkout</a>
+                        <a href="#shop"
+                            style="display:block;text-align:center;margin-top:14px;font-size:11px;font-family:'DM Mono',monospace;letter-spacing:0.12em;color:var(--stone);text-decoration:none;">←
+                            Continue Shopping</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. CHECKOUT -->
+    <template id="page-checkout">
+        <div id="page-checkout-hash"></div>
+    </template>
+    <section id="view-checkout" class="view-section">
+        <div class="page-section" style="padding-top:48px;">
+            <div class="page-inner">
+                <div style="display:grid;grid-template-columns:1fr 380px;gap:64px;align-items:start;flex-wrap:wrap;">
+                    <div>
+                        <a href="#home"
+                            style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;letter-spacing:0.1em;color:var(--espresso);text-decoration:none;display:block;margin-bottom:32px;">OAKLYN</a>
+                        <!-- Step Indicator -->
+                        <div class="step-indicator" id="step-indicator">
+                            <div class="step-dot active" id="step-dot-1">1</div>
+                            <div class="step-line"></div>
+                            <div class="step-dot" id="step-dot-2">2</div>
+                            <div class="step-line"></div>
+                            <div class="step-dot" id="step-dot-3">3</div>
+                            <div class="step-line"></div>
+                            <div class="step-dot" id="step-dot-4">✓</div>
+                        </div>
+                        <div id="checkout-steps">
+                            <!-- Step 1: Info -->
+                            <div id="checkout-step-1">
+                                <h2
+                                    style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;margin-bottom:32px;">
+                                    Contact & Shipping</h2>
+                                <div class="form-group"><label class="form-label">Email</label><input type="email"
+                                        class="form-input" id="co-email" placeholder="you@example.com" /></div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                                    <div class="form-group"><label class="form-label">First Name</label><input
+                                            type="text" class="form-input" id="co-fname" placeholder="Jane" /></div>
+                                    <div class="form-group"><label class="form-label">Last Name</label><input
+                                            type="text" class="form-input" id="co-lname" placeholder="Doe" /></div>
+                                </div>
+                                <div class="form-group"><label class="form-label">Street Address</label><input
+                                        type="text" class="form-input" id="co-address" placeholder="123 Main Street" />
+                                </div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+                                    <div class="form-group"><label class="form-label">City</label><input type="text"
+                                            class="form-input" id="co-city" placeholder="Cape Town" /></div>
+                                    <div class="form-group"><label class="form-label">Province</label><input type="text"
+                                            class="form-input" id="co-province" placeholder="Western Cape" /></div>
+                                    <div class="form-group"><label class="form-label">Postal Code</label><input
+                                            type="text" class="form-input" id="co-postal" placeholder="8000" /></div>
+                                </div>
+                                <button onclick="checkoutNext()" class="btn-primary" style="margin-top:8px;">Continue to
+                                    Shipping →</button>
+                            </div>
+                            <!-- Step 2: Shipping -->
+                            <div id="checkout-step-2" style="display:none;">
+                                <h2
+                                    style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;margin-bottom:32px;">
+                                    Shipping Method</h2>
+                                <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:32px;">
+                                    <label
+                                        style="display:flex;align-items:center;gap:16px;padding:20px;border:1px solid var(--cream);cursor:pointer;background:var(--white);">
+                                        <input type="radio" name="shipping" value="standard" checked
+                                            style="accent-color:var(--espresso);" />
+                                        <div style="flex:1;">
+                                            <div style="font-size:14px;font-weight:400;">Standard Shipping</div>
+                                            <div
+                                                style="font-size:12px;color:var(--stone);font-family:'DM Mono',monospace;">
+                                                3-5 business days</div>
+                                        </div>
+                                        <span style="font-family:'DM Mono',monospace;font-size:13px;">R80.00</span>
+                                    </label>
+                                    <label
+                                        style="display:flex;align-items:center;gap:16px;padding:20px;border:1px solid var(--cream);cursor:pointer;background:var(--white);">
+                                        <input type="radio" name="shipping" value="express"
+                                            style="accent-color:var(--espresso);" />
+                                        <div style="flex:1;">
+                                            <div style="font-size:14px;font-weight:400;">Express Shipping</div>
+                                            <div
+                                                style="font-size:12px;color:var(--stone);font-family:'DM Mono',monospace;">
+                                                1-2 business days</div>
+                                        </div>
+                                        <span style="font-family:'DM Mono',monospace;font-size:13px;">R150.00</span>
+                                    </label>
+                                </div>
+                                <div style="display:flex;gap:12px;">
+                                    <button onclick="checkoutBack()" class="btn-outline">← Back</button>
+                                    <button onclick="checkoutNext()" class="btn-primary">Continue to Payment →</button>
+                                </div>
+                            </div>
+                            <!-- Step 3: Payment -->
+                            <div id="checkout-step-3" style="display:none;">
+                                <h2
+                                    style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;margin-bottom:32px;">
+                                    Payment</h2>
+                                <div
+                                    style="background:var(--cream);padding:20px;margin-bottom:24px;display:flex;align-items:center;gap:12px;">
+                                    <span style="font-size:20px;">💳</span>
+                                    <div>
+                                        <div style="font-size:13px;font-weight:400;">Secure Card Payment</div>
+                                        <div style="font-size:11px;color:var(--stone);font-family:'DM Mono',monospace;">
+                                            256-bit SSL encrypted</div>
+                                    </div>
+                                </div>
+                                <div class="form-group"><label class="form-label">Card Number</label><input type="text"
+                                        class="form-input" placeholder="•••• •••• •••• ••••" maxlength="19" /></div>
+                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                                    <div class="form-group"><label class="form-label">Expiry</label><input type="text"
+                                            class="form-input" placeholder="MM / YY" /></div>
+                                    <div class="form-group"><label class="form-label">CVV</label><input type="text"
+                                            class="form-input" placeholder="•••" maxlength="3" /></div>
+                                </div>
+                                <div class="form-group"><label class="form-label">Name on Card</label><input type="text"
+                                        class="form-input" placeholder="Jane Doe" /></div>
+                                <div style="display:flex;gap:12px;margin-top:8px;">
+                                    <button onclick="checkoutBack()" class="btn-outline">← Back</button>
+                                    <button onclick="placeOrder()" class="btn-gold" style="flex:1;">Place Order
+                                        →</button>
+                                </div>
+                            </div>
+                            <!-- Step 4: Confirmation -->
+                            <div id="checkout-step-4" style="display:none;text-align:center;padding:48px 0;">
+                                <div style="font-size:56px;margin-bottom:24px;">✦</div>
+                                <h2
+                                    style="font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;margin-bottom:16px;">
+                                    Order Confirmed</h2>
+                                <p style="color:var(--stone);font-size:14px;margin-bottom:8px;">Thank you for your
+                                    order.</p>
+                                <p id="order-confirm-num"
+                                    style="font-family:'DM Mono',monospace;font-size:13px;color:var(--gold);letter-spacing:0.15em;margin-bottom:32px;">
+                                </p>
+                                <p style="font-size:14px;color:var(--bark);margin-bottom:32px;line-height:1.7;">A
+                                    confirmation email will be sent to your address. You can track your order at any
+                                    time.</p>
+                                <a href="#home" class="btn-primary" onclick="cart.clear();">Continue Shopping</a>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Order Summary Sidebar -->
+                    <div style="background:var(--cream);padding:32px;">
+                        <h3
+                            style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--stone);margin-bottom:20px;">
+                            Order Summary</h3>
+                        <div id="checkout-order-items"
+                            style="margin-bottom:20px;border-bottom:1px solid rgba(0,0,0,0.1);padding-bottom:20px;">
+                        </div>
+                        <div style="font-size:13px;">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+                                <span>Subtotal</span><span id="co-subtotal">R0.00</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+                                <span>Shipping</span><span id="co-shipping">R80.00</span>
+                            </div>
+                            <div
+                                style="display:flex;justify-content:space-between;margin-top:16px;padding-top:16px;border-top:1px solid rgba(0,0,0,0.1);font-weight:400;">
+                                <span
+                                    style="font-family:'DM Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;">Total</span>
+                                <span id="co-total"
+                                    style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:300;">R0.00</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8. SEARCH -->
+    <template id="page-search">
+        <div id="page-search-hash"></div>
+    </template>
+    <section id="view-search" class="view-section">
+        <div class="page-section" style="padding-top:48px;">
+            <div class="page-inner">
+                <h1 style="font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;margin-bottom:8px;">
+                    Search Results</h1>
+                <p id="search-page-count"
+                    style="font-family:'DM Mono',monospace;font-size:11px;color:var(--stone);letter-spacing:0.1em;margin-bottom:40px;">
+                </p>
+                <div id="search-page-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:24px;"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 9. ABOUT -->
+    <template id="page-about">
+        <div id="page-about-hash"></div>
+    </template>
+    <section id="view-about" class="view-section">
+        <!-- Hero -->
+        <div style="background:var(--espresso);color:var(--ivory);padding:120px 32px;text-align:center;">
+            <p
+                style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.3em;text-transform:uppercase;color:var(--gold);margin-bottom:20px;">
+                Our Story</p>
+            <h1
+                style="font-family:'Cormorant Garamond',serif;font-size:clamp(48px,7vw,88px);font-weight:300;line-height:1.05;margin-bottom:24px;">
+                Made to <em style="font-style:italic;color:var(--gold);">Matter</em></h1>
+            <p style="max-width:560px;margin:0 auto;color:rgba(245,240,232,0.65);font-size:15px;line-height:1.8;">OAKLYN
+                began in 2020 as a rejection of disposable culture — a commitment to objects worth keeping.</p>
+        </div>
+        <div class="page-section">
+            <div class="page-inner">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;margin-bottom:80px;">
+                    <div>
+                        <p class="section-eyebrow">The Beginning</p>
+                        <h2
+                            style="font-family:'Cormorant Garamond',serif;font-size:40px;font-weight:300;line-height:1.2;margin-bottom:24px;">
+                            From studio to storefont</h2>
+                        <p style="font-size:14px;line-height:1.8;color:var(--bark);margin-bottom:16px;">What started as
+                            a small Johannesburg studio selecting objects for considered living grew into a curated
+                            brand trusted by thousands across southern Africa and beyond.</p>
+                        <p style="font-size:14px;line-height:1.8;color:var(--bark);">We work with artisans, small-batch
+                            manufacturers, and material specialists who share our belief that well-made things make life
+                            better.</p>
+                    </div>
+                    <div
+                        style="aspect-ratio:4/5;background:linear-gradient(135deg,var(--cream),var(--gold-lt));display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:72px;color:var(--espresso);opacity:0.3;">
+                        ✦</div>
+                </div>
+                <!-- Values -->
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:32px;">
+                    <div style="text-align:center;padding:32px 16px;border:1px solid var(--cream);">
+                        <div style="font-size:32px;margin-bottom:16px;">🌿</div>
+                        <h3
+                            style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;margin-bottom:12px;">
+                            Sustainability</h3>
+                        <p style="font-size:13px;color:var(--stone);line-height:1.7;">Carbon-neutral shipping, minimal
+                            packaging, certified materials.</p>
+                    </div>
+                    <div style="text-align:center;padding:32px 16px;border:1px solid var(--cream);">
+                        <div style="font-size:32px;margin-bottom:16px;">✦</div>
+                        <h3
+                            style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;margin-bottom:12px;">
+                            Quality</h3>
+                        <p style="font-size:13px;color:var(--stone);line-height:1.7;">Every product held to exacting
+                            standards before it reaches you.</p>
+                    </div>
+                    <div style="text-align:center;padding:32px 16px;border:1px solid var(--cream);">
+                        <div style="font-size:32px;margin-bottom:16px;">🤝</div>
+                        <h3
+                            style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;margin-bottom:12px;">
+                            Community</h3>
+                        <p style="font-size:13px;color:var(--stone);line-height:1.7;">Partnering with local artisans and
+                            independent makers.</p>
+                    </div>
+                    <div style="text-align:center;padding:32px 16px;border:1px solid var(--cream);">
+                        <div style="font-size:32px;margin-bottom:16px;">🎯</div>
+                        <h3
+                            style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;margin-bottom:12px;">
+                            Intention</h3>
+                        <p style="font-size:13px;color:var(--stone);line-height:1.7;">Curating with purpose. Only what
+                            earns its place in your life.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 10. CONTACT -->
+    <template id="page-contact">
+        <div id="page-contact-hash"></div>
+    </template>
+    <section id="view-contact" class="view-section">
+        <div class="page-section" style="padding-top:48px;">
+            <div class="page-inner">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start;">
+                    <div>
+                        <p class="section-eyebrow">Get in Touch</p>
+                        <h1 class="section-title" style="margin-bottom:24px;">Contact Us</h1>
+                        <p style="font-size:14px;color:var(--bark);line-height:1.8;margin-bottom:40px;">We're here to
+                            help. Our team responds within one business day.</p>
+                        <div style="display:flex;flex-direction:column;gap:24px;">
+                            <div style="display:flex;gap:16px;align-items:flex-start;">
+                                <span style="font-size:20px;">📬</span>
+                                <div>
+                                    <div
+                                        style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--stone);margin-bottom:4px;">
+                                        Email</div>
+                                    <div style="font-size:14px;">hello@oaklynstudio.co.za</div>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:16px;align-items:flex-start;">
+                                <span style="font-size:20px;">📍</span>
+                                <div>
+                                    <div
+                                        style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--stone);margin-bottom:4px;">
+                                        Studio</div>
+                                    <div style="font-size:14px;">12 Juta Street, Braamfontein<br>Johannesburg, 2001
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display:flex;gap:16px;align-items:flex-start;">
+                                <span style="font-size:20px;">⏱</span>
+                                <div>
+                                    <div
+                                        style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--stone);margin-bottom:4px;">
+                                        Hours</div>
+                                    <div style="font-size:14px;">Mon–Fri: 9am–5pm SAST</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="form-group"><label class="form-label">Name</label><input type="text"
+                                class="form-input" id="contact-name" placeholder="Jane Doe" /></div>
+                        <div class="form-group"><label class="form-label">Email</label><input type="email"
+                                class="form-input" id="contact-email" placeholder="you@example.com" /></div>
+                        <div class="form-group"><label class="form-label">Order ID (optional)</label><input type="text"
+                                class="form-input" id="contact-order" placeholder="KK-00001" /></div>
+                        <div class="form-group">
+                            <label class="form-label">Message</label>
+                            <textarea class="form-input" id="contact-message" rows="5" placeholder="How can we help?"
+                                style="resize:vertical;"></textarea>
+                        </div>
+                        <button onclick="submitContact()" class="btn-primary">Send Message</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 11. FAQ -->
+    <template id="page-faq">
+        <div id="page-faq-hash"></div>
+    </template>
+    <section id="view-faq" class="view-section">
+        <div class="page-section" style="padding-top:48px;">
+            <div class="page-inner" style="max-width:760px;">
+                <p class="section-eyebrow">Help Centre</p>
+                <h1 class="section-title" style="margin-bottom:48px;">Frequently Asked Questions</h1>
+                <div id="faq-list">
+                    <!-- Rendered by JS -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 12. ORDER TRACKING -->
+    <template id="page-track">
+        <div id="page-track-hash"></div>
+    </template>
+    <section id="view-track" class="view-section">
+        <div class="page-section" style="padding-top:48px;">
+            <div class="page-inner" style="max-width:640px;margin:0 auto;">
+                <p class="section-eyebrow">Track</p>
+                <h1 class="section-title" style="margin-bottom:12px;">Order Tracking</h1>
+                <p style="color:var(--stone);font-size:14px;margin-bottom:40px;">Enter your email address to find your
+                    order status.</p>
+                <div style="display:flex;gap:0;margin-bottom:40px;">
+                    <input type="email" id="track-email" class="form-input" placeholder="your@email.com"
+                        style="flex:1;" />
+                    <button onclick="trackOrder()" class="btn-primary" style="white-space:nowrap;">Track Order</button>
+                </div>
+                <div id="track-results"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 13. TERMS -->
+    <template id="page-terms">
+        <div id="page-terms-hash"></div>
+    </template>
+    <section id="view-terms" class="view-section">
+        <div class="page-section" style="padding-top:48px;">
+            <div class="page-inner" style="max-width:760px;">
+                <p class="section-eyebrow">Legal</p>
+                <h1 class="section-title" style="margin-bottom:48px;">Terms, Privacy & Policies</h1>
+                <div style="display:flex;flex-direction:column;gap:48px;">
+                    <div>
+                        <h2
+                            style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--cream);">
+                            Terms of Service</h2>
+                        <p style="font-size:14px;color:var(--bark);line-height:1.8;margin-bottom:12px;">By accessing or
+                            using the OAKLYN online store, you agree to be bound by these terms. OAKLYN reserves the
+                            right
+                            to refuse service to anyone for any reason at any time.</p>
+                        <p style="font-size:14px;color:var(--bark);line-height:1.8;">You agree not to reproduce,
+                            duplicate, copy, sell, or exploit any portion of the Service, use of the Service, or access
+                            to the Service without express written permission by OAKLYN.</p>
+                    </div>
+                    <div>
+                        <h2
+                            style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--cream);">
+                            Privacy Policy</h2>
+                        <p style="font-size:14px;color:var(--bark);line-height:1.8;margin-bottom:12px;">OAKLYN collects
+                            information you voluntarily provide (name, email, address) for order fulfilment and
+                            communication purposes. We do not sell or share personal data with third parties beyond what
+                            is necessary for shipping and payment processing.</p>
+                        <p style="font-size:14px;color:var(--bark);line-height:1.8;">We use cookies to improve your
+                            browsing experience. You can disable cookies in your browser settings. For questions,
+                            contact privacy@oaklynstudio.co.za.</p>
+                    </div>
+                    <div>
+                        <h2
+                            style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--cream);">
+                            Refund & Return Policy</h2>
+                        <p style="font-size:14px;color:var(--bark);line-height:1.8;margin-bottom:12px;">Items may be
+                            returned within 30 days of receipt provided they are unused, unworn, and in their original
+                            packaging. To initiate a return, email returns@oaklynstudio.co.za with your order number.
+                        </p>
+                        <p style="font-size:14px;color:var(--bark);line-height:1.8;">Refunds are processed within 5-7
+                            business days of receiving the returned item. Shipping costs are non-refundable unless the
+                            item was defective.</p>
+                    </div>
+                    <div>
+                        <h2
+                            style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--cream);">
+                            Shipping Policy</h2>
+                        <p style="font-size:14px;color:var(--bark);line-height:1.8;margin-bottom:12px;">Standard
+                            delivery within South Africa takes 3-5 business days. Express shipping (1-2 days) is
+                            available at checkout. International orders ship via DHL and typically arrive within 7-14
+                            business days.</p>
+                        <p style="font-size:14px;color:var(--bark);line-height:1.8;">Free standard shipping on all South
+                            African orders over R500. Orders are processed within 1-2 business days of payment
+                            confirmation.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 14. ORDERS -->
+    <template id="page-orders">
+        <div id="page-orders-hash"></div>
+    </template>
+    <section id="view-orders" class="view-section">
+        <div class="page-section" style="padding-top:48px;">
+            <div class="page-inner" style="max-width:700px;margin:0 auto;">
+                <p class="section-eyebrow">History</p>
+                <h1 class="section-title" style="margin-bottom:12px;">Order History</h1>
+                <p style="color:var(--stone);font-size:14px;margin-bottom:40px;">Enter your email to retrieve your past
+                    orders.</p>
+                <div style="display:flex;gap:0;margin-bottom:40px;">
+                    <input type="email" id="orders-email" class="form-input" placeholder="your@email.com"
+                        style="flex:1;" />
+                    <button onclick="lookupOrders()" class="btn-primary" style="white-space:nowrap;">Look Up
+                        Orders</button>
+                </div>
+                <div id="orders-results"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ══ FOOTER ══ -->
+    <footer>
+        <div class="footer-grid">
+            <div>
+                <div class="footer-brand">OAKLYN</div>
+                <p class="footer-tagline">Curated objects for a considered life.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Shop</h4>
+                <a href="#shop">All Products</a>
+                <a href="#collections">Collections</a>
+                <a href="#sale">Sale</a>
+            </div>
+            <div class="footer-col">
+                <h4>Support</h4>
+                <a href="#contact">Contact Us</a>
+                <a href="#faq">FAQ</a>
+                <a href="#track">Track Order</a>
+                <a href="#orders">Order History</a>
+            </div>
+            <div class="footer-col">
+                <h4>Company</h4>
+                <a href="#about">About OAKLYN</a>
+                <a href="#terms">Terms of Service</a>
+                <a href="#terms">Privacy Policy</a>
+                <a href="#terms">Refund Policy</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© 2026 OAKLYN. All rights reserved.</span>
+            <span style="display:flex;gap:16px;">
+                <span>🔒 Secure</span>
+                <span>💳 Visa / Mastercard / PayFast</span>
+            </span>
+        </div>
+    </footer>
+
+    <noscript>
+        <nav>
+            <a href="#home">Home</a> | <a href="#shop">Shop</a> | <a href="#collections">Collections</a> |
+            <a href="#sale">Sale</a> | <a href="#about">About</a> | <a href="#contact">Contact</a> |
+            <a href="#faq">FAQ</a> | <a href="#track">Track</a> | <a href="#terms">Terms</a>
+        </nav>
+    </noscript>
+
+    <!-- ══════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════ -->
+    <script>
+        /* ── MOCK DATA ── */
+        const MOCK = {
+            site: { name: "OAKLYN", currency: "R", domain: window.location.hostname },
+            categories: [
+                { id: 1, name: "Apparel" },
+                { id: 2, name: "Accessories" },
+                { id: 3, name: "Footwear" },
+                { id: 4, name: "Home & Living" }
+            ],
+            products: [
+                { id: 1, name: "Unstructured Linen Shirt", price: 680, image: "https://images.unsplash.com/photo-1602810318383-e386cc2a3ccf?w=600", description: "Enzyme-washed linen in a relaxed, dropped-shoulder silhouette. Naturally breathable and softens with every wash.", stock: 14, category_id: 1 },
+                { id: 2, name: "Heritage Denim Jacket", price: 1850, image: "https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=600", description: "Rigid selvedge denim from a Japanese mill, structured cut with a clean back yoke.", stock: 6, category_id: 1 },
+                { id: 3, name: "Full-Grain Crossbody", price: 1200, image: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600", description: "Vegetable-tanned leather with solid brass hardware. Ages beautifully over decades.", stock: 11, category_id: 2 },
+                { id: 4, name: "Canvas Low-Top", price: 950, image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=600", description: "Vulcanised rubber sole, organic cotton upper, recycled foam insole.", stock: 28, category_id: 3 },
+                { id: 5, name: "Cashmere Overcoat", price: 3200, image: "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=600", description: "Italian cashmere-wool blend. Drop-shoulder, clean hem, single button fastening.", stock: 3, category_id: 1 },
+                { id: 6, name: "Ceramic Pour-Over Set", price: 680, image: "https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?w=600", description: "Hand-thrown stoneware dripper and carafe with a matte speckled glaze.", stock: 20, category_id: 4 },
+                { id: 7, name: "Titanium Sunglasses", price: 2100, image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=600", description: "Ultra-light Japanese titanium frame with polarised lenses. Lifetime guarantee.", stock: 9, category_id: 2 },
+                { id: 8, name: "Wide-Leg Linen Trousers", price: 1100, image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=600", description: "Belgian linen, elastic waistband, tapered wide leg. Available in natural and slate.", stock: 17, category_id: 1 },
+                { id: 9, name: "Suede Chelsea Boot", price: 1680, image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600", description: "Premium suede upper with a crepe sole. Pull-on tabs, subtle welt stitching.", stock: 13, category_id: 3 },
+                { id: 10, name: "Beeswax Candle Set", price: 320, image: "https://images.unsplash.com/photo-1607006344380-b6775a0824a7?w=600", description: "Pure beeswax, cotton wicks, hand-poured in Johannesburg. 60-hour burn time.", stock: 40, category_id: 4 },
+                { id: 11, name: "Merino Turtleneck", price: 890, image: "https://images.unsplash.com/photo-1614252235316-8c857d38b5f4?w=600", description: "Extrafine Merino wool in a close-fitting ribbed turtleneck. Odour-resistant, temperature-regulating.", stock: 22, category_id: 1 },
+                { id: 12, name: "Leather Card Wallet", price: 480, image: "https://images.unsplash.com/photo-1627123424574-724758594785?w=600", description: "Four-card slim wallet in full-grain leather. Develops a natural patina over time.", stock: 35, category_id: 2 }
+            ],
+            discounts: [
+                { id: 1, code: "WELCOME10", percentage: 10, active: 1 },
+                { id: 2, code: "SUMMER20", percentage: 20, active: 1 }
+            ]
+        };
+
+        /* ── API WRAPPER ── */
+        async function fetchStore(state, params = {}) {
+            const url = new URL("api.php", window.location.href);
+            url.searchParams.set("state", state);
+            for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+            const headers = {};
+            const token = localStorage.getItem('vm_customer_token');
+            if (token) headers['X-Customer-Token'] = token;
+            try {
+                const res = await fetch(url, { signal: AbortSignal.timeout(4000), headers });
+                if (!res.ok) throw new Error(res.status);
+                return await res.json();
+            } catch {
+                return getMockData(state, params);
+            }
+        }
+
+        async function postStore(state, body = {}) {
+            const url = new URL("api.php", window.location.href);
+            url.searchParams.set("state", state);
+            const headers = { 'Content-Type': 'application/json' };
+            const token = localStorage.getItem('vm_customer_token');
+            if (token) headers['X-Customer-Token'] = token;
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(body),
+                    signal: AbortSignal.timeout(8000)
+                });
+                const data = await res.json().catch(() => ({}));
+                return { ok: res.ok && (data.ok !== false), status: res.status, data, error: data.error || null };
+            } catch (e) {
+                return { ok: false, status: 0, data: {}, error: e.message };
+            }
+        }
+
+        function getMockData(state, params = {}) {
+            switch (state) {
+                case "site": return MOCK.site;
+                case "products": return MOCK.products;
+                case "product": return MOCK.products.find(p => p.id == params.id) || null;
+                case "categories": return MOCK.categories;
+                case "products_by_category": return MOCK.products.filter(p => p.category_id == params.category_id);
+                case "search":
+                    const q = (params.q || "").toLowerCase();
+                    return MOCK.products.filter(p => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
+                case "discounts": return MOCK.discounts;
+                case "orders": return [];
+                default: return [];
+            }
+        }
+
+        /* ── CURRENCY ── */
+        let CURRENCY = "R";
+        function formatPrice(amount) { return `${CURRENCY}${parseFloat(amount).toFixed(2)}`; }
+
+        /* ── TOAST ── */
+        // One-time migration / proactive cleanup (defensive for shared-origin pollution).
+        try { localStorage.removeItem('vm_user_session'); } catch {}
+        try { localStorage.removeItem('vm_user_history'); } catch {}
+
+        function showToast(msg, type = "success") {
+            const tc = document.getElementById("toast-container");
+            const el = document.createElement("div");
+            el.className = `toast ${type}`;
+            el.textContent = msg;
+            tc.appendChild(el);
+            setTimeout(() => el.remove(), 3200);
+        }
+
+        /* ── CART ── */
+        const cart = {
+            items: JSON.parse(localStorage.getItem("oaklyn_cart") || "[]"),
+            appliedDiscount: null,
+
+            save() {
+                localStorage.setItem("oaklyn_cart", JSON.stringify(this.items));
+                this.updateBadge();
+                window.dispatchEvent(new CustomEvent("cart-updated"));
+            },
+
+            add(product, qty = 1) {
+                const existing = this.items.find(i => i.id === product.id);
+                if (existing) existing.qty = Math.min(existing.qty + qty, product.stock);
+                else this.items.push({ ...product, qty });
+                this.save();
+                showToast(`${product.name} added to cart`, "success");
+            },
+
+            update(id, qty) {
+                const item = this.items.find(i => i.id === id);
+                if (!item) return;
+                item.qty = Math.max(0, qty);
+                if (item.qty === 0) this.remove(id);
+                else this.save();
+            },
+
+            remove(id) {
+                this.items = this.items.filter(i => i.id !== id);
+                this.save();
+            },
+
+            clear() { this.items = []; this.appliedDiscount = null; this.save(); },
+
+            subtotal() { return this.items.reduce((s, i) => s + i.price * i.qty, 0); },
+
+            count() { return this.items.reduce((s, i) => s + i.qty, 0); },
+
+            updateBadge() {
+                const c = this.count();
+                document.querySelectorAll("[data-cart-count]").forEach(el => {
+                    el.textContent = c;
+                    el.style.display = c > 0 ? "flex" : "none";
+                });
+            },
+
+            applyCode(code, discounts) {
+                const d = discounts.find(d => d.code.toUpperCase() === code.toUpperCase() && d.active);
+                if (!d) return null;
+                this.appliedDiscount = { code: d.code, pct: d.percentage, amount: this.subtotal() * (d.percentage / 100) };
+                return this.appliedDiscount;
+            }
+        };
+        cart.updateBadge();
+
+        /* ── PRODUCT CARD ── */
+        function productCard(p) {
+            const cat = MOCK.categories.find(c => c.id === p.category_id);
+            return `
+    <div class="product-card" onclick="router.navigate('product',{id:p.id})" data-product-id="${p.id}">
+      ${p.image
+                    ? `<img src="${p.image}" alt="${p.name}" class="product-card-img" loading="lazy" />`
+                    : `<div class="product-card-img-placeholder">No Image</div>`}
+      <div class="product-card-body">
+        <p class="product-card-cat">${cat ? cat.name : ''}</p>
+        <h3 class="product-card-name">${p.name}</h3>
+        <p class="product-card-price">${formatPrice(p.price)}</p>
+      </div>
+    </div>`;
+        }
+
+        function bindProductCards() {
+            document.querySelectorAll(".product-card[data-product-id]").forEach(card => {
+                card.onclick = () => {
+                    const id = card.dataset.productId;
+                    router.navigate("product", { id });
+                };
+            });
+        }
+
+        /* ── ROUTER ── */
+        let currentStep = 1;
+        let shopState = { categoryId: null };
+
+        const router = {
+            init() {
+                window.addEventListener("hashchange", () => this.resolve());
+                this.resolve();
+            },
+
+            navigate(view, params = {}) {
+                let hash = `#${view}`;
+                const qs = new URLSearchParams(params).toString();
+                if (qs) hash += `?${qs}`;
+                window.location.hash = hash;
+            },
+
+            resolve() {
+                const raw = window.location.hash.slice(1) || "home";
+                const [view, qs] = raw.split("?");
+                const params = Object.fromEntries(new URLSearchParams(qs || ""));
+
+                document.querySelectorAll(".view-section").forEach(s => s.classList.remove("active"));
+                const target = document.getElementById(`view-${view}`);
+                if (target) target.classList.add("active");
+                else document.getElementById("view-home").classList.add("active");
+
+                document.title = `OAKLYN — ${view.charAt(0).toUpperCase() + view.slice(1)}`;
+                window.scrollTo({ top: 0, behavior: "instant" });
+                closeCartDrawer();
+                closeMobileNav();
+                this.onRoute(view, params);
+            },
+
+            onRoute(view, params) {
+                switch (view) {
+                    case "home": renderHome(); break;
+                    case "shop": renderShop(params.category); break;
+                    case "product": renderProduct(params.id); break;
+                    case "collections": renderCollections(); break;
+                    case "sale": renderSale(); break;
+                    case "cart": renderCart(); break;
+                    case "checkout": renderCheckout(); break;
+                    case "search": renderSearchPage(params.q); break;
+                    case "faq": renderFaq(); break;
+                    case "track": break;
+                    case "orders": if (params.email) { document.getElementById("orders-email").value = params.email; lookupOrders(); } break;
+                }
+            }
+        };
+
+        /* ══════════════════════
+           PAGE RENDERERS
+        ══════════════════════ */
+
+        /* HOME */
+        async function renderHome() {
+            const [products, cats] = await Promise.all([
+                fetchStore("products"), fetchStore("categories")
+            ]);
+
+            // Featured Products (first 4)
+            const pg = document.getElementById("home-products");
+            pg.innerHTML = products.slice(0, 4).map(productCard).join("");
+            bindProductCards();
+
+            // Collections
+            const cg = document.getElementById("home-collections");
+            const collectionImgs = [
+                "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600",
+                "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600",
+                "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600",
+                "https://images.unsplash.com/photo-1607006344380-b6775a0824a7?w=600"
+            ];
+            cg.innerHTML = cats.slice(0, 3).map((c, i) => {
+                const count = MOCK.products.filter(p => p.category_id === c.id).length;
+                return `
+      <div class="collection-card" onclick="router.navigate('shop',{category:c.id})" data-cat-id="${c.id}" style="cursor:pointer;">
+        <div class="collection-card-bg" style="background:url('${collectionImgs[i]}') center/cover;transition:transform 0.5s ease;"></div>
+        <div class="collection-card-overlay">
+          <span>${count} pieces</span>
+          <h3>${c.name}</h3>
+        </div>
+      </div>`;
+            }).join("");
+            document.querySelectorAll(".collection-card[data-cat-id]").forEach(el => {
+                el.onclick = () => router.navigate("shop", { category: el.dataset.catId });
+                el.querySelector(".collection-card-bg").addEventListener("mouseover", function () { this.style.transform = "scale(1.04)"; });
+                el.querySelector(".collection-card-bg").addEventListener("mouseout", function () { this.style.transform = "scale(1)"; });
+            });
+        }
+
+        /* SHOP */
+        let shopProducts = [];
+        let shopCatId = null;
+
+        async function renderShop(category) {
+            const [products, cats] = await Promise.all([fetchStore("products"), fetchStore("categories")]);
+            shopProducts = products;
+
+            // Category filter buttons
+            const fEl = document.getElementById("shop-categories-filter");
+            fEl.innerHTML = `<button onclick="shopFilter(null)" style="display:block;width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:8px 0;font-size:13px;font-family:'Jost',sans-serif;border-bottom:1px solid var(--cream);color:var(--espresso);font-weight:${shopCatId === null ? '500' : '300'};">All Products</button>`
+                + cats.map(c => `<button onclick="shopFilter(${c.id})" style="display:block;width:100%;text-align:left;background:none;border:none;cursor:pointer;padding:8px 0;font-size:13px;font-family:'Jost',sans-serif;border-bottom:1px solid var(--cream);color:var(--espresso);font-weight:${shopCatId === c.id ? '500' : '300'};">${c.name}</button>`).join("");
+
+            if (category) shopCatId = parseInt(category);
+            buildShopGrid();
+        }
+
+        function shopFilter(catId) {
+            shopCatId = catId;
+            buildShopGrid();
+        }
+
+        function buildShopGrid() {
+            let list = shopCatId ? shopProducts.filter(p => p.category_id === shopCatId) : shopProducts;
+            const sort = document.getElementById("shop-sort")?.value || "default";
+            if (sort === "price-asc") list = [...list].sort((a, b) => a.price - b.price);
+            if (sort === "price-desc") list = [...list].sort((a, b) => b.price - a.price);
+
+            const countEl = document.getElementById("shop-count");
+            if (countEl) countEl.textContent = `${list.length} products`;
+
+            const grid = document.getElementById("shop-grid");
+            if (!grid) return;
+            if (!list.length) {
+                grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:80px 0;color:var(--stone);font-family:'Cormorant Garamond',serif;font-size:24px;">No products found</div>`;
+                return;
+            }
+            grid.innerHTML = list.map(productCard).join("");
+            bindProductCards();
+        }
+
+        /* PRODUCT */
+        let currentProductId = null;
+        let currentQty = 1;
+        let currentProductObj = null;
+
+        async function renderProduct(id) {
+            currentProductId = id;
+            currentQty = 1;
+            document.getElementById("product-qty").textContent = 1;
+
+            const p = await fetchStore("product", { id });
+            if (!p) { showToast("Product not found", "error"); router.navigate("shop"); return; }
+
+            currentProductObj = p;
+            const cat = MOCK.categories.find(c => c.id === p.category_id);
+
+            document.getElementById("product-breadcrumb-name").textContent = p.name;
+            document.getElementById("product-cat-label").textContent = cat ? cat.name : "";
+            document.getElementById("product-name").textContent = p.name;
+            document.getElementById("product-price").textContent = formatPrice(p.price);
+            document.getElementById("product-desc").textContent = p.description;
+
+            const img = document.getElementById("product-main-img");
+            img.src = p.image || "";
+            img.alt = p.name;
+
+            const stock = document.getElementById("product-stock-badge");
+            if (p.stock > 10) stock.innerHTML = `<span style="background:#d4edda;color:#155724;padding:4px 12px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;">In Stock</span>`;
+            else if (p.stock > 0) stock.innerHTML = `<span style="background:var(--gold-lt);color:var(--bark);padding:4px 12px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;">Low Stock — ${p.stock} left</span>`;
+            else { stock.innerHTML = `<span style="background:#f8d7da;color:#721c24;padding:4px 12px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;">Out of Stock</span>`; document.getElementById("add-to-cart-btn").disabled = true; }
+
+            // Related
+            const related = await fetchStore("products_by_category", { category_id: p.category_id });
+            const others = related.filter(r => r.id != p.id).slice(0, 4);
+            document.getElementById("related-products").innerHTML = others.map(productCard).join("");
+            bindProductCards();
+        }
+
+        function changeQty(delta) {
+            if (!currentProductObj) return;
+            currentQty = Math.max(1, Math.min(currentProductObj.stock, currentQty + delta));
+            document.getElementById("product-qty").textContent = currentQty;
+        }
+
+        function addCurrentToCart() {
+            if (!currentProductObj) return;
+            cart.add(currentProductObj, currentQty);
+            openCartDrawer();
+        }
+
+        /* COLLECTIONS */
+        async function renderCollections() {
+            const [cats, products] = await Promise.all([fetchStore("categories"), fetchStore("products")]);
+            const imgs = [
+                "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=600",
+                "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=600",
+                "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600",
+                "https://images.unsplash.com/photo-1612196808214-b8e1d6145a8c?w=600"
+            ];
+            const cg = document.getElementById("collections-grid");
+            cg.innerHTML = cats.map((c, i) => {
+                const count = products.filter(p => p.category_id === c.id).length;
+                return `
+      <div class="collection-card" data-cat="${c.id}" style="cursor:pointer;">
+        <div class="collection-card-bg" style="background:url('${imgs[i] || imgs[0]}') center/cover;transition:transform 0.5s;"></div>
+        <div class="collection-card-overlay">
+          <span>${count} pieces</span>
+          <h3>${c.name}</h3>
+        </div>
+      </div>`;
+            }).join("");
+            document.querySelectorAll(".collection-card[data-cat]").forEach(el => {
+                el.onclick = () => router.navigate("shop", { category: el.dataset.cat });
+            });
+        }
+
+        /* SALE */
+        async function renderSale() {
+            const [discounts, products] = await Promise.all([fetchStore("discounts"), fetchStore("products")]);
+
+            const sd = document.getElementById("sale-discounts");
+            sd.innerHTML = discounts.filter(d => d.active).map(d => `
+    <div class="discount-card">
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;color:var(--stone);text-transform:uppercase;margin-bottom:6px;">Discount Code</div>
+        <div class="discount-code">${d.code}</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="discount-pct">${d.percentage}% OFF</div>
+        <button onclick="copySaleCode('${d.code}')" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;background:none;border:1px solid var(--gold);color:var(--bark);padding:6px 16px;cursor:pointer;margin-top:8px;">Copy Code</button>
+      </div>
+    </div>`).join("");
+
+            const sp = document.getElementById("sale-products");
+            sp.innerHTML = products.map(productCard).join("");
+            bindProductCards();
+        }
+
+        function copySaleCode(code) {
+            navigator.clipboard.writeText(code).then(() => showToast(`Code "${code}" copied!`, "success"));
+        }
+
+        /* CART PAGE */
+        async function renderCart() {
+            const el = document.getElementById("cart-page-items");
+            const discount = cart.appliedDiscount;
+
+            if (!cart.items.length) {
+                el.innerHTML = `
+      <div style="text-align:center;padding:80px 0;">
+        <div style="font-size:56px;margin-bottom:20px;">🛍</div>
+        <h2 style="font-family:'Cormorant Garamond',serif;font-size:32px;font-weight:300;margin-bottom:16px;">Your cart is empty</h2>
+        <p style="color:var(--stone);margin-bottom:32px;">Discover our curated collection.</p>
+        <a href="#shop" class="btn-primary">Shop Now</a>
+      </div>`;
+                document.getElementById("cart-subtotal-display").textContent = formatPrice(0);
+                document.getElementById("cart-total-display").textContent = formatPrice(0);
+                return;
+            }
+
+            el.innerHTML = cart.items.map(item => `
+    <div style="display:flex;gap:20px;padding:24px 0;border-bottom:1px solid var(--cream);align-items:center;">
+      <img src="${item.image}" alt="${item.name}" style="width:80px;height:100px;object-fit:cover;background:var(--cream);flex-shrink:0;" />
+      <div style="flex:1;min-width:0;">
+        <p style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--stone);margin-bottom:4px;">${MOCK.categories.find(c => c.id === item.category_id)?.name || ''}</p>
+        <h4 style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;margin-bottom:8px;">${item.name}</h4>
+        <div class="qty-ctrl" style="width:fit-content;">
+          <button class="qty-btn" onclick="cartUpdate(${item.id},${item.qty - 1})">−</button>
+          <span class="qty-val">${item.qty}</span>
+          <button class="qty-btn" onclick="cartUpdate(${item.id},${item.qty + 1})">+</button>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0;">
+        <p style="font-family:'DM Mono',monospace;font-size:13px;margin-bottom:12px;">${formatPrice(item.price * item.qty)}</p>
+        <button onclick="cartRemove(${item.id})" style="background:none;border:none;cursor:pointer;font-size:11px;font-family:'DM Mono',monospace;letter-spacing:0.1em;color:var(--stone);text-decoration:underline;">Remove</button>
+      </div>
+    </div>`).join("");
+
+            const sub = cart.subtotal();
+            const total = discount ? sub - discount.amount : sub;
+
+            document.getElementById("cart-subtotal-display").textContent = formatPrice(sub);
+            document.getElementById("cart-total-display").textContent = formatPrice(total);
+
+            const discLine = document.getElementById("cart-discount-line");
+            if (discount) {
+                discLine.style.display = "flex";
+                document.getElementById("cart-discount-label").textContent = `${discount.code} (${discount.pct}% off)`;
+                document.getElementById("cart-discount-amount").textContent = `-${formatPrice(discount.amount)}`;
+            } else {
+                discLine.style.display = "none";
+            }
+        }
+
+        function cartUpdate(id, qty) { cart.update(id, qty); renderCart(); renderCartDrawer(); }
+        function cartRemove(id) { cart.remove(id); renderCart(); renderCartDrawer(); }
+
+        async function applyDiscount() {
+            const code = document.getElementById("discount-input").value.trim();
+            const discounts = await fetchStore("discounts");
+            const result = cart.applyCode(code, discounts);
+            const res = document.getElementById("discount-result");
+            if (result) {
+                res.textContent = `✓ ${result.pct}% discount applied — saving ${formatPrice(result.amount)}`;
+                res.style.color = "var(--bark)";
+                showToast(`${result.pct}% discount applied!`);
+                renderCart();
+            } else {
+                res.textContent = "✕ Invalid or inactive discount code";
+                res.style.color = "#7a2020";
+            }
+        }
+
+        /* CHECKOUT */
+        function renderCheckout() {
+            currentStep = 1;
+            showCheckoutStep(1);
+
+            const items = document.getElementById("checkout-order-items");
+            items.innerHTML = cart.items.map(i => `
+    <div style="display:flex;gap:12px;align-items:center;margin-bottom:12px;">
+      <img src="${i.image}" style="width:48px;height:60px;object-fit:cover;background:var(--cream);flex-shrink:0;" />
+      <div style="flex:1;min-width:0;font-size:12px;">
+        <div style="font-family:'Jost',sans-serif;">${i.name}</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--stone);">× ${i.qty}</div>
+      </div>
+      <div style="font-family:'DM Mono',monospace;font-size:12px;">${formatPrice(i.price * i.qty)}</div>
+    </div>`).join("");
+
+            const sub = cart.subtotal();
+            document.getElementById("co-subtotal").textContent = formatPrice(sub);
+            document.getElementById("co-shipping").textContent = formatPrice(80);
+            document.getElementById("co-total").textContent = formatPrice(sub + 80);
+        }
+
+        function showCheckoutStep(n) {
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById(`checkout-step-${i}`);
+                if (el) el.style.display = i === n ? "block" : "none";
+                const dot = document.getElementById(`step-dot-${i}`);
+                if (dot) {
+                    dot.classList.remove("active", "done");
+                    if (i < n) dot.classList.add("done");
+                    else if (i === n) dot.classList.add("active");
+                }
+            }
+        }
+
+        function checkoutNext() {
+            if (currentStep === 1) {
+                const email = document.getElementById("co-email").value;
+                const fname = document.getElementById("co-fname").value;
+                if (!email || !fname) { showToast("Please fill in required fields", "error"); return; }
+            }
+            currentStep++;
+            showCheckoutStep(currentStep);
+        }
+
+        function checkoutBack() {
+            currentStep--;
+            showCheckoutStep(currentStep);
+        }
+
+        async function placeOrder() {
+            const email = document.getElementById("co-email").value;
+            const fname = document.getElementById("co-fname").value;
+            const lname = document.getElementById("co-lname").value;
+            const orderId = "KK-" + Math.floor(10000 + Math.random() * 90000);
+
+            const body = {
+                name: `${fname} ${lname}`,
+                email,
+                total: cart.subtotal(),
+                items: JSON.stringify(cart.items.map(i => ({ id: i.id, name: i.name, qty: i.qty, price: i.price })))
+            };
+
+            try {
+                const url = new URL("api.php?state=order", window.location.href);
+                await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body), signal: AbortSignal.timeout(5000) });
+            } catch { }
+
+            document.getElementById("order-confirm-num").textContent = `Order Reference: ${orderId}`;
+            currentStep = 4;
+            showCheckoutStep(4);
+            cart.clear();
+        }
+
+        /* SEARCH PAGE */
+        async function renderSearchPage(q) {
+            if (!q) return;
+            document.getElementById("search-page-count").textContent = `Searching for "${q}"...`;
+            const results = await fetchStore("search", { q });
+            document.getElementById("search-page-count").textContent = `${results.length} result${results.length !== 1 ? "s" : ""} for "${q}"`;
+            const grid = document.getElementById("search-page-grid");
+            if (!results.length) {
+                grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:80px 0;color:var(--stone);font-family:'Cormorant Garamond',serif;font-size:24px;">No products match "${q}"</div>`;
+                return;
+            }
+            grid.innerHTML = results.map(productCard).join("");
+            bindProductCards();
+        }
+
+        /* FAQ */
+        const FAQ_DATA = [
+            { q: "What is your shipping policy?", a: "We offer free standard shipping on all South African orders over R500. Standard delivery takes 3-5 business days; express shipping (1-2 days) is available at checkout for R150." },
+            { q: "How do I return or exchange an item?", a: "Items may be returned within 30 days of receipt, unused and in original packaging. Email returns@oaklynstudio.co.za with your order number to start the process." },
+            { q: "What payment methods do you accept?", a: "We accept Visa, Mastercard, and PayFast. All transactions are secured with 256-bit SSL encryption." },
+            { q: "How do I track my order?", a: "Visit the Order Tracking page and enter your email address. You can also use the order reference number sent to your email after purchase." },
+            { q: "Do you ship internationally?", a: "Yes, we ship internationally via DHL. International orders typically arrive within 7-14 business days. Duties and taxes may apply depending on your country." },
+            { q: "How do I apply a discount code?", a: "Add items to your cart, then enter your discount code in the 'Discount Code' field on the Cart page before proceeding to checkout." },
+            { q: "What is your refund policy?", a: "Refunds are processed within 5-7 business days of receiving the returned item. Original shipping costs are non-refundable unless the item was defective or incorrectly shipped." },
+            { q: "How do I contact customer support?", a: "Email us at hello@oaklynstudio.co.za or use the Contact form. Our team responds within one business day, Monday to Friday." }
+        ];
+
+        function renderFaq() {
+            const el = document.getElementById("faq-list");
+            el.innerHTML = FAQ_DATA.map((item, i) => `
+    <div class="accordion-item" id="faq-${i}">
+      <button class="accordion-btn" onclick="toggleFaq(${i})">
+        <span class="accordion-q">${item.q}</span>
+        <span class="accordion-icon">+</span>
+      </button>
+      <div class="accordion-body">${item.a}</div>
+    </div>`).join("");
+        }
+
+        function toggleFaq(i) {
+            const el = document.getElementById(`faq-${i}`);
+            el.classList.toggle("open");
+        }
+
+        /* TRACK */
+        async function trackOrder() {
+            const email = document.getElementById("track-email").value.trim();
+            if (!email) { showToast("Please enter your email", "error"); return; }
+
+            const orders = await fetchStore("orders", { email });
+            const el = document.getElementById("track-results");
+
+            if (!orders.length) {
+                el.innerHTML = `
+      <div style="background:var(--cream);padding:32px;text-align:center;">
+        <p style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;margin-bottom:8px;">No orders found</p>
+        <p style="font-size:13px;color:var(--stone);">No orders found for ${email}</p>
+      </div>
+      <div style="margin-top:48px;">
+        <p style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--stone);margin-bottom:24px;">Example Order Status</p>
+        <div style="display:flex;flex-direction:column;gap:0;">
+          ${["Order Confirmed", "Processing", "Shipped", "Delivered"].map((s, i) => `
+            <div class="track-step ${i < 2 ? 'done' : ''}">
+              <div class="track-step-dot"></div>
+              <div>
+                <div style="font-weight:400;font-size:14px;margin-bottom:4px;">${s}</div>
+                <div style="font-size:12px;color:var(--stone);font-family:'DM Mono',monospace;">${i < 2 ? 'Completed' : 'Pending'}</div>
+              </div>
+            </div>`).join("")}
+        </div>
+      </div>`;
+                return;
+            }
+
+            el.innerHTML = orders.map(o => `
+    <div style="background:var(--white);border:1px solid var(--cream);padding:24px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+        <span style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.1em;">#${o.id}</span>
+        <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--stone);">${formatPrice(o.total_amount)}</span>
+      </div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;color:var(--gold);">${o.status || 'Processing'}</div>
+    </div>`).join("");
+        }
+
+        /* ORDERS LOOKUP */
+        async function lookupOrders() {
+            const email = document.getElementById("orders-email").value.trim();
+            if (!email) { showToast("Please enter your email", "error"); return; }
+            const orders = await fetchStore("orders", { email });
+            const el = document.getElementById("orders-results");
+            if (!orders.length) {
+                el.innerHTML = `<div style="text-align:center;padding:48px 0;color:var(--stone);font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;">No orders found for this email.</div>`;
+                return;
+            }
+            el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+    <thead><tr style="border-bottom:2px solid var(--cream);">
+      <th style="text-align:left;padding:12px 0;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--stone);">Order</th>
+      <th style="text-align:left;padding:12px 0;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--stone);">Date</th>
+      <th style="text-align:left;padding:12px 0;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--stone);">Total</th>
+      <th style="text-align:left;padding:12px 0;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--stone);">Status</th>
+    </tr></thead>
+    <tbody>${orders.map(o => `
+      <tr style="border-bottom:1px solid var(--cream);">
+        <td style="padding:16px 0;font-family:'DM Mono',monospace;">#${o.id}</td>
+        <td style="padding:16px 0;color:var(--stone);">${o.created_at || '—'}</td>
+        <td style="padding:16px 0;">${formatPrice(o.total_amount)}</td>
+        <td style="padding:16px 0;"><span style="background:var(--cream);padding:3px 10px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;">${o.status || 'Processing'}</span></td>
+      </tr>`).join("")}
+    </tbody></table>`;
+        }
+
+        /* ── CART DRAWER ── */
+        function openCartDrawer() {
+            renderCartDrawer();
+            document.getElementById("cart-drawer").classList.add("open");
+            document.getElementById("cart-drawer-overlay").classList.add("open");
+            document.body.style.overflow = "hidden";
+        }
+
+        function closeCartDrawer() {
+            document.getElementById("cart-drawer").classList.remove("open");
+            document.getElementById("cart-drawer-overlay").classList.remove("open");
+            document.body.style.overflow = "";
+        }
+
+        function renderCartDrawer() {
+            const el = document.getElementById("cart-drawer-items");
+            const subEl = document.getElementById("cart-drawer-subtotal");
+
+            if (!cart.items.length) {
+                el.innerHTML = `<div style="text-align:center;padding:48px 0;color:var(--stone);"><div style="font-size:40px;margin-bottom:16px;">🛍</div><p style="font-family:'Cormorant Garamond',serif;font-size:20px;">Your cart is empty</p></div>`;
+                if (subEl) subEl.textContent = formatPrice(0);
+                return;
+            }
+
+            el.innerHTML = cart.items.map(item => `
+    <div style="display:flex;gap:16px;padding:16px 0;border-bottom:1px solid var(--cream);align-items:center;">
+      <img src="${item.image}" style="width:64px;height:80px;object-fit:cover;background:var(--cream);" />
+      <div style="flex:1;min-width:0;">
+        <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:400;margin-bottom:4px;line-height:1.3;">${item.name}</p>
+        <p style="font-family:'DM Mono',monospace;font-size:11px;color:var(--stone);margin-bottom:8px;">${formatPrice(item.price)} × ${item.qty}</p>
+        <div class="qty-ctrl" style="width:fit-content;">
+          <button class="qty-btn" style="width:28px;height:28px;font-size:14px;" onclick="drawerUpdate(${item.id},${item.qty - 1})">−</button>
+          <span class="qty-val" style="width:32px;font-size:12px;">${item.qty}</span>
+          <button class="qty-btn" style="width:28px;height:28px;font-size:14px;" onclick="drawerUpdate(${item.id},${item.qty + 1})">+</button>
+        </div>
+      </div>
+      <button onclick="drawerRemove(${item.id})" style="background:none;border:none;cursor:pointer;color:var(--stone);font-size:16px;flex-shrink:0;">✕</button>
+    </div>`).join("");
+
+            if (subEl) subEl.textContent = formatPrice(cart.subtotal());
+        }
+
+        function drawerUpdate(id, qty) { cart.update(id, qty); renderCartDrawer(); }
+        function drawerRemove(id) { cart.remove(id); renderCartDrawer(); }
+
+        /* ── SEARCH OVERLAY ── */
+        let searchDebounce;
+        async function doSearch(q) {
+            const res = document.getElementById("search-results");
+            if (!q) { res.innerHTML = ""; return; }
+            const results = await fetchStore("search", { q });
+            if (!results.length) { res.innerHTML = `<p style="font-family:'DM Mono',monospace;font-size:12px;color:var(--stone);letter-spacing:0.1em;">No results for "${q}"</p>`; return; }
+            res.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">${results.slice(0, 6).map(p => `
+    <div style="cursor:pointer;" onclick="closeSearch();router.navigate('product',{id:${p.id}})">
+      <img src="${p.image}" style="width:100%;aspect-ratio:1;object-fit:cover;background:var(--cream);display:block;margin-bottom:8px;" />
+      <p style="font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:400;">${p.name}</p>
+      <p style="font-family:'DM Mono',monospace;font-size:11px;color:var(--stone);">${formatPrice(p.price)}</p>
+    </div>`).join("")}</div>`;
+        }
+
+        function closeSearch() {
+            document.getElementById("search-overlay").classList.remove("open");
+            document.body.style.overflow = "";
+        }
+
+        /* CONTACT FORM */
+        function submitContact() {
+            const name = document.getElementById("contact-name").value;
+            const email = document.getElementById("contact-email").value;
+            const message = document.getElementById("contact-message").value;
+            if (!name || !email || !message) { showToast("Please fill in all required fields", "error"); return; }
+            showToast("Message sent! We'll be in touch within one business day.", "success");
+            document.getElementById("contact-name").value = "";
+            document.getElementById("contact-email").value = "";
+            document.getElementById("contact-order").value = "";
+            document.getElementById("contact-message").value = "";
+        }
+
+        /* NEWSLETTER */
+        function subscribeNewsletter() {
+            const email = document.getElementById("newsletter-input").value;
+            if (!email) { showToast("Please enter your email", "error"); return; }
+            showToast("You're subscribed to The OAKLYN Effect!", "success");
+            document.getElementById("newsletter-input").value = "";
+        }
+
+        /* MOBILE NAV */
+        function openMobileNav() { document.getElementById("mobile-nav").classList.add("open"); document.body.style.overflow = "hidden"; }
+        function closeMobileNav() { document.getElementById("mobile-nav").classList.remove("open"); document.body.style.overflow = ""; }
+
+        /* ── EVENT LISTENERS ── */
+        document.getElementById("cart-toggle").addEventListener("click", openCartDrawer);
+        document.getElementById("cart-drawer-close").addEventListener("click", closeCartDrawer);
+        document.getElementById("cart-drawer-overlay").addEventListener("click", closeCartDrawer);
+        document.getElementById("drawer-checkout-btn").addEventListener("click", closeCartDrawer);
+
+        document.getElementById("hamburger-btn").addEventListener("click", openMobileNav);
+        document.getElementById("mob-close").addEventListener("click", closeMobileNav);
+        document.querySelectorAll("#mobile-nav a").forEach(a => a.addEventListener("click", closeMobileNav));
+
+        document.getElementById("search-toggle").addEventListener("click", () => {
+            document.getElementById("search-overlay").classList.add("open");
+            document.body.style.overflow = "hidden";
+            setTimeout(() => document.getElementById("search-input").focus(), 100);
+        });
+        document.getElementById("search-close").addEventListener("click", closeSearch);
+        document.addEventListener("keydown", e => { if (e.key === "Escape") { closeSearch(); closeCartDrawer(); closeMobileNav(); } });
+
+        document.getElementById("search-input").addEventListener("input", e => {
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(() => doSearch(e.target.value.trim()), 300);
+        });
+
+        window.addEventListener("cart-updated", () => {
+            renderCartDrawer();
+        });
+
+        /* ── RESPONSIVE GRID ADJUSTMENTS ── */
+        function updateGrids() {
+            const w = window.innerWidth;
+            const shopGrid = document.getElementById("shop-grid");
+            if (shopGrid) shopGrid.style.gridTemplateColumns = w < 640 ? "1fr" : w < 1024 ? "repeat(2,1fr)" : "repeat(3,1fr)";
+            const homeProds = document.getElementById("home-products");
+            if (homeProds) homeProds.style.gridTemplateColumns = w < 640 ? "1fr 1fr" : w < 1024 ? "repeat(2,1fr)" : "repeat(4,1fr)";
+            const homeCols = document.getElementById("home-collections");
+            if (homeCols) homeCols.style.gridTemplateColumns = w < 640 ? "1fr" : w < 1024 ? "repeat(2,1fr)" : "repeat(3,1fr)";
+            const saleProd = document.getElementById("sale-products");
+            if (saleProd) saleProd.style.gridTemplateColumns = w < 640 ? "1fr 1fr" : w < 1024 ? "repeat(2,1fr)" : "repeat(4,1fr)";
+            const relProd = document.getElementById("related-products");
+            if (relProd) relProd.style.gridTemplateColumns = w < 640 ? "1fr 1fr" : "repeat(4,1fr)";
+            const searchGrid = document.getElementById("search-page-grid");
+            if (searchGrid) searchGrid.style.gridTemplateColumns = w < 640 ? "1fr 1fr" : w < 1024 ? "repeat(2,1fr)" : "repeat(4,1fr)";
+            const colsGrid = document.getElementById("collections-grid");
+            if (colsGrid) colsGrid.style.gridTemplateColumns = w < 640 ? "1fr" : w < 1024 ? "repeat(2,1fr)" : "repeat(3,1fr)";
+
+            // Product page
+            const prodGrid = document.querySelector("#view-product .page-inner > div:nth-child(2)");
+            if (prodGrid) prodGrid.style.gridTemplateColumns = w < 768 ? "1fr" : "1fr 1fr";
+
+            // Cart page
+            const cartGrid = document.querySelector("#view-cart .page-inner > div:nth-child(2)");
+            if (cartGrid) cartGrid.style.gridTemplateColumns = w < 1024 ? "1fr" : "1fr 360px";
+
+            // Checkout grid
+            const coGrid = document.querySelector("#view-checkout .page-inner > div");
+            if (coGrid) coGrid.style.gridTemplateColumns = w < 1024 ? "1fr" : "1fr 380px";
+
+            // Trust badges
+            const trustBadges = document.querySelector(".view-section.active .page-inner > div[style*='grid-template-columns:repeat(3,1fr)']");
+        }
+
+        window.addEventListener("resize", updateGrids);
+
+        /* ── INIT ── */
+        window.addEventListener("DOMContentLoaded", async () => {
+            // Load site config
+            try {
+                const site = await fetchStore("site");
+                CURRENCY = site.currency || "R";
+            } catch { }
+
+            cart.updateBadge();
+            renderFaq();
+            router.init();
+            updateGrids();
+        });
+    </script>
+</body>
+
+</html>
