@@ -555,7 +555,134 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 </div>
 
                 <!-- Page Settings Tab -->
-                <div id="tab-page" style="display:none"></div>
+                <div id="tab-page" style="display:none">
+
+                    <!-- SEO -->
+                    <div class="fb-section">
+                        <div class="fb-sec-header open" onclick="toggleSec(this)">
+                            SEO <span class="chev"><i class="bi bi-chevron-right"></i></span>
+                        </div>
+                        <div class="fb-sec-body">
+                            <div class="fb-row">
+                                <span class="fb-lbl">Title</span>
+                                <input class="fb-input" id="prop-head-title" placeholder="Page title" oninput="onHeadFieldChange('title', this.value)">
+                            </div>
+                            <div style="color:var(--fig-text4);font-size:9px;margin:6px 0 4px;">Description</div>
+                            <textarea class="fb-input" style="width:100%;" id="prop-head-description" rows="3" placeholder="Meta description" oninput="onHeadFieldChange('description', this.value)"></textarea>
+                            <div class="fb-row" style="margin-top:6px">
+                                <span class="fb-lbl">Keywords</span>
+                                <input class="fb-input" id="prop-head-keywords" placeholder="comma, separated" oninput="onHeadFieldChange('keywords', this.value)">
+                            </div>
+                            <div class="fb-row">
+                                <span class="fb-lbl">Canonical</span>
+                                <input class="fb-input" id="prop-head-canonical" placeholder="https://..." oninput="onHeadFieldChange('canonical', this.value)">
+                            </div>
+                            <div class="fb-row">
+                                <span class="fb-lbl">Robots</span>
+                                <select class="fb-input" id="prop-head-robots" onchange="onHeadFieldChange('robots', this.value)">
+                                    <option value="">—</option>
+                                    <option value="index, follow">index, follow</option>
+                                    <option value="noindex">noindex</option>
+                                    <option value="nofollow">nofollow</option>
+                                    <option value="noindex, nofollow">noindex, nofollow</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Social (Open Graph) -->
+                    <div class="fb-section">
+                        <div class="fb-sec-header" onclick="toggleSec(this)">
+                            Social (Open Graph) <span class="chev"><i class="bi bi-chevron-right"></i></span>
+                        </div>
+                        <div class="fb-sec-body">
+                            <div class="fb-row">
+                                <span class="fb-lbl">og:title</span>
+                                <input class="fb-input" id="prop-head-ogTitle" placeholder="Shared title" oninput="onHeadFieldChange('ogTitle', this.value)">
+                            </div>
+                            <div style="color:var(--fig-text4);font-size:9px;margin:6px 0 4px;">og:description</div>
+                            <textarea class="fb-input" style="width:100%;" id="prop-head-ogDescription" rows="2" placeholder="Shared description" oninput="onHeadFieldChange('ogDescription', this.value)"></textarea>
+                            <div class="fb-row" style="margin-top:6px">
+                                <span class="fb-lbl">og:image</span>
+                                <input class="fb-input" id="prop-head-ogImage" placeholder="https://..." oninput="onHeadFieldChange('ogImage', this.value)">
+                            </div>
+                            <div class="fb-row">
+                                <span class="fb-lbl">og:url</span>
+                                <input class="fb-input" id="prop-head-ogUrl" placeholder="https://..." oninput="onHeadFieldChange('ogUrl', this.value)">
+                            </div>
+                            <div class="fb-row">
+                                <span class="fb-lbl">og:type</span>
+                                <select class="fb-input" id="prop-head-ogType" onchange="onHeadFieldChange('ogType', this.value)">
+                                    <option value="">—</option>
+                                    <option value="website">website</option>
+                                    <option value="article">article</option>
+                                    <option value="product">product</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Twitter -->
+                    <div class="fb-section">
+                        <div class="fb-sec-header" onclick="toggleSec(this)">
+                            Twitter <span class="chev"><i class="bi bi-chevron-right"></i></span>
+                        </div>
+                        <div class="fb-sec-body">
+                            <div class="fb-row">
+                                <span class="fb-lbl">Card</span>
+                                <select class="fb-input" id="prop-head-twitterCard" onchange="onHeadFieldChange('twitterCard', this.value)">
+                                    <option value="">—</option>
+                                    <option value="summary">summary</option>
+                                    <option value="summary_large_image">summary_large_image</option>
+                                </select>
+                            </div>
+                            <div class="fb-row">
+                                <span class="fb-lbl">Title</span>
+                                <input class="fb-input" id="prop-head-twitterTitle" placeholder="Tweet title" oninput="onHeadFieldChange('twitterTitle', this.value)">
+                            </div>
+                            <div style="color:var(--fig-text4);font-size:9px;margin:6px 0 4px;">Description</div>
+                            <textarea class="fb-input" style="width:100%;" id="prop-head-twitterDescription" rows="2" placeholder="Tweet description" oninput="onHeadFieldChange('twitterDescription', this.value)"></textarea>
+                            <div class="fb-row" style="margin-top:6px">
+                                <span class="fb-lbl">Image</span>
+                                <input class="fb-input" id="prop-head-twitterImage" placeholder="https://..." oninput="onHeadFieldChange('twitterImage', this.value)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Icons & Theme -->
+                    <div class="fb-section">
+                        <div class="fb-sec-header" onclick="toggleSec(this)">
+                            Icons &amp; Theme <span class="chev"><i class="bi bi-chevron-right"></i></span>
+                        </div>
+                        <div class="fb-sec-body">
+                            <div class="fb-row">
+                                <span class="fb-lbl">Favicon</span>
+                                <input class="fb-input" id="prop-head-favicon" placeholder="/favicon.ico" oninput="onHeadFieldChange('favicon', this.value)">
+                            </div>
+                            <div class="fb-row">
+                                <span class="fb-lbl">Apple</span>
+                                <input class="fb-input" id="prop-head-appleTouchIcon" placeholder="/apple-touch-icon.png" oninput="onHeadFieldChange('appleTouchIcon', this.value)">
+                            </div>
+                            <div style="color:var(--fig-text4);font-size:9px;margin:6px 0 4px;">Theme color</div>
+                            <div class="fb-color-row">
+                                <input type="color" class="fb-swatch" id="cp-head-themeColor" oninput="onHeadColorChange('themeColor', 'cp-head-themeColor', 'prop-head-themeColor')">
+                                <input class="fb-input" id="prop-head-themeColor" placeholder="#000000" oninput="onHeadFieldChange('themeColor', this.value)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Custom Head HTML -->
+                    <div class="fb-section">
+                        <div class="fb-sec-header" onclick="toggleSec(this)">
+                            Custom Head HTML <span class="chev"><i class="bi bi-chevron-right"></i></span>
+                        </div>
+                        <div class="fb-sec-body">
+                            <div style="color:var(--fig-text4);font-size:9px;margin-bottom:4px;">Inserted between sentinel comments at the end of &lt;head&gt;. Paste scripts, preconnect links, analytics, JSON-LD, etc.</div>
+                            <textarea class="fb-input" style="width:100%;font-family:'SF Mono','Consolas',monospace;font-size:10px;" id="prop-head-customHead" rows="8" placeholder="<!-- analytics, preconnect, JSON-LD --&gt;" oninput="onHeadFieldChange('customHead', this.value)"></textarea>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
 
