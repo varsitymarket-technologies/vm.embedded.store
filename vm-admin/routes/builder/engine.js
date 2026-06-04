@@ -10,6 +10,19 @@
     let selectedEl = null;
     let hoveredEl = null;
     let isEditing = false;
+    let currentMode = 'select';        // 'select' | 'interaction' | 'drag'
+    let dragSourceEl = null;
+    let dragGhost = null;
+    let dragStartX = 0;
+    let dragStartY = 0;
+    let isDragging = false;
+    let dropContainer = null;          // currently-highlighted drop container
+    let dropAnchor = null;             // child to insertBefore (null = append)
+    const DRAG_THRESHOLD = 4;          // px before drag starts
+    const CONTAINER_TAGS = new Set([
+        'DIV','SECTION','ARTICLE','HEADER','FOOTER','NAV','ASIDE','MAIN',
+        'UL','OL','FORM','FIGURE','BODY'
+    ]);
 
     // ── Overlay elements ──
     const hoverOverlay = createOverlay('vb-hover-overlay');
@@ -443,6 +456,29 @@
         sendToParent({ type: 'CONTENT_CHANGED', html: selectedEl.innerHTML });
     }
 
+    // ── Mode helpers ──
+    function resetVisualState() {
+        if (isEditing) exitEditMode();
+        hideOverlay(selectOverlay);
+        hideOverlay(hoverOverlay);
+        tooltip.style.display = 'none';
+        gridContainer.style.display = 'none';
+        document.body.style.cursor = '';
+    }
+
+    function enableDragMode() {
+        document.body.style.cursor = 'grab';
+    }
+
+    function disableDragMode() {
+        document.body.style.cursor = '';
+        if (dragGhost) { dragGhost.remove(); dragGhost = null; }
+        dragSourceEl = null;
+        dropContainer = null;
+        dropAnchor = null;
+        isDragging = false;
+    }
+
     // ── Scroll handler: reposition overlays ──
     document.addEventListener('scroll', function () {
         if (selectedEl) {
@@ -462,6 +498,21 @@
     window.addEventListener('message', function (e) {
         const msg = e.data;
         if (!msg || !msg.type) return;
+
+        if (msg.type === 'SET_MODE') {
+            const next = msg.mode;
+            if (!['select','interaction','drag'].includes(next)) return;
+            if (next === currentMode) {
+                sendToParent({ type: 'MODE_CHANGED', mode: currentMode });
+                return;
+            }
+            resetVisualState();
+            if (currentMode === 'drag') disableDragMode();
+            currentMode = next;
+            if (currentMode === 'drag') enableDragMode();
+            sendToParent({ type: 'MODE_CHANGED', mode: currentMode });
+            return;
+        }
 
         if (msg.type === 'APPLY_STYLE' && selectedEl) {
             Object.entries(msg.styles).forEach(([prop, val]) => {
