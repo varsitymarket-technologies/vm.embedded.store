@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Starved Hustla Fam</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Brutalist Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #f9f9f9; }
+        ::-webkit-scrollbar-thumb { background: #000; }
+        ::-webkit-scrollbar-thumb:hover { background: #333; }
+        
+        /* View Transitions */
+        .fade-enter { animation: fadeIn 0.3s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Utility */
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="bg-white text-black font-sans antialiased flex flex-col min-h-screen selection:bg-black selection:text-white">
+
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-black/10 px-6 py-4 flex justify-between items-center">
+        <a href="#home" class="text-2xl font-bold tracking-tighter uppercase italic">SHF</a>
+        
+        <ul class="hidden md:flex space-x-8 text-xs font-medium uppercase tracking-widest">
+            <li><a href="#shop" class="hover:line-through transition-all">Shop</a></li>
+            <li><a href="#about" class="hover:line-through transition-all">About</a></li>
+            <li><a href="#contact" class="hover:line-through transition-all">Contact</a></li>
+        </ul>
+
+        <div class="flex items-center space-x-6">
+            <a href="#search" class="hidden md:block text-xs uppercase tracking-widest hover:line-through">Search</a>
+            <a href="#auth" class="hidden md:block text-xs uppercase tracking-widest hover:line-through">Account</a>
+            <a href="#cart" class="text-xs uppercase tracking-widest font-bold">Bag (<span class="js-cart-count">0</span>)</a>
+            
+            <button id="mobile-menu-btn" class="md:hidden">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            </button>
+        </div>
+    </nav>
+
+    <div id="mobile-menu" class="fixed inset-0 bg-white z-50 hidden flex-col justify-center items-center space-y-8 text-2xl uppercase tracking-widest font-light">
+        <ul class="text-left px-6 py-8 space-y-8">
+            <li><a href="#shop" class="hover:line-through js-mobile-link">Shop</a></li>
+            <li><a href="#search" class="hover:line-through js-mobile-link">Search</a></li>
+            <li><a href="#auth" class="hover:line-through js-mobile-link">Account</a></li>
+            <li><a href="#about" class="hover:line-through js-mobile-link">About</a></li>
+            <li><a href="#contact" class="hover:line-through js-mobile-link">Contact</a></li>
+            <li><a href="#cart" class="hover:line-through js-mobile-link">Bag (<span class="js-cart-count">0</span>)</a></li>
+        </ul>
+        <button id="mobile-close-btn" class="absolute top-6 right-6 text-sm hover:line-through">Close</button>
+    </div>
+
+    <main id="app-root" class="flex-grow fade-enter"></main>
+
+    <footer class="border-t border-black/10 px-6 py-12 bg-[#fafafa] text-[10px] uppercase tracking-[0.2em] mt-auto">
+        <div class="flex flex-col md:flex-row justify-between items-start gap-8 max-w-7xl mx-auto w-full">
+            <div>
+                <p class="font-bold mb-2">Starved Hustla Fam</p>
+                <p class="opacity-50">Essential objects for the modern space.</p>
+            </div>
+            <div class="flex gap-12">
+                <div class="flex flex-col space-y-2">
+                    <a href="#shop" class="hover:line-through">Shop</a>
+                    <a href="#about" class="hover:line-through">About</a>
+                </div>
+                <div class="flex flex-col space-y-2">
+                    <a href="#" class="hover:line-through">Instagram</a>
+                    <a href="#" class="hover:line-through">Terms</a>
+                </div>
+            </div>
+        </div>
+        <div class="text-center mt-16 opacity-30">Powered By VMTECH</div>
+    </footer>
+
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <template id="tpl-home">
+        <div class="h-[80vh] flex items-center justify-center bg-[#F9F9F9] border-b border-black">
+            <div class="text-center px-4">
+                <h1 class="text-6xl md:text-8xl font-light tracking-tighter mb-6 uppercase">Starved.Family</h1>
+                <p class="text-sm md:text-base tracking-[0.2em] mb-8 uppercase opacity-60">Reduction of noise.</p>
+                <a href="#shop" class="inline-block bg-black text-white px-10 py-4 text-xs uppercase tracking-[0.3em] hover:bg-white hover:text-black border border-black transition-all">
+                    Explore
+                </a>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-shop">
+        <div class="max-w-7xl mx-auto px-6 py-20 flex flex-col md:flex-row gap-12">
+            <aside class="w-full md:w-48 shrink-0">
+                <h3 class="text-[10px] font-bold uppercase tracking-widest border-b border-black pb-3 mb-6">Categories</h3>
+                <ul class="space-y-4 text-xs uppercase tracking-widest opacity-60 js-category-list"></ul>
+            </aside>
+            <div class="flex-1">
+                <header class="flex justify-between items-end mb-12 border-b border-black/10 pb-6">
+                    <h1 class="text-4xl font-light uppercase tracking-tighter js-collection-title">All Objects</h1>
+                    <span class="text-[10px] uppercase tracking-widest opacity-50 js-collection-count"></span>
+                </header>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16 js-product-grid"></div>
+            </div>
+        </div>
+    </template>
+    
+    <template id="tpl-category-item">
+        <li class="hover:opacity-100 hover:text-black cursor-pointer transition-opacity js-cat-link"></li>
+    </template>
+
+    <template id="tpl-product-card">
+        <a href="#" class="group block js-prod-link">
+            <div class="aspect-[3/4] bg-gray-100 mb-4 overflow-hidden relative border border-transparent group-hover:border-black transition-all">
+                <div class="w-full h-full flex items-center justify-center text-[10px] uppercase tracking-widest opacity-20 js-img-placeholder"></div>
+            </div>
+            <h3 class="text-sm font-medium uppercase tracking-tight js-title"></h3>
+            <p class="text-sm opacity-50 mt-1 js-price"></p>
+        </a>
+    </template>
+
+    <template id="tpl-product">
+        <section class="max-w-7xl mx-auto px-6 py-20 grid grid-cols-1 lg:grid-cols-2 gap-16">
+            <div class="bg-[#f2f2f2] aspect-[4/5] flex items-center justify-center text-xs uppercase opacity-30 border border-black/5 js-detail-img"></div>
+            <div class="lg:sticky lg:top-32 h-fit">
+                <nav class="flex text-[10px] uppercase tracking-widest mb-8 opacity-50">
+                    <a href="#shop" class="hover:line-through">Shop</a> <span class="mx-2">/</span> <span class="js-detail-cat"></span>
+                </nav>
+                <h1 class="text-4xl font-light uppercase tracking-tighter mb-2 js-detail-title"></h1>
+                <p class="text-xl mb-10 font-medium js-detail-price"></p>
+                <div class="border-t border-black pt-8 space-y-8">
+                    <p class="text-sm leading-relaxed opacity-70 js-detail-desc"></p>
+                    <button class="w-full bg-black text-white py-5 text-xs uppercase tracking-[0.3em] hover:bg-zinc-800 transition-colors js-add-btn">
+                        Add to Bag
+                    </button>
+                </div>
+            </div>
+        </section>
+    </template>
+
+    <template id="tpl-cart">
+        <section class="max-w-7xl mx-auto px-6 py-20 min-h-[60vh]">
+            <h1 class="text-4xl font-light uppercase tracking-tighter mb-16 border-b border-black/10 pb-6">Your Bag</h1>
+            <div class="js-cart-container"></div>
+        </section>
+    </template>
+
+    <template id="tpl-cart-empty">
+        <div class="py-10 text-center">
+            <p class="text-sm uppercase tracking-widest opacity-50 mb-8">Your bag is currently empty.</p>
+            <a href="#shop" class="inline-block bg-black text-white px-10 py-4 text-xs uppercase tracking-[0.3em] hover:bg-zinc-800">Explore</a>
+        </div>
+    </template>
+
+    <template id="tpl-cart-layout">
+        <div class="flex flex-col lg:flex-row gap-16">
+            <div class="flex-1 space-y-8 js-cart-items"></div>
+            <div class="w-full lg:w-96">
+                <div class="bg-gray-50 p-8 border border-black/5">
+                    <h2 class="text-xs uppercase tracking-[0.2em] mb-8 font-bold">Summary</h2>
+                    <div class="flex justify-between border-b border-black/5 pb-4 text-sm">
+                        <span class="opacity-60 uppercase">Subtotal</span>
+                        <span class="js-cart-subtotal"></span>
+                    </div>
+                    <div class="flex justify-between text-lg pt-4 font-medium uppercase tracking-tighter">
+                        <span>Total</span>
+                        <span class="js-cart-total"></span>
+                    </div>
+                    <a href="#checkout" class="block text-center w-full bg-black text-white py-5 mt-10 text-xs uppercase tracking-[0.3em] hover:bg-zinc-800">Checkout</a>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-cart-item">
+        <div class="flex group border border-black/5 p-4 bg-[#fbfbfb]">
+            <div class="w-20 h-24 bg-gray-200 flex-shrink-0 flex items-center justify-center text-[8px] opacity-30 js-item-img"></div>
+            <div class="ml-6 flex-1 flex flex-col justify-between">
+                <div class="flex justify-between">
+                    <h3 class="text-xs uppercase font-bold js-item-title"></h3>
+                    <span class="text-xs js-item-price"></span>
+                </div>
+                <div class="flex justify-between items-end">
+                    <div class="flex items-center border border-black/20">
+                        <button class="px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors js-qty-sub">−</button>
+                        <span class="px-4 text-xs js-item-qty">1</span>
+                        <button class="px-3 py-1 text-xs hover:bg-black hover:text-white transition-colors js-qty-add">+</button>
+                    </div>
+                    <button class="text-[10px] uppercase border-b border-black/30 hover:border-black opacity-50 hover:opacity-100 js-item-remove">Remove</button>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-checkout">
+        <section class="max-w-3xl mx-auto px-6 py-20 min-h-[70vh]">
+            <h1 class="text-3xl font-light uppercase tracking-tighter mb-12">Secure Checkout</h1>
+            <form class="space-y-12 js-checkout-form">
+                <div>
+                    <h2 class="text-[10px] uppercase tracking-[0.2em] mb-6 font-bold">Shipping Details</h2>
+                    <div class="grid grid-cols-2 gap-6">
+                        <input type="text" required placeholder="FIRST NAME" class="border-b border-black/20 py-4 text-xs uppercase tracking-widest focus:outline-none focus:border-black bg-transparent">
+                        <input type="text" required placeholder="LAST NAME" class="border-b border-black/20 py-4 text-xs uppercase tracking-widest focus:outline-none focus:border-black bg-transparent">
+                        <input type="email" required placeholder="EMAIL" class="col-span-2 border-b border-black/20 py-4 text-xs uppercase tracking-widest focus:outline-none focus:border-black bg-transparent">
+                        <input type="text" required placeholder="ADDRESS" class="col-span-2 border-b border-black/20 py-4 text-xs uppercase tracking-widest focus:outline-none focus:border-black bg-transparent">
+                    </div>
+                </div>
+                <div>
+                    <h2 class="text-[10px] uppercase tracking-[0.2em] mb-6 font-bold">Payment Simulation</h2>
+                    <input type="text" placeholder="CARD NUMBER (MOCK)" class="w-full border-b border-black/20 py-4 text-xs uppercase tracking-widest focus:outline-none focus:border-black bg-transparent">
+                </div>
+                <button type="submit" class="w-full bg-black text-white py-6 text-xs uppercase tracking-[0.4em] hover:bg-zinc-900">Place Order</button>
+            </form>
+        </section>
+    </template>
+
+    <template id="tpl-search">
+        <div class="max-w-4xl mx-auto px-6 py-32 min-h-[60vh]">
+            <input type="text" placeholder="SEARCH CATALOG..." class="w-full border-b-2 border-black py-6 text-3xl md:text-5xl font-light uppercase tracking-tighter focus:outline-none bg-transparent js-search-input">
+            <div class="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-8 js-search-results"></div>
+        </div>
+    </template>
+
+    <template id="tpl-success">
+        <div class="max-w-2xl mx-auto px-6 py-32 text-center min-h-[60vh]">
+            <h1 class="text-4xl md:text-5xl font-light tracking-tighter mb-6 uppercase">Order Received</h1>
+            <p class="text-xs uppercase tracking-widest opacity-60 mb-12">Your objects are being prepared.</p>
+            <a href="#shop" class="bg-black text-white px-10 py-4 text-[10px] uppercase tracking-[0.3em]">Return Home</a>
+        </div>
+    </template>
+
+    <template id="tpl-auth">
+        <div class="max-w-md mx-auto px-6 py-32 min-h-[60vh]">
+            <h2 class="text-3xl font-light tracking-tighter mb-12 uppercase text-center">Account</h2>
+
+            <div class="acc-login space-y-8">
+                <form data-form="login" class="space-y-6">
+                    <input type="email" name="email" placeholder="EMAIL" required class="w-full border-b border-black/20 py-4 text-xs uppercase focus:outline-none focus:border-black">
+                    <input type="password" name="password" placeholder="PASSWORD" required class="w-full border-b border-black/20 py-4 text-xs uppercase focus:outline-none focus:border-black">
+                    <button type="submit" class="w-full bg-black text-white py-5 text-xs uppercase tracking-[0.3em]">Sign In</button>
+                    <p data-err="login" class="hidden text-[10px] uppercase tracking-widest text-red-500"></p>
+                </form>
+                <p class="text-[10px] uppercase tracking-widest text-center opacity-60">
+                    No account? <a href="#" data-action="show-register" class="border-b border-black pb-0.5">Create one</a>
+                </p>
+            </div>
+
+            <div class="acc-register hidden space-y-8">
+                <form data-form="register" class="space-y-6">
+                    <input type="text" name="name" placeholder="NAME" class="w-full border-b border-black/20 py-4 text-xs uppercase focus:outline-none focus:border-black">
+                    <input type="email" name="email" placeholder="EMAIL" required class="w-full border-b border-black/20 py-4 text-xs uppercase focus:outline-none focus:border-black">
+                    <input type="password" name="password" placeholder="PASSWORD (8+)" required minlength="8" class="w-full border-b border-black/20 py-4 text-xs uppercase focus:outline-none focus:border-black">
+                    <button type="submit" class="w-full bg-black text-white py-5 text-xs uppercase tracking-[0.3em]">Create Account</button>
+                    <p data-err="register" class="hidden text-[10px] uppercase tracking-widest text-red-500"></p>
+                </form>
+                <p class="text-[10px] uppercase tracking-widest text-center opacity-60">
+                    Existing account? <a href="#" data-action="show-login" class="border-b border-black pb-0.5">Sign in</a>
+                </p>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-account">
+        <div class="max-w-4xl mx-auto px-6 py-32 min-h-[60vh]">
+            <p class="text-[10px] uppercase tracking-widest opacity-50 mb-2">Account</p>
+            <h2 class="text-3xl font-light tracking-tighter mb-12 uppercase">Welcome, <span class="js-acc-name">Friend</span></h2>
+            <p class="text-xs uppercase tracking-widest opacity-60 mb-12 js-acc-email"></p>
+
+            <p class="text-[10px] uppercase tracking-widest opacity-50 mb-4">Order History</p>
+            <div class="js-orders-list space-y-2 mb-12 border-t border-black/10 pt-4"></div>
+
+            <button class="text-[10px] uppercase border-b border-red-500 text-red-500 pb-1 js-logout">Sign Out</button>
+        </div>
+    </template>
+    
+    <template id="tpl-static">
+        <div class="max-w-3xl mx-auto px-6 py-32 text-center min-h-[60vh]">
+            <h1 class="text-4xl md:text-6xl font-light tracking-tighter mb-10 uppercase js-static-title"></h1>
+            <p class="text-sm leading-loose uppercase tracking-widest opacity-70 js-static-content"></p>
+        </div>
+    </template>
+
+
+    <script>
+        // --- 1. MOCK DATABASE ---
+        const DB = {
+            currency: 'e(__SYSTEM_CURRENCY__)',
+            categories: ['All', 'Seating', 'Lighting', 'Glassware', 'Objects'],
+            products: [
+                { id: 1, title: 'Osmosis Chair', price: 450, category: 'Seating', img: 'SEATING', desc: 'Handcrafted from sustainably sourced solid oak. Features a seamless joint design.' },
+                { id: 2, title: 'Glass Decanter', price: 85, category: 'Glassware', img: 'GLASS', desc: 'Hand-blown minimalist 750ml vessel.' },
+                { id: 3, title: 'Monolithic Table', price: 1200, category: 'Objects', img: 'TABLE', desc: 'Matte black steel frame with a cast concrete top.' },
+                { id: 4, title: 'Brutalist Lamp', price: 320, category: 'Lighting', img: 'LAMP', desc: 'Cast concrete base with warm industrial filament glow.' },
+                { id: 5, title: 'Steel Bookend', price: 65, category: 'Objects', img: 'STEEL', desc: 'Raw hot-rolled steel, sold individually.' },
+                { id: 6, title: 'Lounge Seat', price: 850, category: 'Seating', img: 'SEATING', desc: 'Low profile boucle fabric on a hidden wooden frame.' }
+            ]
+        };
+
+        // --- 2. CORE APPLICATION CLASS ---
+        class StoreEngine {
+            constructor() {
+                this.root = document.getElementById('app-root');
+                this.cart = JSON.parse(localStorage.getItem('shf_cart')) || [];
+                // Legacy mock-auth cleanup (pre-D.3.2 port).
+                try { localStorage.removeItem('shf_auth'); } catch {}
+                this.auth = {
+                    user: (() => { try { return JSON.parse(localStorage.getItem('vm_customer_cache') || 'null'); } catch { return null; } })(),
+                    token: localStorage.getItem('vm_customer_token')
+                };
+                this.bootCustomer();
+                
+                this.initLayout();
+                this.initRouter();
+                this.updateCartCount();
+            }
+
+            // --- LAYOUT & GLOBALS ---
+            isLoggedIn() { return !!(this.auth && this.auth.user); }
+
+            async bootCustomer() {
+                if (!this.auth.token) {
+                    document.dispatchEvent(new CustomEvent('vm:customer-logout'));
+                    return;
+                }
+                try {
+                    const res = await fetch(new URL("api.php?state=customer_me", window.location.href), {
+                        headers: { 'X-Customer-Token': this.auth.token },
+                        signal: AbortSignal.timeout(4000)
+                    });
+                    if (res.status === 401) {
+                        localStorage.removeItem('vm_customer_token');
+                        localStorage.removeItem('vm_customer_cache');
+                        this.auth.user = null;
+                        this.auth.token = null;
+                        document.dispatchEvent(new CustomEvent('vm:customer-logout'));
+                        const cur = (window.location.hash || '').slice(1).split('/')[0];
+                        if (cur === 'account' || cur === 'auth') this.route();
+                        return;
+                    }
+                    if (!res.ok) throw new Error('boot failed: ' + res.status);
+                    const data = await res.json();
+                    if (data && data.ok && data.customer) {
+                        this.auth.user = data.customer;
+                        localStorage.setItem('vm_customer_cache', JSON.stringify(data.customer));
+                        document.dispatchEvent(new CustomEvent('vm:customer-login', { detail: data.customer }));
+                    }
+                } catch (e) { /* network failure */ }
+            }
+
+            async login(email, password) {
+                const result = await postStore('customer_login', { email, password });
+                if (result.ok && result.data.token && result.data.customer) {
+                    this.auth.token = result.data.token;
+                    this.auth.user = result.data.customer;
+                    localStorage.setItem('vm_customer_token', result.data.token);
+                    localStorage.setItem('vm_customer_cache', JSON.stringify(result.data.customer));
+                    document.dispatchEvent(new CustomEvent('vm:customer-login', { detail: result.data.customer }));
+                    return { ok: true };
+                }
+                return { ok: false, error: result.error || 'Sign-in failed' };
+            }
+
+            async register(email, password, name) {
+                const result = await postStore('customer_register', { email, password, name });
+                if (result.ok && result.data.token && result.data.customer) {
+                    this.auth.token = result.data.token;
+                    this.auth.user = result.data.customer;
+                    localStorage.setItem('vm_customer_token', result.data.token);
+                    localStorage.setItem('vm_customer_cache', JSON.stringify(result.data.customer));
+                    document.dispatchEvent(new CustomEvent('vm:customer-login', { detail: result.data.customer }));
+                    return { ok: true };
+                }
+                return { ok: false, error: result.error || 'Could not create account' };
+            }
+
+            async logout() {
+                try { await postStore('customer_logout', {}); } catch {}
+                this.auth.token = null;
+                this.auth.user = null;
+                localStorage.removeItem('vm_customer_token');
+                localStorage.removeItem('vm_customer_cache');
+                document.dispatchEvent(new CustomEvent('vm:customer-logout'));
+            }
+
+            initLayout() {
+                const mobBtn = document.getElementById('mobile-menu-btn');
+                const mobMenu = document.getElementById('mobile-menu');
+                const mobClose = document.getElementById('mobile-close-btn');
+                
+                const toggle = () => mobMenu.classList.toggle('hidden');
+                
+                mobBtn.onclick = toggle;
+                mobClose.onclick = toggle;
+                document.querySelectorAll('.js-mobile-link').forEach(link => link.onclick = toggle);
+            }
+
+            showToast(msg) {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = 'bg-black text-white px-6 py-4 text-[10px] uppercase tracking-widest shadow-xl transition-all duration-300 transform translate-y-10 opacity-0';
+                toast.textContent = msg;
+                container.appendChild(toast);
+                
+                requestAnimationFrame(() => toast.classList.remove('translate-y-10', 'opacity-0'));
+                setTimeout(() => {
+                    toast.classList.add('translate-y-10', 'opacity-0');
+                    setTimeout(() => toast.remove(), 300);
+                }, 2500);
+            }
+
+            // --- ROUTER LOGIC ---
+            initRouter() {
+                window.addEventListener('hashchange', () => this.route());
+                this.route(); // Trigger on load
+            }
+
+            route() {
+                const hash = window.location.hash.slice(1) || 'home';
+                const parts = hash.split('/');
+                const view = parts[0];
+                const id = parts[1];
+
+                this.root.classList.remove('fade-enter');
+                void this.root.offsetWidth; // Trigger reflow
+                this.root.classList.add('fade-enter');
+                window.scrollTo(0, 0);
+
+                // Routing Switchboard
+                switch(view) {
+                    case 'shop': this.renderShop(id); break; // id is category if present
+                    case 'product': this.renderProduct(id); break;
+                    case 'cart': this.renderCart(); break;
+                    case 'checkout': this.renderCheckout(); break;
+                    case 'success': this.renderSuccess(); break;
+                    case 'auth': this.isLoggedIn() ? this.renderAccount() : this.renderTemplate('tpl-auth', this.bindAuth); break;
+                    case 'account': this.isLoggedIn() ? this.renderAccount() : window.location.hash = 'auth'; break;
+                    case 'search': this.renderSearch(); break;
+                    case 'about': this.renderStatic('Our Ethos', 'We believe in the reduction of noise. Everything you need. Nothing you do not.'); break;
+                    case 'contact': this.renderStatic('Inquiries', 'Contact us at strictly@starved.family for bespoke orders.'); break;
+                    default: this.renderTemplate('tpl-home'); break;
+                }
+            }
+
+            renderTemplate(templateId, callback = null) {
+                const tpl = document.getElementById(templateId);
+                if (!tpl) return;
+                this.root.innerHTML = '';
+                this.root.appendChild(tpl.content.cloneNode(true));
+                if (callback) callback.call(this, this.root);
+            }
+
+            // --- VIEW CONTROLLERS ---
+
+            renderShop(activeCategory = 'All') {
+                activeCategory = decodeURI(activeCategory);
+                this.renderTemplate('tpl-shop', (view) => {
+                    const list = view.querySelector('.js-category-list');
+                    const grid = view.querySelector('.js-product-grid');
+                    const catTpl = document.getElementById('tpl-category-item');
+                    const prodTpl = document.getElementById('tpl-product-card');
+
+                    // 1. Build Categories Sidebar
+                    DB.categories.forEach(cat => {
+                        const li = catTpl.content.cloneNode(true);
+                        const link = li.querySelector('.js-cat-link');
+                        link.textContent = cat;
+                        if(cat === activeCategory) link.classList.add('font-bold', 'text-black', 'opacity-100');
+                        link.onclick = () => window.location.hash = `shop/${cat}`;
+                        list.appendChild(li);
+                    });
+
+                    // 2. Filter & Render Products
+                    const filtered = activeCategory === 'All' ? DB.products : DB.products.filter(p => p.category === activeCategory);
+                    view.querySelector('.js-collection-title').textContent = activeCategory === 'All' ? 'All Objects' : activeCategory;
+                    view.querySelector('.js-collection-count').textContent = `${filtered.length} Items`;
+
+                    filtered.forEach(p => {
+                        const card = prodTpl.content.cloneNode(true);
+                        card.querySelector('.js-prod-link').href = `#product/${p.id}`;
+                        card.querySelector('.js-title').textContent = p.title;
+                        card.querySelector('.js-price').textContent = `${DB.currency}${p.price}`;
+                        card.querySelector('.js-img-placeholder').textContent = p.img;
+                        grid.appendChild(card);
+                    });
+                });
+            }
+
+            renderProduct(id) {
+                const product = DB.products.find(p => p.id == id);
+                if (!product) return window.location.hash = 'shop';
+
+                this.renderTemplate('tpl-product', (view) => {
+                    view.querySelector('.js-detail-title').textContent = product.title;
+                    view.querySelector('.js-detail-price').textContent = `${DB.currency}${product.price}`;
+                    view.querySelector('.js-detail-cat').textContent = product.category;
+                    view.querySelector('.js-detail-desc').textContent = product.desc;
+                    view.querySelector('.js-detail-img').textContent = product.img;
+
+                    view.querySelector('.js-add-btn').onclick = () => {
+                        this.cartAdd(product);
+                        this.showToast(`Added ${product.title}`);
+                    };
+                });
+            }
+
+            renderCart() {
+                if (this.cart.length === 0) {
+                    this.renderTemplate('tpl-cart-empty', (emptyView) => {
+                        this.renderTemplate('tpl-cart', (mainView) => {
+                            mainView.querySelector('.js-cart-container').appendChild(emptyView);
+                        });
+                    });
+                    return;
+                }
+
+                this.renderTemplate('tpl-cart', (mainView) => {
+                    const container = mainView.querySelector('.js-cart-container');
+                    const layoutTpl = document.getElementById('tpl-cart-layout').content.cloneNode(true);
+                    const listContainer = layoutTpl.querySelector('.js-cart-items');
+                    const itemTpl = document.getElementById('tpl-cart-item');
+                    
+                    let total = 0;
+
+                    this.cart.forEach((item, index) => {
+                        total += (item.price * item.qty);
+                        const row = itemTpl.content.cloneNode(true);
+                        
+                        row.querySelector('.js-item-title').textContent = item.title;
+                        row.querySelector('.js-item-price').textContent = `${DB.currency}${item.price}`;
+                        row.querySelector('.js-item-qty').textContent = item.qty;
+                        row.querySelector('.js-item-img').textContent = item.img;
+
+                        // Cart Actions
+                        row.querySelector('.js-qty-add').onclick = () => this.cartUpdate(index, 1);
+                        row.querySelector('.js-qty-sub').onclick = () => this.cartUpdate(index, -1);
+                        row.querySelector('.js-item-remove').onclick = () => {
+                            this.cart.splice(index, 1);
+                            this.cartSave();
+                            this.renderCart();
+                        };
+
+                        listContainer.appendChild(row);
+                    });
+
+                    layoutTpl.querySelector('.js-cart-subtotal').textContent = `${DB.currency}${total.toFixed(2)}`;
+                    layoutTpl.querySelector('.js-cart-total').textContent = `${DB.currency}${total.toFixed(2)}`;
+                    container.appendChild(layoutTpl);
+                });
+            }
+
+            renderCheckout() {
+                if(this.cart.length === 0) return window.location.hash = 'cart';
+                this.renderTemplate('tpl-checkout', (view) => {
+                    view.querySelector('.js-checkout-form').onsubmit = (e) => {
+                        e.preventDefault();
+                        this.cart = []; // Clear Cart
+                        this.cartSave();
+                        window.location.hash = 'success';
+                    };
+                });
+            }
+
+            renderSearch() {
+                this.renderTemplate('tpl-search', (view) => {
+                    const input = view.querySelector('.js-search-input');
+                    const results = view.querySelector('.js-search-results');
+                    const prodTpl = document.getElementById('tpl-product-card');
+
+                    input.oninput = (e) => {
+                        const query = e.target.value.toLowerCase();
+                        results.innerHTML = '';
+                        if(query.length < 2) return;
+
+                        const hits = DB.products.filter(p => p.title.toLowerCase().includes(query) || p.category.toLowerCase().includes(query));
+                        hits.forEach(p => {
+                            const card = prodTpl.content.cloneNode(true);
+                            card.querySelector('.js-prod-link').href = `#product/${p.id}`;
+                            card.querySelector('.js-title').textContent = p.title;
+                            card.querySelector('.js-price').textContent = `${DB.currency}${p.price}`;
+                            card.querySelector('.js-img-placeholder').textContent = p.img;
+                            results.appendChild(card);
+                        });
+                    };
+                });
+            }
+
+            renderAccount() {
+                this.renderTemplate('tpl-account', async (view) => {
+                    const u = this.auth.user || {};
+                    const nameEl = view.querySelector('.js-acc-name');
+                    const emailEl = view.querySelector('.js-acc-email');
+                    if (nameEl) nameEl.textContent = u.name || 'Friend';
+                    if (emailEl) emailEl.textContent = u.email || '';
+
+                    const ordersEl = view.querySelector('.js-orders-list');
+                    if (ordersEl) {
+                        ordersEl.innerHTML = '<p class="text-xs uppercase tracking-widest opacity-50 py-4 text-center">Loading…</p>';
+                        let orders = [];
+                        try { orders = await fetchStore('customer_my_orders'); } catch { orders = []; }
+                        if (!Array.isArray(orders)) orders = [];
+                        if (orders.length === 0) {
+                            ordersEl.innerHTML = '<p class="text-xs uppercase tracking-widest opacity-50 py-4 text-center">No orders yet.</p>';
+                        } else {
+                            ordersEl.innerHTML = orders.slice(0, 5).map(o => {
+                                const id = o.id || '?';
+                                const total = o.total_amount != null ? o.total_amount : (o.total || '?');
+                                const status = (o.status || 'pending').toString();
+                                const date = (o.created_at || '').toString().substring(0, 10);
+                                return '<div class="flex justify-between items-center py-3 border-b border-black/5 text-xs uppercase tracking-widest">' +
+                                          '<span class="opacity-60">#' + String(id).padStart(4, '0') + '</span>' +
+                                          '<span class="opacity-60">' + date + '</span>' +
+                                          '<span>' + total + '</span>' +
+                                          '<span class="font-bold">' + status + '</span>' +
+                                       '</div>';
+                            }).join('');
+                        }
+                    }
+
+                    view.querySelector('.js-logout').onclick = async () => {
+                        await this.logout();
+                        this.showToast("Signed Out");
+                        window.location.hash = 'home';
+                    };
+                });
+            }
+
+            renderSuccess() { this.renderTemplate('tpl-success'); }
+            
+            renderStatic(title, content) {
+                this.renderTemplate('tpl-static', (view) => {
+                    view.querySelector('.js-static-title').textContent = title;
+                    view.querySelector('.js-static-content').textContent = content;
+                });
+            }
+
+            bindAuth(view) {
+                const showSection = (which) => {
+                    view.querySelector('.acc-login').classList.toggle('hidden', which !== 'login');
+                    view.querySelector('.acc-register').classList.toggle('hidden', which !== 'register');
+                };
+                const setError = (which, msg) => {
+                    const el = view.querySelector('[data-err="' + which + '"]');
+                    if (!el) return;
+                    if (msg) { el.textContent = msg; el.classList.remove('hidden'); }
+                    else { el.textContent = ''; el.classList.add('hidden'); }
+                };
+
+                view.querySelectorAll('[data-action="show-register"]').forEach(el => {
+                    el.addEventListener('click', (e) => { e.preventDefault(); setError('login', ''); showSection('register'); });
+                });
+                view.querySelectorAll('[data-action="show-login"]').forEach(el => {
+                    el.addEventListener('click', (e) => { e.preventDefault(); setError('register', ''); showSection('login'); });
+                });
+
+                const loginForm = view.querySelector('[data-form="login"]');
+                if (loginForm) {
+                    loginForm.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        setError('login', '');
+                        const fd = new FormData(loginForm);
+                        const result = await this.login(fd.get('email'), fd.get('password'));
+                        if (result.ok) {
+                            window.location.hash = 'account';
+                            this.showToast("Authentication Successful");
+                        } else {
+                            setError('login', result.error);
+                        }
+                    });
+                }
+
+                const registerForm = view.querySelector('[data-form="register"]');
+                if (registerForm) {
+                    registerForm.addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        setError('register', '');
+                        const fd = new FormData(registerForm);
+                        const result = await this.register(fd.get('email'), fd.get('password'), fd.get('name'));
+                        if (result.ok) {
+                            window.location.hash = 'account';
+                            this.showToast("Account Created");
+                        } else {
+                            setError('register', result.error);
+                        }
+                    });
+                }
+            }
+
+            // Legacy stub kept for clarity but not used after port:
+            _legacyBindAuth(view) {
+                view.querySelector('.js-auth-form').onsubmit = (e) => {
+                    e.preventDefault();
+                    window.location.hash = 'account';
+                    this.showToast("Authentication Successful");
+                };
+            }
+
+            // --- CART DATA MUTATIONS ---
+            cartAdd(product) {
+                const existing = this.cart.find(item => item.id === product.id);
+                if (existing) {
+                    existing.qty += 1;
+                } else {
+                    this.cart.push({ ...product, qty: 1 });
+                }
+                this.cartSave();
+            }
+
+            cartUpdate(index, amount) {
+                this.cart[index].qty += amount;
+                if (this.cart[index].qty <= 0) this.cart.splice(index, 1);
+                this.cartSave();
+                this.renderCart(); // Re-render instantly
+            }
+
+            cartSave() {
+                localStorage.setItem('shf_cart', JSON.stringify(this.cart));
+                this.updateCartCount();
+            }
+
+            updateCartCount() {
+                const count = this.cart.reduce((sum, item) => sum + item.qty, 0);
+                document.querySelectorAll('.js-cart-count').forEach(el => el.textContent = count);
+            }
+        }
+
+        // --- 3. BOOTSTRAP ---
+        /* ════════════════════
+           CANONICAL DATA LAYER — fetchStore → api.php?state=X, getMockData fallback, MOCK shape
+        ════════════════════ */
+        const __CATS = [...new Set(DB.products.map(p => p.category).filter(Boolean))].map((name, i) => ({ id: i + 1, name }));
+        const MOCK = {
+            site: { name: "STARVED HUSTLA", currency: DB.currency || "R", domain: window.location.hostname },
+            categories: __CATS,
+            products: DB.products.map((p, i) => ({
+                ...p,
+                id: p.id != null ? p.id : i + 1,
+                name: p.name || p.title || "",
+                image: p.image || p.img || "",
+                description: p.description || p.desc || "",
+                stock: p.stock != null ? p.stock : 12,
+                category_id: (__CATS.find(c => c.name === p.category) || {}).id || null
+            })),
+            discounts: [
+                { id: 1, code: "WELCOME10", percentage: 10, active: 1 },
+                { id: 2, code: "DROP20", percentage: 20, active: 1 }
+            ]
+        };
+        async function fetchStore(state, params = {}) {
+            const url = new URL("api.php", window.location.href);
+            url.searchParams.set("state", state);
+            for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+            const headers = {};
+            const token = localStorage.getItem('vm_customer_token');
+            if (token) headers['X-Customer-Token'] = token;
+            try {
+                const res = await fetch(url, { signal: AbortSignal.timeout(4000), headers });
+                if (!res.ok) throw new Error(res.status);
+                return await res.json();
+            } catch {
+                return getMockData(state, params);
+            }
+        }
+
+        async function postStore(state, body = {}) {
+            const url = new URL("api.php", window.location.href);
+            url.searchParams.set("state", state);
+            const headers = { 'Content-Type': 'application/json' };
+            const token = localStorage.getItem('vm_customer_token');
+            if (token) headers['X-Customer-Token'] = token;
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(body),
+                    signal: AbortSignal.timeout(8000)
+                });
+                const data = await res.json().catch(() => ({}));
+                return { ok: res.ok && (data.ok !== false), status: res.status, data, error: data.error || null };
+            } catch (e) {
+                return { ok: false, status: 0, data: {}, error: e.message };
+            }
+        }
+        function getMockData(state, params = {}) {
+            switch (state) {
+                case "site": return MOCK.site;
+                case "products": return MOCK.products;
+                case "product": return MOCK.products.find(p => p.id == params.id) || null;
+                case "categories": return MOCK.categories;
+                case "products_by_category": return MOCK.products.filter(p => p.category_id == params.category_id);
+                case "search": {
+                    const q = (params.q || "").toLowerCase();
+                    return MOCK.products.filter(p => (p.name || "").toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q));
+                }
+                case "discounts": return MOCK.discounts;
+                case "orders": return [];
+                default: return [];
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try { const __d = await fetchStore('products'); DB.products = __d.map(p => ({ ...p, title: p.title || p.name || '', img: p.img || p.image || '', desc: p.desc || p.description || '', category: p.category || ((MOCK.categories.find(c => c.id == p.category_id) || {}).name) || '' })); } catch {}
+            window.App = new StoreEngine();
+        });
+    </script>
+</body>
+</html>
