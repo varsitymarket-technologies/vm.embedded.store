@@ -3086,6 +3086,8 @@
             renderFaq();
             router.init();
             updateGrids();
+            wireAuthView();
+            bootCustomer();
         });
     </script>
 </body>
