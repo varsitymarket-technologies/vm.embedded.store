@@ -342,6 +342,73 @@
         return data;
     }
 
+    function writeCustomHead(html) {
+        const head = document.head;
+        if (!head) return;
+        let startNode = null, endNode = null;
+        for (const node of head.childNodes) {
+            if (node.nodeType !== 8) continue;
+            const t = node.nodeValue.trim();
+            if (t === CUSTOM_HEAD_START) startNode = node;
+            else if (t === CUSTOM_HEAD_END) { endNode = node; break; }
+        }
+        // Remove existing block (if any)
+        if (startNode && endNode) {
+            let cursor = startNode.nextSibling;
+            while (cursor && cursor !== endNode) {
+                const next = cursor.nextSibling;
+                cursor.remove();
+                cursor = next;
+            }
+            startNode.remove();
+            endNode.remove();
+        }
+        // Insert new block only if value is non-empty
+        const trimmed = (html || '').trim();
+        if (!trimmed) return;
+        const start = document.createComment(' ' + CUSTOM_HEAD_START + ' ');
+        const end   = document.createComment(' ' + CUSTOM_HEAD_END + ' ');
+        const fragment = document.createRange().createContextualFragment(trimmed);
+        head.appendChild(start);
+        head.appendChild(fragment);
+        head.appendChild(end);
+    }
+
+    function updateHeadTag(kind, value) {
+        const entry = HEAD_MAP[kind];
+        if (!entry) return;
+        const head = document.head;
+        if (!head) return;
+        const trimmed = value == null ? '' : String(value);
+
+        if (entry.type === 'custom') {
+            writeCustomHead(trimmed);
+            return;
+        }
+
+        if (entry.type === 'title') {
+            let t = head.querySelector('title');
+            if (!t) { t = document.createElement('title'); head.appendChild(t); }
+            t.textContent = trimmed; // keep <title> element even if empty (HTML5 requires)
+            return;
+        }
+
+        const selector = headSelector(entry);
+        let el = head.querySelector(selector);
+
+        if (trimmed === '') {
+            if (el) el.remove();
+            return;
+        }
+
+        if (!el) {
+            el = document.createElement(entry.type); // 'meta' or 'link'
+            for (const [k, v] of Object.entries(entry.match)) el.setAttribute(k, v);
+            head.appendChild(el);
+        }
+        el.setAttribute(entry.attr, trimmed);
+    }
+
     function sendToParent(data) {
         window.parent.postMessage(data, '*');
     }
