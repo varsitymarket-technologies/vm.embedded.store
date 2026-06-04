@@ -919,6 +919,10 @@
         if (msg.type === 'GET_LAYERS') {
             sendToParent({ type: 'LAYERS_UPDATE', layers: buildLayersTree() });
         }
+
+        if (msg.type === 'GET_HEAD') {
+            sendToParent({ type: 'HEAD_DATA', data: getHeadData() });
+        }
     });
 
     // ── Element templates ──
@@ -967,4 +971,5 @@
     // Notify parent we're ready
     sendToParent({ type: 'ENGINE_READY' });
     sendToParent({ type: 'LAYERS_UPDATE', layers: buildLayersTree() });
+    sendToParent({ type: 'HEAD_DATA',    data: getHeadData() });
 })();
