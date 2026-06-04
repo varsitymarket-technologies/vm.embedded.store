@@ -106,6 +106,13 @@
             }
             .vb-drop-indicator.horizontal { height: 2px; left: 0; right: 0; }
             .vb-drop-indicator.vertical { width: 2px; top: 0; bottom: 0; }
+
+            #vb-drop-container {
+                position: fixed; pointer-events: none; z-index: 99996;
+                border: 2px solid #0d99ff;
+                background: rgba(13, 153, 255, 0.06);
+                display: none;
+            }
         `;
         document.head.appendChild(style);
     }
@@ -140,6 +147,11 @@
     const dropIndicator = document.createElement('div');
     dropIndicator.className = 'vb-drop-indicator horizontal';
     document.body.appendChild(dropIndicator);
+
+    // ── Drop container highlight ──
+    const dropContainerOverlay = document.createElement('div');
+    dropContainerOverlay.id = 'vb-drop-container';
+    document.body.appendChild(dropContainerOverlay);
 
     // ── Helpers ──
     const EDITABLE_TAGS = new Set([
@@ -478,15 +490,195 @@
 
     function enableDragMode() {
         document.body.style.cursor = 'grab';
+        document.addEventListener('mousedown', onDragStart, true);
+        document.addEventListener('mousemove', onDragMove,  true);
+        document.addEventListener('mouseup',   onDragEnd,   true);
+        document.addEventListener('keydown',   onDragKey,   true);
+        document.addEventListener('mouseleave', onDragCancel, true);
     }
 
     function disableDragMode() {
         document.body.style.cursor = '';
+        document.removeEventListener('mousedown', onDragStart, true);
+        document.removeEventListener('mousemove', onDragMove,  true);
+        document.removeEventListener('mouseup',   onDragEnd,   true);
+        document.removeEventListener('keydown',   onDragKey,   true);
+        document.removeEventListener('mouseleave', onDragCancel, true);
+        cleanupDrag();
+    }
+
+    function cleanupDrag() {
         if (dragGhost) { dragGhost.remove(); dragGhost = null; }
+        dropContainerOverlay.style.display = 'none';
+        dropIndicator.style.display = 'none';
         dragSourceEl = null;
         dropContainer = null;
         dropAnchor = null;
         isDragging = false;
+    }
+
+    function onDragStart(e) {
+        if (e.button !== 0) return;
+        const el = getTarget(e);
+        if (!el || el === document.body) return;
+        dragSourceEl = el;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    function onDragMove(e) {
+        if (!dragSourceEl) return;
+        if (!isDragging) {
+            const dx = e.clientX - dragStartX;
+            const dy = e.clientY - dragStartY;
+            if (Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+            beginDrag();
+        }
+        positionGhost(e.clientX, e.clientY);
+        updateDropTarget(e.clientX, e.clientY);
+    }
+
+    function beginDrag() {
+        isDragging = true;
+        document.body.style.cursor = 'grabbing';
+        const rect = dragSourceEl.getBoundingClientRect();
+        dragGhost = dragSourceEl.cloneNode(true);
+        dragGhost.style.cssText += `
+            position: fixed !important;
+            pointer-events: none !important;
+            opacity: 0.6 !important;
+            z-index: 100001 !important;
+            left: ${rect.left}px !important;
+            top: ${rect.top}px !important;
+            width: ${rect.width}px !important;
+            height: ${rect.height}px !important;
+            margin: 0 !important;
+            transform: none !important;
+        `;
+        document.body.appendChild(dragGhost);
+    }
+
+    function positionGhost(x, y) {
+        if (!dragGhost) return;
+        dragGhost.style.left = (x + 8) + 'px';
+        dragGhost.style.top  = (y + 8) + 'px';
+    }
+
+    function updateDropTarget(x, y) {
+        if (!dragSourceEl || !dragSourceEl.parentElement) {
+            dropContainerOverlay.style.display = 'none';
+            dropIndicator.style.display = 'none';
+            dropContainer = null;
+            dropAnchor = null;
+            return;
+        }
+        dropContainer = dragSourceEl.parentElement;
+        highlightContainer(dropContainer);
+        dropAnchor = findInsertionAnchor(dropContainer, x, y);
+        showInsertionLine(dropContainer, dropAnchor);
+    }
+
+    function highlightContainer(container) {
+        const r = container.getBoundingClientRect();
+        dropContainerOverlay.style.display = 'block';
+        dropContainerOverlay.style.left = r.left + 'px';
+        dropContainerOverlay.style.top = r.top + 'px';
+        dropContainerOverlay.style.width = r.width + 'px';
+        dropContainerOverlay.style.height = r.height + 'px';
+    }
+
+    function findInsertionAnchor(container, x, y) {
+        const cs = getComputedStyle(container);
+        const horizontal = cs.flexDirection === 'row' || cs.flexDirection === 'row-reverse';
+        const children = Array.from(container.children).filter(c =>
+            c !== dragSourceEl && c !== dragGhost &&
+            !(c.id && c.id.startsWith('vb-')) &&
+            !(c.classList && (c.classList.contains('vb-grid-lines') || c.classList.contains('vb-drop-indicator')))
+        );
+        for (const child of children) {
+            const r = child.getBoundingClientRect();
+            const mid = horizontal ? (r.left + r.width / 2) : (r.top + r.height / 2);
+            const cursor = horizontal ? x : y;
+            if (cursor < mid) return child;
+        }
+        return null;
+    }
+
+    function showInsertionLine(container, anchor) {
+        const cs = getComputedStyle(container);
+        const horizontal = cs.flexDirection === 'row' || cs.flexDirection === 'row-reverse';
+        dropIndicator.className = 'vb-drop-indicator ' + (horizontal ? 'vertical' : 'horizontal');
+        dropIndicator.style.display = 'block';
+        const cRect = container.getBoundingClientRect();
+        if (anchor) {
+            const aRect = anchor.getBoundingClientRect();
+            if (horizontal) {
+                dropIndicator.style.left = aRect.left + 'px';
+                dropIndicator.style.top = cRect.top + 'px';
+                dropIndicator.style.height = cRect.height + 'px';
+                dropIndicator.style.width = '2px';
+                dropIndicator.style.right = '';
+            } else {
+                dropIndicator.style.top = aRect.top + 'px';
+                dropIndicator.style.left = cRect.left + 'px';
+                dropIndicator.style.width = cRect.width + 'px';
+                dropIndicator.style.height = '2px';
+                dropIndicator.style.right = '';
+            }
+        } else {
+            if (horizontal) {
+                dropIndicator.style.left = (cRect.right - 2) + 'px';
+                dropIndicator.style.top = cRect.top + 'px';
+                dropIndicator.style.height = cRect.height + 'px';
+                dropIndicator.style.width = '2px';
+                dropIndicator.style.right = '';
+            } else {
+                dropIndicator.style.top = (cRect.bottom - 2) + 'px';
+                dropIndicator.style.left = cRect.left + 'px';
+                dropIndicator.style.width = cRect.width + 'px';
+                dropIndicator.style.height = '2px';
+                dropIndicator.style.right = '';
+            }
+        }
+    }
+
+    function onDragEnd(e) {
+        if (!isDragging) {
+            cleanupDrag();
+            return;
+        }
+        if (dropContainer) {
+            try {
+                dropContainer.insertBefore(dragSourceEl, dropAnchor || null);
+                if (selectedEl === dragSourceEl) {
+                    const rect = dragSourceEl.getBoundingClientRect();
+                    positionOverlay(selectOverlay, rect, dragSourceEl.tagName.toLowerCase());
+                    sendToParent(getElementInfo(dragSourceEl));
+                }
+                sendToParent({ type: 'LAYERS_UPDATE', layers: buildLayersTree() });
+            } catch (err) {
+                sendToParent({ type: 'HTML_SYNC_ERROR', error: err.message });
+            }
+        }
+        cleanupDrag();
+        document.body.style.cursor = 'grab';
+    }
+
+    function onDragKey(e) {
+        if (e.key === 'Escape' && isDragging) {
+            e.preventDefault();
+            cleanupDrag();
+            document.body.style.cursor = 'grab';
+        }
+    }
+
+    function onDragCancel() {
+        if (isDragging) {
+            cleanupDrag();
+            document.body.style.cursor = 'grab';
+        }
     }
 
     // ── Scroll handler: reposition overlays ──
