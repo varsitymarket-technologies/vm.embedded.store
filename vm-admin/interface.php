@@ -47,6 +47,55 @@ ob_start();
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="VarsityMarket">
+
+    <style>
+        /* Modern browsers — Chrome 121+, Edge 121+, Firefox, Safari 18.2+ */
+* {
+  scrollbar-width: 8px;
+  scrollbar-color:#64606b #09090b00;
+}
+
+/* Legacy WebKit — older Chrome/Edge/Safari, radius, borders & shadows */
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background-color: #1e1b4b;
+  border-radius: 4px;
+  padding: 1px;
+}
+
+*::-webkit-scrollbar-track:hover {
+  background-color: #312e81;
+}
+
+*::-webkit-scrollbar-track:active {
+  background-color: #3730a3;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #7c3aed;
+  border-radius: 4px;
+  min-height: 30px;
+  box-shadow: 0 0 6px rgba(129,140,248, 0.60);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #818cf8;
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background-color: #a5b4fc;
+}
+
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+</style>
 </head>
 
 <body class="bg-gray-900 text-white font-sans antialiased">

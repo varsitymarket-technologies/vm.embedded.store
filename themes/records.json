@@ -1,26 +1,42 @@
 {
-  "austin": {
-    "hash": "v2.0.1.1",
-    "files": [
-      "interface",
-      "autofill.json",
-      "poster.png",
-      "index.html"
-    ]
-  },
-  "oaklyn": {
-    "hash": "v1.0.0.1",
-    "files": [
-      "interface",
-      "poster.png",
-      "index.html",
-      "autofill.json"
-    ]
-  },
   "anti": {
     "hash": "v1.0.1.4",
     "files": [
       "interface",
+      "index.html",
+      "poster.png"
+    ]
+  },
+  "aura": {
+    "hash": "v1.0.1.6",
+    "files": [
+      "interface",
+      "index.html",
+      "poster.png"
+    ]
+  },
+  "austin": {
+    "hash": "v2.0.1.1",
+    "files": [
+      "interface",
+      "index.html",
+      "poster.png",
+      "autofill.json"
+    ]
+  },
+  "corselle": {
+    "hash": "v1.0.1.4",
+    "files": [
+      "interface",
+      "index.html",
+      "poster.png"
+    ]
+  },
+  "crown": {
+    "hash": "v1.0.1.6",
+    "files": [
+      "interface",
+      "index.html",
       "poster.png"
     ]
   },
@@ -28,56 +44,78 @@
     "hash": "v1.0.0.1",
     "files": [
       "interface",
+      "index.html",
       "poster.png"
     ]
   },
-  "pvt": {
-    "hash": "v1.0.1.4",
+  "eros": {
+    "hash": "v1.0.2.7",
     "files": [
       "interface",
+      "index.html",
       "poster.png"
     ]
   },
-  "crown": {
-    "hash": "v1.0.1.4",
+  "gta": {
+    "hash": "v1.0.0.1",
     "files": [
       "interface",
-      "poster.png"
-    ]
-  },
-  "revenge": {
-    "hash": "v1.0.1.4",
-    "files": [
-      "interface",
-      "poster.png"
-    ]
-  },
-  "terra": {
-    "hash": "v1.0.1.4",
-    "files": [
-      "interface",
-      "poster.png"
-    ]
-  },
-  "oasis": {
-    "hash": "v1.0.1.4",
-    "files": [
-      "interface",
-      "poster.png"
+      "index.html"
     ]
   },
   "hastings.ego": {
     "hash": "v1.0.0.2",
     "files": [
       "interface",
-      "autofill.json",
+      "index.html",
+      "poster.png",
+      "autofill.json"
+    ]
+  },
+  "imara": {
+    "hash": "v1.0.0.3",
+    "files": [
+      "interface",
+      "index.html",
       "poster.png"
     ]
   },
-  "starved.hustla": {
-    "hash": "v1.0.1.4",
+  "kinetic": {
+    "hash": "v1.0.0.3",
     "files": [
       "interface",
+      "index.html",
+      "poster.png"
+    ]
+  },
+  "lafromage": {
+    "hash": "v1.0.0.1",
+    "files": [
+      "interface",
+      "index.html"
+    ]
+  },
+  "linus": {
+    "hash": "v1.0.0.3",
+    "files": [
+      "interface",
+      "index.html",
+      "poster.png"
+    ]
+  },
+  "lucid": {
+    "hash": "v1.0.0.3",
+    "files": [
+      "interface",
+      "index.html",
+      "poster.png"
+    ]
+  },
+  "makhesa": {
+    "hash": "v1.0.0.3",
+    "files": [
+      "interface",
+      "index.html",
       "poster.png"
     ]
   },
@@ -85,83 +123,40 @@
     "hash": "v1.0.1.4",
     "files": [
       "interface",
+      "index.html",
       "poster.png"
     ]
   },
   "mono": {
-    "hash": "v1.0.1.4",
+    "hash": "v1.0.0.3",
     "files": [
       "interface",
+      "index.html",
       "poster.png"
     ]
   },
-  "terra": {
-    "hash": "v1.0.1.4",
-    "files": [
-      "interface",
-      "poster.png"
-    ]
-  },
-  "aura": {
-    "hash": "v1.0.1.4",
-    "files": [
-      "interface",
-      "poster.png"
-    ]
-  },
-  "corselle": {
-    "hash": "v1.0.1.4",
-    "files": [
-      "interface",
-      "poster.png"
-    ]
-  },
-  "eros": {
-    "hash": "v1.0.2.5",
-    "files": [
-      "interface",
-      "poster.png"
-    ]
-  },
-  "imara": {
+  "oaklyn": {
     "hash": "v1.0.0.1",
     "files": [
       "interface",
+      "index.html",
+      "poster.png",
+      "autofill.json"
+    ]
+  },
+  "oasis": {
+    "hash": "v1.0.1.8",
+    "files": [
+      "interface",
+      "index.html",
       "poster.png"
     ]
   },
-  "kinetic": {
-    "hash": "v1.0.0.1",
+  "osmossis": {
+    "hash": "v1.0.0.3",
     "files": [
       "interface",
-      "poster.png"
-    ]
-  },
-  "linus": {
-    "hash": "v1.0.0.1",
-    "files": [
-      "interface",
-      "poster.png"
-    ]
-  },
-  "lucid": {
-    "hash": "v1.0.0.1",
-    "files": [
-      "interface",
-      "poster.png"
-    ]
-  },
-  "makhesa": {
-    "hash": "v1.0.0.1",
-    "files": [
-      "interface",
-      "poster.png"
-    ]
-  },
-  "mono": {
-    "hash": "v1.0.0.1",
-    "files": [
-      "interface",
+      "index.html",
       "poster.png"
     ]
   },
@@ -169,13 +164,46 @@
     "hash": "v1.0.1.3",
     "files": [
       "interface",
+      "index.html",
       "poster.png"
     ]
   },
-  "oasis": {
+  "pvt": {
     "hash": "v1.0.1.6",
     "files": [
       "interface",
+      "index.html",
+      "poster.png"
+    ]
+  },
+  "revenge": {
+    "hash": "v1.0.1.6",
+    "files": [
+      "interface",
+      "index.html",
+      "poster.png"
+    ]
+  },
+  "starved.hustla": {
+    "hash": "v1.0.1.4",
+    "files": [
+      "interface",
+      "index.html",
+      "poster.png"
+    ]
+  },
+  "street": {
+    "hash": "v1.0.0.1",
+    "files": [
+      "interface",
+      "index.html"
+    ]
+  },
+  "terra": {
+    "hash": "v1.0.1.6",
+    "files": [
+      "interface",
+      "index.html",
       "poster.png"
     ]
   }

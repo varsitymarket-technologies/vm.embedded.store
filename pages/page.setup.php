@@ -12,10 +12,10 @@
 function seed_demo_data($db) {
     // Categories
     $categories = [
-        ['Footwear', 'Shoes, sneakers, boots and sandals', 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop'],
-        ['Apparel', 'T-shirts, hoodies, jackets and more', 'https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=400&h=300&fit=crop'],
-        ['Accessories', 'Bags, watches, sunglasses and jewelry', 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=400&h=300&fit=crop'],
-        ['Electronics', 'Gadgets, headphones and tech gear', 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop'],
+        ['Streetwear', 'Customised Clothing and Accessories', 'https://mercha.co.za/wp-content/uploads/2025/08/DARK-HOMEPAGE.pdf-1-scaled-e1755757658874.png'],
+        ['Apparel', 'T-shirts, hoodies, jackets and more', 'https://mercha.co.za/wp-content/uploads/2025/08/DARK-HOMEPAGE.pdf-scaled-e1755757458722.png'],
+        ['Accessories', 'Bags, watches, sunglasses and jewelry', 'https://mercha.co.za/wp-content/uploads/2025/08/DARK-HOMEPAGE.pdf-3-scaled-e1755757708529.png'],
+        ['Merch', 'Custom Clothing and Accessories', 'https://mercha.co.za/wp-content/uploads/2025/08/DARK-HOMEPAGE.pdf-2-scaled-e1755757767206.png'],
     ];
     foreach ($categories as $c) {
         $db->query("INSERT INTO categories (name, description, image) VALUES (?, ?, ?)", $c);
@@ -25,16 +25,16 @@ function seed_demo_data($db) {
     $products = [
         [1, 'Urban Runner Pro', 'Lightweight running shoes with responsive cushioning and breathable mesh upper. Perfect for daily training.', 1299.99, 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=300&fit=crop', 25],
         [1, 'Classic Leather Boot', 'Premium full-grain leather boots with Goodyear welt construction. Built to last a lifetime.', 2499.00, 'https://images.unsplash.com/photo-1608256246200-53e635b5b65f?w=400&h=300&fit=crop', 12],
-        [1, 'Summer Slide Sandal', 'Comfortable slide sandals with contoured footbed. Ideal for beach days and casual outings.', 449.99, 'https://images.unsplash.com/photo-1603487742131-4160ec999306?w=400&h=300&fit=crop', 40],
-        [2, 'Oversized Graphic Tee', 'Relaxed fit cotton tee with screen-printed artwork. Pre-shrunk and garment dyed.', 349.00, 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400&h=300&fit=crop', 60],
+            [1, 'TBHBG 220GSM OVRSZD TEE', 'This is a new era of A-Reece. The P2 Collection embodies the power of owning every version of yourself. Each T-shirt is crafted from a premium, heavyweight 220gsm cotton blend, designed for lasting quality and comfort. With its oversized fit and everyday versatility, the collection offers a graphic streetwear staple made for the day-one fans.',499.99, 'https://mercha.co.za/wp-content/uploads/2025/08/Mocks-134-1000x1259.png', 40],
+            [2, 'Deadlines SLVLSS Tee', 'The Deadlines Sleeveless T-Shirt by A-Reece: Crafted from 100% premium cotton for a comfortable, breathable feel, this unisex sleeveless tee delivers a bold streetwear edge with an easy, relaxed fit. Featuring the full project track list on the back and “DEADLINES” in striking red on the front, it comes in both classic black and clean white editions, offering two versatile looks for any wardrobe.', 399.99, 'https://mercha.co.za/wp-content/uploads/2025/07/Mocks-94-1000x1259.webp', 60],
         [2, 'Tech Fleece Hoodie', 'Midweight hoodie with kangaroo pocket and adjustable hood. Soft brushed interior.', 899.99, 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400&h=300&fit=crop', 18],
         [2, 'Denim Trucker Jacket', 'Classic denim jacket with chest pockets and adjustable waist tabs. Stonewash finish.', 1199.00, 'https://images.unsplash.com/photo-1576995853123-5a10305d93c0?w=400&h=300&fit=crop', 8],
-        [3, 'Leather Crossbody Bag', 'Compact crossbody bag with adjustable strap and magnetic closure. Multiple compartments.', 799.00, 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=300&fit=crop', 15],
-        [3, 'Aviator Sunglasses', 'Polarized UV400 lenses with gold metal frame. Includes protective carrying case.', 599.99, 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&h=300&fit=crop', 30],
+            [3, 'HEATSKRS HOODIE', 'Available in black and off-white, with a big red print saying ‘culture comes alive’. The hoodie is crafted from a premium, heavyweight cotton blend that is soft, warm, and built to last. Its oversized fit ensures everyday comfort. Get yours now.', 799.00, 'https://mercha.co.za/wp-content/uploads/2025/09/Mocks-_Hoodie-Back-1000x1259.png', 15],
+            [3, 'SHINE O’ CLOCK Hoodie', 'It’s time to shine in the Shine O’ Clock hoodie, a statement piece suitable for any occasion. This hoodie features bold and graphic prints that encapsulate Jay Jody’s new body of work. An essential piece for fans and lovers of graphic hoodies.', 699.99, 'https://mercha.co.za/wp-content/uploads/2025/08/Shine-Black-Hoodie_back_1721644978-1000x1260.webp', 30],
         [3, 'Minimalist Watch', 'Swiss quartz movement with sapphire crystal glass. Genuine leather strap, 40mm case.', 1899.00, 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=400&h=300&fit=crop', 0],
         [4, 'Wireless Noise-Cancelling Headphones', 'Premium over-ear headphones with active noise cancellation. 30-hour battery life.', 2999.00, 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop', 22],
-        [4, 'Portable Bluetooth Speaker', 'Waterproof speaker with 360-degree sound. 12-hour playtime, USB-C charging.', 1499.00, 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400&h=300&fit=crop', 35],
-        [4, 'Smart Fitness Band', 'Heart rate monitor, sleep tracking, and 7-day battery. Water resistant to 50m.', 699.99, 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?w=400&h=300&fit=crop', 45],
+            [4, 'HEATSKRS OVRSZD TEE', 'The Heatskrs Oversize black T-shirt is available in black and off-white, with a big red print saying ‘culture comes alive’. This T-shirt is crafted from a premium, heavyweight cotton blend that is soft, warm, and built to last. Its oversized fit ensures everyday comfort. Get yours now.', 499.00, 'https://mercha.co.za/wp-content/uploads/2025/09/Mocks-_B-Tee-Back-1000x1259.png', 35],
+            [4, 'Underdog Hoodie', 'Embrace A-Reece’s essence with his official brand merch. Made from 100% breathable cotton, this unisex hoodie features a hand-written print by A-Reece on the back and his signature tattoos on the sleeve, creating a personal connection to his artistry. Available in both black and grey, this hoodie sports a baggy fit for ultimate comfort.', 699.99, 'https://mercha.co.za/wp-content/uploads/2025/07/Underdog-114-1000x1259.webp', 45],
     ];
     foreach ($products as $p) {
         $db->query("INSERT INTO products (category_id, name, description, price, image, stock) VALUES (?, ?, ?, ?, ?, ?)", $p);
@@ -50,11 +50,12 @@ function seed_demo_data($db) {
         ['Lerato Khumalo', 'lerato.k@example.com'],
     ];
     $order_items = [
-        [['Urban Runner Pro', 1, 1299.99], ['Oversized Graphic Tee', 2, 349.00]],
+        [['Urban Runner Pro', 1, 1299.99], ['Deadlines SLVLSS Tee', 2, 349.00]],
         [['Tech Fleece Hoodie', 1, 899.99]],
         [['Leather Crossbody Bag', 1, 799.00], ['Aviator Sunglasses', 1, 599.99]],
         [['Wireless Noise-Cancelling Headphones', 1, 2999.00], ['Classic Leather Boot', 1, 2499.00]],
-        [['Smart Fitness Band', 2, 699.99], ['Portable Bluetooth Speaker', 1, 1499.00]],
+        [['Underdog Hoodie', 2, 699.99], ['
+HEATSKRS OVRSZD TEE', 1, 499.00]],
     ];
     for ($i = 0; $i < count($customers); $i++) {
         $total = 0;

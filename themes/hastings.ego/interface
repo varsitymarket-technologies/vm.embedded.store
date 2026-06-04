@@ -516,7 +516,7 @@
     </style>
 
     <!-- D.5: customer auth helper (vm-customer.js from same dir as api.php) -->
-    <script src="vm-customer.js" defer></script>
+    <script src="/themes/hastings.ego/vm-customer.js" defer></script>
     <script>
         window.addEventListener('vm:customer-loaded', function () {
             document.body.dataset.customer = 'logged-in';
@@ -793,7 +793,7 @@
             storePubKey: "e(__SYSTEM_CURRENCY__)"
         };
     </script>
-    <script src="https://themes.varsitymarket.tech/plugin/store.js" defer></script>
+    <script src="https://themes.varsitymarket.co.za/plugin/store.js" defer></script>
 
     <script>
                                     function open_menu() {

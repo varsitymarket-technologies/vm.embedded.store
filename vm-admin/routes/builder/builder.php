@@ -437,13 +437,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     <!-- Top Bar -->
     <div class="fb-topbar">
         <div class="fb-topbar-left">
-            <div class="fb-logo">
-                <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="#0d99ff" stroke-width="2"/><rect x="7" y="7" width="4" height="4" rx="1" fill="#0d99ff"/><rect x="13" y="7" width="4" height="4" rx="1" fill="#0d99ff" opacity="0.5"/><rect x="7" y="13" width="4" height="4" rx="1" fill="#0d99ff" opacity="0.5"/><rect x="13" y="13" width="4" height="4" rx="1" fill="#0d99ff" opacity="0.3"/></svg>
-                Page Builder
-            </div>
-            <a href="<?php echo $admin_base; ?>home" class="fb-tbtn" title="Back">
+        <a href="<?php echo $admin_base; ?>home" class="fb-tbtn" title="Back">
                 <i class="bi bi-arrow-left"></i>
             </a>
+            <div class="fb-logo">
+                <img src="/assets/favicon.png" alt="Logo" class="w-6 h-6">
+                Page Builder
+            </div>
+            
         </div>
 
         <div class="fb-topbar-center">

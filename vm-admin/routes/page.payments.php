@@ -171,7 +171,7 @@ $status_colors = [
 
         <!-- Payment Methods + Banking -->
         <div class="px-8 pb-6">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 lg:grid-cols-1 gap-1">
                 <!-- Payment Methods -->
                 <div class="lg:col-span-2 bg-zinc-900/40 border border-zinc-800/60 rounded-2xl overflow-hidden">
                     <div class="px-6 py-4 border-b border-zinc-800/60 flex items-center justify-between">
@@ -246,42 +246,6 @@ $status_colors = [
                     </div>
                 </div>
 
-                <!-- Banking Details -->
-                <div class="bg-zinc-900/40 border border-zinc-800/60 rounded-2xl overflow-hidden">
-                    <div class="px-6 py-4 border-b border-zinc-800/60">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                                <i class="bi bi-bank text-amber-400"></i>
-                            </div>
-                            <div>
-                                <h3 class="text-sm font-semibold">Banking Details</h3>
-                                <p class="text-xs text-zinc-500">Linked account info</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="p-6 space-y-3">
-                        <div class="p-3 bg-zinc-800/40 border border-zinc-700/30 rounded-xl">
-                            <label class="text-[10px] text-zinc-500 uppercase font-medium">Bank / Provider</label>
-                            <p class="font-medium text-sm mt-0.5"><?= !empty($bank_name) ? htmlspecialchars($bank_name) : '<span class="text-zinc-600">Not linked</span>' ?></p>
-                        </div>
-                        <div class="p-3 bg-zinc-800/40 border border-zinc-700/30 rounded-xl">
-                            <label class="text-[10px] text-zinc-500 uppercase font-medium">Account Number</label>
-                            <p class="font-mono text-sm mt-0.5">
-                                <?php if (!empty($bank_account)): ?>
-                                    <?= str_repeat('*', max(0, strlen($bank_account) - 4)) . substr($bank_account, -4) ?>
-                                <?php else: ?>
-                                    <span class="text-zinc-600">Not configured</span>
-                                <?php endif; ?>
-                            </p>
-                        </div>
-                        <?php if (!empty($bank_type)): ?>
-                        <div class="p-3 bg-zinc-800/40 border border-zinc-700/30 rounded-xl">
-                            <label class="text-[10px] text-zinc-500 uppercase font-medium">Account Type</label>
-                            <p class="text-sm mt-0.5"><?= htmlspecialchars($bank_type) ?></p>
-                        </div>
-                        <?php endif; ?>
-                    </div>
-                </div>
             </div>
         </div>
 

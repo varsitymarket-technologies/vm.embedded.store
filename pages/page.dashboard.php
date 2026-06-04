@@ -24,7 +24,7 @@ $store_url = __WEBSITE_URL__ ?? '#';
 
 <div class="grid-layout">
 
-    <main class="dash-main overflow-x-hidden bg-[#09090b] p-6 md:p-8">
+    <main class="dash-main overflow-x-hidden bg-[#09090b] md:p-8">
 
         <!-- Page Header -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
