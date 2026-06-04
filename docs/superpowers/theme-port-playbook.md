@@ -15,9 +15,14 @@ PDt/Cart/Chkt cluster):
   `mono`, `oasis`, `osmossis`, `pvt`, `revenge`, `terra`** — 4/7/1
   lookalikes; near-identical `app = {}` skeleton, Tailwind + Lucide
   styling.
-- **`corselle`, `gta`, `lafromage`, `mashala`, `starved.hustla`,
-  `street`** — 2/8/2 cousins. Same playbook applies; minor markup
-  differences likely.
+- **`corselle`, `gta`, `mashala`, `starved.hustla`, `street`** — 2/8/2
+  cousins. **NOTE (2026-06-04):** Originally listed as covered by this
+  playbook, but verified during D.3.2 batch port: these 5 themes use a
+  `StoreEngine` (or similar) class pattern with `<template>` cloning +
+  hash routing — NOT the `app = {}` skeleton. The 5-edit playbook does
+  not apply directly. Port these using the D.6 lafromage spec/plan
+  shape instead (extend the class with auth methods inline, no external
+  `vm-customer.js`). `lafromage` itself was already ported via D.6 spec.
 
 **Not covered by this playbook** (need their own per-theme spec):
 - `austin` (custom-heavy auth, ported in D.2 — see its spec)
