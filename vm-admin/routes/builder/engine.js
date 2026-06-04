@@ -567,14 +567,40 @@
     }
 
     function updateDropTarget(x, y) {
-        if (!dragSourceEl || !dragSourceEl.parentElement) {
+        if (!dragSourceEl) return;
+
+        const ghostDisplay = dragGhost ? dragGhost.style.display : '';
+        if (dragGhost) dragGhost.style.display = 'none';
+        const under = document.elementFromPoint(x, y);
+        if (dragGhost) dragGhost.style.display = ghostDisplay;
+
+        if (!under) {
             dropContainerOverlay.style.display = 'none';
             dropIndicator.style.display = 'none';
             dropContainer = null;
             dropAnchor = null;
             return;
         }
-        dropContainer = dragSourceEl.parentElement;
+
+        let container = under;
+        while (container && container !== document.body.parentElement) {
+            if (CONTAINER_TAGS.has(container.tagName)
+                && container !== dragSourceEl
+                && !dragSourceEl.contains(container)) {
+                break;
+            }
+            container = container.parentElement;
+        }
+
+        if (!container || container === document.body.parentElement) {
+            dropContainerOverlay.style.display = 'none';
+            dropIndicator.style.display = 'none';
+            dropContainer = null;
+            dropAnchor = null;
+            return;
+        }
+
+        dropContainer = container;
         highlightContainer(dropContainer);
         dropAnchor = findInsertionAnchor(dropContainer, x, y);
         showInsertionLine(dropContainer, dropAnchor);
@@ -651,6 +677,11 @@
         }
         if (dropContainer) {
             try {
+                if (dropContainer === dragSourceEl || dragSourceEl.contains(dropContainer)) {
+                    cleanupDrag();
+                    document.body.style.cursor = 'grab';
+                    return;
+                }
                 dropContainer.insertBefore(dragSourceEl, dropAnchor || null);
                 if (selectedEl === dragSourceEl) {
                     const rect = dragSourceEl.getBoundingClientRect();
