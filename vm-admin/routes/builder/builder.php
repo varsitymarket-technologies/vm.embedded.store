@@ -1110,6 +1110,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     let engineReady = false;
     let currentRightTab = 'design';
     let currentMode = 'select';
+    let headData = {};
+    let suppressHeadEcho = false;
+    const headDebounce = {};
 
     // ── Load site into iframe ──
     const siteHtmlContent = <?php echo json_encode($site_html_content); ?>;
@@ -1161,6 +1164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if (msg.type === 'REQUEST_DELETE') { if (confirm('Delete this element?')) sendToIframe({ type: 'DELETE_ELEMENT' }); }
         if (msg.type === 'LAYERS_UPDATE') { renderLayers(msg.layers); }
         if (msg.type === 'HTML_SYNC_ERROR') { showToast('HTML error: ' + msg.error); }
+        if (msg.type === 'HEAD_DATA') { applyHeadData(msg.data); }
     });
 
     // ── Show/Hide Properties ──
@@ -1475,6 +1479,58 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         const current = currentElement[prop] || currentElement[prop.replace(/([A-Z])/g, '-$1').toLowerCase()] || '';
         const val = current === onVal ? offVal : onVal;
         sendToIframe({ type: 'APPLY_STYLE', styles: { [prop]: val } });
+    };
+
+    // ── Page tab (head tags) ──
+    function requestHead() {
+        sendToIframe({ type: 'GET_HEAD' });
+    }
+
+    function applyHeadData(data) {
+        headData = data || {};
+        suppressHeadEcho = true;
+        try {
+            const fields = [
+                'title','description','keywords','canonical','robots',
+                'ogTitle','ogDescription','ogImage','ogUrl','ogType',
+                'twitterCard','twitterTitle','twitterDescription','twitterImage',
+                'favicon','appleTouchIcon','themeColor','customHead'
+            ];
+            fields.forEach(kind => {
+                const el = document.getElementById('prop-head-' + kind);
+                if (!el) return;
+                const v = data && data[kind] != null ? data[kind] : '';
+                if (el.tagName === 'SELECT') {
+                    let matched = false;
+                    for (let i = 0; i < el.options.length; i++) {
+                        if (el.options[i].value === v) { el.selectedIndex = i; matched = true; break; }
+                    }
+                    if (!matched) el.selectedIndex = 0;
+                } else {
+                    el.value = v;
+                }
+            });
+            // Sync theme-color swatch
+            const themeVal = (data && data.themeColor) || '';
+            const swatch = document.getElementById('cp-head-themeColor');
+            if (swatch && /^#[0-9a-fA-F]{6}$/.test(themeVal)) swatch.value = themeVal;
+        } finally {
+            suppressHeadEcho = false;
+        }
+    }
+
+    window.onHeadFieldChange = function(kind, value) {
+        if (suppressHeadEcho) return;
+        clearTimeout(headDebounce[kind]);
+        headDebounce[kind] = setTimeout(() => {
+            sendToIframe({ type: 'UPDATE_HEAD', kind, value });
+        }, 200);
+    };
+
+    window.onHeadColorChange = function(kind, swatchId, inputId) {
+        const val = document.getElementById(swatchId).value;
+        document.getElementById(inputId).value = val;
+        window.onHeadFieldChange(kind, val);
     };
 
     window.onColorChange = function(prop, swatchId, inputId) {
