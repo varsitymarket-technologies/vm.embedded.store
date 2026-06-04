@@ -2566,8 +2566,8 @@
                     case "checkout": renderCheckout(); break;
                     case "search": renderSearchPage(params.q); break;
                     case "faq": renderFaq(); break;
-                    case "track": break;
-                    case "orders": if (params.email) { document.getElementById("orders-email").value = params.email; lookupOrders(); } break;
+                    case "account": renderAccount(); break;
+                    case "dashboard": renderDashboard(); break;
                 }
             }
         };
