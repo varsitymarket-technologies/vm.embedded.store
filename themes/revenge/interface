@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REVENGE | No Forgiveness</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Permanent+Marker&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --rvg-black: #030303;
+            --rvg-dark: #111111;
+            --rvg-red: #D90429;
+            --rvg-blood: #8B0000;
+            --rvg-white: #EAEAEA;
+            --rvg-gray: #333333;
+        }
+        
+        body { 
+            font-family: 'Chakra Petch', sans-serif; 
+            background-color: var(--rvg-black); 
+            color: var(--rvg-white); 
+            -webkit-font-smoothing: antialiased;
+            background-image: 
+                radial-gradient(circle at 50% 50%, rgba(217, 4, 41, 0.03) 0%, transparent 60%),
+                url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23222222" fill-opacity="0.4"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
+        }
+        
+        .font-graffiti { 
+            font-family: 'Permanent Marker', cursive; 
+        }
+
+        /* Spray Paint Effect */
+        .spray-text {
+            color: var(--rvg-red);
+            text-shadow: 0 0 10px rgba(217, 4, 41, 0.8), 0 0 20px rgba(217, 4, 41, 0.5), 0 0 30px rgba(139, 0, 0, 0.5);
+            transform: rotate(-3deg);
+            display: inline-block;
+        }
+        
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: bloodFade 0.4s ease-out forwards; }
+        
+        @keyframes bloodFade {
+            from { opacity: 0; filter: blur(4px); transform: scale(1.02); }
+            to { opacity: 1; filter: blur(0); transform: scale(1); }
+        }
+
+        @keyframes flicker {
+            0% { opacity: 1; }
+            3% { opacity: 0.4; }
+            6% { opacity: 1; }
+            7% { opacity: 0.4; }
+            8% { opacity: 1; }
+            9% { opacity: 1; }
+            10% { opacity: 0.1; }
+            11% { opacity: 1; }
+            100% { opacity: 1; }
+        }
+
+        .glitch-hover:hover {
+            animation: flicker 0.15s infinite;
+            color: var(--rvg-red);
+        }
+
+        /* Gritty Inputs */
+        .rvg-input { 
+            border: 1px solid var(--rvg-gray); 
+            background-color: var(--rvg-dark);
+            color: var(--rvg-white);
+            border-radius: 0px;
+            padding: 14px;
+            font-size: 14px;
+            font-family: 'Chakra Petch', sans-serif;
+            transition: all 0.2s ease;
+        }
+        .rvg-input:focus { 
+            outline: none; 
+            border-color: var(--rvg-red);
+            box-shadow: 0 0 8px rgba(217, 4, 41, 0.3);
+        }
+        
+        /* Aggressive Buttons */
+        .btn-blood {
+            background-color: var(--rvg-red);
+            color: #ffffff;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            border: 1px solid transparent;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-blood:hover {
+            background-color: var(--rvg-blood);
+            border-color: var(--rvg-red);
+            box-shadow: 0 0 15px rgba(217, 4, 41, 0.6);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: var(--rvg-black); border-left: 1px solid var(--rvg-gray); }
+        ::-webkit-scrollbar-thumb { background: var(--rvg-gray); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--rvg-red); }
+
+        /* Image filter hack for dark/red vibe */
+        .img-revenge {
+            filter: grayscale(100%) contrast(1.2) brightness(0.8);
+            transition: all 0.4s ease;
+        }
+        .group:hover .img-revenge {
+            filter: grayscale(80%) sepia(50%) hue-rotate(315deg) saturate(300%) contrast(1.4) brightness(0.7);
+        }
+    </style>
+
+    <!-- D.3.x: customer auth helper (vm-customer.js from same dir as api.php) -->
+    <script src="vm-customer.js" defer></script>
+    <script>
+        window.addEventListener('vm:customer-loaded', function () {
+            document.body.dataset.customer = 'logged-in';
+            if (window.app && app.auth && typeof app.auth.updateIcon === 'function') app.auth.updateIcon();
+        });
+        window.addEventListener('vm:customer-login', function () {
+            document.body.dataset.customer = 'logged-in';
+            if (window.app && app.auth && typeof app.auth.updateIcon === 'function') app.auth.updateIcon();
+        });
+        window.addEventListener('vm:customer-logout', function () {
+            document.body.dataset.customer = 'logged-out';
+            if (window.app && app.auth && typeof app.auth.updateIcon === 'function') app.auth.updateIcon();
+        });
+    </script>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-[var(--rvg-red)] selection:text-white">
+
+    <div class="bg-[var(--rvg-red)] text-white text-center py-1.5 text-[11px] font-bold tracking-widest uppercase px-4 overflow-hidden border-b border-[var(--rvg-blood)]">
+        <span class="animate-pulse">WARNING: VANDAL COLLECTION RELEASED // NO RESTOCKS // ALL SALES FINAL</span>
+    </div>
+
+    <header class="sticky top-0 bg-[var(--rvg-black)]/90 backdrop-blur-md z-40 border-b border-[var(--rvg-gray)]">
+        <div class="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
+            
+            <nav class="hidden md:flex items-center space-x-8 text-sm font-bold uppercase tracking-wider">
+                <a href="#shop" onclick="app.router.navigate('shop')" class="glitch-hover transition-colors text-white/70">Asylum</a>
+                <a href="#about" onclick="app.router.navigate('about')" class="glitch-hover transition-colors text-white/70">Manifesto</a>
+            </nav>
+
+            <a href="#home" onclick="app.router.navigate('home')" class="text-center absolute left-1/2 -translate-x-1/2">
+                <span class="font-graffiti text-3xl md:text-4xl text-white spray-text tracking-widest">REVENGE</span>
+            </a>
+
+            <div class="flex items-center space-x-5">
+                <button class="hover:text-[var(--rvg-red)] transition-colors" onclick="app.ui.toggleSearchOverlay()">
+                    <i data-lucide="search" class="w-5 h-5"></i>
+                </button>
+                <button id="auth-icon-btn" class="hover:text-[var(--rvg-red)] transition-colors flex items-center" onclick="app.auth.iconClick()" aria-label="Account">
+                    <span class="sr-only" id="auth-icon-label">Account</span>
+                    <i data-lucide="user" class="w-5 h-5"></i>
+                </button>
+                <button class="hover:text-[var(--rvg-red)] transition-colors flex items-center relative" onclick="app.ui.toggleCartDrawer()">
+                    <i data-lucide="skull" class="w-5 h-5"></i>
+                    <span id="global-cart-count" class="absolute -top-1 -right-2 text-[10px] bg-[var(--rvg-red)] text-white w-4 h-4 flex items-center justify-center rounded-full opacity-0 font-bold border border-black shadow-[0_0_5px_rgba(217,4,41,0.8)]">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+
+        <section id="view-home" class="view-section active">
+            <div class="max-w-7xl mx-auto px-4 py-6">
+                <div class="relative w-full h-[75vh] min-h-[500px] bg-neutral-900 border border-[var(--rvg-gray)] overflow-hidden flex items-center justify-center">
+                    <img src="https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=1600&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover object-center filter grayscale contrast-150 brightness-50" alt="Gritty Urban Background">
+                    
+                    <div class="absolute inset-0 bg-black/40"></div>
+                    
+                    <span class="absolute top-10 left-10 font-graffiti text-8xl text-[var(--rvg-red)]/20 -rotate-12 select-none blur-[2px]">PAIN</span>
+                    <span class="absolute bottom-20 right-10 font-graffiti text-9xl text-white/5 rotate-6 select-none">RIOT</span>
+
+                    <div class="relative z-10 p-6 text-center w-full max-w-4xl flex flex-col items-center">
+                        <h1 class="font-graffiti text-6xl sm:text-8xl lg:text-9xl text-white mb-2 leading-none transform -rotate-2 mix-blend-screen">NO FORGIVENESS</h1>
+                        <p class="font-graffiti text-2xl text-[var(--rvg-red)] spray-text mb-10">We never forget.</p>
+                        <button onclick="app.router.navigate('shop')" class="px-10 py-4 btn-blood text-sm shadow-[0_0_20px_rgba(217,4,41,0.4)]">
+                            Enter the Asylum
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="max-w-7xl mx-auto px-4 my-16 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="border border-[var(--rvg-gray)] p-8 bg-[var(--rvg-dark)] relative overflow-hidden group cursor-pointer" onclick="app.router.navigate('shop')">
+                    <div class="absolute inset-0 bg-[var(--rvg-red)] opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                    <span class="font-graffiti text-4xl text-white/20 absolute -right-4 -bottom-4 group-hover:text-[var(--rvg-red)]/20 transition-colors">01</span>
+                    <h3 class="text-2xl font-bold uppercase mb-2 text-white">Heavy Artillery</h3>
+                    <p class="text-white/50 text-sm">Distressed outwear and thick gauge cottons meant to survive the concrete.</p>
+                </div>
+                <div class="border border-[var(--rvg-gray)] p-8 bg-[var(--rvg-dark)] relative overflow-hidden group cursor-pointer" onclick="app.router.navigate('shop')">
+                    <div class="absolute inset-0 bg-[var(--rvg-red)] opacity-0 group-hover:opacity-10 transition-opacity duration-300"></div>
+                    <span class="font-graffiti text-4xl text-white/20 absolute -right-4 -bottom-4 group-hover:text-[var(--rvg-red)]/20 transition-colors">02</span>
+                    <h3 class="text-2xl font-bold uppercase mb-2 text-white">Bloodline Denim</h3>
+                    <p class="text-white/50 text-sm">Raw, unwashed, and cut to bleed indigo until broken in.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-shop" class="view-section max-w-7xl mx-auto px-4 py-8">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-10 border-b border-[var(--rvg-gray)] pb-4">
+                <div>
+                    <h2 class="font-graffiti text-4xl text-white spray-text -rotate-1 mb-2">THE VAULT</h2>
+                    <p class="text-white/50 text-sm font-bold uppercase tracking-widest">Select your weapon.</p>
+                </div>
+                <select id="catalog-sort" onchange="app.store.sortCatalog(this.value)" class="bg-transparent border border-[var(--rvg-gray)] p-2 text-sm font-bold uppercase text-[var(--rvg-red)] focus:outline-none focus:border-[var(--rvg-red)] cursor-pointer mt-4 sm:mt-0">
+                    <option value="featured" class="bg-black">Sort: Chaos</option>
+                    <option value="price-low" class="bg-black">Sort: Cheap Blood</option>
+                    <option value="price-high" class="bg-black">Sort: High Value</option>
+                </select>
+            </div>
+
+            <div id="shop-items-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                </div>
+        </section>
+
+        <section id="view-product" class="view-section max-w-7xl mx-auto px-4 py-12">
+            <div id="product-detail-target" class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                </div>
+        </section>
+
+        <!-- D.3.x: account view -->
+        <section id="view-account" class="view-section max-w-5xl mx-auto px-4 py-12">
+            <div class="flex items-center justify-between mb-12">
+                <div>
+                    <p class="text-[10px] uppercase tracking-widest text-[var(--rvg-red)] font-bold">Account</p>
+                    <h1 id="acc-greeting" class="font-graffiti text-4xl text-white mt-2 tracking-widest spray-text">Welcome</h1>
+                </div>
+                <button onclick="app.auth.doLogout()" class="text-[10px] uppercase tracking-widest text-white/50 hover:text-[var(--rvg-red)] font-bold">Sign Out</button>
+            </div>
+
+            <div class="flex space-x-8 border-b border-[var(--rvg-gray)] mb-8">
+                <button id="acc-tab-overview" onclick="app.auth.activateTab('overview')" class="acc-tab pb-3 text-[11px] uppercase tracking-widest font-bold">Overview</button>
+                <button id="acc-tab-profile"  onclick="app.auth.activateTab('profile')"  class="acc-tab pb-3 text-[11px] uppercase tracking-widest font-bold">Profile</button>
+                <button id="acc-tab-orders"   onclick="app.auth.activateTab('orders')"   class="acc-tab pb-3 text-[11px] uppercase tracking-widest font-bold">Orders</button>
+                <button id="acc-tab-password" onclick="app.auth.activateTab('password')" class="acc-tab pb-3 text-[11px] uppercase tracking-widest font-bold">Password</button>
+            </div>
+
+            <div id="acc-panel-overview" class="acc-panel">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                    <div><p class="text-[10px] uppercase tracking-widest text-white/50 font-bold">Name</p><p id="acc-ov-name" class="text-sm text-white mt-2">—</p></div>
+                    <div><p class="text-[10px] uppercase tracking-widest text-white/50 font-bold">Email</p><p id="acc-ov-email" class="text-sm text-white mt-2">—</p></div>
+                    <div><p class="text-[10px] uppercase tracking-widest text-white/50 font-bold">Member Since</p><p id="acc-ov-joined" class="text-sm text-white mt-2">—</p></div>
+                </div>
+                <button onclick="app.auth.activateTab('profile')" class="text-[10px] uppercase tracking-widest text-[var(--rvg-red)] border-b border-[var(--rvg-red)] pb-0.5 font-bold">Edit profile</button>
+            </div>
+
+            <div id="acc-panel-profile" class="acc-panel hidden">
+                <form onsubmit="event.preventDefault(); app.auth.saveProfile()" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div><label class="block text-[10px] uppercase tracking-widest text-white/50 mb-2 font-bold">First Name</label>
+                             <input type="text" id="acc-fname" class="w-full bg-[var(--rvg-dark)] border border-[var(--rvg-gray)] px-4 py-3 text-white focus:outline-none focus:border-[var(--rvg-red)]"></div>
+                        <div><label class="block text-[10px] uppercase tracking-widest text-white/50 mb-2 font-bold">Last Name</label>
+                             <input type="text" id="acc-lname" class="w-full bg-[var(--rvg-dark)] border border-[var(--rvg-gray)] px-4 py-3 text-white focus:outline-none focus:border-[var(--rvg-red)]"></div>
+                    </div>
+                    <div><label class="block text-[10px] uppercase tracking-widest text-white/50 mb-2 font-bold">Email</label>
+                         <input type="email" id="acc-email" readonly title="Email is the account identifier and cannot be changed here" class="w-full bg-[var(--rvg-black)] border border-[var(--rvg-gray)] px-4 py-3 text-white/40 cursor-not-allowed"></div>
+                    <div><label class="block text-[10px] uppercase tracking-widest text-white/50 mb-2 font-bold">Phone (optional)</label>
+                         <input type="tel" id="acc-phone" class="w-full bg-[var(--rvg-dark)] border border-[var(--rvg-gray)] px-4 py-3 text-white focus:outline-none focus:border-[var(--rvg-red)]"></div>
+                    <button type="submit" class="w-full bg-[var(--rvg-red)] text-white py-3 text-[11px] uppercase tracking-widest font-bold hover:bg-white hover:text-[var(--rvg-red)] transition-colors">Save</button>
+                </form>
+            </div>
+
+            <div id="acc-panel-orders" class="acc-panel hidden">
+                <div id="acc-orders-list">
+                    <p class="text-[10px] uppercase tracking-widest text-white/50 py-12 text-center font-bold">Loading…</p>
+                </div>
+            </div>
+
+            <div id="acc-panel-password" class="acc-panel hidden">
+                <form onsubmit="event.preventDefault(); app.auth.changePassword()" class="space-y-6">
+                    <div><label class="block text-[10px] uppercase tracking-widest text-white/50 mb-2 font-bold">Current Password</label>
+                         <input type="password" id="acc-pw-cur" required class="w-full bg-[var(--rvg-dark)] border border-[var(--rvg-gray)] px-4 py-3 text-white focus:outline-none focus:border-[var(--rvg-red)]"></div>
+                    <div><label class="block text-[10px] uppercase tracking-widest text-white/50 mb-2 font-bold">New Password</label>
+                         <input type="password" id="acc-pw-new" required minlength="8" class="w-full bg-[var(--rvg-dark)] border border-[var(--rvg-gray)] px-4 py-3 text-white focus:outline-none focus:border-[var(--rvg-red)]"></div>
+                    <div><label class="block text-[10px] uppercase tracking-widest text-white/50 mb-2 font-bold">Confirm New Password</label>
+                         <input type="password" id="acc-pw-conf" required minlength="8" class="w-full bg-[var(--rvg-dark)] border border-[var(--rvg-gray)] px-4 py-3 text-white focus:outline-none focus:border-[var(--rvg-red)]"></div>
+                    <button type="submit" class="w-full bg-[var(--rvg-red)] text-white py-3 text-[11px] uppercase tracking-widest font-bold hover:bg-white hover:text-[var(--rvg-red)] transition-colors">Change Password</button>
+                </form>
+            </div>
+        </section>
+
+        <style>
+            .acc-tab { color: rgba(234,234,234,0.5); border-bottom: 1px solid transparent; transition: all 0.3s; }
+            .acc-tab.active { color: #fff; border-bottom-color: var(--rvg-red); }
+        </style>
+
+        <!-- D.3.x: Auth modal overlay -->
+        <div id="auth-modal" class="fixed inset-0 bg-[var(--rvg-black)] z-50 hidden flex-col items-center justify-start overflow-y-auto p-6">
+            <div class="w-full max-w-md mx-auto pt-12 pb-24">
+                <div class="flex items-center justify-between mb-12">
+                    <span class="font-graffiti text-3xl text-white spray-text tracking-widest">REVENGE</span>
+                    <button onclick="app.auth.close()" aria-label="Close" class="text-white/50 hover:text-[var(--rvg-red)] transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <div class="flex space-x-8 border-b border-[var(--rvg-gray)] mb-8">
+                    <button id="auth-tab-login"    onclick="app.auth.switchTab('login')"    class="auth-tab pb-3 text-[11px] uppercase tracking-widest font-bold">Sign In</button>
+                    <button id="auth-tab-register" onclick="app.auth.switchTab('register')" class="auth-tab pb-3 text-[11px] uppercase tracking-widest font-bold">Create</button>
+                    <button id="auth-tab-forgot"   onclick="app.auth.switchTab('forgot')"   class="auth-tab pb-3 text-[11px] uppercase tracking-widest font-bold">Forgot</button>
+                </div>
+
+                <div id="auth-panel-login" class="auth-panel">
+                    <form onsubmit="event.preventDefault(); app.auth.submitLogin()" class="space-y-6">
+                        <div><label class="block text-[10px] uppercase tracking-widest text-white/50 mb-2 font-bold">Email</label>
+                            <input type="email" id="auth-login-email" required class="w-full bg-[var(--rvg-dark)] border border-[var(--rvg-gray)] px-4 py-3 text-white focus:outline-none focus:border-[var(--rvg-red)]"></div>
+                        <div><label class="block text-[10px] uppercase tracking-widest text-white/50 mb-2 font-bold">Password</label>
+                            <input type="password" id="auth-login-pass" required class="w-full bg-[var(--rvg-dark)] border border-[var(--rvg-gray)] px-4 py-3 text-white focus:outline-none focus:border-[var(--rvg-red)]"></div>
+                        <div id="auth-login-error" class="hidden text-[11px] text-[var(--rvg-red)] mt-2 font-bold"></div>
+                        <button type="submit" class="w-full bg-[var(--rvg-red)] text-white py-3 text-[11px] uppercase tracking-widest font-bold hover:bg-white hover:text-[var(--rvg-red)] transition-colors">Sign In</button>
+                    </form>
+                </div>
+
+                <div id="auth-panel-register" class="auth-panel hidden">
+                    <form onsubmit="event.preventDefault(); app.auth.submitRegister()" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="block text-[10px] uppercase tracking-widest text-white/50 mb-2 font-bold">First Name</label>
+                                 <input type="text" id="auth-reg-fname" required class="w-full bg-[var(--rvg-dark)] border border-[var(--rvg-gray)] px-4 py-3 text-white focus:outline-none focus:border-[var(--rvg-red)]"></div>
+                            <div><label class="block text-[10px] uppercase tracking-widest text-white/50 mb-2 font-bold">Last Name</label>
+                                 <input type="text" id="auth-reg-lname" class="w-full bg-[var(--rvg-dark)] border border-[var(--rvg-gray)] px-4 py-3 text-white focus:outline-none focus:border-[var(--rvg-red)]"></div>
+                        </div>
+                        <div><label class="block text-[10px] uppercase tracking-widest text-white/50 mb-2 font-bold">Email</label>
+                             <input type="email" id="auth-reg-email" required class="w-full bg-[var(--rvg-dark)] border border-[var(--rvg-gray)] px-4 py-3 text-white focus:outline-none focus:border-[var(--rvg-red)]"></div>
+                        <div><label class="block text-[10px] uppercase tracking-widest text-white/50 mb-2 font-bold">Password</label>
+                             <input type="password" id="auth-reg-pass" required minlength="8" class="w-full bg-[var(--rvg-dark)] border border-[var(--rvg-gray)] px-4 py-3 text-white focus:outline-none focus:border-[var(--rvg-red)]"></div>
+                        <div><label class="block text-[10px] uppercase tracking-widest text-white/50 mb-2 font-bold">Confirm Password</label>
+                             <input type="password" id="auth-reg-pass2" required minlength="8" class="w-full bg-[var(--rvg-dark)] border border-[var(--rvg-gray)] px-4 py-3 text-white focus:outline-none focus:border-[var(--rvg-red)]"></div>
+                        <div id="auth-reg-error" class="hidden text-[11px] text-[var(--rvg-red)] mt-2 font-bold"></div>
+                        <button type="submit" class="w-full bg-[var(--rvg-red)] text-white py-3 text-[11px] uppercase tracking-widest font-bold hover:bg-white hover:text-[var(--rvg-red)] transition-colors">Create Account</button>
+                    </form>
+                </div>
+
+                <div id="auth-panel-forgot" class="auth-panel hidden">
+                    <form onsubmit="event.preventDefault(); app.auth.submitForgot()" class="space-y-6">
+                        <p class="text-sm text-white/60 leading-relaxed">Enter the email associated with your account and we'll send a reset link when this feature becomes available.</p>
+                        <div><label class="block text-[10px] uppercase tracking-widest text-white/50 mb-2 font-bold">Email</label>
+                             <input type="email" id="auth-forgot-email" required class="w-full bg-[var(--rvg-dark)] border border-[var(--rvg-gray)] px-4 py-3 text-white focus:outline-none focus:border-[var(--rvg-red)]"></div>
+                        <button type="submit" class="w-full bg-[var(--rvg-red)] text-white py-3 text-[11px] uppercase tracking-widest font-bold hover:bg-white hover:text-[var(--rvg-red)] transition-colors">Send Reset</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .auth-tab { color: rgba(234,234,234,0.5); border-bottom: 1px solid transparent; transition: all 0.3s; }
+            .auth-tab.active { color: #fff; border-bottom-color: var(--rvg-red); }
+            #auth-modal.is-open { display: flex; }
+        </style>
+
+        <section id="view-checkout" class="view-section max-w-5xl mx-auto px-4 py-12">
+            <h2 class="font-graffiti text-5xl mb-8 text-center text-[var(--rvg-red)] spray-text transform -rotate-1">PAY THE TOLL</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <div class="lg:col-span-7">
+                    <div class="flex items-center space-x-2 text-sm font-bold uppercase mb-6 bg-[var(--rvg-dark)] p-4 border border-[var(--rvg-gray)] shadow-inner">
+                        <span id="step-nav-1" class="text-[var(--rvg-red)]">Drop Zone</span>
+                        <span class="text-white/30">></span>
+                        <span id="step-nav-2" class="text-white/30">Blood Money</span>
+                    </div>
+
+                    <form id="checkout-form" onsubmit="app.checkout.handleStepSubmit(event)" class="space-y-5 bg-[var(--rvg-dark)] p-6 border border-[var(--rvg-gray)] relative overflow-hidden">
+                        <div class="absolute -top-20 -right-20 font-graffiti text-9xl text-white/5 rotate-45 pointer-events-none">$$$</div>
+                        
+                        <div id="checkout-step-container" class="space-y-4 relative z-10 min-h-[250px]"></div>
+                        
+                        <div class="flex justify-between items-center pt-6 border-t border-[var(--rvg-gray)] relative z-10">
+                            <a href="#shop" onclick="app.router.navigate('shop')" class="text-xs font-bold uppercase text-white/50 hover:text-white transition-colors">Cancel Hit</a>
+                            <button type="submit" class="px-8 py-3 btn-blood text-sm">
+                                Confirm
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="lg:col-span-5 bg-[var(--rvg-dark)] p-6 border border-[var(--rvg-gray)] h-fit relative">
+                    <h3 class="font-bold text-xl uppercase tracking-widest text-white border-b border-[var(--rvg-gray)] pb-4 mb-4">The Damage</h3>
+                    <div id="checkout-summary-items" class="space-y-4 max-h-[250px] overflow-y-auto mb-6"></div>
+                    <div class="space-y-3 text-sm font-bold text-white/70">
+                        <div class="flex justify-between"><span>Subtotal</span><span id="chk-sub">$0.00</span></div>
+                        <div class="flex justify-between"><span>Smuggling Fee</span><span class="text-[var(--rvg-red)]">$0.00</span></div>
+                        <div class="flex justify-between items-center pt-4 text-lg border-t border-[var(--rvg-gray)] text-white">
+                            <span>TOTAL EXTORTION</span>
+                            <span id="chk-total" class="text-[var(--rvg-red)] spray-text">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <div id="cart-drawer-overlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 pointer-events-none opacity-0 transition-opacity duration-300" onclick="app.ui.toggleCartDrawer()">
+        <div class="absolute right-0 top-0 h-full w-full max-w-[420px] bg-[var(--rvg-black)] border-l border-[var(--rvg-gray)] flex flex-col justify-between pointer-events-auto transform translate-x-full transition-transform duration-400" onclick="event.stopPropagation()">
+            
+            <div class="p-6 border-b border-[var(--rvg-gray)] flex items-center justify-between bg-[var(--rvg-dark)]">
+                <div>
+                    <h3 class="font-graffiti text-3xl text-white spray-text -rotate-2">BODY BAG</h3>
+                </div>
+                <button onclick="app.ui.toggleCartDrawer()" class="text-white/50 hover:text-[var(--rvg-red)] transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+            </div>
+            
+            <div id="cart-drawer-items" class="flex-grow overflow-y-auto p-6 space-y-4 bg-[var(--rvg-black)]"></div>
+            
+            <div class="p-6 bg-[var(--rvg-dark)] border-t border-[var(--rvg-gray)]">
+                <div class="flex justify-between items-end mb-6">
+                    <span class="text-sm font-bold uppercase tracking-widest text-white/50">Ransom:</span>
+                    <span id="cart-drawer-subtotal" class="font-bold text-2xl text-[var(--rvg-red)]">$0.00</span>
+                </div>
+                <button onclick="app.checkout.initiateCheckout()" class="w-full py-4 btn-blood text-sm tracking-widest">
+                    CHECKOUT
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="search-overlay" class="fixed inset-0 bg-[var(--rvg-black)]/95 backdrop-blur-md z-50 hidden flex-col justify-center items-center px-4 transition-all">
+        <button onclick="app.ui.toggleSearchOverlay()" class="absolute top-8 right-8 text-white/50 hover:text-[var(--rvg-red)] transition-colors">
+            <i data-lucide="x" class="w-8 h-8"></i>
+        </button>
+        <div class="w-full max-w-3xl flex flex-col items-center">
+            <span class="font-graffiti text-5xl text-[var(--rvg-red)] spray-text -rotate-2 mb-8">SEEK & DESTROY</span>
+            <input type="text" id="live-search-input" oninput="app.store.handleSearch(this.value)" placeholder="SEARCH ARSENAL..." class="w-full bg-transparent border-b-2 border-[var(--rvg-gray)] focus:border-[var(--rvg-red)] p-4 text-3xl text-center text-white font-bold uppercase tracking-widest focus:outline-none placeholder:text-white/20 transition-colors">
+            <div id="search-results-output" class="mt-8 w-full space-y-2 max-h-[40vh] overflow-y-auto"></div>
+        </div>
+    </div>
+
+    <div id="toast-notif" class="fixed bottom-6 right-6 bg-[var(--rvg-red)] border border-[var(--rvg-blood)] text-white text-sm font-bold uppercase tracking-widest py-3 px-6 shadow-[0_0_15px_rgba(217,4,41,0.5)] z-50 opacity-0 translate-x-10 transition-all duration-300 pointer-events-none flex items-center gap-3">
+        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+        <span id="toast-notif-message">ACQUIRED.</span>
+    </div>
+
+    <footer class="bg-[var(--rvg-dark)] border-t border-[var(--rvg-gray)] pt-16 pb-8 text-sm">
+        <div class="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-12 mb-12">
+            <div class="space-y-4">
+                <span class="font-graffiti text-4xl text-white block">REVENGE</span>
+                <p class="text-white/50 font-medium">Born in the gutter. Raised in the dark. We don't ask for permission.</p>
+            </div>
+            <div class="space-y-2">
+                <h4 class="text-[var(--rvg-red)] uppercase font-bold tracking-widest mb-4">Black Market</h4>
+                <a href="#shop" onclick="app.router.navigate('shop')" class="block text-white/70 hover:text-white transition-colors uppercase font-bold">All Gear</a>
+                <a href="#" class="block text-white/70 hover:text-white transition-colors uppercase font-bold">Shipping / Smuggling</a>
+                <a href="#" class="block text-white/70 hover:text-white transition-colors uppercase font-bold">Returns (Denied)</a>
+            </div>
+            <div class="space-y-4">
+                <h4 class="text-[var(--rvg-red)] uppercase font-bold tracking-widest mb-2">Join the Cult</h4>
+                <form onsubmit="event.preventDefault(); app.ui.triggerToast('YOU ARE NOW ON THE LIST.');" class="flex">
+                    <input type="email" placeholder="EMAIL ADDRESS" required class="flex-grow bg-[var(--rvg-black)] border border-[var(--rvg-gray)] border-r-0 text-white p-3 focus:outline-none focus:border-[var(--rvg-red)] text-sm uppercase">
+                    <button type="submit" class="bg-[var(--rvg-red)] text-white px-6 font-bold uppercase tracking-widest hover:bg-[var(--rvg-blood)] transition-colors">SUBMIT</button>
+                </form>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 pt-6 border-t border-[var(--rvg-gray)] text-center text-xs text-white/30 font-bold uppercase tracking-widest">
+            <p>&copy; 2026 REVENGE SYNDICATE. TRUST NOBODY.</p>
+        </div>
+    </footer>
+
+    <script>
+        const __SEED = [
+            { id: 'rvg-01', name: 'Anarchy Zip Hoodie', price: 120.00, category: 'Fleece', image: 'https://images.unsplash.com/photo-1556821840-3a63f95609a7?q=80&w=800&auto=format&fit=crop', desc: 'Heavyweight 450gsm distressed cotton. Barbed wire print down the sleeves. Cropped fit. Raw hem.' },
+            { id: 'rvg-02', name: 'Vandal Cargo Pants', price: 165.00, category: 'Bottoms', image: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?q=80&w=800&auto=format&fit=crop', desc: 'Tactical nylon blend with 8 functional pockets. Cinch cords at the ankle. Custom gunmetal hardware.' },
+            { id: 'rvg-03', name: 'Blood Oath Graphic Tee', price: 45.00, category: 'Tees', image: 'https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?q=80&w=800&auto=format&fit=crop', desc: 'Vintage wash black tee. Oversized fit. High-density puff print across the chest.' },
+            { id: 'rvg-04', name: 'Riot Mask / Beanie', price: 35.00, category: 'Headwear', image: 'https://images.unsplash.com/photo-1618641986557-1ab01e51b14d?q=80&w=800&auto=format&fit=crop', desc: 'Distressed knit balaclava. Can be rolled into a standard beanie. Red embroidered logo on the edge.' }
+        ];
+
+        /* ════════════════════
+           CANONICAL DATA LAYER — fetchStore → api.php?state=X, getMockData fallback, MOCK shape
+        ════════════════════ */
+        const __CATS = [...new Set(__SEED.map(p => p.category).filter(Boolean))].map((name, i) => ({ id: i + 1, name }));
+        const MOCK = {
+            site: { name: "REVENGE", currency: "R", domain: window.location.hostname },
+            categories: __CATS,
+            products: __SEED.map((p, i) => ({
+                ...p,
+                id: p.id != null ? p.id : i + 1,
+                image: p.image || (Array.isArray(p.images) ? p.images[0] : "") || "",
+                description: p.description || p.desc || "",
+                stock: p.stock != null ? p.stock : 12,
+                category_id: (__CATS.find(c => c.name === p.category) || {}).id || null
+            })),
+            discounts: [
+                { id: 1, code: "WELCOME10", percentage: 10, active: 1 },
+                { id: 2, code: "DROP20", percentage: 20, active: 1 }
+            ]
+        };
+
+        async function fetchStore(state, params = {}) {
+            const url = new URL("api.php", window.location.href);
+            url.searchParams.set("state", state);
+            for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+            try {
+                const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+                if (!res.ok) throw new Error(res.status);
+                return await res.json();
+            } catch {
+                return getMockData(state, params);
+            }
+        }
+
+        function getMockData(state, params = {}) {
+            switch (state) {
+                case "site": return MOCK.site;
+                case "products": return MOCK.products;
+                case "product": return MOCK.products.find(p => p.id == params.id) || null;
+                case "categories": return MOCK.categories;
+                case "products_by_category": return MOCK.products.filter(p => p.category_id == params.category_id);
+                case "search": {
+                    const q = (params.q || "").toLowerCase();
+                    return MOCK.products.filter(p => (p.name || "").toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q));
+                }
+                case "discounts": return MOCK.discounts;
+                case "orders": return [];
+                default: return [];
+            }
+        }
+
+        let INVENTORY_DB = [];
+
+        const app = {
+            state: { cart: [], currentSort: 'featured', activeCheckoutStep: 1, selectedSize: null },
+            init: async function() {
+                const __d = await fetchStore('products');
+                INVENTORY_DB = __d.map(p => ({ ...p, images: p.images || (p.image ? [p.image] : []), desc: p.desc || p.description || '', category: p.category || ((MOCK.categories.find(c => c.id == p.category_id) || {}).name) || '' }));
+                this.router.init(); this.store.renderCatalog(); this.cart.loadAndSync(); lucide.createIcons();
+            }
+        };
+
+        app.router = {
+            init: function() {
+                window.addEventListener('popstate', () => this.evalRoute(window.location.hash));
+                this.evalRoute(window.location.hash || '#home');
+            },
+            navigate: function(view, params = null) {
+                let hash = `#${view}`;
+                if (params) hash += `?${new URLSearchParams(params).toString()}`;
+                history.pushState(null, null, hash);
+                this.evalRoute(hash);
+            },
+            evalRoute: function(hashString) {
+                const parts = hashString.split('?');
+                const view = parts[0] || '#home';
+                const queryParams = parts[1] ? Object.fromEntries(new URLSearchParams(parts[1])) : {};
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                const targetView = document.getElementById(`view-${view.replace('#', '')}`);
+                if (targetView) targetView.classList.add('active');
+                
+                if (view === '#shop') { app.store.sortCatalog('featured'); } 
+                else if (view === '#product' && queryParams.id) { app.store.renderProductDetail(queryParams.id); } 
+                else if (view === '#checkout') { app.checkout.renderCurrentStep(); }
+                else if (view === '#account') {
+                    if (!app.auth || !app.auth.isLoggedIn()) {
+                        if (app.auth) app.auth.open('login');
+                        const homeView = document.getElementById('view-home');
+                        if (targetView) targetView.classList.remove('active');
+                        if (homeView) homeView.classList.add('active');
+                    } else {
+                        app.auth.renderDashboard();
+                    }
+                }
+                window.scrollTo({top:0, behavior: 'auto'});
+            }
+        };
+
+        app.store = {
+            renderCatalog: function(items = INVENTORY_DB) {
+                const grid = document.getElementById('shop-items-grid');
+                if (!grid) return;
+                grid.innerHTML = items.map(item => `
+                    <div class="group cursor-pointer bg-[var(--rvg-black)] border border-[var(--rvg-gray)] hover:border-[var(--rvg-red)] transition-colors relative" onclick="app.router.navigate('product', {id: '${item.id}'})">
+                        <div class="aspect-[4/5] w-full overflow-hidden bg-[var(--rvg-dark)] relative">
+                            <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover img-revenge">
+                            <div class="absolute top-2 left-2 bg-[var(--rvg-red)] text-white text-[10px] font-bold uppercase px-2 py-1 transform -rotate-2">${item.category}</div>
+                        </div>
+                        <div class="p-4 flex flex-col justify-between">
+                            <h3 class="font-bold text-lg text-white group-hover:text-[var(--rvg-red)] transition-colors uppercase tracking-tight">${item.name}</h3>
+                            <span class="text-white/70 font-bold mt-2 block">$${item.price.toFixed(2)}</span>
+                        </div>
+                    </div>`).join('');
+            },
+            sortCatalog: function(criteria) {
+                let sorted = [...INVENTORY_DB];
+                if (criteria === 'price-low') sorted.sort((a,b) => a.price - b.price);
+                if (criteria === 'price-high') sorted.sort((a,b) => b.price - a.price);
+                this.renderCatalog(sorted);
+            },
+            selectSize: function(sz) {
+                app.state.selectedSize = sz;
+                document.querySelectorAll('.btn-sz').forEach(b => b.className = "btn-sz border border-[var(--rvg-gray)] bg-[var(--rvg-dark)] text-white/50 hover:text-white hover:border-white p-3 font-bold text-sm text-center transition-all uppercase");
+                event.target.className = "btn-sz border-2 border-[var(--rvg-red)] bg-[var(--rvg-red)] text-white p-3 font-bold text-sm text-center uppercase shadow-[0_0_10px_rgba(217,4,41,0.5)]";
+                document.getElementById('sz-error').classList.add('hidden');
+            },
+            renderProductDetail: function(id) {
+                const item = INVENTORY_DB.find(p => p.id === id);
+                if (!item) return;
+                app.state.selectedSize = null;
+
+                const sizes = ['S', 'M', 'L', 'XL', 'XXL'];
+
+                document.getElementById('product-detail-target').innerHTML = `
+                    <div class="w-full border border-[var(--rvg-gray)] bg-[var(--rvg-dark)] p-2 relative group">
+                        <div class="aspect-[4/5] overflow-hidden">
+                            <img src="${item.image}" alt="${item.name}" class="w-full h-full object-cover img-revenge">
+                        </div>
+                        <div class="absolute inset-0 border-2 border-transparent group-hover:border-[var(--rvg-red)] pointer-events-none transition-colors"></div>
+                    </div>
+                    <div class="w-full flex flex-col justify-center py-6">
+                        <h1 class="font-graffiti text-5xl text-white uppercase leading-none mb-4 spray-text -rotate-1">${item.name}</h1>
+                        <p class="text-2xl font-bold text-white mb-8 border-b border-[var(--rvg-gray)] pb-4">$${item.price.toFixed(2)}</p>
+                        
+                        <div class="mb-8">
+                            <span class="text-sm font-bold text-white/50 uppercase tracking-widest block mb-3">Select Size:</span>
+                            <div class="grid grid-cols-5 gap-2">
+                                ${sizes.map(sz => `<button onclick="app.store.selectSize('${sz}')" class="btn-sz border border-[var(--rvg-gray)] bg-[var(--rvg-dark)] text-white/50 hover:text-white hover:border-white p-3 font-bold text-sm text-center transition-all uppercase">${sz}</button>`).join('')}
+                            </div>
+                            <span id="sz-error" class="text-[var(--rvg-red)] text-xs font-bold uppercase mt-3 hidden animate-pulse">! SELECT A SIZE BEFORE ADDING TO BAG</span>
+                        </div>
+
+                        <button onclick="app.store.executeCartInsertion('${item.id}')" class="w-full py-5 btn-blood text-lg mb-8 flex justify-center items-center gap-3">
+                            <i data-lucide="skull" class="w-5 h-5"></i> ADD TO BODY BAG
+                        </button>
+                        
+                        <div class="space-y-4 pt-6 border-t border-[var(--rvg-gray)] text-white/70 leading-relaxed text-sm">
+                            <p>${item.desc}</p>
+                        </div>
+                    </div>`;
+                lucide.createIcons();
+            },
+            executeCartInsertion: function(id) {
+                if(!app.state.selectedSize) {
+                    document.getElementById('sz-error').classList.remove('hidden');
+                    return;
+                }
+                app.cart.addItem(id, app.state.selectedSize);
+            },
+            handleSearch: function(term) {
+                const out = document.getElementById('search-results-output');
+                if (!term) { out.innerHTML = ''; return; }
+                const results = INVENTORY_DB.filter(i => i.name.toLowerCase().includes(term.toLowerCase()));
+                
+                if (results.length === 0) {
+                    out.innerHTML = `<div class="text-center text-[var(--rvg-red)] font-bold uppercase mt-8 spray-text">NOTHING FOUND</div>`;
+                    return;
+                }
+
+                out.innerHTML = results.map(i => `
+                    <div onclick="app.ui.toggleSearchOverlay(); app.router.navigate('product', {id: '${i.id}'})" class="flex items-center space-x-4 p-4 bg-[var(--rvg-dark)] border border-[var(--rvg-gray)] hover:border-[var(--rvg-red)] cursor-pointer transition-colors">
+                        <img src="${i.image}" class="w-16 h-16 object-cover img-revenge border border-[var(--rvg-gray)]">
+                        <div class="flex-grow">
+                            <span class="block text-lg font-bold text-white uppercase">${i.name}</span>
+                            <span class="block text-xs font-bold text-[var(--rvg-red)] uppercase mt-1">${i.category}</span>
+                        </div>
+                        <span class="font-bold text-lg text-white">$${i.price}</span>
+                    </div>`).join('');
+            }
+        };
+
+        app.cart = {
+            loadAndSync: function() { const stored = localStorage.getItem('rvg_cart'); if (stored) app.state.cart = JSON.parse(stored); this.updateUI(); },
+            addItem: function(id, size) {
+                const prod = INVENTORY_DB.find(p => p.id === id);
+                const exist = app.state.cart.find(item => item.product.id === id && item.size === size);
+                if (exist) exist.qty += 1; else app.state.cart.push({ product: prod, qty: 1, size: size });
+                this.sync(); app.ui.triggerToast(`${prod.name} ADDED.`); app.ui.toggleCartDrawer(true);
+            },
+            updateQty: function(index, val) { 
+                const item = app.state.cart[index]; 
+                if (!item) return; 
+                item.qty += val; 
+                if (item.qty <= 0) app.state.cart.splice(index, 1); 
+                this.sync(); 
+            },
+            sync: function() { localStorage.setItem('rvg_cart', JSON.stringify(app.state.cart)); this.updateUI(); },
+            updateUI: function() {
+                const drawerContainer = document.getElementById('cart-drawer-items');
+                const badge = document.getElementById('global-cart-count');
+                const subtotalText = document.getElementById('cart-drawer-subtotal');
+                const totalItems = app.state.cart.reduce((sum, i) => sum + i.qty, 0);
+                const subtotal = app.state.cart.reduce((sum, i) => sum + (i.product.price * i.qty), 0);
+                
+                if (totalItems > 0) { badge.classList.remove('opacity-0'); badge.innerText = totalItems; } else { badge.classList.add('opacity-0'); }
+                subtotalText.innerText = `$${subtotal.toFixed(2)}`;
+                
+                if (app.state.cart.length === 0) { 
+                    drawerContainer.innerHTML = `<div class="text-center text-white/30 text-sm py-20 font-bold uppercase tracking-widest">BAG IS EMPTY. <br>GO BLEED YOUR WALLET.</div>`; 
+                } else {
+                    drawerContainer.innerHTML = app.state.cart.map((item, idx) => `
+                        <div class="flex space-x-4 bg-[var(--rvg-dark)] border border-[var(--rvg-gray)] p-3 relative group">
+                            <img src="${item.product.image}" class="w-20 h-24 object-cover img-revenge">
+                            <div class="flex flex-col justify-between flex-grow">
+                                <div>
+                                    <h4 class="text-sm font-bold text-white uppercase leading-tight group-hover:text-[var(--rvg-red)] transition-colors">${item.product.name}</h4>
+                                    <span class="text-[11px] font-bold text-white/50 block uppercase mt-1">Size: ${item.size}</span>
+                                </div>
+                                <div class="flex justify-between items-end mt-2">
+                                    <div class="flex items-center space-x-3 border border-[var(--rvg-gray)] bg-[var(--rvg-black)] px-2 py-1">
+                                        <button onclick="app.cart.updateQty(${idx}, -1)" class="text-white/50 hover:text-[var(--rvg-red)] font-bold">&minus;</button>
+                                        <span class="text-white w-4 text-center text-xs font-bold">${item.qty}</span>
+                                        <button onclick="app.cart.updateQty(${idx}, 1)" class="text-white/50 hover:text-[var(--rvg-red)] font-bold">&plus;</button>
+                                    </div>
+                                    <span class="text-sm font-bold text-white">$${(item.product.price * item.qty).toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>`).join('');
+                }
+            }
+        };
+
+        app.checkout = {
+            initiateCheckout: function() { if(!app.state.cart.length) return; app.ui.toggleCartDrawer(false); app.router.navigate('checkout'); },
+            renderCurrentStep: function() {
+                const container = document.getElementById('checkout-step-container');
+                const sub = app.state.cart.reduce((sum, i) => sum + (i.product.price * i.qty), 0);
+                document.getElementById('chk-sub').innerText = `$${sub.toFixed(2)}`;
+                document.getElementById('chk-total').innerText = `$${sub.toFixed(2)}`;
+                
+                document.getElementById('checkout-summary-items').innerHTML = app.state.cart.map(i => `
+                    <div class="flex justify-between items-center text-sm font-bold text-white/70 py-2 border-b border-[var(--rvg-gray)] last:border-0">
+                        <span class="truncate pr-4">${i.product.name} [${i.size}] x${i.qty}</span>
+                        <span class="text-white">$${(i.product.price * i.qty).toFixed(2)}</span>
+                    </div>`).join('');
+                
+                document.getElementById('step-nav-1').className = app.state.activeCheckoutStep === 1 ? "text-[var(--rvg-red)]" : "text-white/30";
+                document.getElementById('step-nav-2').className = app.state.activeCheckoutStep === 2 ? "text-[var(--rvg-red)]" : "text-white/30";
+
+                if (app.state.activeCheckoutStep === 1) { 
+                    container.innerHTML = `
+                        <input type="email" required placeholder="EMAIL" class="w-full rvg-input">
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="text" required placeholder="FIRST NAME" class="w-full rvg-input">
+                            <input type="text" required placeholder="LAST NAME" class="w-full rvg-input">
+                        </div>
+                        <input type="text" required placeholder="STREET ADDRESS" class="w-full rvg-input">
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="text" required placeholder="CITY" class="w-full rvg-input">
+                            <input type="text" required placeholder="POSTAL/ZIP" class="w-full rvg-input">
+                        </div>`; 
+                } else if (app.state.activeCheckoutStep === 2) { 
+                    container.innerHTML = `
+                        <div class="p-4 bg-black border border-[var(--rvg-gray)] text-xs text-[var(--rvg-red)] tracking-widest uppercase font-bold text-center mb-4">
+                            Address Secured. Enter Payment Intel.
+                        </div>
+                        <input type="text" required placeholder="CARD NUMBER" class="w-full rvg-input">
+                        <div class="grid grid-cols-2 gap-3">
+                            <input type="text" required placeholder="MM/YY" class="w-full rvg-input">
+                            <input type="text" required placeholder="CVC" class="w-full rvg-input">
+                        </div>`; 
+                }
+            },
+            handleStepSubmit: function(e) { 
+                e.preventDefault(); 
+                if(app.state.activeCheckoutStep < 2) { 
+                    app.state.activeCheckoutStep += 1; 
+                    this.renderCurrentStep(); 
+                } else { 
+                    app.state.cart = []; 
+                    app.cart.sync(); 
+                    app.state.activeCheckoutStep = 1; 
+                    alert("ORDER COMPLETE. PREPARE FOR DELIVERY."); 
+                    app.router.navigate('home'); 
+                } 
+            }
+        };
+
+        app.ui = {
+            toggleCartDrawer: function(forceOpen = null) {
+                const overlay = document.getElementById('cart-drawer-overlay');
+                const inner = overlay.firstElementChild;
+                if (forceOpen === true) { 
+                    overlay.classList.remove('opacity-0', 'pointer-events-none'); 
+                    inner.classList.remove('translate-x-full'); 
+                    return; 
+                }
+                if (forceOpen === false) { 
+                    overlay.classList.add('opacity-0', 'pointer-events-none'); 
+                    inner.classList.add('translate-x-full'); 
+                    return; 
+                }
+                overlay.classList.toggle('opacity-0'); 
+                overlay.classList.toggle('pointer-events-none');
+                inner.classList.toggle('translate-x-full');
+            },
+            toggleSearchOverlay: function() { 
+                const s = document.getElementById('search-overlay'); 
+                s.classList.toggle('hidden'); 
+                s.classList.toggle('flex'); 
+                if(!s.classList.contains('hidden')) {
+                    setTimeout(() => document.getElementById('live-search-input').focus(), 100);
+                } else {
+                    document.getElementById('live-search-input').value = '';
+                    document.getElementById('search-results-output').innerHTML = '';
+                }
+            },
+            triggerToast: function(msg) {
+                const t = document.getElementById('toast-notif'); 
+                if(msg) document.getElementById('toast-notif-message').innerText = msg;
+                t.classList.remove('opacity-0', 'translate-x-10', 'pointer-events-none');
+                setTimeout(() => { 
+                    t.classList.add('opacity-0', 'translate-x-10', 'pointer-events-none'); 
+                }, 3000);
+            }
+        };
+
+        app.auth = {
+            getUser: function () {
+                if (!window.vmCustomer || !vmCustomer.isLoggedIn()) return null;
+                const c = vmCustomer.cached();
+                if (!c) return null;
+                const parts = (c.name || '').trim().split(/\s+/).filter(Boolean);
+                return { email: c.email, fname: parts[0] || '', lname: parts.slice(1).join(' '), phone: c.phone || '', joinDate: c.created_at || '' };
+            },
+            isLoggedIn: function () { return !!window.vmCustomer && vmCustomer.isLoggedIn(); },
+            iconClick: function () { if (this.isLoggedIn()) app.router.navigate('account'); else this.open('login'); },
+            updateIcon: function () { const label = document.getElementById('auth-icon-label'); if (!label) return; const u = this.getUser(); label.textContent = u && u.fname ? u.fname : 'Account'; },
+            open: function (tab) { this.switchTab(tab || 'login'); const m = document.getElementById('auth-modal'); m.classList.add('is-open'); document.body.style.overflow = 'hidden'; if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons(); },
+            close: function () { const m = document.getElementById('auth-modal'); m.classList.remove('is-open'); document.body.style.overflow = ''; ['auth-login-error', 'auth-reg-error'].forEach(function (id) { const el = document.getElementById(id); if (el) { el.textContent = ''; el.classList.add('hidden'); } }); },
+            switchTab: function (tab) { ['login', 'register', 'forgot'].forEach(function (t) { const btn = document.getElementById('auth-tab-' + t); const pan = document.getElementById('auth-panel-' + t); if (btn) btn.classList.toggle('active', t === tab); if (pan) pan.classList.toggle('hidden', t !== tab); }); },
+            submitLogin: async function () {
+                const email = document.getElementById('auth-login-email').value.trim();
+                const pass = document.getElementById('auth-login-pass').value;
+                const errEl = document.getElementById('auth-login-error');
+                errEl.classList.add('hidden');
+                if (!email || !pass) { errEl.textContent = 'Email and password required.'; errEl.classList.remove('hidden'); return; }
+                try { await vmCustomer.login(email, pass); this.close(); const u = this.getUser(); app.ui.triggerToast('Welcome, ' + ((u && u.fname) || 'friend')); app.router.navigate('account'); }
+                catch (e) { errEl.textContent = (e && e.code === 'locked') ? 'Account temporarily locked. Try again in a few minutes.' : ((e && e.message) || 'Sign-in failed'); errEl.classList.remove('hidden'); }
+            },
+            submitRegister: async function () {
+                const fname = document.getElementById('auth-reg-fname').value.trim();
+                const lname = document.getElementById('auth-reg-lname').value.trim();
+                const email = document.getElementById('auth-reg-email').value.trim();
+                const pass  = document.getElementById('auth-reg-pass').value;
+                const pass2 = document.getElementById('auth-reg-pass2').value;
+                const errEl = document.getElementById('auth-reg-error');
+                errEl.classList.add('hidden');
+                if (!fname || !email || !pass) { errEl.textContent = 'Please fill in all required fields.'; errEl.classList.remove('hidden'); return; }
+                if (pass !== pass2) { errEl.textContent = 'Passwords do not match.'; errEl.classList.remove('hidden'); return; }
+                if (pass.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.classList.remove('hidden'); return; }
+                const name = (fname + ' ' + lname).trim();
+                try { await vmCustomer.register(email, pass, name, null); this.close(); app.ui.triggerToast('Welcome, ' + fname); app.router.navigate('account'); }
+                catch (e) { errEl.textContent = (e && e.message) || 'Sign-up failed'; errEl.classList.remove('hidden'); }
+            },
+            submitForgot: function () { app.ui.triggerToast('Reset link sent (placeholder)'); this.switchTab('login'); },
+            doLogout: async function () { try { await vmCustomer.logout(); } catch (e) {} app.ui.triggerToast('Signed out'); app.router.navigate('home'); },
+            activateTab: function (name) { ['overview', 'profile', 'orders', 'password'].forEach(function (t) { const btn = document.getElementById('acc-tab-' + t); const pan = document.getElementById('acc-panel-' + t); if (btn) btn.classList.toggle('active', t === name); if (pan) pan.classList.toggle('hidden', t !== name); }); if (name === 'orders') app.auth.hydrateOrders(); },
+            renderDashboard: async function () {
+                if (!this.isLoggedIn()) { this.open('login'); return; }
+                const u = this.getUser();
+                if (!u) { this.open('login'); return; }
+                document.getElementById('acc-greeting').textContent = 'Welcome, ' + ((u.fname) || 'friend');
+                document.getElementById('acc-ov-name').textContent  = (u.fname + ' ' + u.lname).trim() || '—';
+                document.getElementById('acc-ov-email').textContent = u.email || '—';
+                document.getElementById('acc-ov-joined').textContent = u.joinDate ? u.joinDate.split(' ')[0] : '—';
+                document.getElementById('acc-fname').value = u.fname || '';
+                document.getElementById('acc-lname').value = u.lname || '';
+                document.getElementById('acc-email').value = u.email || '';
+                document.getElementById('acc-phone').value = u.phone || '';
+                this.activateTab('overview');
+            },
+            hydrateOrders: async function () {
+                const wrap = document.getElementById('acc-orders-list');
+                wrap.innerHTML = '<p class="text-[10px] uppercase tracking-widest text-white/50 py-12 text-center font-bold">Loading…</p>';
+                try {
+                    const r = await vmCustomer.myOrders();
+                    const orders = (r.orders || []);
+                    if (!orders.length) {
+                        wrap.innerHTML = '<p class="text-[10px] uppercase tracking-widest text-white/50 py-12 text-center font-bold">No orders yet. <a href="#shop" onclick="app.router.navigate(\'shop\')" class="text-[var(--rvg-red)] border-b border-[var(--rvg-red)] pb-0.5">Start shopping →</a></p>';
+                        return;
+                    }
+                    wrap.innerHTML = '<div class="space-y-4">' + orders.map(function (o) {
+                        const total = (o.total_amount != null ? o.total_amount : 0).toFixed(2);
+                        const dateStr = o.created_at ? String(o.created_at).split(' ')[0] : '—';
+                        const status = o.status || 'pending';
+                        return '<div class="flex items-center justify-between border-b border-[var(--rvg-gray)] pb-4">' +
+                                  '<div><p class="text-[10px] uppercase tracking-widest text-white/50 font-bold">Order</p>' +
+                                  '<p class="font-graffiti text-2xl text-white spray-text">#' + o.id + '</p></div>' +
+                                  '<div class="text-right"><p class="text-[10px] uppercase tracking-widest text-white/50 font-bold">' + dateStr + '</p>' +
+                                  '<p class="text-sm text-white">$' + total + ' &middot; ' + status + '</p></div>' +
+                               '</div>';
+                    }).join('') + '</div>';
+                } catch (e) { wrap.innerHTML = '<p class="text-[10px] uppercase tracking-widest text-[var(--rvg-red)] py-12 text-center font-bold">Failed to load orders.</p>'; }
+            },
+            saveProfile: async function () {
+                const fname = document.getElementById('acc-fname').value.trim();
+                const lname = document.getElementById('acc-lname').value.trim();
+                const phone = document.getElementById('acc-phone').value.trim();
+                const name = (fname + ' ' + lname).trim();
+                try { await vmCustomer.updateProfile(name || null, phone || null); const u = this.getUser(); if (u) { document.getElementById('acc-greeting').textContent = 'Welcome, ' + ((u.fname) || 'friend'); document.getElementById('acc-ov-name').textContent = (u.fname + ' ' + u.lname).trim() || '—'; } this.updateIcon(); app.ui.triggerToast('Profile updated'); }
+                catch (e) { app.ui.triggerToast((e && e.message) || 'Update failed'); }
+            },
+            changePassword: async function () {
+                const cur = document.getElementById('acc-pw-cur').value;
+                const nw  = document.getElementById('acc-pw-new').value;
+                const conf = document.getElementById('acc-pw-conf').value;
+                if (!cur || !nw || !conf) { app.ui.triggerToast('All password fields required'); return; }
+                if (nw.length < 8) { app.ui.triggerToast('New password must be 8+ chars'); return; }
+                if (nw !== conf) { app.ui.triggerToast('Passwords do not match'); return; }
+                try { await vmCustomer.changePassword(cur, nw); ['acc-pw-cur','acc-pw-new','acc-pw-conf'].forEach(function (id) { const el = document.getElementById(id); if (el) el.value = ''; }); app.ui.triggerToast('Password updated'); }
+                catch (e) { app.ui.triggerToast((e && e.message) || 'Failed to change password'); }
+            }
+        };
+
+        window.app = app;
+
+        window.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
