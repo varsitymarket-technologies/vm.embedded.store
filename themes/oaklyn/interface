@@ -2860,6 +2860,18 @@
                     else if (i === n) dot.classList.add("active");
                 }
             }
+            if (n === 1 && isLoggedIn()) {
+                const email = document.getElementById('co-email');
+                const fname = document.getElementById('co-fname');
+                const lname = document.getElementById('co-lname');
+                const user = customerAuth.user || {};
+                if (email && !email.value) email.value = user.email || '';
+                if ((fname && !fname.value) || (lname && !lname.value)) {
+                    const parts = (user.name || '').trim().split(/\s+/);
+                    if (fname && !fname.value) fname.value = parts[0] || '';
+                    if (lname && !lname.value) lname.value = parts.slice(1).join(' ') || '';
+                }
+            }
         }
 
         function checkoutNext() {
@@ -2884,11 +2896,14 @@
             const orderId = "KK-" + Math.floor(10000 + Math.random() * 90000);
 
             const body = {
-                name: `${fname} ${lname}`,
+                name: `${fname} ${lname}`.trim(),
                 email,
                 total: cart.subtotal(),
                 items: JSON.stringify(cart.items.map(i => ({ id: i.id, name: i.name, qty: i.qty, price: i.price })))
             };
+            if (isLoggedIn() && customerAuth.user && customerAuth.user.id) {
+                body.customer_id = customerAuth.user.id;
+            }
 
             try {
                 const url = new URL("api.php?state=order", window.location.href);
