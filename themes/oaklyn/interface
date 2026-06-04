@@ -1965,23 +1965,6 @@
     <template id="page-track">
         <div id="page-track-hash"></div>
     </template>
-    <section id="view-track" class="view-section">
-        <div class="page-section" style="padding-top:48px;">
-            <div class="page-inner" style="max-width:640px;margin:0 auto;">
-                <p class="section-eyebrow">Track</p>
-                <h1 class="section-title" style="margin-bottom:12px;">Order Tracking</h1>
-                <p style="color:var(--stone);font-size:14px;margin-bottom:40px;">Enter your email address to find your
-                    order status.</p>
-                <div style="display:flex;gap:0;margin-bottom:40px;">
-                    <input type="email" id="track-email" class="form-input" placeholder="your@email.com"
-                        style="flex:1;" />
-                    <button onclick="trackOrder()" class="btn-primary" style="white-space:nowrap;">Track Order</button>
-                </div>
-                <div id="track-results"></div>
-            </div>
-        </div>
-    </section>
-
     <!-- 13. TERMS -->
     <template id="page-terms">
         <div id="page-terms-hash"></div>
@@ -2041,28 +2024,6 @@
                             confirmation.</p>
                     </div>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 14. ORDERS -->
-    <template id="page-orders">
-        <div id="page-orders-hash"></div>
-    </template>
-    <section id="view-orders" class="view-section">
-        <div class="page-section" style="padding-top:48px;">
-            <div class="page-inner" style="max-width:700px;margin:0 auto;">
-                <p class="section-eyebrow">History</p>
-                <h1 class="section-title" style="margin-bottom:12px;">Order History</h1>
-                <p style="color:var(--stone);font-size:14px;margin-bottom:40px;">Enter your email to retrieve your past
-                    orders.</p>
-                <div style="display:flex;gap:0;margin-bottom:40px;">
-                    <input type="email" id="orders-email" class="form-input" placeholder="your@email.com"
-                        style="flex:1;" />
-                    <button onclick="lookupOrders()" class="btn-primary" style="white-space:nowrap;">Look Up
-                        Orders</button>
-                </div>
-                <div id="orders-results"></div>
             </div>
         </div>
     </section>
@@ -2958,73 +2919,6 @@
         function toggleFaq(i) {
             const el = document.getElementById(`faq-${i}`);
             el.classList.toggle("open");
-        }
-
-        /* TRACK */
-        async function trackOrder() {
-            const email = document.getElementById("track-email").value.trim();
-            if (!email) { showToast("Please enter your email", "error"); return; }
-
-            const orders = await fetchStore("orders", { email });
-            const el = document.getElementById("track-results");
-
-            if (!orders.length) {
-                el.innerHTML = `
-      <div style="background:var(--cream);padding:32px;text-align:center;">
-        <p style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;margin-bottom:8px;">No orders found</p>
-        <p style="font-size:13px;color:var(--stone);">No orders found for ${email}</p>
-      </div>
-      <div style="margin-top:48px;">
-        <p style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--stone);margin-bottom:24px;">Example Order Status</p>
-        <div style="display:flex;flex-direction:column;gap:0;">
-          ${["Order Confirmed", "Processing", "Shipped", "Delivered"].map((s, i) => `
-            <div class="track-step ${i < 2 ? 'done' : ''}">
-              <div class="track-step-dot"></div>
-              <div>
-                <div style="font-weight:400;font-size:14px;margin-bottom:4px;">${s}</div>
-                <div style="font-size:12px;color:var(--stone);font-family:'DM Mono',monospace;">${i < 2 ? 'Completed' : 'Pending'}</div>
-              </div>
-            </div>`).join("")}
-        </div>
-      </div>`;
-                return;
-            }
-
-            el.innerHTML = orders.map(o => `
-    <div style="background:var(--white);border:1px solid var(--cream);padding:24px;margin-bottom:16px;">
-      <div style="display:flex;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
-        <span style="font-family:'DM Mono',monospace;font-size:12px;letter-spacing:0.1em;">#${o.id}</span>
-        <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--stone);">${formatPrice(o.total_amount)}</span>
-      </div>
-      <div style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;color:var(--gold);">${o.status || 'Processing'}</div>
-    </div>`).join("");
-        }
-
-        /* ORDERS LOOKUP */
-        async function lookupOrders() {
-            const email = document.getElementById("orders-email").value.trim();
-            if (!email) { showToast("Please enter your email", "error"); return; }
-            const orders = await fetchStore("orders", { email });
-            const el = document.getElementById("orders-results");
-            if (!orders.length) {
-                el.innerHTML = `<div style="text-align:center;padding:48px 0;color:var(--stone);font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;">No orders found for this email.</div>`;
-                return;
-            }
-            el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:13px;">
-    <thead><tr style="border-bottom:2px solid var(--cream);">
-      <th style="text-align:left;padding:12px 0;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--stone);">Order</th>
-      <th style="text-align:left;padding:12px 0;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--stone);">Date</th>
-      <th style="text-align:left;padding:12px 0;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--stone);">Total</th>
-      <th style="text-align:left;padding:12px 0;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:var(--stone);">Status</th>
-    </tr></thead>
-    <tbody>${orders.map(o => `
-      <tr style="border-bottom:1px solid var(--cream);">
-        <td style="padding:16px 0;font-family:'DM Mono',monospace;">#${o.id}</td>
-        <td style="padding:16px 0;color:var(--stone);">${o.created_at || '—'}</td>
-        <td style="padding:16px 0;">${formatPrice(o.total_amount)}</td>
-        <td style="padding:16px 0;"><span style="background:var(--cream);padding:3px 10px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;">${o.status || 'Processing'}</span></td>
-      </tr>`).join("")}
-    </tbody></table>`;
         }
 
         /* ── CART DRAWER ── */
