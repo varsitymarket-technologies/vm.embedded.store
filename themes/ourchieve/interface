@@ -68,6 +68,8 @@
 
         .checkout-view { display: none; }
         .checkout-view.active { display: block; }
+        .dashboard-view { display: none; }
+        .dashboard-view.active { display: block; }
         .main-view.hidden { display: none; }
 
         @keyframes pulse-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(0,255,136,0.4); } 50% { box-shadow: 0 0 0 8px rgba(0,255,136,0); } }
@@ -428,6 +430,41 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard View -->
+    <div id="dashboard-view" class="dashboard-view">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <button onclick="showMainView()" class="flex items-center gap-2 text-gray-400 hover:text-accent transition-colors mb-8">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span class="text-sm font-medium">Back to Shop</span>
+            </button>
+
+            <h1 class="text-3xl font-black text-white mb-10">Account</h1>
+
+            <div class="bg-dark-800 rounded-2xl p-6 border border-white/5 mb-10 flex justify-between items-start gap-4 flex-wrap">
+                <div>
+                    <p class="text-2xl font-black text-white mb-1">Hello, <span id="dash-name">Friend</span>.</p>
+                    <p class="text-sm text-gray-500" id="dash-email"></p>
+                </div>
+                <button id="dash-signout" type="button" class="btn-outline px-5 py-2 rounded-xl text-sm font-bold">Sign Out</button>
+            </div>
+
+            <h2 class="text-xs font-bold uppercase tracking-widest text-gray-500 mb-4">Order History</h2>
+            <div class="bg-dark-800 rounded-2xl p-6 border border-white/5">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-white/10 text-left">
+                            <th class="py-3 text-xs font-bold uppercase tracking-widest text-gray-500">Order</th>
+                            <th class="py-3 text-xs font-bold uppercase tracking-widest text-gray-500">Date</th>
+                            <th class="py-3 text-xs font-bold uppercase tracking-widest text-gray-500">Total</th>
+                            <th class="py-3 text-xs font-bold uppercase tracking-widest text-gray-500">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dash-orders-tbody"></tbody>
+                </table>
             </div>
         </div>
     </div>
