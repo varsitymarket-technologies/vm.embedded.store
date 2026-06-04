@@ -2306,6 +2306,132 @@
             router.navigate('home');
         }
 
+        function renderAccount() {
+            if (isLoggedIn()) { router.navigate('dashboard'); return; }
+            setAuthMode('login');
+            document.querySelectorAll('#view-account [data-err]').forEach(el => { el.textContent = ''; el.style.display = 'none'; });
+        }
+
+        function setAuthMode(mode) {
+            document.querySelectorAll('#view-account .auth-tab').forEach(btn => {
+                const active = btn.dataset.tab === mode;
+                btn.style.color = active ? 'var(--espresso)' : 'var(--stone)';
+                btn.style.borderBottomColor = active ? 'var(--gold)' : 'transparent';
+            });
+            document.querySelector('#view-account .auth-mode-login').style.display = mode === 'login' ? 'block' : 'none';
+            document.querySelector('#view-account .auth-mode-register').style.display = mode === 'register' ? 'block' : 'none';
+        }
+
+        async function renderDashboard() {
+            if (!isLoggedIn()) { router.navigate('account'); return; }
+
+            document.getElementById('dash-name').textContent = customerAuth.user.name || 'Friend';
+            document.getElementById('dash-email').textContent = customerAuth.user.email || '';
+
+            const tbody = document.getElementById('dash-orders-tbody');
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:48px 0;color:var(--stone);font-family:'Cormorant Garamond',serif;font-size:18px;">Loading…</td></tr>`;
+
+            let orders = [];
+            try { orders = await fetchStore('customer_my_orders'); } catch { orders = []; }
+            if (!Array.isArray(orders)) orders = [];
+
+            if (orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:48px 0;color:var(--stone);font-family:'Cormorant Garamond',serif;font-size:18px;">No orders yet.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = orders.map(o => {
+                const id = o.id;
+                const total = formatPrice(o.total_amount || o.total || 0);
+                const status = (o.status || 'Processing').toString();
+                const date = (o.created_at || '').toString().substring(0, 10);
+                return `
+                <tr style="border-bottom:1px solid var(--cream);">
+                    <td style="padding:16px 0;font-family:'DM Mono',monospace;">#${id}</td>
+                    <td style="padding:16px 0;color:var(--stone);">${date}</td>
+                    <td style="padding:16px 0;">${total}</td>
+                    <td style="padding:16px 0;"><span style="background:var(--cream);padding:3px 10px;font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;">${status}</span></td>
+                </tr>`;
+            }).join('');
+        }
+
+        function wireAuthView() {
+            document.querySelectorAll('#view-account .auth-tab').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('#view-account [data-err]').forEach(el => { el.textContent = ''; el.style.display = 'none'; });
+                    setAuthMode(btn.dataset.tab);
+                });
+            });
+
+            const loginForm = document.querySelector('#view-account [data-form="login"]');
+            if (loginForm) {
+                loginForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const btn = loginForm.querySelector('button[type="submit"]');
+                    if (btn.disabled) return;
+                    const errEl = loginForm.querySelector('[data-err="login"]');
+                    errEl.style.display = 'none';
+                    btn.disabled = true;
+                    btn.dataset.originalText = btn.textContent;
+                    btn.textContent = 'Signing in…';
+                    try {
+                        const fd = new FormData(loginForm);
+                        const result = await login(fd.get('email'), fd.get('password'));
+                        if (result.ok) {
+                            router.navigate('dashboard');
+                        } else {
+                            errEl.textContent = result.error;
+                            errEl.style.display = 'block';
+                            btn.disabled = false;
+                            btn.textContent = btn.dataset.originalText;
+                        }
+                    } catch (err) {
+                        errEl.textContent = 'Sign-in failed.';
+                        errEl.style.display = 'block';
+                        btn.disabled = false;
+                        btn.textContent = btn.dataset.originalText;
+                    }
+                });
+            }
+
+            const registerForm = document.querySelector('#view-account [data-form="register"]');
+            if (registerForm) {
+                registerForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const btn = registerForm.querySelector('button[type="submit"]');
+                    if (btn.disabled) return;
+                    const errEl = registerForm.querySelector('[data-err="register"]');
+                    errEl.style.display = 'none';
+                    btn.disabled = true;
+                    btn.dataset.originalText = btn.textContent;
+                    btn.textContent = 'Creating…';
+                    try {
+                        const fd = new FormData(registerForm);
+                        const result = await register(fd.get('email'), fd.get('password'), fd.get('name'));
+                        if (result.ok) {
+                            router.navigate('dashboard');
+                        } else {
+                            errEl.textContent = result.error;
+                            errEl.style.display = 'block';
+                            btn.disabled = false;
+                            btn.textContent = btn.dataset.originalText;
+                        }
+                    } catch (err) {
+                        errEl.textContent = 'Could not create account.';
+                        errEl.style.display = 'block';
+                        btn.disabled = false;
+                        btn.textContent = btn.dataset.originalText;
+                    }
+                });
+            }
+
+            const signOutBtn = document.getElementById('dash-signout');
+            if (signOutBtn) {
+                signOutBtn.addEventListener('click', async () => {
+                    await logout();
+                });
+            }
+        }
+
         function showToast(msg, type = "success") {
             const tc = document.getElementById("toast-container");
             const el = document.createElement("div");
