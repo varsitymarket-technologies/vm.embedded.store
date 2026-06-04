@@ -326,6 +326,7 @@
 
     // ── Event handlers ──
     document.addEventListener('mouseover', function (e) {
+        if (currentMode !== 'select') return;
         if (isEditing) return;
         const el = getTarget(e);
         if (!el || el === selectedEl) {
@@ -347,11 +348,13 @@
     }, true);
 
     document.addEventListener('mousemove', function (e) {
+        if (currentMode !== 'select') return;
         tooltip.style.left = (e.clientX + 14) + 'px';
         tooltip.style.top = (e.clientY - 28) + 'px';
     }, true);
 
     document.addEventListener('mouseout', function (e) {
+        if (currentMode !== 'select') return;
         if (!e.relatedTarget || e.relatedTarget === document.documentElement) {
             hideOverlay(hoverOverlay);
             tooltip.style.display = 'none';
@@ -361,6 +364,8 @@
 
     // ── Click to select ──
     document.addEventListener('click', function (e) {
+        if (currentMode === 'interaction') return;     // pass-through to page
+        if (currentMode === 'drag') return;            // drag handlers own this
         const el = getTarget(e);
         if (!el) { deselect(); return; }
 
@@ -377,6 +382,7 @@
 
     // ── Double-click to edit inline ──
     document.addEventListener('dblclick', function (e) {
+        if (currentMode !== 'select') return;
         const el = getTarget(e);
         if (!el) return;
         if (el.tagName === 'IMG' || el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA' || el.tagName === 'HR') return;
@@ -398,17 +404,20 @@
 
     // ── Exit editing on blur or Escape ──
     document.addEventListener('keydown', function (e) {
+        if (currentMode === 'interaction') return;
         if (e.key === 'Escape') {
+            if (currentMode === 'drag') return;        // Drag handles its own Escape
             if (isEditing) exitEditMode();
             else deselect();
         }
-        if (e.key === 'Delete' && selectedEl && !isEditing) {
+        if (e.key === 'Delete' && selectedEl && !isEditing && currentMode === 'select') {
             e.preventDefault();
             sendToParent({ type: 'REQUEST_DELETE' });
         }
     }, true);
 
     document.addEventListener('focusout', function (e) {
+        if (currentMode !== 'select') return;
         if (isEditing && selectedEl && !selectedEl.contains(e.relatedTarget)) {
             exitEditMode();
         }
@@ -416,6 +425,7 @@
 
     // ── Input tracking for live updates ──
     document.addEventListener('input', function () {
+        if (currentMode !== 'select') return;
         if (isEditing && selectedEl) {
             sendToParent({ type: 'CONTENT_CHANGED', text: selectedEl.innerHTML });
         }
