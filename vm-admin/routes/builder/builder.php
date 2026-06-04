@@ -1461,6 +1461,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
     window.setMode = setMode;
 
+    // ── Keyboard shortcuts ──
+    document.addEventListener('keydown', function (e) {
+        const t = e.target;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        const k = e.key.toLowerCase();
+        if (k === 'v') { setMode('select');      e.preventDefault(); }
+        if (k === 'h') { setMode('interaction'); e.preventDefault(); }
+        if (k === 'm') { setMode('drag');        e.preventDefault(); }
+    });
+
     // ── Init ──
     loadSite();
 })();
