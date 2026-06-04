@@ -269,6 +269,79 @@
         } catch(e) { return ''; }
     }
 
+    // ── Head tag registry ──
+    const HEAD_MAP = {
+        title:              { type: 'title' },
+        description:        { type: 'meta', match: { name: 'description' },        attr: 'content' },
+        keywords:           { type: 'meta', match: { name: 'keywords' },           attr: 'content' },
+        canonical:          { type: 'link', match: { rel:  'canonical' },          attr: 'href'    },
+        robots:             { type: 'meta', match: { name: 'robots' },             attr: 'content' },
+        ogTitle:            { type: 'meta', match: { property: 'og:title' },       attr: 'content' },
+        ogDescription:      { type: 'meta', match: { property: 'og:description' }, attr: 'content' },
+        ogImage:            { type: 'meta', match: { property: 'og:image' },       attr: 'content' },
+        ogUrl:              { type: 'meta', match: { property: 'og:url' },         attr: 'content' },
+        ogType:             { type: 'meta', match: { property: 'og:type' },        attr: 'content' },
+        twitterCard:        { type: 'meta', match: { name: 'twitter:card' },        attr: 'content' },
+        twitterTitle:       { type: 'meta', match: { name: 'twitter:title' },       attr: 'content' },
+        twitterDescription: { type: 'meta', match: { name: 'twitter:description' }, attr: 'content' },
+        twitterImage:       { type: 'meta', match: { name: 'twitter:image' },       attr: 'content' },
+        favicon:            { type: 'link', match: { rel: 'icon' },                attr: 'href' },
+        appleTouchIcon:     { type: 'link', match: { rel: 'apple-touch-icon' },    attr: 'href' },
+        themeColor:         { type: 'meta', match: { name: 'theme-color' },        attr: 'content' },
+        customHead:         { type: 'custom' }
+    };
+
+    const CUSTOM_HEAD_START = 'vm-builder:custom-head:start';
+    const CUSTOM_HEAD_END   = 'vm-builder:custom-head:end';
+
+    function headSelector(entry) {
+        if (entry.type === 'title') return 'title';
+        const tag = entry.type;
+        const attrs = Object.entries(entry.match)
+            .map(([k, v]) => `[${k}="${v.replace(/"/g, '\\"')}"]`)
+            .join('');
+        return tag + attrs;
+    }
+
+    function readCustomHead() {
+        const head = document.head;
+        if (!head) return '';
+        let startNode = null, endNode = null;
+        for (const node of head.childNodes) {
+            if (node.nodeType !== 8) continue; // 8 = COMMENT_NODE
+            const t = node.nodeValue.trim();
+            if (t === CUSTOM_HEAD_START) startNode = node;
+            else if (t === CUSTOM_HEAD_END) { endNode = node; break; }
+        }
+        if (!startNode || !endNode) return '';
+        const parts = [];
+        let cursor = startNode.nextSibling;
+        while (cursor && cursor !== endNode) {
+            parts.push(cursor.nodeType === 1 ? cursor.outerHTML : (cursor.nodeValue || ''));
+            cursor = cursor.nextSibling;
+        }
+        return parts.join('').trim();
+    }
+
+    function getHeadData() {
+        const data = {};
+        const head = document.head;
+        for (const [key, entry] of Object.entries(HEAD_MAP)) {
+            if (entry.type === 'custom') {
+                data[key] = readCustomHead();
+                continue;
+            }
+            if (entry.type === 'title') {
+                const t = head ? head.querySelector('title') : null;
+                data[key] = t ? (t.textContent || '') : '';
+                continue;
+            }
+            const el = head ? head.querySelector(headSelector(entry)) : null;
+            data[key] = el ? (el.getAttribute(entry.attr) || '') : '';
+        }
+        return data;
+    }
+
     function sendToParent(data) {
         window.parent.postMessage(data, '*');
     }
