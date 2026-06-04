@@ -978,6 +978,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     let currentElement = null;
     let engineReady = false;
     let currentRightTab = 'design';
+    let currentMode = 'select';
 
     // ── Load site into iframe ──
     const siteHtmlContent = <?php echo json_encode($site_html_content); ?>;
@@ -1019,7 +1020,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         const msg = e.data;
         if (!msg || !msg.type) return;
 
-        if (msg.type === 'ENGINE_READY') { engineReady = true; }
+        if (msg.type === 'ENGINE_READY') { engineReady = true; sendToIframe({ type: 'SET_MODE', mode: currentMode }); }
         if (msg.type === 'ELEMENT_SELECTED') { currentElement = msg; showProperties(msg); }
         if (msg.type === 'ELEMENT_DESELECTED') { currentElement = null; hideProperties(); }
         if (msg.type === 'EDIT_MODE') { /* visual indicator could go here */ }
@@ -1435,6 +1436,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         saveForPreview = true;
         sendToIframe({ type: 'GET_HTML' });
     };
+
+    // ── Mode switching ──
+    function setMode(mode) {
+        if (!['select','interaction','drag'].includes(mode)) return;
+        currentMode = mode;
+        document.querySelectorAll('#mode-group [data-mode]').forEach(b => {
+            b.classList.toggle('on', b.dataset.mode === mode);
+        });
+        if (mode === 'interaction') {
+            floatActions.classList.remove('show');
+            panelEmpty.style.display = 'flex';
+            panelDesign.style.display = 'none';
+            panelInspect.style.display = 'none';
+            const p = panelEmpty.querySelector('p');
+            if (p) p.innerHTML = 'Switch to Select mode<br>to edit elements';
+        } else {
+            const p = panelEmpty.querySelector('p');
+            if (p && p.textContent.startsWith('Switch to Select')) {
+                p.innerHTML = 'Select an element to<br>inspect its properties';
+            }
+        }
+        sendToIframe({ type: 'SET_MODE', mode });
+    }
+    window.setMode = setMode;
 
     // ── Init ──
     loadSite();
