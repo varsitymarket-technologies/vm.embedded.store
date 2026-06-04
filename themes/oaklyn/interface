@@ -1166,6 +1166,7 @@
                 <a href="#sale">Sale</a>
                 <a href="#about">About</a>
                 <a href="#contact">Contact</a>
+                <a href="#account" id="nav-account-link">Account</a>
             </div>
             <div class="nav-icons">
                 <button class="nav-icon-btn" id="search-toggle" title="Search">
@@ -1201,7 +1202,7 @@
         <a href="#about">About</a>
         <a href="#contact">Contact</a>
         <a href="#faq">FAQ</a>
-        <a href="#track">Track Order</a>
+        <a href="#account">Account</a>
     </div>
 
     <!-- ══ CART DRAWER ══ -->
@@ -2083,8 +2084,7 @@
                 <h4>Support</h4>
                 <a href="#contact">Contact Us</a>
                 <a href="#faq">FAQ</a>
-                <a href="#track">Track Order</a>
-                <a href="#orders">Order History</a>
+                <a href="#account">Account</a>
             </div>
             <div class="footer-col">
                 <h4>Company</h4>
@@ -2107,7 +2107,7 @@
         <nav>
             <a href="#home">Home</a> | <a href="#shop">Shop</a> | <a href="#collections">Collections</a> |
             <a href="#sale">Sale</a> | <a href="#about">About</a> | <a href="#contact">Contact</a> |
-            <a href="#faq">FAQ</a> | <a href="#track">Track</a> | <a href="#terms">Terms</a>
+            <a href="#faq">FAQ</a> | <a href="#account">Account</a> | <a href="#terms">Terms</a>
         </nav>
     </noscript>
 
