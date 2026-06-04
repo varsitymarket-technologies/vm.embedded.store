@@ -2132,6 +2132,67 @@
         try { localStorage.removeItem('vm_user_session'); } catch {}
         try { localStorage.removeItem('vm_user_history'); } catch {}
 
+        let customerAuth = {
+            user: (() => { try { return JSON.parse(localStorage.getItem('vm_customer_cache') || 'null'); } catch { return null; } })(),
+            token: localStorage.getItem('vm_customer_token')
+        };
+
+        function isLoggedIn() {
+            return !!(customerAuth && customerAuth.user);
+        }
+
+        function applyCustomerToDom() {
+            document.body.dataset.customer = isLoggedIn() ? 'in' : 'out';
+            const link = document.getElementById('nav-account-link');
+            if (!link) return;
+            if (isLoggedIn()) {
+                const name = (customerAuth.user.name || customerAuth.user.email || 'Account').toString();
+                link.textContent = name.length > 12 ? name.substring(0, 12) + '…' : name;
+                link.setAttribute('href', '#dashboard');
+            } else {
+                link.textContent = 'Account';
+                link.setAttribute('href', '#account');
+            }
+        }
+
+        async function bootCustomer() {
+            applyCustomerToDom();
+
+            if (!customerAuth.token) {
+                document.dispatchEvent(new CustomEvent('vm:customer-logout'));
+                return;
+            }
+            try {
+                const res = await fetch(new URL("api.php?state=customer_me", window.location.href), {
+                    headers: { 'X-Customer-Token': customerAuth.token },
+                    signal: AbortSignal.timeout(4000)
+                });
+                if (res.status === 401) {
+                    localStorage.removeItem('vm_customer_token');
+                    localStorage.removeItem('vm_customer_cache');
+                    customerAuth.user = null;
+                    customerAuth.token = null;
+                    applyCustomerToDom();
+                    document.dispatchEvent(new CustomEvent('vm:customer-logout'));
+                    const cur = document.querySelector('.view-section.active')?.id || '';
+                    if (cur === 'view-dashboard') {
+                        router.navigate('home');
+                    }
+                    return;
+                }
+                if (!res.ok) throw new Error('boot failed: ' + res.status);
+                const data = await res.json();
+                if (data && data.ok && data.customer) {
+                    customerAuth.user = data.customer;
+                    localStorage.setItem('vm_customer_cache', JSON.stringify(data.customer));
+                    applyCustomerToDom();
+                    document.dispatchEvent(new CustomEvent('vm:customer-login', { detail: data.customer }));
+                }
+            } catch (e) {
+                // Network failure: keep cached user, do not log out.
+            }
+        }
+
         function showToast(msg, type = "success") {
             const tc = document.getElementById("toast-container");
             const el = document.createElement("div");
