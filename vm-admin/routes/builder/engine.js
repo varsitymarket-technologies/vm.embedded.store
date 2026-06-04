@@ -990,6 +990,10 @@
         if (msg.type === 'GET_HEAD') {
             sendToParent({ type: 'HEAD_DATA', data: getHeadData() });
         }
+
+        if (msg.type === 'UPDATE_HEAD') {
+            updateHeadTag(msg.kind, msg.value);
+        }
     });
 
     // ── Element templates ──
