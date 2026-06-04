@@ -1134,16 +1134,72 @@
         toggleCart();
         setTimeout(() => {
             document.getElementById('main-view').classList.add('hidden');
+            document.getElementById('dashboard-view').classList.remove('active');
             document.getElementById('checkout-view').classList.add('active');
             window.scrollTo(0, 0);
             updateCheckoutSummary();
+            if (isLoggedIn()) prefillCheckoutFromAuth();
         }, 300);
+    }
+
+    function prefillCheckoutFromAuth() {
+        const user = customerAuth.user || {};
+        const email = document.getElementById('co-email');
+        const fname = document.getElementById('co-fname');
+        const lname = document.getElementById('co-lname');
+        if (email && !email.value) email.value = user.email || '';
+        if ((fname && !fname.value) || (lname && !lname.value)) {
+            const parts = (user.name || '').trim().split(/\s+/);
+            if (fname && !fname.value) fname.value = parts[0] || '';
+            if (lname && !lname.value) lname.value = parts.slice(1).join(' ') || '';
+        }
     }
 
     function showMainView() {
         document.getElementById('main-view').classList.remove('hidden');
         document.getElementById('checkout-view').classList.remove('active');
+        document.getElementById('dashboard-view').classList.remove('active');
         window.scrollTo(0, 0);
+    }
+
+    function showDashboardView() {
+        if (!isLoggedIn()) { openAuthModal('login'); return; }
+        document.getElementById('main-view').classList.add('hidden');
+        document.getElementById('checkout-view').classList.remove('active');
+        document.getElementById('dashboard-view').classList.add('active');
+        window.scrollTo(0, 0);
+        renderDashboard();
+    }
+
+    async function renderDashboard() {
+        if (!isLoggedIn()) { openAuthModal('login'); return; }
+
+        document.getElementById('dash-name').textContent = customerAuth.user.name || 'Friend';
+        document.getElementById('dash-email').textContent = customerAuth.user.email || '';
+
+        const tbody = document.getElementById('dash-orders-tbody');
+        tbody.innerHTML = `<tr><td colspan="4" class="text-center py-12 text-gray-500">Loading…</td></tr>`;
+
+        let orders = [];
+        try { orders = await fetchStore('customer_my_orders'); } catch { orders = []; }
+        if (!Array.isArray(orders)) orders = [];
+
+        if (orders.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center py-12 text-gray-500">No orders yet.</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = orders.map(o => {
+            const id = o.id;
+            const total = `R${Number(o.total_amount || o.total || 0).toLocaleString()}.00`;
+            const status = (o.status || 'Processing').toString();
+            const date = (o.created_at || '').toString().substring(0, 10);
+            return `<tr class="border-b border-white/5">
+                <td class="py-4 text-white font-medium">#${id}</td>
+                <td class="py-4 text-gray-400">${date}</td>
+                <td class="py-4 text-white">${total}</td>
+                <td class="py-4"><span class="inline-block px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-bold">${status}</span></td>
+            </tr>`;
+        }).join('');
     }
 
     function updateCheckoutSummary() {
