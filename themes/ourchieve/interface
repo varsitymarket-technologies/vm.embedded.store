@@ -117,6 +117,11 @@
                         <span id="cart-count" class="absolute -top-1 -right-1 bg-accent text-dark-900 text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center opacity-0 transition-opacity">0</span>
                     </button>
 
+                    <!-- Account -->
+                    <button onclick="handleAccountClick()" id="header-account-btn" class="p-2 text-gray-400 hover:text-white transition-colors" title="Account">
+                        <i class="fa-solid fa-user"></i>
+                    </button>
+
                     <!-- Mobile Menu -->
                     <button onclick="toggleMobileMenu()" class="md:hidden p-2 text-gray-400 hover:text-white transition-colors">
                         <i class="fa-solid fa-bars"></i>
@@ -147,6 +152,7 @@
                 <a href="#products" onclick="toggleMobileMenu()" class="text-lg font-medium text-gray-300 hover:text-accent transition-colors">Shop</a>
                 <a href="#about" onclick="toggleMobileMenu()" class="text-lg font-medium text-gray-300 hover:text-accent transition-colors">About</a>
                 <a href="#contact" onclick="toggleMobileMenu()" class="text-lg font-medium text-gray-300 hover:text-accent transition-colors">Contact</a>
+                <a href="#" onclick="handleAccountClick(); toggleMobileMenu();" class="text-lg font-medium text-gray-300 hover:text-accent transition-colors">Account</a>
             </nav>
         </div>
     </div>
