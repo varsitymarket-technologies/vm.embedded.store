@@ -448,6 +448,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         </div>
 
         <div class="fb-topbar-center">
+            <div class="fb-vp-group" id="mode-group">
+                <button class="fb-vp-btn on" data-mode="select"      onclick="setMode('select')"      title="Select (V)"><i class="bi bi-cursor-fill"></i></button>
+                <button class="fb-vp-btn"    data-mode="interaction" onclick="setMode('interaction')" title="Interaction (H)"><i class="bi bi-hand-index"></i></button>
+                <button class="fb-vp-btn"    data-mode="drag"        onclick="setMode('drag')"        title="Drag (M)"><i class="bi bi-arrows-move"></i></button>
+            </div>
+            <div class="fb-sep"></div>
             <button class="fb-tbtn" onclick="undo()" title="Undo"><i class="bi bi-arrow-counterclockwise"></i></button>
             <button class="fb-tbtn" onclick="redo()" title="Redo"><i class="bi bi-arrow-clockwise"></i></button>
             <div class="fb-sep"></div>
