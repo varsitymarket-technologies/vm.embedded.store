@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CORSELE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        void: {
+                            base: '#FBFBFB',
+                            glass: 'rgba(255, 255, 255, 0.6)',
+                            ink: '#121212',
+                            ghost: '#999999'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+                        mono: ['"Space Mono"', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #FBFBFB; color: #121212; overflow-x: hidden; }
+        
+        /* The "Void" Animation */
+        .fade-in { animation: voidReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes voidReveal { from { opacity: 0; filter: blur(10px); transform: scale(1.05); } to { opacity: 1; filter: blur(0); transform: scale(1); } }
+        
+        .hidden { display: none !important; }
+        
+        /* Glass Effect */
+        .glass-panel { background: rgba(255, 255, 255, 0.6); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.3); }
+
+        /* Ghost Interaction */
+        .ghost-input { border-bottom: 1px solid rgba(18, 18, 18, 0.05); transition: border-color 0.4s ease; }
+        .ghost-input:focus { border-color: #121212; }
+
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-thumb { background: #121212; }
+    </style>
+</head>
+<body class="font-sans antialiased text-[14px]">
+
+    <nav class="fixed top-0 left-0 w-full z-50 glass-panel px-10 py-8 flex justify-between items-center">
+        <a href="#home" class="font-extrabold text-lg uppercase tracking-[0.4em]">CORSELE</a>
+        
+        <div class="flex items-center space-x-12">
+            <ul class="hidden md:flex space-x-10 text-[10px] font-bold uppercase tracking-[0.2em] text-void-ghost">
+                <li><a href="#shop" class="hover:text-void-ink transition-colors">Catalog</a></li>
+                <li><a href="#info" class="hover:text-void-ink transition-colors">Concept</a></li>
+                <li><a href="#account" id="nav-account-link" class="hover:text-void-ink transition-colors">Account</a></li>
+            </ul>
+            <a href="#cart" class="group flex items-center space-x-3">
+                <span class="text-[9px] font-mono font-bold uppercase tracking-widest text-void-ghost group-hover:text-void-ink">Cart:</span>
+                <span class="text-[10px] font-mono font-bold js-cart-count">0</span>
+            </a>
+        </div>
+    </nav>
+
+    <main id="app-root" class="pt-40 min-h-screen fade-in"></main>
+
+    <footer class="px-10 py-32 mt-40 border-t border-black/5">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start gap-12">
+            <div class="space-y-6">
+                <p class="font-bold uppercase tracking-widest text-[10px]">CORSELE</p>
+                <p class="text-[11px] text-void-ghost max-w-xs leading-relaxed font-light">
+                    An exploration of physical form in a digital-first world. Produced in limited quantities.
+                </p>
+            </div>
+            <div class="flex flex-col space-y-3 text-[10px] font-bold uppercase tracking-widest">
+                <a href="#" class="opacity-30 hover:opacity-100 transition-opacity underline decoration-1 underline-offset-4">Terms_Of_Access</a>
+                <a href="#" class="opacity-30 hover:opacity-100 transition-opacity underline decoration-1 underline-offset-4">Global_Shipping</a>
+            </div>
+        </div>
+    </footer>
+
+    <template id="tpl-home">
+        <div class="max-w-7xl mx-auto px-10 py-20 text-center">
+            <h1 class="text-[10vw] font-extrabold uppercase tracking-tighter leading-none mb-10 opacity-[0.03] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none whitespace-nowrap">
+                CORSELE
+            </h1>
+            <div class="relative z-10 space-y-12">
+                <h2 class="text-6xl md:text-8xl font-extrabold uppercase tracking-tighter leading-none">
+                    CORSELE <br> <span class="italic font-light opacity-40">CLOTHING.</span>
+                </h2>
+                <div class="flex justify-center">
+                    <a href="#shop" class="group flex flex-col items-center">
+                        <span class="text-[10px] font-bold uppercase tracking-[0.5em] mb-4 group-hover:tracking-[0.8em] transition-all">Begin_Browsing</span>
+                        <div class="w-px h-20 bg-void-ink opacity-20"></div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-shop">
+        <div class="max-w-7xl mx-auto px-10 py-12">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-20 js-product-grid"></div>
+        </div>
+    </template>
+
+    <template id="tpl-product-card">
+        <div class="group cursor-pointer">
+            <a href="#" class="js-prod-link block mb-8 relative overflow-hidden bg-void-base">
+                <div class="aspect-[2/3] bg-white border border-black/5 flex items-center justify-center js-img-placeholder font-mono text-[8px] uppercase tracking-widest text-void-ghost">Img_Ref</div>
+                <div class="absolute inset-0 bg-white/40 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm flex items-center justify-center">
+                    <span class="text-[9px] font-bold uppercase tracking-widest border border-void-ink px-4 py-2">Quick_Look</span>
+                </div>
+            </a>
+            <div class="flex flex-col space-y-2 px-2">
+                <div class="flex justify-between items-baseline">
+                    <h3 class="font-bold uppercase tracking-tight text-xs js-title"></h3>
+                    <span class="font-mono text-[10px] js-price"></span>
+                </div>
+                <p class="text-[9px] font-mono font-bold uppercase tracking-widest text-void-ghost js-category"></p>
+            </div>
+        </div>
+    </template>
+
+    <template id="tpl-product">
+        <section class="max-w-7xl mx-auto px-10 grid grid-cols-1 lg:grid-cols-2 gap-24 py-10">
+            <div class="aspect-[3/4] bg-white border border-black/5 flex items-center justify-center js-detail-img font-mono text-[10px] uppercase text-void-ghost"></div>
+            <div class="flex flex-col justify-center space-y-12">
+                <div>
+                    <span class="font-mono text-[9px] font-bold uppercase tracking-[0.4em] text-void-ghost block mb-4 js-detail-cat"></span>
+                    <h1 class="text-6xl font-extrabold uppercase tracking-tighter mb-4 js-detail-title"></h1>
+                    <p class="text-2xl font-light js-detail-price"></p>
+                </div>
+                
+                <div class="space-y-4">
+                    <p class="text-[9px] font-bold uppercase tracking-widest border-b border-black/10 pb-2">Manifesto</p>
+                    <p class="text-[13px] leading-relaxed text-void-ghost js-detail-desc"></p>
+                </div>
+
+                <button class="w-full bg-void-ink text-white py-6 font-bold uppercase tracking-[0.5em] text-[11px] js-add-btn hover:bg-void-ghost transition-all shadow-2xl">
+                    Add_To_Inventory
+                </button>
+            </div>
+        </section>
+    </template>
+
+    <template id="tpl-cart">
+        <section class="max-w-3xl mx-auto px-10 py-20">
+            <h1 class="text-5xl font-extrabold uppercase tracking-tighter mb-16">Active_Queue</h1>
+            <div class="js-cart-container glass-panel p-10"></div>
+        </section>
+    </template>
+
+    <template id="tpl-cart-empty">
+        <div class="py-12 text-center">
+            <p class="font-mono text-[10px] uppercase tracking-widest text-void-ghost mb-8 italic">No items identified in session.</p>
+            <a href="#shop" class="text-[10px] font-bold uppercase tracking-[0.4em] underline underline-offset-8">Return_To_Void</a>
+        </div>
+    </template>
+
+    <template id="tpl-cart-layout">
+        <div class="space-y-10 js-cart-items mb-16"></div>
+        <div class="border-t border-black/5 pt-10 flex flex-col items-end">
+            <div class="flex justify-between w-full mb-10">
+                <span class="font-mono text-[11px] uppercase font-bold text-void-ghost">Session_Total</span>
+                <span class="text-2xl font-bold js-cart-total"></span>
+            </div>
+            <a href="#checkout" class="w-full bg-void-ink text-white py-6 text-center font-bold uppercase tracking-[0.5em] text-[11px]">Finalize_Transfer</a>
+        </div>
+    </template>
+
+    <template id="tpl-account">
+        <section class="max-w-md mx-auto px-10 py-20">
+            <p class="text-[10px] font-mono font-bold uppercase tracking-widest text-void-ghost text-center mb-2">Access_Module</p>
+            <h2 class="font-extrabold uppercase tracking-tighter text-3xl text-center mb-12">Account</h2>
+
+            <div class="acc-login space-y-6">
+                <form data-form="login" class="space-y-4">
+                    <label class="block">
+                        <span class="text-[9px] font-mono font-bold uppercase tracking-widest text-void-ghost block mb-2">Email</span>
+                        <input type="email" name="email" required class="w-full bg-transparent border-b border-black/20 py-2 text-sm focus:outline-none focus:border-void-ink transition-colors">
+                    </label>
+                    <label class="block">
+                        <span class="text-[9px] font-mono font-bold uppercase tracking-widest text-void-ghost block mb-2">Password</span>
+                        <input type="password" name="password" required class="w-full bg-transparent border-b border-black/20 py-2 text-sm focus:outline-none focus:border-void-ink transition-colors">
+                    </label>
+                    <button type="submit" class="w-full bg-void-ink text-void-base py-3 text-[10px] font-bold uppercase tracking-widest hover:opacity-80 transition-opacity">Sign_In</button>
+                    <p data-err="login" class="hidden text-[10px] font-mono text-red-400 uppercase tracking-widest"></p>
+                </form>
+                <p class="text-[9px] font-mono font-bold uppercase tracking-widest text-void-ghost text-center">
+                    No_Access? <a href="#" data-action="show-register" class="text-void-ink underline decoration-1 underline-offset-2">Request_Module</a>
+                </p>
+            </div>
+
+            <div class="acc-register hidden space-y-6">
+                <form data-form="register" class="space-y-4">
+                    <label class="block">
+                        <span class="text-[9px] font-mono font-bold uppercase tracking-widest text-void-ghost block mb-2">Designation</span>
+                        <input type="text" name="name" class="w-full bg-transparent border-b border-black/20 py-2 text-sm focus:outline-none focus:border-void-ink transition-colors">
+                    </label>
+                    <label class="block">
+                        <span class="text-[9px] font-mono font-bold uppercase tracking-widest text-void-ghost block mb-2">Email</span>
+                        <input type="email" name="email" required class="w-full bg-transparent border-b border-black/20 py-2 text-sm focus:outline-none focus:border-void-ink transition-colors">
+                    </label>
+                    <label class="block">
+                        <span class="text-[9px] font-mono font-bold uppercase tracking-widest text-void-ghost block mb-2">Password (8+)</span>
+                        <input type="password" name="password" required minlength="8" class="w-full bg-transparent border-b border-black/20 py-2 text-sm focus:outline-none focus:border-void-ink transition-colors">
+                    </label>
+                    <button type="submit" class="w-full bg-void-ink text-void-base py-3 text-[10px] font-bold uppercase tracking-widest hover:opacity-80 transition-opacity">Initiate_Access</button>
+                    <p data-err="register" class="hidden text-[10px] font-mono text-red-400 uppercase tracking-widest"></p>
+                </form>
+                <p class="text-[9px] font-mono font-bold uppercase tracking-widest text-void-ghost text-center">
+                    Existing_Access? <a href="#" data-action="show-login" class="text-void-ink underline decoration-1 underline-offset-2">Sign_In</a>
+                </p>
+            </div>
+
+            <div class="acc-dashboard hidden space-y-10">
+                <div class="space-y-2 text-center">
+                    <p class="text-[9px] font-mono font-bold uppercase tracking-widest text-void-ghost">Access_Holder</p>
+                    <h3 class="font-extrabold uppercase tracking-tighter text-2xl js-acc-name"></h3>
+                    <p class="text-[10px] font-mono text-void-ghost js-acc-email"></p>
+                </div>
+                <div class="space-y-4">
+                    <p class="text-[9px] font-mono font-bold uppercase tracking-widest text-void-ghost">Order_Log</p>
+                    <div class="js-orders-list space-y-2 border-t border-black/5"></div>
+                </div>
+                <button type="button" class="js-logout-btn w-full bg-void-base text-void-ink border border-black/10 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-void-ink hover:text-void-base transition-colors">Sign_Out</button>
+            </div>
+        </section>
+    </template>
+
+    <template id="tpl-checkout">
+        <section class="max-w-xl mx-auto px-10 py-24">
+            <h1 class="text-4xl font-extrabold uppercase tracking-tighter mb-16">Verification</h1>
+            <form class="space-y-12 js-checkout-form">
+                <input type="email" placeholder="IDENTITY_EMAIL" required class="w-full bg-transparent ghost-input py-4 text-[10px] font-mono font-bold outline-none">
+                <input type="text" placeholder="SHIPPING_TARGET" required class="w-full bg-transparent ghost-input py-4 text-[10px] font-mono font-bold outline-none">
+                <button type="submit" class="w-full bg-void-ink text-white py-6 font-bold uppercase tracking-[0.5em] text-[11px]">Execute_Order</button>
+            </form>
+        </section>
+    </template>
+
+    <template id="tpl-success">
+        <div class="max-w-2xl mx-auto px-10 py-60 text-center">
+            <h1 class="text-7xl font-extrabold uppercase tracking-tighter mb-6">Confirmed.</h1>
+            <p class="font-mono text-[9px] uppercase tracking-[0.5em] text-void-ghost">Accession code generated. Monitor your inbox.</p>
+            <div class="mt-20">
+                <a href="#shop" class="text-[10px] font-bold uppercase tracking-[0.4em] border border-void-ink px-10 py-4">Exit_Session</a>
+            </div>
+        </div>
+    </template>
+
+    <script>
+        const DB = {
+            currency: '¥',
+            products: [
+                { id: 1, title: 'Void Shell 01', price: 58000, category: 'Outwear', img: 'VS_01_BLK', desc: 'Japanese technical nylon. Ghost-seam construction. Waterproof membrane with matte finish.' },
+                { id: 2, title: 'Studio Tee // White', price: 12000, category: 'Base', img: 'VS_TEE_WHT', desc: 'Heavyweight organic cotton. Box fit. Reinforced collar with external size-data tag.' },
+                { id: 3, title: 'Modular Tote', price: 24000, category: 'Utility', img: 'VS_TOTE_01', desc: 'Dyneema® composite fabric. Ultralight. Laser-cut structural reinforcement.' },
+                { id: 4, title: 'Wide Studio Pant', price: 32000, category: 'Bottom', img: 'VS_PNT_GRY', desc: 'Double-pleated wool blend. Cropped silhouette. Internal drawcord system.' },
+                { id: 5, title: 'Signal Beanie', price: 8000, category: 'Accessory', img: 'VS_BN_02', desc: 'Merino wool. High-density knit. Minimalist brand-code embroidery.' }
+            ]
+        };
+
+        class StoreEngine {
+            constructor() {
+                this.root = document.getElementById('app-root');
+                this.cart = JSON.parse(localStorage.getItem('void_cart')) || [];
+                this.auth = {
+                    user: (() => { try { return JSON.parse(localStorage.getItem('vm_customer_cache') || 'null'); } catch { return null; } })(),
+                    token: localStorage.getItem('vm_customer_token')
+                };
+                this.initRouter();
+                this.updateCartCount();
+                this.bootCustomer();
+            }
+
+            isLoggedIn() { return !!(this.auth && this.auth.user); }
+
+            applyCustomerToDom() {
+                document.body.dataset.customer = this.isLoggedIn() ? 'in' : 'out';
+                const link = document.getElementById('nav-account-link');
+                if (!link) return;
+                if (this.isLoggedIn()) {
+                    const name = (this.auth.user.name || this.auth.user.email || 'Account').toString();
+                    link.textContent = name.length > 10 ? name.substring(0, 10) + '…' : name;
+                } else {
+                    link.textContent = 'Account';
+                }
+            }
+
+            async bootCustomer() {
+                this.applyCustomerToDom();
+                if (!this.auth.token) {
+                    document.dispatchEvent(new CustomEvent('vm:customer-logout'));
+                    return;
+                }
+                try {
+                    const res = await fetch(new URL("api.php?state=customer_me", window.location.href), {
+                        headers: { 'X-Customer-Token': this.auth.token },
+                        signal: AbortSignal.timeout(4000)
+                    });
+                    if (res.status === 401) {
+                        localStorage.removeItem('vm_customer_token');
+                        localStorage.removeItem('vm_customer_cache');
+                        this.auth.user = null;
+                        this.auth.token = null;
+                        this.applyCustomerToDom();
+                        document.dispatchEvent(new CustomEvent('vm:customer-logout'));
+                        if ((window.location.hash || '').startsWith('#account')) this.route();
+                        return;
+                    }
+                    if (!res.ok) throw new Error('boot failed: ' + res.status);
+                    const data = await res.json();
+                    if (data && data.ok && data.customer) {
+                        this.auth.user = data.customer;
+                        localStorage.setItem('vm_customer_cache', JSON.stringify(data.customer));
+                        this.applyCustomerToDom();
+                        document.dispatchEvent(new CustomEvent('vm:customer-login', { detail: data.customer }));
+                    }
+                } catch (e) { /* network failure: keep cache */ }
+            }
+
+            async login(email, password) {
+                const result = await postStore('customer_login', { email, password });
+                if (result.ok && result.data.token && result.data.customer) {
+                    this.auth.token = result.data.token;
+                    this.auth.user = result.data.customer;
+                    localStorage.setItem('vm_customer_token', result.data.token);
+                    localStorage.setItem('vm_customer_cache', JSON.stringify(result.data.customer));
+                    this.applyCustomerToDom();
+                    document.dispatchEvent(new CustomEvent('vm:customer-login', { detail: result.data.customer }));
+                    return { ok: true };
+                }
+                return { ok: false, error: result.error || 'Access_Denied' };
+            }
+
+            async register(email, password, name) {
+                const result = await postStore('customer_register', { email, password, name });
+                if (result.ok && result.data.token && result.data.customer) {
+                    this.auth.token = result.data.token;
+                    this.auth.user = result.data.customer;
+                    localStorage.setItem('vm_customer_token', result.data.token);
+                    localStorage.setItem('vm_customer_cache', JSON.stringify(result.data.customer));
+                    this.applyCustomerToDom();
+                    document.dispatchEvent(new CustomEvent('vm:customer-login', { detail: result.data.customer }));
+                    return { ok: true };
+                }
+                return { ok: false, error: result.error || 'Access_Request_Rejected' };
+            }
+
+            async logout() {
+                try { await postStore('customer_logout', {}); } catch {}
+                this.auth.token = null;
+                this.auth.user = null;
+                localStorage.removeItem('vm_customer_token');
+                localStorage.removeItem('vm_customer_cache');
+                this.applyCustomerToDom();
+                document.dispatchEvent(new CustomEvent('vm:customer-logout'));
+            }
+
+            initRouter() {
+                window.addEventListener('hashchange', () => this.route());
+                this.route();
+            }
+
+            route() {
+                const hash = window.location.hash.slice(1) || 'home';
+                const [view, id] = hash.split('/');
+                this.root.classList.remove('fade-in');
+                void this.root.offsetWidth;
+                this.root.classList.add('fade-in');
+                window.scrollTo(0, 0);
+
+                switch(view) {
+                    case 'shop': this.renderShop(); break;
+                    case 'product': this.renderProduct(id); break;
+                    case 'cart': this.renderCart(); break;
+                    case 'checkout': this.renderCheckout(); break;
+                    case 'success': this.renderSuccess(); break;
+                    case 'account': this.renderAccount(); break;
+                    default: this.renderTemplate('tpl-home'); break;
+                }
+            }
+
+            renderTemplate(templateId, callback = null) {
+                const tpl = document.getElementById(templateId);
+                this.root.innerHTML = '';
+                this.root.appendChild(tpl.content.cloneNode(true));
+                if (callback) callback.call(this, this.root);
+            }
+
+            renderShop() {
+                this.renderTemplate('tpl-shop', (view) => {
+                    const grid = view.querySelector('.js-product-grid');
+                    const prodTpl = document.getElementById('tpl-product-card');
+
+                    DB.products.forEach(p => {
+                        const card = prodTpl.content.cloneNode(true);
+                        card.querySelector('.js-prod-link').href = `#product/${p.id}`;
+                        card.querySelector('.js-title').textContent = p.title;
+                        card.querySelector('.js-category').textContent = p.category;
+                        card.querySelector('.js-price').textContent = `${DB.currency}${p.price.toLocaleString()}`;
+                        card.querySelector('.js-img-placeholder').textContent = p.img;
+                        grid.appendChild(card);
+                    });
+                });
+            }
+
+            renderProduct(id) {
+                const product = DB.products.find(p => p.id == id);
+                if (!product) return;
+                this.renderTemplate('tpl-product', (view) => {
+                    view.querySelector('.js-detail-title').textContent = product.title;
+                    view.querySelector('.js-detail-price').textContent = `${DB.currency}${product.price.toLocaleString()}`;
+                    view.querySelector('.js-detail-desc').textContent = product.desc;
+                    view.querySelector('.js-detail-cat').textContent = `Object_Code: ${product.id}`;
+                    view.querySelector('.js-detail-img').textContent = product.img;
+                    view.querySelector('.js-add-btn').onclick = () => {
+                        this.cartAdd(product);
+                        window.location.hash = 'cart';
+                    };
+                });
+            }
+
+            renderCart() {
+                if (this.cart.length === 0) {
+                    this.renderTemplate('tpl-cart', v => v.querySelector('.js-cart-container').appendChild(document.getElementById('tpl-cart-empty').content.cloneNode(true)));
+                    return;
+                }
+                this.renderTemplate('tpl-cart', (mainView) => {
+                    const container = mainView.querySelector('.js-cart-container');
+                    const layout = document.getElementById('tpl-cart-layout').content.cloneNode(true);
+                    const list = layout.querySelector('.js-cart-items');
+                    let total = 0;
+
+                    this.cart.forEach((item, index) => {
+                        total += (item.price * item.qty);
+                        const row = document.createElement('div');
+                        row.className = "flex justify-between items-center";
+                        row.innerHTML = `
+                            <div class="space-y-1">
+                                <h3 class="font-bold uppercase text-[10px] tracking-widest">${item.title}</h3>
+                                <p class="font-mono text-[9px] text-void-ghost">${DB.currency}${item.price.toLocaleString()} x ${item.qty}</p>
+                            </div>
+                            <button class="font-mono text-[9px] font-bold text-red-400 uppercase tracking-widest js-remove">Remove</button>
+                        `;
+                        row.querySelector('.js-remove').onclick = () => { this.cart.splice(index, 1); this.cartSave(); this.renderCart(); };
+                        list.appendChild(row);
+                    });
+                    layout.querySelector('.js-cart-total').textContent = `${DB.currency}${total.toLocaleString()}`;
+                    container.appendChild(layout);
+                });
+            }
+
+            renderCheckout() {
+                this.renderTemplate('tpl-checkout', (view) => {
+                    view.querySelector('.js-checkout-form').onsubmit = (e) => {
+                        e.preventDefault();
+                        this.cart = []; this.cartSave(); window.location.hash = 'success';
+                    };
+                });
+            }
+
+            renderSuccess() { this.renderTemplate('tpl-success'); }
+
+            renderAccount() {
+                this.renderTemplate('tpl-account', (view) => {
+                    const showSection = (which) => {
+                        view.querySelector('.acc-login').classList.toggle('hidden', which !== 'login');
+                        view.querySelector('.acc-register').classList.toggle('hidden', which !== 'register');
+                        view.querySelector('.acc-dashboard').classList.toggle('hidden', which !== 'dashboard');
+                    };
+                    const setError = (which, msg) => {
+                        const el = view.querySelector('[data-err="' + which + '"]');
+                        if (!el) return;
+                        if (msg) { el.textContent = msg; el.classList.remove('hidden'); }
+                        else { el.textContent = ''; el.classList.add('hidden'); }
+                    };
+
+                    if (this.isLoggedIn()) {
+                        showSection('dashboard');
+                        this.renderDashboard(view);
+                    } else {
+                        showSection('login');
+                    }
+
+                    view.querySelectorAll('[data-action="show-register"]').forEach(el => {
+                        el.addEventListener('click', (e) => { e.preventDefault(); setError('login', ''); showSection('register'); });
+                    });
+                    view.querySelectorAll('[data-action="show-login"]').forEach(el => {
+                        el.addEventListener('click', (e) => { e.preventDefault(); setError('register', ''); showSection('login'); });
+                    });
+
+                    const loginForm = view.querySelector('[data-form="login"]');
+                    if (loginForm) {
+                        loginForm.addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            setError('login', '');
+                            const fd = new FormData(loginForm);
+                            const result = await this.login(fd.get('email'), fd.get('password'));
+                            if (result.ok) { showSection('dashboard'); this.renderDashboard(view); }
+                            else setError('login', result.error);
+                        });
+                    }
+
+                    const registerForm = view.querySelector('[data-form="register"]');
+                    if (registerForm) {
+                        registerForm.addEventListener('submit', async (e) => {
+                            e.preventDefault();
+                            setError('register', '');
+                            const fd = new FormData(registerForm);
+                            const result = await this.register(fd.get('email'), fd.get('password'), fd.get('name'));
+                            if (result.ok) { showSection('dashboard'); this.renderDashboard(view); }
+                            else setError('register', result.error);
+                        });
+                    }
+
+                    const logoutBtn = view.querySelector('.js-logout-btn');
+                    if (logoutBtn) {
+                        logoutBtn.addEventListener('click', async () => {
+                            await this.logout();
+                            showSection('login');
+                        });
+                    }
+                });
+            }
+
+            async renderDashboard(view) {
+                const root = view || this.root;
+                const user = this.auth.user || {};
+                const nameEl = root.querySelector('.js-acc-name');
+                const emailEl = root.querySelector('.js-acc-email');
+                if (nameEl) nameEl.textContent = (user.name || 'Access_Holder').toUpperCase();
+                if (emailEl) emailEl.textContent = user.email || '';
+
+                const ordersEl = root.querySelector('.js-orders-list');
+                if (!ordersEl) return;
+                ordersEl.innerHTML = '<p class="text-[9px] font-mono uppercase tracking-widest text-void-ghost py-6 text-center">Fetching_Log…</p>';
+
+                let orders = [];
+                try { orders = await fetchStore('customer_my_orders'); } catch { orders = []; }
+                if (!Array.isArray(orders)) orders = [];
+                ordersEl.innerHTML = '';
+                if (orders.length === 0) {
+                    ordersEl.innerHTML = '<p class="text-[9px] font-mono uppercase tracking-widest text-void-ghost py-6 text-center">No_Orders_Logged</p>';
+                    return;
+                }
+                orders.slice(0, 5).forEach(o => {
+                    const row = document.createElement('div');
+                    row.className = 'flex justify-between items-center py-3 border-b border-black/5 text-[10px] font-mono uppercase tracking-widest';
+                    const id = o.id || '?';
+                    const total = o.total_amount != null ? o.total_amount : (o.total || '?');
+                    const status = (o.status || 'pending').toString();
+                    const date = (o.created_at || '').toString().substring(0, 10);
+                    row.innerHTML =
+                        '<span class="text-void-ghost">#' + String(id).padStart(4, '0') + '</span>' +
+                        '<span class="text-void-ghost">' + date + '</span>' +
+                        '<span>' + total + '</span>' +
+                        '<span class="font-bold">' + status + '</span>';
+                    ordersEl.appendChild(row);
+                });
+            }
+
+            cartAdd(product) {
+                const existing = this.cart.find(item => item.id === product.id);
+                if (existing) { existing.qty += 1; } else { this.cart.push({ ...product, qty: 1 }); }
+                this.cartSave();
+            }
+
+            cartSave() {
+                localStorage.setItem('void_cart', JSON.stringify(this.cart));
+                this.updateCartCount();
+            }
+
+            updateCartCount() {
+                const count = this.cart.reduce((sum, item) => sum + item.qty, 0);
+                document.querySelectorAll('.js-cart-count').forEach(el => el.textContent = count);
+            }
+        }
+
+        /* ════════════════════
+           CANONICAL DATA LAYER — fetchStore → api.php?state=X, getMockData fallback, MOCK shape
+        ════════════════════ */
+        const __CATS = [...new Set(DB.products.map(p => p.category).filter(Boolean))].map((name, i) => ({ id: i + 1, name }));
+        const MOCK = {
+            site: { name: "CORSELLE", currency: DB.currency || "R", domain: window.location.hostname },
+            categories: __CATS,
+            products: DB.products.map((p, i) => ({
+                ...p,
+                id: p.id != null ? p.id : i + 1,
+                name: p.name || p.title || "",
+                image: p.image || p.img || "",
+                description: p.description || p.desc || "",
+                stock: p.stock != null ? p.stock : 12,
+                category_id: (__CATS.find(c => c.name === p.category) || {}).id || null
+            })),
+            discounts: [
+                { id: 1, code: "WELCOME10", percentage: 10, active: 1 },
+                { id: 2, code: "DROP20", percentage: 20, active: 1 }
+            ]
+        };
+        async function fetchStore(state, params = {}) {
+            const url = new URL("api.php", window.location.href);
+            url.searchParams.set("state", state);
+            for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+            const headers = {};
+            const token = localStorage.getItem('vm_customer_token');
+            if (token) headers['X-Customer-Token'] = token;
+            try {
+                const res = await fetch(url, { signal: AbortSignal.timeout(4000), headers });
+                if (!res.ok) throw new Error(res.status);
+                return await res.json();
+            } catch {
+                return getMockData(state, params);
+            }
+        }
+
+        async function postStore(state, body = {}) {
+            const url = new URL("api.php", window.location.href);
+            url.searchParams.set("state", state);
+            const headers = { 'Content-Type': 'application/json' };
+            const token = localStorage.getItem('vm_customer_token');
+            if (token) headers['X-Customer-Token'] = token;
+            try {
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers,
+                    body: JSON.stringify(body),
+                    signal: AbortSignal.timeout(8000)
+                });
+                const data = await res.json().catch(() => ({}));
+                return { ok: res.ok && (data.ok !== false), status: res.status, data, error: data.error || null };
+            } catch (e) {
+                return { ok: false, status: 0, data: {}, error: e.message };
+            }
+        }
+        function getMockData(state, params = {}) {
+            switch (state) {
+                case "site": return MOCK.site;
+                case "products": return MOCK.products;
+                case "product": return MOCK.products.find(p => p.id == params.id) || null;
+                case "categories": return MOCK.categories;
+                case "products_by_category": return MOCK.products.filter(p => p.category_id == params.category_id);
+                case "search": {
+                    const q = (params.q || "").toLowerCase();
+                    return MOCK.products.filter(p => (p.name || "").toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q));
+                }
+                case "discounts": return MOCK.discounts;
+                case "orders": return [];
+                default: return [];
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            try { const __d = await fetchStore('products'); DB.products = __d.map(p => ({ ...p, title: p.title || p.name || '', img: p.img || p.image || '', desc: p.desc || p.description || '', category: p.category || ((MOCK.categories.find(c => c.id == p.category_id) || {}).name) || '' })); } catch {}
+            window.App = new StoreEngine();
+        });
+    </script>
+</body>
+</html>
