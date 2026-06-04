@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OSMOSSIS | Elevated Living</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-cream: #F9F8F6;
+            --text-dark: #2D2B2A;
+            --text-muted: #8C857B;
+            --accent-sage: #A3B19B;
+            --accent-sand: #D4C4B7;
+            --border-light: #E6E2DB;
+        }
+        
+        body { 
+            font-family: 'Lato', sans-serif; 
+            background-color: var(--bg-cream); 
+            color: var(--text-dark); 
+            -webkit-font-smoothing: antialiased;
+        }
+        .font-serif { font-family: 'Cormorant Garamond', serif; }
+        
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: softFade 0.8s ease-in-out forwards; }
+        
+        @keyframes softFade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Elegant Inputs */
+        .osmossis-input { 
+            border: none;
+            border-bottom: 1px solid var(--border-light); 
+            background-color: transparent;
+            color: var(--text-dark);
+            border-radius: 0;
+            padding: 12px 0;
+            transition: border-color 0.4s ease;
+        }
+        .osmossis-input:focus { 
+            outline: none; 
+            border-bottom-color: var(--text-dark); 
+        }
+        
+        /* Soft Buttons */
+        .btn-primary {
+            background-color: var(--text-dark);
+            color: var(--bg-cream);
+            transition: background-color 0.4s ease;
+        }
+        .btn-primary:hover {
+            background-color: #4A4745;
+        }
+
+        .btn-outline {
+            border: 1px solid var(--text-dark);
+            background-color: transparent;
+            color: var(--text-dark);
+            transition: all 0.4s ease;
+        }
+        .btn-outline:hover {
+            background-color: var(--text-dark);
+            color: var(--bg-cream);
+        }
+
+        /* Delicate Scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-light); }
+        ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+    </style>
+
+    <!-- D.3.x: customer auth helper (vm-customer.js from same dir as api.php) -->
+    <script src="vm-customer.js" defer></script>
+    <script>
+        window.addEventListener('vm:customer-loaded', function () {
+            document.body.dataset.customer = 'logged-in';
+            if (window.app && app.auth && typeof app.auth.updateIcon === 'function') app.auth.updateIcon();
+        });
+        window.addEventListener('vm:customer-login', function () {
+            document.body.dataset.customer = 'logged-in';
+            if (window.app && app.auth && typeof app.auth.updateIcon === 'function') app.auth.updateIcon();
+        });
+        window.addEventListener('vm:customer-logout', function () {
+            document.body.dataset.customer = 'logged-out';
+            if (window.app && app.auth && typeof app.auth.updateIcon === 'function') app.auth.updateIcon();
+        });
+    </script>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-[#D4C4B7] selection:text-white font-light text-[15px]">
+
+    <div class="bg-[var(--accent-sage)] text-white text-center py-2.5 text-xs tracking-[0.15em] uppercase font-medium">
+        Complimentary shipping on domestic orders over $150
+    </div>
+
+    <header class="sticky top-0 bg-[var(--bg-cream)]/90 backdrop-blur-lg z-40 border-b border-[var(--border-light)] transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
+            
+            <nav class="hidden md:flex items-center space-x-8 text-xs tracking-[0.1em] uppercase text-[var(--text-muted)]">
+                <a href="#shop" onclick="app.router.navigate('shop')" class="hover:text-[var(--text-dark)] transition-colors">Shop</a>
+                <a href="#about" onclick="app.router.navigate('about')" class="hover:text-[var(--text-dark)] transition-colors">Journal</a>
+            </nav>
+
+            <a href="#home" onclick="app.router.navigate('home')" class="font-serif text-3xl tracking-[0.15em] text-[var(--text-dark)] absolute left-1/2 transform -translate-x-1/2">
+                OSMOSSIS
+            </a>
+
+            <div class="flex items-center space-x-6 text-[var(--text-muted)]">
+                <button class="hover:text-[var(--text-dark)] transition-colors" onclick="app.ui.toggleSearchOverlay()" aria-label="Search">
+                    <i data-lucide="search" class="w-5 h-5 stroke-[1.5]"></i>
+                </button>
+                <button id="auth-icon-btn" class="hover:text-[var(--text-dark)] transition-colors flex items-center" onclick="app.auth.iconClick()" aria-label="Account">
+                    <span class="sr-only" id="auth-icon-label">Account</span>
+                    <i data-lucide="user" class="w-5 h-5 stroke-[1.5]"></i>
+                </button>
+                <button class="hover:text-[var(--text-dark)] transition-colors flex items-center space-x-1 relative" onclick="app.ui.toggleCartDrawer()" aria-label="Cart">
+                    <i data-lucide="shopping-bag" class="w-5 h-5 stroke-[1.5]"></i>
+                    <span id="global-cart-count" class="absolute -top-1 -right-2 text-[9px] bg-[var(--text-dark)] text-white w-4 h-4 rounded-full flex items-center justify-center opacity-0 transition-opacity">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+
+        <section id="view-home" class="view-section active">
+            <div class="max-w-[1600px] mx-auto px-4 sm:px-6 py-6 h-[80vh] min-h-[600px]">
+                <div class="w-full h-full relative overflow-hidden flex items-center justify-center">
+                    <img src="https://images.unsplash.com/photo-1615876234886-fd9a39fda97f?q=80&w=2000&auto=format&fit=crop" class="absolute inset-0 w-full h-full object-cover rounded-sm" alt="Minimalist Interior">
+                    <div class="absolute inset-0 bg-black/10"></div>
+                    
+                    <div class="relative z-10 text-center text-white px-4">
+                        <span class="text-xs tracking-[0.2em] uppercase mb-4 block drop-shadow-md">The Ritual Collection</span>
+                        <h1 class="font-serif text-5xl sm:text-7xl mb-8 drop-shadow-md">Return to Center.</h1>
+                        <button onclick="app.router.navigate('shop')" class="bg-white/90 backdrop-blur-sm text-[var(--text-dark)] px-8 py-3 text-xs tracking-[0.1em] uppercase hover:bg-white transition-colors duration-300">
+                            Discover
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="max-w-7xl mx-auto px-6 py-20 grid grid-cols-1 md:grid-cols-3 gap-12 text-center border-b border-[var(--border-light)]">
+                <div>
+                    <h3 class="font-serif text-xl mb-3">Consciously Crafted</h3>
+                    <p class="text-[var(--text-muted)] text-sm leading-relaxed">Sustainable materials sourced from ethical artisans worldwide.</p>
+                </div>
+                <div>
+                    <h3 class="font-serif text-xl mb-3">Clean Ingredients</h3>
+                    <p class="text-[var(--text-muted)] text-sm leading-relaxed">Botanical formulations free from synthetics and harsh chemicals.</p>
+                </div>
+                <div>
+                    <h3 class="font-serif text-xl mb-3">Slow Living</h3>
+                    <p class="text-[var(--text-muted)] text-sm leading-relaxed">Designed to turn daily routines into mindful rituals.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-shop" class="view-section max-w-7xl mx-auto px-6 py-16">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-16 space-y-6 md:space-y-0">
+                <h2 class="font-serif text-4xl">Curated Essentials</h2>
+                <div class="flex items-center space-x-4 border-b border-[var(--border-light)] pb-1">
+                    <span class="text-xs uppercase tracking-[0.1em] text-[var(--text-muted)]">Sort by:</span>
+                    <select id="catalog-sort" onchange="app.store.sortCatalog(this.value)" class="bg-transparent text-sm text-[var(--text-dark)] focus:outline-none cursor-pointer pb-1">
+                        <option value="featured">Featured</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="shop-items-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-16">
+                </div>
+        </section>
+
+        <section id="view-product" class="view-section max-w-7xl mx-auto px-6 py-16">
+            <div id="product-detail-target" class="flex flex-col lg:flex-row gap-16">
+                </div>
+        </section>
+
+        <section id="view-about" class="view-section max-w-3xl mx-auto px-6 py-24 text-center">
+            <span class="text-[var(--accent-sage)] text-xs tracking-[0.2em] uppercase mb-4 block">Our Philosophy</span>
+            <h2 class="font-serif text-5xl mb-10 leading-tight">The beauty of pausing.</h2>
+            <div class="space-y-6 text-[var(--text-muted)] leading-relaxed text-lg font-serif italic">
+                <p>"Osmossis was born from a desire to reclaim our time and our spaces. In a world that demands constant acceleration, we believe true luxury is found in stillness."</p>
+            </div>
+            <div class="space-y-6 text-[var(--text-dark)] leading-loose mt-10">
+                <p>We curate objects and formulations that encourage presence. From the tactile weight of a ceramic mug to the grounding scent of vetiver, every item in our collection is an invitation to slow down and experience the immediate moment.</p>
+                <img src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=1200&auto=format&fit=crop" class="w-full h-80 object-cover mt-12 rounded-sm" alt="Slow Living Atmosphere">
+            </div>
+        </section>
+
+        <!-- D.3.x: account view -->
+        <section id="view-account" class="view-section max-w-5xl mx-auto px-6 py-16">
+            <div class="flex items-center justify-between mb-12">
+                <div>
+                    <p class="text-[11px] uppercase tracking-[0.2em] text-[var(--accent-sage)] font-medium">Account</p>
+                    <h1 id="acc-greeting" class="font-serif text-4xl text-[var(--text-dark)] mt-2 tracking-[0.05em]">Welcome</h1>
+                </div>
+                <button onclick="app.auth.doLogout()" class="text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] hover:text-[var(--text-dark)]">Sign Out</button>
+            </div>
+
+            <div class="flex space-x-8 border-b border-[var(--border-light)] mb-8">
+                <button id="acc-tab-overview" onclick="app.auth.activateTab('overview')" class="acc-tab pb-3 text-[11px] uppercase tracking-[0.15em]">Overview</button>
+                <button id="acc-tab-profile"  onclick="app.auth.activateTab('profile')"  class="acc-tab pb-3 text-[11px] uppercase tracking-[0.15em]">Profile</button>
+                <button id="acc-tab-orders"   onclick="app.auth.activateTab('orders')"   class="acc-tab pb-3 text-[11px] uppercase tracking-[0.15em]">Orders</button>
+                <button id="acc-tab-password" onclick="app.auth.activateTab('password')" class="acc-tab pb-3 text-[11px] uppercase tracking-[0.15em]">Password</button>
+            </div>
+
+            <div id="acc-panel-overview" class="acc-panel">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                    <div><p class="text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)]">Name</p><p id="acc-ov-name" class="text-sm text-[var(--text-dark)] mt-2">—</p></div>
+                    <div><p class="text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)]">Email</p><p id="acc-ov-email" class="text-sm text-[var(--text-dark)] mt-2">—</p></div>
+                    <div><p class="text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)]">Member Since</p><p id="acc-ov-joined" class="text-sm text-[var(--text-dark)] mt-2">—</p></div>
+                </div>
+                <button onclick="app.auth.activateTab('profile')" class="text-[11px] uppercase tracking-[0.15em] text-[var(--text-dark)] border-b border-[var(--text-dark)] pb-0.5">Edit profile</button>
+            </div>
+
+            <div id="acc-panel-profile" class="acc-panel hidden">
+                <form onsubmit="event.preventDefault(); app.auth.saveProfile()" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div><label class="block text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">First Name</label>
+                             <input type="text" id="acc-fname" class="w-full bg-white border border-[var(--border-light)] px-4 py-3 text-[var(--text-dark)] focus:outline-none focus:border-[var(--text-dark)]"></div>
+                        <div><label class="block text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">Last Name</label>
+                             <input type="text" id="acc-lname" class="w-full bg-white border border-[var(--border-light)] px-4 py-3 text-[var(--text-dark)] focus:outline-none focus:border-[var(--text-dark)]"></div>
+                    </div>
+                    <div><label class="block text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">Email</label>
+                         <input type="email" id="acc-email" readonly title="Email is the account identifier and cannot be changed here" class="w-full bg-[var(--bg-cream)] border border-[var(--border-light)] px-4 py-3 text-[var(--text-muted)] cursor-not-allowed"></div>
+                    <div><label class="block text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">Phone (optional)</label>
+                         <input type="tel" id="acc-phone" class="w-full bg-white border border-[var(--border-light)] px-4 py-3 text-[var(--text-dark)] focus:outline-none focus:border-[var(--text-dark)]"></div>
+                    <button type="submit" class="w-full bg-[var(--text-dark)] text-white py-3 text-[11px] uppercase tracking-[0.2em] hover:bg-[var(--accent-sage)] transition-colors">Save</button>
+                </form>
+            </div>
+
+            <div id="acc-panel-orders" class="acc-panel hidden">
+                <div id="acc-orders-list">
+                    <p class="text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] py-12 text-center">Loading…</p>
+                </div>
+            </div>
+
+            <div id="acc-panel-password" class="acc-panel hidden">
+                <form onsubmit="event.preventDefault(); app.auth.changePassword()" class="space-y-6">
+                    <div><label class="block text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">Current Password</label>
+                         <input type="password" id="acc-pw-cur" required class="w-full bg-white border border-[var(--border-light)] px-4 py-3 text-[var(--text-dark)] focus:outline-none focus:border-[var(--text-dark)]"></div>
+                    <div><label class="block text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">New Password</label>
+                         <input type="password" id="acc-pw-new" required minlength="8" class="w-full bg-white border border-[var(--border-light)] px-4 py-3 text-[var(--text-dark)] focus:outline-none focus:border-[var(--text-dark)]"></div>
+                    <div><label class="block text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">Confirm New Password</label>
+                         <input type="password" id="acc-pw-conf" required minlength="8" class="w-full bg-white border border-[var(--border-light)] px-4 py-3 text-[var(--text-dark)] focus:outline-none focus:border-[var(--text-dark)]"></div>
+                    <button type="submit" class="w-full bg-[var(--text-dark)] text-white py-3 text-[11px] uppercase tracking-[0.2em] hover:bg-[var(--accent-sage)] transition-colors">Change Password</button>
+                </form>
+            </div>
+        </section>
+
+        <style>
+            .acc-tab { color: var(--text-muted); border-bottom: 1px solid transparent; transition: all 0.3s; }
+            .acc-tab.active { color: var(--text-dark); border-bottom-color: var(--text-dark); }
+        </style>
+
+        <!-- D.3.x: Auth modal overlay -->
+        <div id="auth-modal" class="fixed inset-0 bg-[var(--bg-cream)] z-50 hidden flex-col items-center justify-start overflow-y-auto p-6">
+            <div class="w-full max-w-md mx-auto pt-12 pb-24">
+                <div class="flex items-center justify-between mb-12">
+                    <span class="font-serif text-2xl tracking-[0.15em] text-[var(--text-dark)]">OSMOSSIS</span>
+                    <button onclick="app.auth.close()" aria-label="Close" class="text-[var(--text-muted)] hover:text-[var(--text-dark)] transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <div class="flex space-x-8 border-b border-[var(--border-light)] mb-8">
+                    <button id="auth-tab-login"    onclick="app.auth.switchTab('login')"    class="auth-tab pb-3 text-[11px] uppercase tracking-[0.15em]">Sign In</button>
+                    <button id="auth-tab-register" onclick="app.auth.switchTab('register')" class="auth-tab pb-3 text-[11px] uppercase tracking-[0.15em]">Create</button>
+                    <button id="auth-tab-forgot"   onclick="app.auth.switchTab('forgot')"   class="auth-tab pb-3 text-[11px] uppercase tracking-[0.15em]">Forgot</button>
+                </div>
+
+                <div id="auth-panel-login" class="auth-panel">
+                    <form onsubmit="event.preventDefault(); app.auth.submitLogin()" class="space-y-6">
+                        <div><label class="block text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">Email</label>
+                            <input type="email" id="auth-login-email" required class="w-full bg-white border border-[var(--border-light)] px-4 py-3 text-[var(--text-dark)] focus:outline-none focus:border-[var(--text-dark)]"></div>
+                        <div><label class="block text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">Password</label>
+                            <input type="password" id="auth-login-pass" required class="w-full bg-white border border-[var(--border-light)] px-4 py-3 text-[var(--text-dark)] focus:outline-none focus:border-[var(--text-dark)]"></div>
+                        <div id="auth-login-error" class="hidden text-[11px] text-red-700 mt-2"></div>
+                        <button type="submit" class="w-full bg-[var(--text-dark)] text-white py-3 text-[11px] uppercase tracking-[0.2em] hover:bg-[var(--accent-sage)] transition-colors">Sign In</button>
+                    </form>
+                </div>
+
+                <div id="auth-panel-register" class="auth-panel hidden">
+                    <form onsubmit="event.preventDefault(); app.auth.submitRegister()" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="block text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">First Name</label>
+                                 <input type="text" id="auth-reg-fname" required class="w-full bg-white border border-[var(--border-light)] px-4 py-3 text-[var(--text-dark)] focus:outline-none focus:border-[var(--text-dark)]"></div>
+                            <div><label class="block text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">Last Name</label>
+                                 <input type="text" id="auth-reg-lname" class="w-full bg-white border border-[var(--border-light)] px-4 py-3 text-[var(--text-dark)] focus:outline-none focus:border-[var(--text-dark)]"></div>
+                        </div>
+                        <div><label class="block text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">Email</label>
+                             <input type="email" id="auth-reg-email" required class="w-full bg-white border border-[var(--border-light)] px-4 py-3 text-[var(--text-dark)] focus:outline-none focus:border-[var(--text-dark)]"></div>
+                        <div><label class="block text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">Password</label>
+                             <input type="password" id="auth-reg-pass" required minlength="8" class="w-full bg-white border border-[var(--border-light)] px-4 py-3 text-[var(--text-dark)] focus:outline-none focus:border-[var(--text-dark)]"></div>
+                        <div><label class="block text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">Confirm Password</label>
+                             <input type="password" id="auth-reg-pass2" required minlength="8" class="w-full bg-white border border-[var(--border-light)] px-4 py-3 text-[var(--text-dark)] focus:outline-none focus:border-[var(--text-dark)]"></div>
+                        <div id="auth-reg-error" class="hidden text-[11px] text-red-700 mt-2"></div>
+                        <button type="submit" class="w-full bg-[var(--text-dark)] text-white py-3 text-[11px] uppercase tracking-[0.2em] hover:bg-[var(--accent-sage)] transition-colors">Create Account</button>
+                    </form>
+                </div>
+
+                <div id="auth-panel-forgot" class="auth-panel hidden">
+                    <form onsubmit="event.preventDefault(); app.auth.submitForgot()" class="space-y-6">
+                        <p class="text-sm text-[var(--text-muted)] leading-relaxed">Enter the email associated with your account and we'll send a reset link when this feature becomes available.</p>
+                        <div><label class="block text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] mb-2">Email</label>
+                             <input type="email" id="auth-forgot-email" required class="w-full bg-white border border-[var(--border-light)] px-4 py-3 text-[var(--text-dark)] focus:outline-none focus:border-[var(--text-dark)]"></div>
+                        <button type="submit" class="w-full bg-[var(--text-dark)] text-white py-3 text-[11px] uppercase tracking-[0.2em] hover:bg-[var(--accent-sage)] transition-colors">Send Reset</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .auth-tab { color: var(--text-muted); border-bottom: 1px solid transparent; transition: all 0.3s; }
+            .auth-tab.active { color: var(--text-dark); border-bottom-color: var(--text-dark); }
+            #auth-modal.is-open { display: flex; }
+        </style>
+
+        <section id="view-checkout" class="view-section max-w-5xl mx-auto px-6 py-16">
+            <h2 class="font-serif text-4xl mb-12 text-center">Secure Checkout</h2>
+            <div class="flex flex-col lg:flex-row gap-16">
+                
+                <div class="w-full lg:w-3/5">
+                    <div class="flex items-center space-x-4 text-xs tracking-[0.1em] uppercase mb-10 border-b border-[var(--border-light)] pb-4">
+                        <span id="step-nav-1" class="text-[var(--text-dark)] font-medium">1. Shipping</span>
+                        <span class="text-[var(--border-light)]">/</span>
+                        <span id="step-nav-2" class="text-[var(--text-muted)]">2. Payment</span>
+                    </div>
+
+                    <form id="checkout-form" onsubmit="app.checkout.handleStepSubmit(event)" class="space-y-8">
+                        <div id="checkout-step-container" class="min-h-[200px]"></div>
+                        <div class="flex justify-between items-center pt-8">
+                            <a href="#shop" onclick="app.router.navigate('shop')" class="text-sm text-[var(--text-muted)] hover:text-[var(--text-dark)] transition-colors">Return to Shop</a>
+                            <button type="submit" class="px-8 py-4 btn-primary text-xs uppercase tracking-[0.1em]">
+                                Continue
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="w-full lg:w-2/5 bg-white p-8 rounded-sm shadow-sm border border-[var(--border-light)]/50 h-fit">
+                    <h3 class="font-serif text-2xl mb-6">Order Summary</h3>
+                    <div id="checkout-summary-items" class="space-y-4 max-h-[300px] overflow-y-auto pr-2 mb-6"></div>
+                    <div class="space-y-4 pt-6 border-t border-[var(--border-light)] text-sm text-[var(--text-muted)]">
+                        <div class="flex justify-between"><span>Subtotal</span><span id="chk-sub"></span></div>
+                        <div class="flex justify-between"><span>Shipping</span><span>Complimentary</span></div>
+                        <div class="flex justify-between items-center pt-4 text-lg text-[var(--text-dark)] font-serif">
+                            <span>Total</span>
+                            <span id="chk-total">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <div id="cart-drawer-overlay" class="fixed inset-0 bg-[var(--text-dark)]/20 backdrop-blur-sm z-50 pointer-events-none opacity-0 transition-opacity duration-500" onclick="app.ui.toggleCartDrawer()">
+        <div class="absolute right-0 top-0 h-full w-full max-w-[400px] bg-[var(--bg-cream)] shadow-2xl flex flex-col justify-between pointer-events-auto transform translate-x-full transition-transform duration-500 ease-[cubic-bezier(0.25,0.8,0.25,1)]" onclick="event.stopPropagation()">
+            
+            <div class="p-8 border-b border-[var(--border-light)] flex items-center justify-between">
+                <h3 class="font-serif text-2xl">Your Bag</h3>
+                <button onclick="app.ui.toggleCartDrawer()" class="text-[var(--text-muted)] hover:text-[var(--text-dark)] transition-colors">
+                    <i data-lucide="x" class="w-5 h-5 stroke-[1.5]"></i>
+                </button>
+            </div>
+            
+            <div id="cart-drawer-items" class="flex-grow overflow-y-auto p-8 space-y-8"></div>
+            
+            <div class="p-8 bg-white border-t border-[var(--border-light)]">
+                <div class="flex justify-between items-end mb-6">
+                    <span class="text-sm text-[var(--text-muted)] uppercase tracking-[0.1em] text-xs">Subtotal</span>
+                    <span id="cart-drawer-subtotal" class="font-serif text-2xl text-[var(--text-dark)]">$0.00</span>
+                </div>
+                <p class="text-xs text-[var(--text-muted)] mb-6 text-center">Taxes and shipping calculated at checkout.</p>
+                <button onclick="app.checkout.initiateCheckout()" class="w-full py-4 btn-primary text-xs uppercase tracking-[0.1em]">
+                    Checkout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="search-overlay" class="fixed inset-0 bg-[var(--bg-cream)]/95 backdrop-blur-md z-50 hidden flex-col justify-center px-6 transition-opacity duration-300">
+        <button onclick="app.ui.toggleSearchOverlay()" class="absolute top-8 right-8 text-[var(--text-muted)] hover:text-[var(--text-dark)] transition-colors">
+            <i data-lucide="x" class="w-8 h-8 stroke-[1]"></i>
+        </button>
+        <div class="w-full max-w-3xl mx-auto flex flex-col text-center">
+            <h2 class="font-serif text-3xl mb-8 text-[var(--text-muted)]">What are you looking for?</h2>
+            <input type="text" id="live-search-input" oninput="app.store.handleSearch(this.value)" placeholder="Search for rituals, scents, homeware..." class="w-full bg-transparent border-b border-[var(--text-dark)] pb-4 text-2xl sm:text-4xl font-serif text-[var(--text-dark)] focus:outline-none placeholder:text-[var(--border-light)] text-center">
+            <div id="search-results-output" class="mt-12 space-y-4 max-h-[50vh] overflow-y-auto text-left"></div>
+        </div>
+    </div>
+
+    <div id="toast-notif" class="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-[var(--text-dark)] text-white text-sm tracking-wide py-3 px-8 rounded-full shadow-xl z-50 opacity-0 translate-y-4 transition-all duration-400 pointer-events-none flex items-center gap-3">
+        <i data-lucide="check-circle-2" class="w-4 h-4 text-[var(--accent-sage)]"></i>
+        <span id="toast-notif-message">Added to your bag.</span>
+    </div>
+
+    <footer class="bg-white border-t border-[var(--border-light)] pt-20 pb-10">
+        <div class="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
+            <div class="md:col-span-4">
+                <h4 class="font-serif text-2xl mb-4">OSMOSSIS</h4>
+                <p class="text-sm text-[var(--text-muted)] leading-relaxed max-w-xs">Curating elements for a slower, more intentional way of living.</p>
+            </div>
+            <div class="md:col-span-2 space-y-4">
+                <h5 class="text-xs uppercase tracking-[0.1em] mb-6 text-[var(--text-dark)]">Explore</h5>
+                <a href="#shop" onclick="app.router.navigate('shop')" class="block text-sm text-[var(--text-muted)] hover:text-[var(--text-dark)] transition-colors">Shop All</a>
+                <a href="#about" onclick="app.router.navigate('about')" class="block text-sm text-[var(--text-muted)] hover:text-[var(--text-dark)] transition-colors">Journal</a>
+                <a href="#" class="block text-sm text-[var(--text-muted)] hover:text-[var(--text-dark)] transition-colors">Ingredients</a>
+            </div>
+            <div class="md:col-span-2 space-y-4">
+                <h5 class="text-xs uppercase tracking-[0.1em] mb-6 text-[var(--text-dark)]">Support</h5>
+                <a href="#" class="block text-sm text-[var(--text-muted)] hover:text-[var(--text-dark)] transition-colors">Shipping & Returns</a>
+                <a href="#" class="block text-sm text-[var(--text-muted)] hover:text-[var(--text-dark)] transition-colors">Contact Us</a>
+                <a href="#" class="block text-sm text-[var(--text-muted)] hover:text-[var(--text-dark)] transition-colors">FAQ</a>
+            </div>
+            <div class="md:col-span-4">
+                <h5 class="text-xs uppercase tracking-[0.1em] mb-6 text-[var(--text-dark)]">The Newsletter</h5>
+                <p class="text-sm text-[var(--text-muted)] mb-4">Join our community for essays on slow living and early access to new collections.</p>
+                <form onsubmit="event.preventDefault(); app.ui.triggerToast('Welcome to the community.');" class="flex items-end">
+                    <input type="email" placeholder="Your email address" required class="flex-grow osmossis-input text-sm">
+                    <button type="submit" class="pb-3 text-xs uppercase tracking-[0.1em] hover:text-[var(--accent-sage)] transition-colors ml-4">Subscribe</button>
+                </form>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center text-xs text-[var(--text-muted)] pt-8 border-t border-[var(--border-light)]">
+            <p>&copy; 2026 OSMOSSIS. All rights reserved.</p>
+            <div class="flex space-x-4 mt-4 md:mt-0">
+                <a href="#" class="hover:text-[var(--text-dark)]">Instagram</a>
+                <a href="#" class="hover:text-[var(--text-dark)]">Pinterest</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        /**
+         * Elevated Lifestyle Dataset
+         */
+        const __SEED = [
+            { id: 'osm-01', name: 'Bergamot & Vetiver Hand Wash', price: 42.00, category: 'Apothecary', images: ['https://images.unsplash.com/photo-1608248543803-ba4f8c70ae0b?q=80&w=800&auto=format&fit=crop'], desc: 'A gentle, botanical-rich formulation that cleanses without stripping the skin. Scented with grounding notes of earthy vetiver, bright bergamot, and cedar.', spec: '500ml / Vegan / Glass Bottle' },
+            { id: 'osm-02', name: 'Washed Linen Lounge Robe', price: 185.00, category: 'Apparel', images: ['https://images.unsplash.com/photo-1616858178143-6df7cc2dc157?q=80&w=800&auto=format&fit=crop'], desc: 'Crafted from 100% organic French flax linen. This robe features a relaxed drape, deep pockets, and gets softer with every wash. Perfect for slow weekend mornings.', spec: 'One Size / Cream / OEKO-TEX Certified' },
+            { id: 'osm-03', name: 'Ceramic Ritual Matcha Bowl', price: 65.00, category: 'Homeware', images: ['https://images.unsplash.com/photo-1611078749449-37eb3b92de5a?q=80&w=800&auto=format&fit=crop'], desc: 'Hand-thrown by artisans in Kyoto, this traditional Chawan features a tactile, unglazed exterior and a smooth inner glaze designed to whisk the perfect froth.', spec: 'Hand-wash only / Unique variations' },
+            { id: 'osm-04', name: 'Aura Stone Oil Diffuser', price: 120.00, category: 'Wellness', images: ['https://images.unsplash.com/photo-1602928321679-560bb453f190?q=80&w=800&auto=format&fit=crop'], desc: 'Sculpted from matte ceramic, this ultrasonic diffuser doubles as an elegant piece of decor. Fills your space with botanical aromas while softly humidifying the air.', spec: 'Covers 500 sq ft / Auto shut-off' }
+        ];
+
+        /* ════════════════════
+           CANONICAL DATA LAYER — fetchStore → api.php?state=X, getMockData fallback, MOCK shape
+        ════════════════════ */
+        const __CATS = [...new Set(__SEED.map(p => p.category).filter(Boolean))].map((name, i) => ({ id: i + 1, name }));
+        const MOCK = {
+            site: { name: "OSMOSSIS", currency: "R", domain: window.location.hostname },
+            categories: __CATS,
+            products: __SEED.map((p, i) => ({
+                ...p,
+                id: p.id != null ? p.id : i + 1,
+                image: p.image || (Array.isArray(p.images) ? p.images[0] : "") || "",
+                description: p.description || p.desc || "",
+                stock: p.stock != null ? p.stock : 12,
+                category_id: (__CATS.find(c => c.name === p.category) || {}).id || null
+            })),
+            discounts: [
+                { id: 1, code: "WELCOME10", percentage: 10, active: 1 },
+                { id: 2, code: "DROP20", percentage: 20, active: 1 }
+            ]
+        };
+
+        async function fetchStore(state, params = {}) {
+            const url = new URL("api.php", window.location.href);
+            url.searchParams.set("state", state);
+            for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+            try {
+                const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+                if (!res.ok) throw new Error(res.status);
+                return await res.json();
+            } catch {
+                return getMockData(state, params);
+            }
+        }
+
+        function getMockData(state, params = {}) {
+            switch (state) {
+                case "site": return MOCK.site;
+                case "products": return MOCK.products;
+                case "product": return MOCK.products.find(p => p.id == params.id) || null;
+                case "categories": return MOCK.categories;
+                case "products_by_category": return MOCK.products.filter(p => p.category_id == params.category_id);
+                case "search": {
+                    const q = (params.q || "").toLowerCase();
+                    return MOCK.products.filter(p => (p.name || "").toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q));
+                }
+                case "discounts": return MOCK.discounts;
+                case "orders": return [];
+                default: return [];
+            }
+        }
+
+        let INVENTORY_DB = [];
+
+        const app = {
+            state: { cart: [], activeFilter: 'all', currentSort: 'featured', activeCheckoutStep: 1 },
+            init: async function() {
+                const __d = await fetchStore('products');
+                INVENTORY_DB = __d.map(p => ({ ...p, images: p.images || (p.image ? [p.image] : []), desc: p.desc || p.description || '', category: p.category || ((MOCK.categories.find(c => c.id == p.category_id) || {}).name) || '' }));
+                this.router.init(); this.store.renderCatalog(); this.cart.loadAndSync(); lucide.createIcons();
+            }
+        };
+
+        // --- ROUTER ---
+        app.router = {
+            init: function() {
+                window.addEventListener('popstate', () => this.evalRoute(window.location.hash));
+                this.evalRoute(window.location.hash || '#home');
+            },
+            navigate: function(view, params = null) {
+                let hash = `#${view}`;
+                if (params) hash += `?${new URLSearchParams(params).toString()}`;
+                history.pushState(null, null, hash);
+                this.evalRoute(hash);
+            },
+            evalRoute: function(hashString) {
+                const parts = hashString.split('?');
+                const view = parts[0] || '#home';
+                const queryParams = parts[1] ? Object.fromEntries(new URLSearchParams(parts[1])) : {};
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                const targetView = document.getElementById(`view-${view.replace('#', '')}`);
+                if (targetView) targetView.classList.add('active');
+                if (view === '#shop') { app.store.filterCatalog('all'); } 
+                else if (view === '#product' && queryParams.id) { app.store.renderProductDetail(queryParams.id); } 
+                else if (view === '#checkout') { app.checkout.renderCurrentStep(); }
+                else if (view === '#account') {
+                    if (!app.auth || !app.auth.isLoggedIn()) {
+                        if (app.auth) app.auth.open('login');
+                        const homeView = document.getElementById('view-home');
+                        if (targetView) targetView.classList.remove('active');
+                        if (homeView) homeView.classList.add('active');
+                    } else {
+                        app.auth.renderDashboard();
+                    }
+                }
+                window.scrollTo({top:0, behavior: 'smooth'});
+            }
+        };
+
+        // --- STORE & CATALOG ---
+        app.store = {
+            renderCatalog: function(itemsToRender = INVENTORY_DB) {
+                const grid = document.getElementById('shop-items-grid');
+                if (!grid) return;
+                grid.innerHTML = itemsToRender.map(item => `
+                    <div class="group cursor-pointer flex flex-col" onclick="app.router.navigate('product', {id: '${item.id}'})">
+                        <div class="aspect-[4/5] w-full overflow-hidden bg-white mb-6 rounded-sm relative">
+                            <img src="${item.images[0]}" alt="${item.name}" class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out">
+                            <div class="absolute bottom-0 left-0 w-full p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                                <button onclick="event.stopPropagation(); app.cart.addItem('${item.id}')" class="w-full bg-white/90 backdrop-blur-sm text-[var(--text-dark)] py-3 text-xs tracking-widest uppercase hover:bg-white shadow-sm">Add to Bag</button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col flex-grow text-center">
+                            <p class="text-xs text-[var(--text-muted)] tracking-widest uppercase mb-2">${item.category}</p>
+                            <h3 class="font-serif text-lg text-[var(--text-dark)] mb-2">${item.name}</h3>
+                            <div class="text-sm text-[var(--text-muted)]">$${item.price.toFixed(2)}</div>
+                        </div>
+                    </div>`).join('');
+            },
+            filterCatalog: function(cat) { app.state.activeFilter = cat; this.renderCatalog(cat === 'all' ? INVENTORY_DB : INVENTORY_DB.filter(i => i.category === cat)); },
+            sortCatalog: function(criteria) {
+                let sorted = [...INVENTORY_DB];
+                if (criteria === 'price-low') sorted.sort((a,b) => a.price - b.price);
+                if (criteria === 'price-high') sorted.sort((a,b) => b.price - a.price);
+                this.renderCatalog(sorted);
+            },
+            renderProductDetail: function(id) {
+                const item = INVENTORY_DB.find(p => p.id === id);
+                if (!item) return;
+                document.getElementById('product-detail-target').innerHTML = `
+                    <div class="w-full lg:w-1/2 aspect-[4/5] overflow-hidden rounded-sm bg-white">
+                        <img src="${item.images[0]}" alt="${item.name}" class="w-full h-full object-cover">
+                    </div>
+                    <div class="w-full lg:w-1/2 flex flex-col justify-center py-10 lg:pl-10">
+                        <span class="text-xs text-[var(--text-muted)] tracking-[0.2em] uppercase mb-4 block">${item.category}</span>
+                        <h1 class="font-serif text-4xl sm:text-5xl text-[var(--text-dark)] leading-tight mb-4">${item.name}</h1>
+                        <p class="text-xl text-[var(--text-muted)] mb-8">$${item.price.toFixed(2)}</p>
+                        
+                        <div class="prose prose-sm text-[var(--text-muted)] leading-relaxed mb-10 border-t border-b border-[var(--border-light)] py-8">
+                            <p>${item.desc}</p>
+                            <p class="mt-4 text-xs tracking-wide"><strong class="text-[var(--text-dark)] font-normal">Details:</strong> ${item.spec}</p>
+                        </div>
+                        
+                        <button onclick="app.cart.addItem('${item.id}')" class="w-full py-4 btn-primary text-xs tracking-[0.1em] uppercase flex justify-center items-center gap-3">
+                            <span>Add to Bag</span>
+                        </button>
+
+                        <div class="mt-8 flex items-center space-x-6 text-xs text-[var(--text-muted)]">
+                            <div class="flex items-center gap-2"><i data-lucide="truck" class="w-4 h-4 stroke-[1]"></i> Ships in 1-2 days</div>
+                            <div class="flex items-center gap-2"><i data-lucide="leaf" class="w-4 h-4 stroke-[1]"></i> Sustainable Packaging</div>
+                        </div>
+                    </div>`;
+                lucide.createIcons();
+            },
+            handleSearch: function(term) {
+                const out = document.getElementById('search-results-output');
+                if (!term) { out.innerHTML = ''; return; }
+                out.innerHTML = INVENTORY_DB.filter(i => i.name.toLowerCase().includes(term.toLowerCase())).map(i => `
+                    <div onclick="app.ui.toggleSearchOverlay(); app.router.navigate('product', {id: '${i.id}'})" class="flex items-center space-x-6 p-4 hover:bg-white rounded-sm cursor-pointer transition-colors group">
+                        <img src="${i.images[0]}" class="w-16 h-20 object-cover rounded-sm shadow-sm">
+                        <div class="flex-grow">
+                            <span class="block font-serif text-xl text-[var(--text-dark)] group-hover:text-[var(--accent-sage)] transition-colors">${i.name}</span>
+                            <span class="block text-sm text-[var(--text-muted)] mt-1">$${i.price}</span>
+                        </div>
+                        <i data-lucide="arrow-right" class="w-5 h-5 text-[var(--border-light)] group-hover:text-[var(--text-dark)] transition-colors"></i>
+                    </div>`).join('');
+                lucide.createIcons();
+            }
+        };
+
+        // --- CART SYSTEM ---
+        app.cart = {
+            loadAndSync: function() { const stored = localStorage.getItem('osm_cart'); if (stored) app.state.cart = JSON.parse(stored); this.updateUI(); },
+            addItem: function(id) {
+                const prod = INVENTORY_DB.find(p => p.id === id);
+                const exist = app.state.cart.find(item => item.product.id === id);
+                if (exist) exist.qty += 1; else app.state.cart.push({ product: prod, qty: 1 });
+                this.sync(); app.ui.triggerToast(`${prod.name} added to bag.`); app.ui.toggleCartDrawer(true);
+            },
+            updateQty: function(id, val) { const item = app.state.cart.find(i => i.product.id === id); if (!item) return; item.qty += val; if (item.qty <= 0) app.state.cart = app.state.cart.filter(i => i.product.id !== id); this.sync(); },
+            sync: function() { localStorage.setItem('osm_cart', JSON.stringify(app.state.cart)); this.updateUI(); },
+            updateUI: function() {
+                const drawerContainer = document.getElementById('cart-drawer-items');
+                const badge = document.getElementById('global-cart-count');
+                const subtotalText = document.getElementById('cart-drawer-subtotal');
+                const totalItems = app.state.cart.reduce((sum, i) => sum + i.qty, 0);
+                const subtotal = app.state.cart.reduce((sum, i) => sum + (i.product.price * i.qty), 0);
+                
+                if (totalItems > 0) { badge.classList.remove('opacity-0'); badge.innerText = totalItems; } else { badge.classList.add('opacity-0'); }
+                subtotalText.innerText = `$${subtotal.toFixed(2)}`;
+                
+                if (app.state.cart.length === 0) { 
+                    drawerContainer.innerHTML = `<div class="text-center text-[var(--text-muted)] text-sm py-16">Your bag is empty.</div>`; 
+                } else {
+                    drawerContainer.innerHTML = app.state.cart.map(item => `
+                        <div class="flex space-x-6">
+                            <img src="${item.product.images[0]}" class="w-20 h-28 object-cover rounded-sm shadow-sm">
+                            <div class="flex flex-col justify-between flex-grow py-1">
+                                <div>
+                                    <h4 class="font-serif text-lg text-[var(--text-dark)] leading-tight mb-1">${item.product.name}</h4>
+                                    <p class="text-sm text-[var(--text-muted)]">$${item.product.price.toFixed(2)}</p>
+                                </div>
+                                <div class="flex items-center space-x-4 border border-[var(--border-light)] w-fit px-3 py-1 rounded-full">
+                                    <button onclick="app.cart.updateQty('${item.product.id}', -1)" class="text-[var(--text-muted)] hover:text-[var(--text-dark)]">&minus;</button>
+                                    <span class="text-sm text-[var(--text-dark)] w-4 text-center">${item.qty}</span>
+                                    <button onclick="app.cart.updateQty('${item.product.id}', 1)" class="text-[var(--text-muted)] hover:text-[var(--text-dark)]">&plus;</button>
+                                </div>
+                            </div>
+                        </div>`).join('');
+                }
+            }
+        };
+
+        // --- CHECKOUT ---
+        app.checkout = {
+            initiateCheckout: function() { if(!app.state.cart.length) return; app.ui.toggleCartDrawer(false); app.router.navigate('checkout'); },
+            renderCurrentStep: function() {
+                const container = document.getElementById('checkout-step-container');
+                const sub = app.state.cart.reduce((sum, i) => sum + (i.product.price * i.qty), 0);
+                document.getElementById('chk-sub').innerText = `$${sub.toFixed(2)}`;
+                document.getElementById('chk-total').innerText = `$${sub.toFixed(2)}`;
+                document.getElementById('checkout-summary-items').innerHTML = app.state.cart.map(i => `
+                    <div class="flex justify-between items-center py-3 border-b border-[var(--border-light)]/50 last:border-0">
+                        <div class="flex items-center space-x-4">
+                            <div class="relative">
+                                <img src="${i.product.images[0]}" class="w-12 h-16 object-cover rounded-sm shadow-sm">
+                                <span class="absolute -top-2 -right-2 bg-[var(--text-muted)] text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center">${i.qty}</span>
+                            </div>
+                            <span class="text-[var(--text-dark)] font-serif text-sm">${i.product.name}</span>
+                        </div>
+                        <span class="text-[var(--text-muted)] text-sm">$${(i.product.price * i.qty).toFixed(2)}</span>
+                    </div>`).join('');
+                
+                document.getElementById('step-nav-1').className = app.state.activeCheckoutStep === 1 ? "text-[var(--text-dark)] font-medium" : "text-[var(--text-muted)]";
+                document.getElementById('step-nav-2').className = app.state.activeCheckoutStep === 2 ? "text-[var(--text-dark)] font-medium" : "text-[var(--text-muted)]";
+
+                if (app.state.activeCheckoutStep === 1) { 
+                    container.innerHTML = `
+                        <div class="space-y-6">
+                            <input type="email" required placeholder="Email Address" class="w-full osmossis-input">
+                            <div class="grid grid-cols-2 gap-6">
+                                <input type="text" required placeholder="First Name" class="w-full osmossis-input">
+                                <input type="text" required placeholder="Last Name" class="w-full osmossis-input">
+                            </div>
+                            <input type="text" required placeholder="Street Address" class="w-full osmossis-input">
+                            <div class="grid grid-cols-2 gap-6">
+                                <input type="text" required placeholder="City" class="w-full osmossis-input">
+                                <input type="text" required placeholder="Postal Code" class="w-full osmossis-input">
+                            </div>
+                        </div>
+                    `; 
+                } else if (app.state.activeCheckoutStep === 2) { 
+                    container.innerHTML = `
+                        <div class="space-y-6">
+                            <div class="p-4 border border-[var(--border-light)] rounded-sm bg-white text-sm text-[var(--text-muted)] mb-6 flex justify-between items-center">
+                                <span>Contact & Shipping Provided</span>
+                                <i data-lucide="check" class="w-4 h-4 text-[var(--accent-sage)]"></i>
+                            </div>
+                            <h4 class="font-serif text-xl mb-4">Payment Details</h4>
+                            <input type="text" required placeholder="Card Number" class="w-full osmossis-input">
+                            <div class="grid grid-cols-2 gap-6">
+                                <input type="text" required placeholder="Expiration (MM/YY)" class="w-full osmossis-input">
+                                <input type="text" required placeholder="Security Code" class="w-full osmossis-input">
+                            </div>
+                        </div>
+                    `; 
+                    lucide.createIcons();
+                }
+            },
+            handleStepSubmit: function(e) { 
+                e.preventDefault(); 
+                if(app.state.activeCheckoutStep < 2) { 
+                    app.state.activeCheckoutStep += 1; 
+                    this.renderCurrentStep(); 
+                } else { 
+                    app.state.cart = []; 
+                    app.cart.sync(); 
+                    app.state.activeCheckoutStep = 1; 
+                    app.ui.triggerToast("Order placed successfully. Thank you."); 
+                    app.router.navigate('home'); 
+                } 
+            }
+        };
+
+        // --- UI ---
+        app.ui = {
+            toggleCartDrawer: function(forceOpen = null) {
+                const overlay = document.getElementById('cart-drawer-overlay');
+                const inner = overlay.firstElementChild;
+                if (forceOpen === true) { 
+                    overlay.classList.remove('opacity-0', 'pointer-events-none'); 
+                    inner.classList.remove('translate-x-full'); 
+                    return; 
+                }
+                if (forceOpen === false) { 
+                    overlay.classList.add('opacity-0', 'pointer-events-none'); 
+                    inner.classList.add('translate-x-full'); 
+                    return; 
+                }
+                overlay.classList.toggle('opacity-0'); 
+                overlay.classList.toggle('pointer-events-none');
+                inner.classList.toggle('translate-x-full');
+            },
+            toggleSearchOverlay: function() { 
+                const s = document.getElementById('search-overlay'); 
+                s.classList.toggle('hidden'); 
+                s.classList.toggle('flex'); 
+                if(!s.classList.contains('hidden')) {
+                    setTimeout(() => document.getElementById('live-search-input').focus(), 100);
+                }
+            },
+            triggerToast: function(msg) {
+                const t = document.getElementById('toast-notif'); 
+                document.getElementById('toast-notif-message').innerText = msg;
+                t.classList.remove('opacity-0', 'translate-y-4', 'pointer-events-none');
+                setTimeout(() => { 
+                    t.classList.add('opacity-0', 'translate-y-4', 'pointer-events-none'); 
+                }, 4000);
+            }
+        };
+
+        app.auth = {
+            getUser: function () {
+                if (!window.vmCustomer || !vmCustomer.isLoggedIn()) return null;
+                const c = vmCustomer.cached();
+                if (!c) return null;
+                const parts = (c.name || '').trim().split(/\s+/).filter(Boolean);
+                return { email: c.email, fname: parts[0] || '', lname: parts.slice(1).join(' '), phone: c.phone || '', joinDate: c.created_at || '' };
+            },
+            isLoggedIn: function () { return !!window.vmCustomer && vmCustomer.isLoggedIn(); },
+            iconClick: function () { if (this.isLoggedIn()) app.router.navigate('account'); else this.open('login'); },
+            updateIcon: function () {
+                const label = document.getElementById('auth-icon-label');
+                if (!label) return;
+                const u = this.getUser();
+                label.textContent = u && u.fname ? u.fname : 'Account';
+            },
+            open: function (tab) {
+                this.switchTab(tab || 'login');
+                const m = document.getElementById('auth-modal');
+                m.classList.add('is-open');
+                document.body.style.overflow = 'hidden';
+                if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
+            },
+            close: function () {
+                const m = document.getElementById('auth-modal');
+                m.classList.remove('is-open');
+                document.body.style.overflow = '';
+                ['auth-login-error', 'auth-reg-error'].forEach(function (id) {
+                    const el = document.getElementById(id);
+                    if (el) { el.textContent = ''; el.classList.add('hidden'); }
+                });
+            },
+            switchTab: function (tab) {
+                ['login', 'register', 'forgot'].forEach(function (t) {
+                    const btn = document.getElementById('auth-tab-' + t);
+                    const pan = document.getElementById('auth-panel-' + t);
+                    if (btn) btn.classList.toggle('active', t === tab);
+                    if (pan) pan.classList.toggle('hidden', t !== tab);
+                });
+            },
+            submitLogin: async function () {
+                const email = document.getElementById('auth-login-email').value.trim();
+                const pass = document.getElementById('auth-login-pass').value;
+                const errEl = document.getElementById('auth-login-error');
+                errEl.classList.add('hidden');
+                if (!email || !pass) { errEl.textContent = 'Email and password required.'; errEl.classList.remove('hidden'); return; }
+                try {
+                    await vmCustomer.login(email, pass);
+                    this.close();
+                    const u = this.getUser();
+                    app.ui.triggerToast('Welcome, ' + ((u && u.fname) || 'friend'));
+                    app.router.navigate('account');
+                } catch (e) {
+                    errEl.textContent = (e && e.code === 'locked') ? 'Account temporarily locked. Try again in a few minutes.' : ((e && e.message) || 'Sign-in failed');
+                    errEl.classList.remove('hidden');
+                }
+            },
+            submitRegister: async function () {
+                const fname = document.getElementById('auth-reg-fname').value.trim();
+                const lname = document.getElementById('auth-reg-lname').value.trim();
+                const email = document.getElementById('auth-reg-email').value.trim();
+                const pass  = document.getElementById('auth-reg-pass').value;
+                const pass2 = document.getElementById('auth-reg-pass2').value;
+                const errEl = document.getElementById('auth-reg-error');
+                errEl.classList.add('hidden');
+                if (!fname || !email || !pass) { errEl.textContent = 'Please fill in all required fields.'; errEl.classList.remove('hidden'); return; }
+                if (pass !== pass2) { errEl.textContent = 'Passwords do not match.'; errEl.classList.remove('hidden'); return; }
+                if (pass.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.classList.remove('hidden'); return; }
+                const name = (fname + ' ' + lname).trim();
+                try {
+                    await vmCustomer.register(email, pass, name, null);
+                    this.close();
+                    app.ui.triggerToast('Welcome, ' + fname);
+                    app.router.navigate('account');
+                } catch (e) {
+                    errEl.textContent = (e && e.message) || 'Sign-up failed';
+                    errEl.classList.remove('hidden');
+                }
+            },
+            submitForgot: function () { app.ui.triggerToast('Reset link sent (placeholder)'); this.switchTab('login'); },
+            doLogout: async function () {
+                try { await vmCustomer.logout(); } catch (e) { /* cleared locally regardless */ }
+                app.ui.triggerToast('Signed out');
+                app.router.navigate('home');
+            },
+            activateTab: function (name) {
+                ['overview', 'profile', 'orders', 'password'].forEach(function (t) {
+                    const btn = document.getElementById('acc-tab-' + t);
+                    const pan = document.getElementById('acc-panel-' + t);
+                    if (btn) btn.classList.toggle('active', t === name);
+                    if (pan) pan.classList.toggle('hidden', t !== name);
+                });
+                if (name === 'orders') app.auth.hydrateOrders();
+            },
+            renderDashboard: async function () {
+                if (!this.isLoggedIn()) { this.open('login'); return; }
+                const u = this.getUser();
+                if (!u) { this.open('login'); return; }
+                document.getElementById('acc-greeting').textContent = 'Welcome, ' + ((u.fname) || 'friend');
+                document.getElementById('acc-ov-name').textContent  = (u.fname + ' ' + u.lname).trim() || '—';
+                document.getElementById('acc-ov-email').textContent = u.email || '—';
+                document.getElementById('acc-ov-joined').textContent = u.joinDate ? u.joinDate.split(' ')[0] : '—';
+                document.getElementById('acc-fname').value = u.fname || '';
+                document.getElementById('acc-lname').value = u.lname || '';
+                document.getElementById('acc-email').value = u.email || '';
+                document.getElementById('acc-phone').value = u.phone || '';
+                this.activateTab('overview');
+            },
+            hydrateOrders: async function () {
+                const wrap = document.getElementById('acc-orders-list');
+                wrap.innerHTML = '<p class="text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] py-12 text-center">Loading…</p>';
+                try {
+                    const r = await vmCustomer.myOrders();
+                    const orders = (r.orders || []);
+                    if (!orders.length) {
+                        wrap.innerHTML = '<p class="text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)] py-12 text-center">No orders yet. <a href="#shop" onclick="app.router.navigate(\'shop\')" class="text-[var(--text-dark)] border-b border-[var(--text-dark)] pb-0.5">Start shopping →</a></p>';
+                        return;
+                    }
+                    wrap.innerHTML = '<div class="space-y-4">' + orders.map(function (o) {
+                        const total = (o.total_amount != null ? o.total_amount : 0).toFixed(2);
+                        const dateStr = o.created_at ? String(o.created_at).split(' ')[0] : '—';
+                        const status = o.status || 'pending';
+                        return '<div class="flex items-center justify-between border-b border-[var(--border-light)] pb-4">' +
+                                  '<div><p class="text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)]">Order</p>' +
+                                  '<p class="font-serif text-lg text-[var(--text-dark)]">#' + o.id + '</p></div>' +
+                                  '<div class="text-right"><p class="text-[11px] uppercase tracking-[0.15em] text-[var(--text-muted)]">' + dateStr + '</p>' +
+                                  '<p class="text-sm text-[var(--text-dark)]">$' + total + ' &middot; ' + status + '</p></div>' +
+                               '</div>';
+                    }).join('') + '</div>';
+                } catch (e) {
+                    wrap.innerHTML = '<p class="text-[11px] uppercase tracking-[0.15em] text-red-700 py-12 text-center">Failed to load orders.</p>';
+                }
+            },
+            saveProfile: async function () {
+                const fname = document.getElementById('acc-fname').value.trim();
+                const lname = document.getElementById('acc-lname').value.trim();
+                const phone = document.getElementById('acc-phone').value.trim();
+                const name = (fname + ' ' + lname).trim();
+                try {
+                    await vmCustomer.updateProfile(name || null, phone || null);
+                    const u = this.getUser();
+                    if (u) {
+                        document.getElementById('acc-greeting').textContent = 'Welcome, ' + ((u.fname) || 'friend');
+                        document.getElementById('acc-ov-name').textContent = (u.fname + ' ' + u.lname).trim() || '—';
+                    }
+                    this.updateIcon();
+                    app.ui.triggerToast('Profile updated');
+                } catch (e) {
+                    app.ui.triggerToast((e && e.message) || 'Update failed');
+                }
+            },
+            changePassword: async function () {
+                const cur = document.getElementById('acc-pw-cur').value;
+                const nw  = document.getElementById('acc-pw-new').value;
+                const conf = document.getElementById('acc-pw-conf').value;
+                if (!cur || !nw || !conf) { app.ui.triggerToast('All password fields required'); return; }
+                if (nw.length < 8) { app.ui.triggerToast('New password must be 8+ chars'); return; }
+                if (nw !== conf) { app.ui.triggerToast('Passwords do not match'); return; }
+                try {
+                    await vmCustomer.changePassword(cur, nw);
+                    ['acc-pw-cur','acc-pw-new','acc-pw-conf'].forEach(function (id) {
+                        const el = document.getElementById(id); if (el) el.value = '';
+                    });
+                    app.ui.triggerToast('Password updated');
+                } catch (e) {
+                    app.ui.triggerToast((e && e.message) || 'Failed to change password');
+                }
+            }
+        };
+
+        window.app = app;
+
+        window.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
