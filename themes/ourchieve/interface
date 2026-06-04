@@ -1241,11 +1241,56 @@
         if (totalEl) totalEl.textContent = `R${total.toLocaleString()}.00`;
     }
 
-    function placeOrder() {
-        showToast('Order placed successfully! Thank you for shopping with Ourchieve.');
-        cart = [];
-        updateCartUI();
-        setTimeout(() => { showMainView(); }, 2000);
+    async function placeOrder() {
+        if (cart.length === 0) { showToast('Your cart is empty.'); return; }
+        const btn = event?.target?.closest('button');
+        if (btn?.disabled) return;
+
+        const fname = document.getElementById('co-fname')?.value?.trim() || '';
+        const lname = document.getElementById('co-lname')?.value?.trim() || '';
+        const email = document.getElementById('co-email')?.value?.trim() || '';
+        if (!fname || !lname || !email) {
+            showToast('Please fill in name and email.');
+            return;
+        }
+
+        const subtotal = getSubtotal();
+        const shipping = subtotal >= 750 ? 0 : 99;
+        const total = subtotal + shipping;
+
+        const payload = {
+            name: `${fname} ${lname}`.trim(),
+            email,
+            total,
+            items: JSON.stringify(cart.map(i => ({ id: i.id, name: i.name, price: i.price, qty: i.qty, image: i.image })))
+        };
+        if (isLoggedIn() && customerAuth.user && customerAuth.user.id) {
+            payload.customer_id = customerAuth.user.id;
+        }
+
+        if (btn) {
+            btn.disabled = true;
+            btn.dataset.originalText = btn.innerHTML;
+            btn.innerHTML = 'PLACING ORDER...';
+        }
+        try {
+            const result = await postStore('order', payload);
+            const ok = result.ok || (result.data && result.data.success === true);
+            if (ok) {
+                showToast('Order placed successfully! Thank you for shopping with Ourchieve.');
+                cart = [];
+                updateCartUI();
+                setTimeout(() => {
+                    if (isLoggedIn()) { showDashboardView(); } else { showMainView(); }
+                }, 1500);
+            } else {
+                if (btn) { btn.disabled = false; btn.innerHTML = btn.dataset.originalText; }
+                showToast(result.error || (result.data && result.data.error) || 'Order could not be placed. Please try again.');
+            }
+        } catch (err) {
+            if (btn) { btn.disabled = false; btn.innerHTML = btn.dataset.originalText; }
+            showToast('Order could not be placed. Please try again.');
+        }
     }
 
     // ============ SEARCH ============
