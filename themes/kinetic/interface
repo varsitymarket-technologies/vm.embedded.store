@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KINETIC - High-Performance Streetwear & Gear</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@500;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0B0B0C; color: #F3F4F6; }
+        .font-display { font-family: 'Syne', sans-serif; }
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+        
+        /* Shopify style high-octane focus states */
+        .shopify-input { 
+            border: 2px solid #27272A; 
+            background-color: #121214;
+            color: #FFFFFF;
+            transition: all 0.2s ease;
+        }
+        .shopify-input:focus { 
+            outline: none; 
+            border-color: #CCFF00; 
+        }
+        
+        /* Fast scaling product card behaviors */
+        .product-card img {
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .product-card:hover img {
+            transform: scale(1.05);
+        }
+    </style>
+
+    <!-- D.3.x: customer auth helper (vm-customer.js from same dir as api.php) -->
+    <script src="vm-customer.js" defer></script>
+    <script>
+        window.addEventListener('vm:customer-loaded', function () {
+            document.body.dataset.customer = 'logged-in';
+            if (window.app && app.auth && typeof app.auth.updateIcon === 'function') app.auth.updateIcon();
+        });
+        window.addEventListener('vm:customer-login', function () {
+            document.body.dataset.customer = 'logged-in';
+            if (window.app && app.auth && typeof app.auth.updateIcon === 'function') app.auth.updateIcon();
+        });
+        window.addEventListener('vm:customer-logout', function () {
+            document.body.dataset.customer = 'logged-out';
+            if (window.app && app.auth && typeof app.auth.updateIcon === 'function') app.auth.updateIcon();
+        });
+    </script>
+</head>
+<body class="antialiased min-h-screen flex flex-col justify-between selection:bg-[#CCFF00] selection:text-black">
+
+    <div class="bg-[#CCFF00] text-black py-2.5 text-xs font-extrabold tracking-widest text-center uppercase px-4 overflow-hidden whitespace-nowrap">
+        DROP 04 IS LIVE-SIMULTANEOUS INTERNATIONAL SHIPPING PATHWAYS ACTIVATED
+    </div>
+
+    <header class="sticky top-0 bg-[#0B0B0C]/90 backdrop-blur-md z-40 border-b-2 border-zinc-900">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <nav class="hidden md:flex items-center space-x-8 text-xs font-bold tracking-wider uppercase">
+                <a href="#shop" onclick="app.router.navigate('shop')" class="text-zinc-400 hover:text-[#CCFF00] transition-colors">All Drops</a>
+                <a href="#about" onclick="app.router.navigate('about')" class="text-zinc-400 hover:text-[#CCFF00] transition-colors">Our Labs</a>
+            </nav>
+
+            <a href="#home" onclick="app.router.navigate('home')" class="font-display text-2xl font-extrabold tracking-tighter text-white hover:opacity-90 transition-opacity">
+                KINETIC-LABS
+            </a>
+
+            <div class="flex items-center space-x-4">
+                <button class="p-2 text-zinc-400 hover:text-white transition-colors" onclick="app.ui.toggleSearchOverlay()" aria-label="Search Vault">
+                    <i data-lucide="search" class="w-5 h-5 stroke-[2]"></i>
+                </button>
+                <button id="auth-icon-btn" class="p-2 text-zinc-400 hover:text-white transition-colors flex items-center" onclick="app.auth.iconClick()" aria-label="Account">
+                    <span class="sr-only" id="auth-icon-label">Account</span>
+                    <i data-lucide="user" class="w-5 h-5 stroke-[2]"></i>
+                </button>
+                <button class="p-2 text-zinc-400 hover:text-white transition-colors relative flex items-center" onclick="app.ui.toggleCartDrawer()" aria-label="Open Loadout Bags">
+                    <i data-lucide="shopping-cart" class="w-5 h-5 stroke-[2]"></i>
+                    <span id="global-cart-count" class="absolute -top-1 -right-1 text-[10px] font-black text-black bg-[#CCFF00] w-4 h-4 rounded-none flex items-center justify-center transition-all transform scale-0">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow">
+
+        <section id="view-home" class="view-section active">
+            <div class="relative min-h-[calc(100vh-10rem)] flex items-center bg-radial from-zinc-900 via-[#0B0B0C] to-[#0B0B0C] border-b-2 border-zinc-900">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-1 lg:grid-cols-12 items-center gap-12 w-full">
+                    <div class="lg:col-span-6 space-y-6 text-center lg:text-left z-10">
+                        <span class="inline-block bg-zinc-900 text-[#CCFF00] text-[10px] font-black tracking-widest uppercase px-3 py-1 border border-zinc-800">SYSTEM REBOOT RELEASE</span>
+                        <h1 class="font-display text-4xl sm:text-6xl lg:text-7xl font-black text-white leading-none uppercase tracking-tighter">
+                            ZERO RESISTANCE. <br><span class="text-[#CCFF00]">PURE PERFORMANCE.</span>
+                        </h1>
+                        <p class="text-zinc-400 text-sm max-w-md mx-auto lg:mx-0 font-medium leading-relaxed">
+                            Engineered for high-output urban environments. Technical hydrophobic shells meeting ultra-heavy loopback athletic cotton weaves.
+                        </p>
+                        <div class="pt-4 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                            <button onclick="app.router.navigate('shop')" class="bg-[#CCFF00] text-black text-xs font-black tracking-widest uppercase px-10 py-4 hover:bg-white hover:text-black transition-colors rounded-none">
+                                View Current Manifest
+                            </button>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-6 border-2 border-zinc-800 p-3 bg-zinc-900/40 backdrop-blur-md">
+                        <div class="aspect-[4/3] w-full bg-zinc-900 overflow-hidden relative">
+                            <img src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=1200&auto=format&fit=crop" class="w-full h-full object-cover grayscale opacity-90 contrast-115" alt="Kinetic dynamic footwear profile asset">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div onclick="app.router.navigate('shop', {category: 'TECH-SHELL'})" class="relative group cursor-pointer border-2 border-zinc-900 p-2 bg-zinc-950 hover:border-[#CCFF00] transition-colors">
+                    <div class="overflow-hidden aspect-[16/9] bg-zinc-900">
+                        <img src="https://images.unsplash.com/photo-1508296695146-257a814070b4?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500 opacity-60">
+                    </div>
+                    <div class="flex justify-between items-center mt-4 px-2">
+                        <h3 class="font-display font-extrabold uppercase text-lg text-white">01 / Technical Outerwear</h3>
+                        <span class="text-[#CCFF00] font-black">&rarr;</span>
+                    </div>
+                </div>
+                <div onclick="app.router.navigate('shop', {category: 'HARDWARE'})" class="relative group cursor-pointer border-2 border-zinc-900 p-2 bg-zinc-950 hover:border-[#CCFF00] transition-colors">
+                    <div class="overflow-hidden aspect-[16/9] bg-zinc-900">
+                        <img src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=800&auto=format&fit=crop" class="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500 opacity-60">
+                    </div>
+                    <div class="flex justify-between items-center mt-4 px-2">
+                        <h3 class="font-display font-extrabold uppercase text-lg text-white">02 / Heavy Load Utilities</h3>
+                        <span class="text-[#CCFF00] font-black">&rarr;</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-shop" class="view-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="flex flex-col md:flex-row md:items-end justify-between border-b-2 border-zinc-900 pb-6 mb-12 gap-4">
+                <div>
+                    <h2 class="font-display text-4xl font-black uppercase text-white tracking-tight">Active Deployments</h2>
+                    <p id="catalog-count-string" class="text-zinc-500 text-xs mt-1 font-bold tracking-widest uppercase">Initializing inventory pathways...</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="text-xs text-zinc-500 uppercase font-black tracking-wider">Sequence:</span>
+                    <select id="catalog-sort" onchange="app.store.sortCatalog(this.value)" class="text-xs font-bold uppercase tracking-wider bg-zinc-900 border-2 border-zinc-800 text-white rounded-none py-3 px-4 focus:outline-none focus:border-[#CCFF00]">
+                        <option value="featured">Curated Drops</option>
+                        <option value="price-low">Price-Baseline to Peak</option>
+                        <option value="price-high">Price-Peak to Baseline</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="shop-items-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                </div>
+        </section>
+
+        <section id="view-product" class="view-section max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div id="product-detail-target" class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+                </div>
+        </section>
+
+        <section id="view-about" class="view-section max-w-4xl mx-auto px-4 py-16 space-y-12">
+            <div class="text-center space-y-4">
+                <span class="text-[#CCFF00] text-xs font-black tracking-widest uppercase">// SYSTEM SPECIFICATION DIRECTIVES</span>
+                <h2 class="font-display text-4xl sm:text-5xl font-black uppercase text-white">We develop physical extensions for performance acceleration.</h2>
+                <p class="text-zinc-400 text-sm font-medium max-w-2xl mx-auto leading-relaxed">KINETIC LABS serves as an advanced design vector creating durable, climate-adaptive garments. Our materials undergo severe multi-climate friction tracking to achieve absolute field synchronization pathways before scaling production outputs.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6">
+                <div class="p-8 bg-zinc-950 border-2 border-zinc-900 space-y-3">
+                    <h3 class="text-white text-xs font-black uppercase tracking-widest">Abrasion Shield Optimization</h3>
+                    <p class="text-zinc-500 text-xs leading-relaxed font-medium">All stress zones feature cross-hatched reinforcement bindings to prevent composite degradation sequences over decades of real-world use.</p>
+                </div>
+                <div class="p-8 bg-zinc-950 border-2 border-zinc-900 space-y-3">
+                    <h3 class="text-white text-xs font-black uppercase tracking-widest">Carbon Neutral Verification</h3>
+                    <p class="text-zinc-500 text-xs leading-relaxed font-medium">We offset 100% of transport friction logs through direct investment pipelines targeting urban ecological recovery zones.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-faq" class="view-section max-w-2xl mx-auto px-4 py-16 space-y-8">
+            <div class="text-center space-y-2">
+                <h2 class="font-display text-3xl font-black uppercase text-white">Support Framework</h2>
+                <p class="text-zinc-500 text-xs font-bold uppercase tracking-widest">Operational dispatch procedures and guidelines</p>
+            </div>
+            <div class="border-t-2 border-zinc-900 divide-y divide-zinc-900">
+                <div class="py-5">
+                    <button onclick="app.ui.toggleAccordion(this)" class="w-full flex justify-between items-center text-left py-2 text-sm font-bold text-white uppercase tracking-wider focus:outline-none group">
+                        <span class="group-hover:text-[#CCFF00] transition-colors">Fulfillment processing timelines?</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-zinc-500 transform transition-transform"></i>
+                    </button>
+                    <div class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out text-zinc-400 text-xs leading-relaxed font-medium">
+                        <p class="py-4 pr-4">Orders enter automated packing streams instantly. Logistics tracking parameters broadcast out within 24 working hours from initial load sequences. Standard transit patterns clock 2-4 days domestically.</p>
+                    </div>
+                </div>
+                <div class="py-5">
+                    <button onclick="app.ui.toggleAccordion(this)" class="w-full flex justify-between items-center text-left py-2 text-sm font-bold text-white uppercase tracking-wider focus:outline-none group">
+                        <span class="group-hover:text-[#CCFF00] transition-colors">Exchange logistics protocol metrics?</span>
+                        <i data-lucide="chevron-right" class="w-4 h-4 text-zinc-500 transform transition-transform"></i>
+                    </button>
+                    <div class="max-h-0 overflow-hidden transition-all duration-300 ease-in-out text-zinc-400 text-xs leading-relaxed font-medium">
+                        <p class="py-4 pr-4">We authorize returns on unmodified cargo packaging structures up to 30 intervals post delivery arrivals. Access the processing terminal directly through your security account logs to secure freight routing stamps.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-contact" class="view-section max-w-4xl mx-auto px-4 py-16">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-zinc-950 p-8 sm:p-12 border-2 border-zinc-900">
+                <div class="space-y-6 flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <h2 class="font-display text-4xl font-black uppercase text-white tracking-tight">Signal Agent Pod</h2>
+                        <p class="text-zinc-400 text-xs leading-relaxed font-medium">Need precision dimension scaling metrics or custom institutional supply batching tokens? Route your data files directly to our engineering coordinators.</p>
+                    </div>
+                    <div class="text-xs text-zinc-600 font-bold tracking-widest uppercase space-y-1">
+                        <p>Secure Interface: support@kineticlabs.io</p>
+                        <p>Terminal Matrix Code: [SEC-CON-994]</p>
+                    </div>
+                </div>
+                <form onsubmit="app.ui.handleContactSubmit(event)" class="space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <input type="text" required placeholder="IDENTIFIER NAME" class="w-full p-4 text-xs font-bold uppercase tracking-wider shopify-input">
+                        <input type="email" required placeholder="EMAIL ROUTING NODE" class="w-full p-4 text-xs font-bold uppercase tracking-wider shopify-input">
+                    </div>
+                    <textarea required rows="4" placeholder="TRANSMIT REQUEST DETAILS..." class="w-full p-4 text-xs font-bold uppercase tracking-wider shopify-input"></textarea>
+                    <button type="submit" class="w-full bg-[#CCFF00] text-black py-4 text-xs font-black tracking-widest uppercase hover:bg-white hover:text-black transition-colors rounded-none">Broadcast Signal</button>
+                </form>
+            </div>
+        </section>
+
+        <!-- D.3.x: account view -->
+        <section id="view-account" class="view-section max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="flex items-center justify-between mb-12">
+                <div>
+                    <p class="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Account</p>
+                    <h1 id="acc-greeting" class="font-display text-4xl font-extrabold text-white mt-2 tracking-tighter uppercase">Welcome</h1>
+                </div>
+                <button onclick="app.auth.doLogout()" class="text-[10px] uppercase tracking-widest text-zinc-500 hover:text-[#CCFF00] font-bold">Sign Out</button>
+            </div>
+
+            <div class="flex space-x-8 border-b-2 border-zinc-900 mb-8">
+                <button id="acc-tab-overview" onclick="app.auth.activateTab('overview')" class="acc-tab pb-3 text-[11px] uppercase tracking-widest font-bold">Overview</button>
+                <button id="acc-tab-profile"  onclick="app.auth.activateTab('profile')"  class="acc-tab pb-3 text-[11px] uppercase tracking-widest font-bold">Profile</button>
+                <button id="acc-tab-orders"   onclick="app.auth.activateTab('orders')"   class="acc-tab pb-3 text-[11px] uppercase tracking-widest font-bold">Orders</button>
+                <button id="acc-tab-password" onclick="app.auth.activateTab('password')" class="acc-tab pb-3 text-[11px] uppercase tracking-widest font-bold">Password</button>
+            </div>
+
+            <div id="acc-panel-overview" class="acc-panel">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                    <div><p class="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Name</p><p id="acc-ov-name" class="text-sm text-white mt-2">—</p></div>
+                    <div><p class="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Email</p><p id="acc-ov-email" class="text-sm text-white mt-2">—</p></div>
+                    <div><p class="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Member Since</p><p id="acc-ov-joined" class="text-sm text-white mt-2">—</p></div>
+                </div>
+                <button onclick="app.auth.activateTab('profile')" class="text-[10px] uppercase tracking-widest text-[#CCFF00] border-b border-[#CCFF00] pb-0.5 font-bold">Edit profile</button>
+            </div>
+
+            <div id="acc-panel-profile" class="acc-panel hidden">
+                <form onsubmit="event.preventDefault(); app.auth.saveProfile()" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div><label class="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2 font-bold">First Name</label>
+                             <input type="text" id="acc-fname" class="w-full bg-zinc-950 border-2 border-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-[#CCFF00] font-bold"></div>
+                        <div><label class="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2 font-bold">Last Name</label>
+                             <input type="text" id="acc-lname" class="w-full bg-zinc-950 border-2 border-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-[#CCFF00] font-bold"></div>
+                    </div>
+                    <div><label class="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2 font-bold">Email</label>
+                         <input type="email" id="acc-email" readonly title="Email is the account identifier and cannot be changed here" class="w-full bg-zinc-900 border-2 border-zinc-900 px-4 py-3 text-zinc-500 cursor-not-allowed font-bold"></div>
+                    <div><label class="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2 font-bold">Phone (optional)</label>
+                         <input type="tel" id="acc-phone" class="w-full bg-zinc-950 border-2 border-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-[#CCFF00] font-bold"></div>
+                    <button type="submit" class="w-full bg-[#CCFF00] text-black py-3 text-[11px] uppercase tracking-widest font-extrabold hover:bg-white transition-colors">Save</button>
+                </form>
+            </div>
+
+            <div id="acc-panel-orders" class="acc-panel hidden">
+                <div id="acc-orders-list">
+                    <p class="text-[10px] uppercase tracking-widest text-zinc-500 py-12 text-center font-bold">Loading…</p>
+                </div>
+            </div>
+
+            <div id="acc-panel-password" class="acc-panel hidden">
+                <form onsubmit="event.preventDefault(); app.auth.changePassword()" class="space-y-6">
+                    <div><label class="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2 font-bold">Current Password</label>
+                         <input type="password" id="acc-pw-cur" required class="w-full bg-zinc-950 border-2 border-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-[#CCFF00] font-bold"></div>
+                    <div><label class="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2 font-bold">New Password</label>
+                         <input type="password" id="acc-pw-new" required minlength="8" class="w-full bg-zinc-950 border-2 border-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-[#CCFF00] font-bold"></div>
+                    <div><label class="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2 font-bold">Confirm New Password</label>
+                         <input type="password" id="acc-pw-conf" required minlength="8" class="w-full bg-zinc-950 border-2 border-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-[#CCFF00] font-bold"></div>
+                    <button type="submit" class="w-full bg-[#CCFF00] text-black py-3 text-[11px] uppercase tracking-widest font-extrabold hover:bg-white transition-colors">Change Password</button>
+                </form>
+            </div>
+        </section>
+
+        <style>
+            .acc-tab { color: #71717a; border-bottom: 2px solid transparent; transition: all 0.3s; margin-bottom: -2px; }
+            .acc-tab.active { color: #fff; border-bottom-color: #CCFF00; }
+        </style>
+
+        <!-- D.3.x: Auth modal overlay -->
+        <div id="auth-modal" class="fixed inset-0 bg-[#0B0B0C] z-50 hidden flex-col items-center justify-start overflow-y-auto p-6">
+            <div class="w-full max-w-md mx-auto pt-12 pb-24">
+                <div class="flex items-center justify-between mb-12">
+                    <span class="font-display text-2xl font-extrabold tracking-tighter text-white">KINETIC-LABS</span>
+                    <button onclick="app.auth.close()" aria-label="Close" class="text-zinc-500 hover:text-white transition-colors">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <div class="flex space-x-8 border-b-2 border-zinc-900 mb-8">
+                    <button id="auth-tab-login"    onclick="app.auth.switchTab('login')"    class="auth-tab pb-3 text-[11px] uppercase tracking-widest font-bold">Sign In</button>
+                    <button id="auth-tab-register" onclick="app.auth.switchTab('register')" class="auth-tab pb-3 text-[11px] uppercase tracking-widest font-bold">Create</button>
+                    <button id="auth-tab-forgot"   onclick="app.auth.switchTab('forgot')"   class="auth-tab pb-3 text-[11px] uppercase tracking-widest font-bold">Forgot</button>
+                </div>
+
+                <div id="auth-panel-login" class="auth-panel">
+                    <form onsubmit="event.preventDefault(); app.auth.submitLogin()" class="space-y-6">
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2 font-bold">Email</label>
+                            <input type="email" id="auth-login-email" required class="w-full bg-zinc-950 border-2 border-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-[#CCFF00] font-bold">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2 font-bold">Password</label>
+                            <input type="password" id="auth-login-pass" required class="w-full bg-zinc-950 border-2 border-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-[#CCFF00] font-bold">
+                        </div>
+                        <div id="auth-login-error" class="hidden text-[11px] text-red-500 mt-2 font-bold"></div>
+                        <button type="submit" class="w-full bg-[#CCFF00] text-black py-3 text-[11px] uppercase tracking-widest font-extrabold hover:bg-white transition-colors">Sign In</button>
+                    </form>
+                </div>
+
+                <div id="auth-panel-register" class="auth-panel hidden">
+                    <form onsubmit="event.preventDefault(); app.auth.submitRegister()" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div><label class="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2 font-bold">First Name</label>
+                                 <input type="text" id="auth-reg-fname" required class="w-full bg-zinc-950 border-2 border-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-[#CCFF00] font-bold"></div>
+                            <div><label class="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2 font-bold">Last Name</label>
+                                 <input type="text" id="auth-reg-lname" class="w-full bg-zinc-950 border-2 border-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-[#CCFF00] font-bold"></div>
+                        </div>
+                        <div><label class="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2 font-bold">Email</label>
+                             <input type="email" id="auth-reg-email" required class="w-full bg-zinc-950 border-2 border-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-[#CCFF00] font-bold"></div>
+                        <div><label class="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2 font-bold">Password</label>
+                             <input type="password" id="auth-reg-pass" required minlength="8" class="w-full bg-zinc-950 border-2 border-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-[#CCFF00] font-bold"></div>
+                        <div><label class="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2 font-bold">Confirm Password</label>
+                             <input type="password" id="auth-reg-pass2" required minlength="8" class="w-full bg-zinc-950 border-2 border-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-[#CCFF00] font-bold"></div>
+                        <div id="auth-reg-error" class="hidden text-[11px] text-red-500 mt-2 font-bold"></div>
+                        <button type="submit" class="w-full bg-[#CCFF00] text-black py-3 text-[11px] uppercase tracking-widest font-extrabold hover:bg-white transition-colors">Create Account</button>
+                    </form>
+                </div>
+
+                <div id="auth-panel-forgot" class="auth-panel hidden">
+                    <form onsubmit="event.preventDefault(); app.auth.submitForgot()" class="space-y-6">
+                        <p class="text-sm text-zinc-400 leading-relaxed">Enter the email associated with your account and we'll send a reset link when this feature becomes available.</p>
+                        <div><label class="block text-[10px] uppercase tracking-widest text-zinc-500 mb-2 font-bold">Email</label>
+                             <input type="email" id="auth-forgot-email" required class="w-full bg-zinc-950 border-2 border-zinc-900 px-4 py-3 text-white focus:outline-none focus:border-[#CCFF00] font-bold"></div>
+                        <button type="submit" class="w-full bg-[#CCFF00] text-black py-3 text-[11px] uppercase tracking-widest font-extrabold hover:bg-white transition-colors">Send Reset</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .auth-tab { color: #71717a; border-bottom: 2px solid transparent; transition: all 0.3s; margin-bottom: -2px; }
+            .auth-tab.active { color: #fff; border-bottom-color: #CCFF00; }
+            #auth-modal.is-open { display: flex; }
+        </style>
+
+        <section id="view-checkout" class="view-section max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="flex items-center space-x-3 text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                        <span id="step-nav-1" class="text-white">01-DISPATCH DATA</span>
+                        <i data-lucide="chevrons-right" class="w-4 h-4"></i>
+                        <span id="step-nav-2">02-VELOCITY PROFILE</span>
+                        <i data-lucide="chevrons-right" class="w-4 h-4"></i>
+                        <span id="step-nav-3">03-CONFIRMATION BOND</span>
+                    </div>
+                    <form id="checkout-form" onsubmit="app.checkout.handleStepSubmit(event)" class="space-y-6 bg-zinc-950 border-2 border-zinc-900 p-6 sm:p-10">
+                        <div id="checkout-step-container"></div>
+                        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-6 border-t border-zinc-900 gap-4">
+                            <a href="#shop" onclick="app.router.navigate('shop')" class="text-xs font-bold text-zinc-500 hover:text-[#CCFF00] uppercase tracking-wider">&larr; Return to drops</a>
+                            <button type="submit" class="bg-[#CCFF00] text-black px-8 py-4 text-xs font-black tracking-widest uppercase hover:bg-white hover:text-black transition-colors rounded-none">
+                                Advance Sequences &rarr;
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="lg:col-span-5 bg-zinc-950 border-2 border-zinc-900 p-6 sm:p-8 space-y-6 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xs font-black text-white uppercase tracking-widest border-b border-zinc-900 pb-3 mb-4">Allocation Manifest</h3>
+                        <div id="checkout-summary-items" class="space-y-4 divide-y divide-zinc-900 max-h-72 overflow-y-auto pr-1"></div>
+                    </div>
+                    <div class="space-y-3 pt-4 border-t border-zinc-900 text-xs font-bold uppercase tracking-wider text-zinc-400">
+                        <div class="flex justify-between"><span>Subtotal Allocation</span><span id="chk-subtotal" class="text-white font-mono">$0.00</span></div>
+                        <div class="flex justify-between text-white font-black pt-4 border-t-2 border-zinc-900 text-sm"><span>Total Ledger Balance</span><span id="chk-total" class="text-[#CCFF00] font-mono">$0.00</span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <div id="cart-drawer-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 pointer-events-none opacity-0 transition-all duration-300" onclick="app.ui.toggleCartDrawer()">
+        <div class="absolute right-0 top-0 h-full w-full max-w-md bg-[#0B0B0C] border-l-2 border-zinc-900 p-6 sm:p-8 flex flex-col justify-between pointer-events-auto transform translate-x-full transition-transform duration-300 ease-in-out" onclick="event.stopPropagation()">
+            <div class="flex flex-col min-h-0 flex-grow">
+                <div class="flex items-center justify-between border-b border-zinc-900 pb-4 mb-6">
+                    <h3 class="text-xs font-black uppercase tracking-widest text-white">Your Loadout Allocation</h3>
+                    <button onclick="app.ui.toggleCartDrawer()" class="p-1 text-zinc-500 hover:text-white transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+                </div>
+                <div id="cart-drawer-items" class="flex-grow overflow-y-auto space-y-4 pr-1"></div>
+            </div>
+            <div class="pt-6 border-t border-zinc-900 space-y-4 bg-[#0B0B0C]">
+                <div class="flex justify-between text-sm font-black uppercase tracking-wider text-white"><span>Estimated Cost Aggregate</span><span id="cart-drawer-subtotal" class="text-[#CCFF00] font-mono">$0.00</span></div>
+                <p class="text-[10px] font-medium text-zinc-500 leading-normal uppercase">Localized custom trade taxation variables and priority freight tracking costs process in step arrays during checkout loops.</p>
+                <button onclick="app.checkout.initiateCheckout()" class="w-full py-4.5 bg-[#CCFF00] text-black font-black text-xs tracking-widest uppercase hover:bg-white hover:text-black transition-colors rounded-none">Execute Secure Checkout</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="search-overlay" class="fixed inset-0 bg-[#0B0B0C] z-50 hidden items-center justify-center p-4 sm:p-6">
+        <button onclick="app.ui.toggleSearchOverlay()" class="absolute top-6 right-6 p-2 text-zinc-500 hover:text-white transition-colors"><i data-lucide="x" class="w-6 h-6"></i></button>
+        <div class="w-full max-w-3xl space-y-6">
+            <h3 class="text-xs text-[#CCFF00] font-black uppercase tracking-widest text-center">// SYSTEM INDEX SEARCH TERMINAL</h3>
+            <div class="relative border-b-2 border-zinc-800 pb-3">
+                <input type="text" id="live-search-input" oninput="app.store.handleSearch(this.value)" placeholder="INPUT QUERY PARAMETERS [OUTERWEAR, FOOTWEAR, GEAR]..." class="w-full bg-transparent py-2 text-xl font-bold uppercase tracking-tight text-white focus:outline-none placeholder-zinc-700">
+            </div>
+            <div id="search-results-output" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto pt-2"></div>
+        </div>
+    </div>
+
+    <div id="toast-notif" class="fixed bottom-6 right-6 bg-[#CCFF00] text-black text-xs font-black py-4 px-6 rounded-none shadow-2xl z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center space-x-3 uppercase tracking-widest">
+        <i data-lucide="activity" class="w-4 h-4 text-black"></i>
+        <span id="toast-notif-message">System allocation altered</span>
+    </div>
+
+    <footer class="bg-zinc-950 border-t-2 border-zinc-900 pt-16 pb-12 text-xs font-bold uppercase tracking-wider text-zinc-500">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 border-b border-zinc-900 pb-12 mb-8">
+            <div class="space-y-4">
+                <h4 class="text-white text-[11px] font-black tracking-widest">// RELEASES</h4>
+                <ul class="space-y-2.5 text-zinc-400 font-medium"><li class="cursor-pointer hover:text-[#CCFF00]" onclick="app.router.navigate('shop')">Active Drops</li></ul>
+            </div>
+            <div class="space-y-4">
+                <h4 class="text-white text-[11px] font-black tracking-widest">// THE HUB</h4>
+                <ul class="space-y-2.5 text-zinc-400 font-medium"><li class="cursor-pointer hover:text-[#CCFF00]" onclick="app.router.navigate('about')">Our Labs</li></ul>
+            </div>
+            <div class="space-y-4">
+                <h4 class="text-white text-[11px] font-black tracking-widest">// INFRASTRUCTURE</h4>
+                <ul class="space-y-2.5 text-zinc-400 font-medium"><li class="cursor-pointer hover:text-[#CCFF00]" onclick="app.router.navigate('faq')">Dispatch FAQ</li><li class="cursor-pointer hover:text-[#CCFF00]" onclick="app.router.navigate('contact')">Signal Agents</li></ul>
+            </div>
+            <div class="space-y-3">
+                <h4 class="text-white text-[11px] font-black tracking-widest">// FREQUENCY PIPELINE</h4>
+                <p class="text-zinc-600 font-medium normal-case leading-relaxed">Lock in credentials to join alert feeds capturing small-batch allocation openings, flash drop paths and event archives.</p>
+            </div>
+        </div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-zinc-600 font-bold">
+            <p>&copy; 2026 KINETIC LABS INC. CORE TRANSACTIONS EXECUTED LOCALLY AT COMPILE TIME RUNS.</p>
+        </div>
+    </footer>
+
+    <script>
+        /**
+         * Dynamic technical streetwear dataset records
+         */
+        const __SEED = [
+            { id: 'kin-01', name: 'Alpha Hydrophobic Cargo Parka X-1', price: 380.00, category: 'TECH-SHELL', images: ['https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=600&auto=format&fit=crop'], desc: 'High-density, laser-fused technical shell layout treating double-layered advanced windproof membranes. Outfitted with heavy magnetic locking utility clasps and deep-profile custom storm shield hoods.' },
+            { id: 'kin-02', name: 'Modular Multi-Fit Grid Loadout Rig', price: 185.00, category: 'HARDWARE', images: ['https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=600&auto=format&fit=crop'], desc: 'Heavyweight military-spec canvas architecture hosting detachable tactical accessory holsters. Engineered with dual compression harness tracking straps for stable, fluid urban carry navigation.' },
+            { id: 'kin-03', name: '460GSM Loopback Track Pullover Hoodie', price: 160.00, category: 'TECH-SHELL', images: ['https://images.unsplash.com/photo-1508296695146-257a814070b4?q=80&w=600&auto=format&fit=crop'], desc: 'An ultra-dense structural jersey layer engineered out of premium long-staple ring-spun brushed raw cotton blends. Cut with relaxed drop shoulders, seamless ribbed edges, and clean tonal stitching layouts.' },
+            { id: 'kin-04', name: 'Element Vector Waterproof Duffel Bag', price: 210.00, category: 'HARDWARE', images: ['https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?q=80&w=600&auto=format&fit=crop'], desc: 'A completely submersible gear travel cell engineered from rugged welded matte TPU canvas lines. Featuring weatherized airtight zippers and smart modular backpack shoulder swap-bindings.' }
+        ];
+
+        /* ════════════════════
+           CANONICAL DATA LAYER — fetchStore → api.php?state=X, getMockData fallback, MOCK shape
+        ════════════════════ */
+        const __CATS = [...new Set(__SEED.map(p => p.category).filter(Boolean))].map((name, i) => ({ id: i + 1, name }));
+        const MOCK = {
+            site: { name: "KINETIC", currency: "R", domain: window.location.hostname },
+            categories: __CATS,
+            products: __SEED.map((p, i) => ({
+                ...p,
+                id: p.id != null ? p.id : i + 1,
+                image: p.image || (Array.isArray(p.images) ? p.images[0] : "") || "",
+                description: p.description || p.desc || "",
+                stock: p.stock != null ? p.stock : 12,
+                category_id: (__CATS.find(c => c.name === p.category) || {}).id || null
+            })),
+            discounts: [
+                { id: 1, code: "WELCOME10", percentage: 10, active: 1 },
+                { id: 2, code: "DROP20", percentage: 20, active: 1 }
+            ]
+        };
+
+        async function fetchStore(state, params = {}) {
+            const url = new URL("api.php", window.location.href);
+            url.searchParams.set("state", state);
+            for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+            try {
+                const res = await fetch(url, { signal: AbortSignal.timeout(4000) });
+                if (!res.ok) throw new Error(res.status);
+                return await res.json();
+            } catch {
+                return getMockData(state, params);
+            }
+        }
+
+        function getMockData(state, params = {}) {
+            switch (state) {
+                case "site": return MOCK.site;
+                case "products": return MOCK.products;
+                case "product": return MOCK.products.find(p => p.id == params.id) || null;
+                case "categories": return MOCK.categories;
+                case "products_by_category": return MOCK.products.filter(p => p.category_id == params.category_id);
+                case "search": {
+                    const q = (params.q || "").toLowerCase();
+                    return MOCK.products.filter(p => (p.name || "").toLowerCase().includes(q) || (p.description || "").toLowerCase().includes(q));
+                }
+                case "discounts": return MOCK.discounts;
+                case "orders": return [];
+                default: return [];
+            }
+        }
+
+        let INVENTORY_DB = [];
+
+        const app = {
+            state: { cart: [], activeFilter: 'all', currentSort: 'featured', activeCheckoutStep: 1 },
+            init: async function() {
+                const __d = await fetchStore('products');
+                INVENTORY_DB = __d.map(p => ({ ...p, images: p.images || (p.image ? [p.image] : []), desc: p.desc || p.description || '', category: p.category || ((MOCK.categories.find(c => c.id == p.category_id) || {}).name) || '' }));
+                this.router.init(); this.store.renderCatalog(); this.cart.loadAndSync(); lucide.createIcons();
+            }
+        };
+
+        // --- SINGLE PAGE APPLICATION NAVIGATION ENGINE ROUTER ---
+        app.router = {
+            init: function() {
+                window.addEventListener('popstate', () => this.evalRoute(window.location.hash));
+                this.evalRoute(window.location.hash || '#home');
+            },
+            navigate: function(view, params = null) {
+                let hash = `#${view}`;
+                if (params) hash += `?${new URLSearchParams(params).toString()}`;
+                history.pushState(null, null, hash);
+                this.evalRoute(hash);
+            },
+            evalRoute: function(hashString) {
+                const parts = hashString.split('?');
+                const view = parts[0] || '#home';
+                const queryParams = parts[1] ? Object.fromEntries(new URLSearchParams(parts[1])) : {};
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                const targetView = document.getElementById(`view-${view.replace('#', '')}`);
+                if (targetView) targetView.classList.add('active');
+                if (view === '#shop') { app.store.filterCatalog(queryParams.category || 'all'); } else if (view === '#product' && queryParams.id) { app.store.renderProductDetail(queryParams.id); } else if (view === '#checkout') { app.checkout.renderCurrentStep(); }
+                else if (view === '#account') {
+                    if (!app.auth || !app.auth.isLoggedIn()) {
+                        if (app.auth) app.auth.open('login');
+                        const homeView = document.getElementById('view-home');
+                        if (targetView) targetView.classList.remove('active');
+                        if (homeView) homeView.classList.add('active');
+                    } else {
+                        app.auth.renderDashboard();
+                    }
+                }
+                window.scrollTo({top:0});
+            }
+        };
+
+        // --- HIGH CONVERSION SHOP TILES RENDERING SYSTEM ---
+        app.store = {
+            renderCatalog: function(itemsToRender = INVENTORY_DB) {
+                const grid = document.getElementById('shop-items-grid');
+                if (!grid) return;
+                grid.innerHTML = itemsToRender.map(item => `
+                    <div class="product-card flex flex-col justify-between border-2 border-zinc-900 p-3 bg-zinc-950 cursor-pointer group hover:border-white transition-colors" onclick="app.router.navigate('product', {id: '${item.id}'})">
+                        <div class="aspect-square w-full overflow-hidden bg-zinc-900 mb-4 relative border border-zinc-900">
+                            <img src="${item.images[0]}" alt="${item.name}" class="w-full h-full object-cover grayscale brightness-90 group-hover:grayscale-0 transition-all duration-300">
+                        </div>
+                        <div class="space-y-2 uppercase">
+                            <div class="flex justify-between items-start text-xs font-bold text-white gap-2">
+                                <h3 class="font-display group-hover:text-[#CCFF00] tracking-tight leading-snug">${item.name}</h3>
+                                <p class="font-mono text-[#CCFF00] whitespace-nowrap font-bold">$${item.price.toFixed(2)}</p>
+                            </div>
+                            <p class="text-[9px] font-black tracking-widest text-zinc-600">${item.category}-UNIT</p>
+                        </div>
+                    </div>`).join('');
+                document.getElementById('catalog-count-string').innerText = `Displaying ${itemsToRender.length} tactical deployment items`;
+            },
+            filterCatalog: function(cat) { app.state.activeFilter = cat; this.renderCatalog(cat === 'all' ? INVENTORY_DB : INVENTORY_DB.filter(i => i.category === cat)); },
+            sortCatalog: function(criteria) {
+                let sorted = [...INVENTORY_DB].filter(i => app.state.activeFilter === 'all' || i.category === app.state.activeFilter);
+                if (criteria === 'price-low') sorted.sort((a,b) => a.price - b.price);
+                if (criteria === 'price-high') sorted.sort((a,b) => b.price - a.price);
+                this.renderCatalog(sorted);
+            },
+            renderProductDetail: function(id) {
+                const item = INVENTORY_DB.find(p => p.id === id);
+                if (!item) return;
+                document.getElementById('product-detail-target').innerHTML = `
+                    <div class="lg:col-span-7 aspect-square w-full bg-zinc-950 border-2 border-zinc-900 p-3 overflow-hidden">
+                        <img src="${item.images[0]}" alt="${item.name}" class="w-full h-full object-cover grayscale brightness-95">
+                    </div>
+                    <div class="lg:col-span-5 flex flex-col space-y-6 py-2">
+                        <div class="border-b border-zinc-900 pb-5 space-y-2 uppercase">
+                            <span class="text-[9px] text-[#CCFF00] font-black tracking-widest">${item.category} MODULAR SPECIFICATION</span>
+                            <h1 class="font-display text-3xl font-black text-white tracking-tight">${item.name}</h1>
+                            <p class="text-xl font-mono text-[#CCFF00] font-bold mt-2">$${item.price.toFixed(2)}</p>
+                        </div>
+                        <p class="text-zinc-400 text-xs leading-relaxed font-medium normal-case">${item.desc}</p>
+                        <div class="pt-4">
+                            <button onclick="app.cart.addItem('${item.id}')" class="w-full py-4.5 bg-[#CCFF00] text-black text-xs font-black uppercase tracking-widest hover:bg-white transition-colors rounded-none">Deploy to Loadout Bag</button>
+                        </div>
+                        <div class="text-[10px] font-bold uppercase tracking-wider text-zinc-600 border-t border-zinc-900 pt-4 space-y-2">
+                            <p>&bull; Integrated tracked global transit processing authorized.</p>
+                            <p>&bull; Rapid 30-interval environmental exchange allowance lines apply.</p>
+                        </div>
+                    </div>`;
+            },
+            handleSearch: function(term) {
+                const out = document.getElementById('search-results-output');
+                if (!term) { out.innerHTML = ''; return; }
+                out.innerHTML = INVENTORY_DB.filter(i => i.name.toLowerCase().includes(term.toLowerCase())).map(i => `
+                    <div onclick="app.ui.toggleSearchOverlay(); app.router.navigate('product', {id: '${i.id}'})" class="p-4 bg-zinc-950 border-2 border-zinc-900 flex items-center justify-between cursor-pointer hover:border-[#CCFF00] transition-colors">
+                        <div class="flex items-center space-x-3">
+                            <img src="${i.images[0]}" class="w-10 h-10 object-cover border border-zinc-900 grayscale">
+                            <span class="text-xs font-bold text-white uppercase font-display">${i.name}</span>
+                        </div>
+                        <span class="text-xs font-mono font-bold text-[#CCFF00]">$${i.price}</span>
+                    </div>`).join('');
+            }
+        };
+
+        // --- STABLE APPLICATION LOCALSTORAGE CART CORE ENGINE ---
+        app.cart = {
+            loadAndSync: function() { const stored = localStorage.getItem('kinetic_loadout_cart'); if (stored) app.state.cart = JSON.parse(stored); this.updateUI(); },
+            addItem: function(id) {
+                const prod = INVENTORY_DB.find(p => p.id === id);
+                const exist = app.state.cart.find(item => item.product.id === id);
+                if (exist) exist.qty += 1; else app.state.cart.push({ product: prod, qty: 1 });
+                this.sync(); app.ui.triggerToast(`Loadout metrics synced`); app.ui.toggleCartDrawer(true);
+            },
+            updateQty: function(id, val) { const item = app.state.cart.find(i => i.product.id === id); if (!item) return; item.qty += val; if (item.qty <= 0) app.state.cart = app.state.cart.filter(i => i.product.id !== id); this.sync(); },
+            sync: function() { localStorage.setItem('kinetic_loadout_cart', JSON.stringify(app.state.cart)); this.updateUI(); },
+            updateUI: function() {
+                const drawerContainer = document.getElementById('cart-drawer-items');
+                const badge = document.getElementById('global-cart-count');
+                const subtotalText = document.getElementById('cart-drawer-subtotal');
+                const totalItems = app.state.cart.reduce((sum, i) => sum + i.qty, 0);
+                const subtotal = app.state.cart.reduce((sum, i) => sum + (i.product.price * i.qty), 0);
+                if (totalItems > 0) { badge.innerText = totalItems; badge.classList.remove('scale-0'); } else { badge.classList.add('scale-0'); }
+                subtotalText.innerText = `$${subtotal.toFixed(2)}`;
+                if (app.state.cart.length === 0) { drawerContainer.innerHTML = `<div class="text-center text-zinc-600 py-16 text-xs font-bold uppercase tracking-widest"><i data-lucide="shopping-cart" class="w-5 h-5 mx-auto mb-3 opacity-30"></i>Loadout allocation cell empty</div>`; } else {
+                    drawerContainer.innerHTML = app.state.cart.map(item => `
+                        <div class="flex items-center space-x-4 border-2 border-zinc-900 p-4 bg-zinc-950">
+                            <img src="${item.product.images[0]}" class="w-14 h-14 object-cover border border-zinc-900 grayscale">
+                            <div class="flex-grow min-w-0 space-y-2 uppercase">
+                                <h4 class="text-xs font-bold font-display text-white truncate tracking-tight">${item.product.name}</h4>
+                                <div class="flex items-center space-x-4">
+                                    <button onclick="app.cart.updateQty('${item.product.id}', -1)" class="text-zinc-600 hover:text-[#CCFF00] text-xs font-black font-mono">-</button>
+                                    <span class="text-xs text-white font-bold font-mono">${item.qty}</span>
+                                    <button onclick="app.cart.updateQty('${item.product.id}', 1)" class="text-zinc-600 hover:text-[#CCFF00] text-xs font-black font-mono">+</button>
+                                </div>
+                            </div>
+                        </div>`).join('');
+                }
+                lucide.createIcons();
+            }
+        };
+
+        // --- HIGH VELOCITY TRANSACTION ROUTER PATH CHECKOUTS ---
+        app.checkout = {
+            initiateCheckout: function() { if(!app.state.cart.length) return; app.ui.toggleCartDrawer(false); app.router.navigate('checkout'); },
+            renderCurrentStep: function() {
+                const container = document.getElementById('checkout-step-container');
+                const sub = app.state.cart.reduce((sum, i) => sum + (i.product.price * i.qty), 0);
+                document.getElementById('chk-subtotal').innerText = `$${sub.toFixed(2)}`;
+                document.getElementById('chk-total').innerText = `$${sub.toFixed(2)}`;
+                document.getElementById('checkout-summary-items').innerHTML = app.state.cart.map(i => `<div class="flex justify-between text-xs py-2 uppercase font-bold text-zinc-500 font-sans"><span>${i.product.name} <span class="text-zinc-600 font-mono">(x${i.qty})</span></span><span class="text-white font-mono">$${(i.product.price * i.qty).toFixed(2)}</span></div>`).join('');
+                document.getElementById('step-nav-1').className = app.state.activeCheckoutStep === 1 ? "text-[#CCFF00] font-black" : "text-zinc-600";
+                document.getElementById('step-nav-2').className = app.state.activeCheckoutStep === 2 ? "text-[#CCFF00] font-black" : "text-zinc-600";
+                document.getElementById('step-nav-3').className = app.state.activeCheckoutStep === 3 ? "text-[#CCFF00] font-black" : "text-zinc-600";
+
+                if (app.state.activeCheckoutStep === 1) { container.innerHTML = `<h3 class="text-xs font-black text-white uppercase tracking-widest mb-3">// LOGISTICS DESTINATION NODE</h3><input type="email" required placeholder="EMAIL COMMUNICATIONS LOG" class="w-full p-4 text-xs font-bold uppercase shopify-input"><input type="text" required placeholder="PHYSICAL ROUTING DELIVERY LOCATION" class="w-full p-4 text-xs font-bold uppercase shopify-input"/>`; } else if (app.state.activeCheckoutStep === 2) { container.innerHTML = `<h3 class="text-xs font-black text-white uppercase tracking-widest mb-3">// SELECT DISPATCH SPEED</h3><div class="border-2 border-zinc-900 bg-zinc-900 text-xs font-bold p-4 flex items-center justify-between uppercase"><div class="flex items-center space-x-2"><input type="radio" checked class="accent-[#CCFF00]"> <span>Priority Secure Freight Transit</span></div> <span class="text-[#CCFF00]">COMPLIMENTARY</span></div>`; } else if (app.state.activeCheckoutStep === 3) { container.innerHTML = `<h3 class="text-xs font-black text-white uppercase tracking-widest mb-3">// SECURE TRANSACTION BOND VALUATION</h3><input type="text" required placeholder="DEBIT INVOICE VAULT GATEWAY ID TOKEN" class="w-full p-4 text-xs font-bold uppercase shopify-input">`; }
+            },
+            handleStepSubmit: function(e) { e.preventDefault(); if(app.state.activeCheckoutStep < 3) { app.state.activeCheckoutStep += 1; this.renderCurrentStep(); } else { app.state.cart = []; app.cart.sync(); app.state.activeCheckoutStep = 1; app.ui.triggerToast("Ledger updated! Check email feed."); app.router.navigate('home'); } }
+        };
+
+        // --- DECORATIVE INTERACTION OVERLAY CLOSURE HANDLERS ---
+        app.ui = {
+            toggleCartDrawer: function(forceOpen = null) {
+                const overlay = document.getElementById('cart-drawer-overlay');
+                if (forceOpen === true) { overlay.classList.remove('opacity-0', 'pointer-events-none'); overlay.firstElementChild.classList.remove('translate-x-full'); return; }
+                if (forceOpen === false) { overlay.classList.add('opacity-0', 'pointer-events-none'); overlay.firstElementChild.classList.add('translate-x-full'); return; }
+                overlay.classList.toggle('opacity-0'); overlay.classList.toggle('pointer-events-none');
+                overlay.firstElementChild.classList.toggle('translate-x-full');
+            },
+            toggleSearchOverlay: function() { const s = document.getElementById('search-overlay'); s.classList.toggle('hidden'); s.classList.toggle('flex'); if(!s.classList.contains('hidden')) document.getElementById('live-search-input').focus(); },
+            toggleAccordion: function(btn) { btn.querySelector('i').classList.toggle('rotate-90'); const panel = btn.nextElementSibling; if (panel.style.maxHeight && panel.style.maxHeight !== '0px') { panel.style.maxHeight = '0px'; } else { panel.style.maxHeight = panel.scrollHeight + "px"; } },
+            handleContactSubmit: function(e) { e.preventDefault(); e.target.reset(); this.triggerToast("Signal broadcasted successfully"); },
+            triggerToast: function(msg) {
+                const t = document.getElementById('toast-notif'); document.getElementById('toast-notif-message').innerText = msg;
+                t.className = "fixed bottom-6 right-6 bg-[#CCFF00] text-black text-xs font-black py-4 px-6 rounded-none shadow-2xl z-50 transform translate-y-0 opacity-100 transition-all duration-300 flex items-center space-x-3 uppercase tracking-widest";
+                setTimeout(() => { t.className = "fixed bottom-6 right-6 bg-[#CCFF00] text-black text-xs font-black py-4 px-6 rounded-none shadow-2xl z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none flex items-center space-x-3 uppercase tracking-widest"; }, 3500);
+            }
+        };
+        app.auth = {
+            getUser: function () {
+                if (!window.vmCustomer || !vmCustomer.isLoggedIn()) return null;
+                const c = vmCustomer.cached();
+                if (!c) return null;
+                const parts = (c.name || '').trim().split(/\s+/).filter(Boolean);
+                return {
+                    email: c.email,
+                    fname: parts[0] || '',
+                    lname: parts.slice(1).join(' '),
+                    phone: c.phone || '',
+                    joinDate: c.created_at || ''
+                };
+            },
+            isLoggedIn: function () { return !!window.vmCustomer && vmCustomer.isLoggedIn(); },
+            iconClick: function () { if (this.isLoggedIn()) app.router.navigate('account'); else this.open('login'); },
+            updateIcon: function () {
+                const label = document.getElementById('auth-icon-label');
+                if (!label) return;
+                const u = this.getUser();
+                label.textContent = u && u.fname ? u.fname : 'Account';
+            },
+            open: function (tab) {
+                this.switchTab(tab || 'login');
+                const m = document.getElementById('auth-modal');
+                m.classList.add('is-open');
+                document.body.style.overflow = 'hidden';
+                if (window.lucide && typeof lucide.createIcons === 'function') lucide.createIcons();
+            },
+            close: function () {
+                const m = document.getElementById('auth-modal');
+                m.classList.remove('is-open');
+                document.body.style.overflow = '';
+                ['auth-login-error', 'auth-reg-error'].forEach(function (id) {
+                    const el = document.getElementById(id);
+                    if (el) { el.textContent = ''; el.classList.add('hidden'); }
+                });
+            },
+            switchTab: function (tab) {
+                ['login', 'register', 'forgot'].forEach(function (t) {
+                    const btn = document.getElementById('auth-tab-' + t);
+                    const pan = document.getElementById('auth-panel-' + t);
+                    if (btn) btn.classList.toggle('active', t === tab);
+                    if (pan) pan.classList.toggle('hidden', t !== tab);
+                });
+            },
+            submitLogin: async function () {
+                const email = document.getElementById('auth-login-email').value.trim();
+                const pass = document.getElementById('auth-login-pass').value;
+                const errEl = document.getElementById('auth-login-error');
+                errEl.classList.add('hidden');
+                if (!email || !pass) { errEl.textContent = 'Email and password required.'; errEl.classList.remove('hidden'); return; }
+                try {
+                    await vmCustomer.login(email, pass);
+                    this.close();
+                    const u = this.getUser();
+                    app.ui.triggerToast('Welcome, ' + ((u && u.fname) || 'friend'));
+                    app.router.navigate('account');
+                } catch (e) {
+                    errEl.textContent = (e && e.code === 'locked') ? 'Account temporarily locked. Try again in a few minutes.' : ((e && e.message) || 'Sign-in failed');
+                    errEl.classList.remove('hidden');
+                }
+            },
+            submitRegister: async function () {
+                const fname = document.getElementById('auth-reg-fname').value.trim();
+                const lname = document.getElementById('auth-reg-lname').value.trim();
+                const email = document.getElementById('auth-reg-email').value.trim();
+                const pass  = document.getElementById('auth-reg-pass').value;
+                const pass2 = document.getElementById('auth-reg-pass2').value;
+                const errEl = document.getElementById('auth-reg-error');
+                errEl.classList.add('hidden');
+                if (!fname || !email || !pass) { errEl.textContent = 'Please fill in all required fields.'; errEl.classList.remove('hidden'); return; }
+                if (pass !== pass2) { errEl.textContent = 'Passwords do not match.'; errEl.classList.remove('hidden'); return; }
+                if (pass.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.classList.remove('hidden'); return; }
+                const name = (fname + ' ' + lname).trim();
+                try {
+                    await vmCustomer.register(email, pass, name, null);
+                    this.close();
+                    app.ui.triggerToast('Welcome, ' + fname);
+                    app.router.navigate('account');
+                } catch (e) {
+                    errEl.textContent = (e && e.message) || 'Sign-up failed';
+                    errEl.classList.remove('hidden');
+                }
+            },
+            submitForgot: function () { app.ui.triggerToast('Reset link sent (placeholder)'); this.switchTab('login'); },
+            doLogout: async function () {
+                try { await vmCustomer.logout(); } catch (e) { /* cleared locally regardless */ }
+                app.ui.triggerToast('Signed out');
+                app.router.navigate('home');
+            },
+            activateTab: function (name) {
+                ['overview', 'profile', 'orders', 'password'].forEach(function (t) {
+                    const btn = document.getElementById('acc-tab-' + t);
+                    const pan = document.getElementById('acc-panel-' + t);
+                    if (btn) btn.classList.toggle('active', t === name);
+                    if (pan) pan.classList.toggle('hidden', t !== name);
+                });
+                if (name === 'orders') app.auth.hydrateOrders();
+            },
+            renderDashboard: async function () {
+                if (!this.isLoggedIn()) { this.open('login'); return; }
+                const u = this.getUser();
+                if (!u) { this.open('login'); return; }
+                document.getElementById('acc-greeting').textContent = 'Welcome, ' + ((u.fname) || 'friend');
+                document.getElementById('acc-ov-name').textContent  = (u.fname + ' ' + u.lname).trim() || '—';
+                document.getElementById('acc-ov-email').textContent = u.email || '—';
+                document.getElementById('acc-ov-joined').textContent = u.joinDate ? u.joinDate.split(' ')[0] : '—';
+                document.getElementById('acc-fname').value = u.fname || '';
+                document.getElementById('acc-lname').value = u.lname || '';
+                document.getElementById('acc-email').value = u.email || '';
+                document.getElementById('acc-phone').value = u.phone || '';
+                this.activateTab('overview');
+            },
+            hydrateOrders: async function () {
+                const wrap = document.getElementById('acc-orders-list');
+                wrap.innerHTML = '<p class="text-[10px] uppercase tracking-widest text-zinc-500 py-12 text-center font-bold">Loading…</p>';
+                try {
+                    const r = await vmCustomer.myOrders();
+                    const orders = (r.orders || []);
+                    if (!orders.length) {
+                        wrap.innerHTML = '<p class="text-[10px] uppercase tracking-widest text-zinc-500 py-12 text-center font-bold">No orders yet. <a href="#shop" onclick="app.router.navigate(\'shop\')" class="text-[#CCFF00] border-b border-[#CCFF00] pb-0.5">Start shopping →</a></p>';
+                        return;
+                    }
+                    wrap.innerHTML = '<div class="space-y-4">' + orders.map(function (o) {
+                        const total = (o.total_amount != null ? o.total_amount : 0).toFixed(2);
+                        const dateStr = o.created_at ? String(o.created_at).split(' ')[0] : '—';
+                        const status = o.status || 'pending';
+                        return '<div class="flex items-center justify-between border-b-2 border-zinc-900 pb-4">' +
+                                  '<div><p class="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Order</p>' +
+                                  '<p class="font-display text-lg font-extrabold text-white">#' + o.id + '</p></div>' +
+                                  '<div class="text-right"><p class="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">' + dateStr + '</p>' +
+                                  '<p class="text-sm text-white">$' + total + ' &middot; ' + status + '</p></div>' +
+                               '</div>';
+                    }).join('') + '</div>';
+                } catch (e) {
+                    wrap.innerHTML = '<p class="text-[10px] uppercase tracking-widest text-red-500 py-12 text-center font-bold">Failed to load orders.</p>';
+                }
+            },
+            saveProfile: async function () {
+                const fname = document.getElementById('acc-fname').value.trim();
+                const lname = document.getElementById('acc-lname').value.trim();
+                const phone = document.getElementById('acc-phone').value.trim();
+                const name = (fname + ' ' + lname).trim();
+                try {
+                    await vmCustomer.updateProfile(name || null, phone || null);
+                    const u = this.getUser();
+                    if (u) {
+                        document.getElementById('acc-greeting').textContent = 'Welcome, ' + ((u.fname) || 'friend');
+                        document.getElementById('acc-ov-name').textContent = (u.fname + ' ' + u.lname).trim() || '—';
+                    }
+                    this.updateIcon();
+                    app.ui.triggerToast('Profile updated');
+                } catch (e) {
+                    app.ui.triggerToast((e && e.message) || 'Update failed');
+                }
+            },
+            changePassword: async function () {
+                const cur = document.getElementById('acc-pw-cur').value;
+                const nw  = document.getElementById('acc-pw-new').value;
+                const conf = document.getElementById('acc-pw-conf').value;
+                if (!cur || !nw || !conf) { app.ui.triggerToast('All password fields required'); return; }
+                if (nw.length < 8) { app.ui.triggerToast('New password must be 8+ chars'); return; }
+                if (nw !== conf) { app.ui.triggerToast('Passwords do not match'); return; }
+                try {
+                    await vmCustomer.changePassword(cur, nw);
+                    ['acc-pw-cur','acc-pw-new','acc-pw-conf'].forEach(function (id) {
+                        const el = document.getElementById(id); if (el) el.value = '';
+                    });
+                    app.ui.triggerToast('Password updated');
+                } catch (e) {
+                    app.ui.triggerToast((e && e.message) || 'Failed to change password');
+                }
+            }
+        };
+
+        window.app = app;
+
+        window.addEventListener('DOMContentLoaded', () => app.init());
+    </script>
+</body>
+</html>
