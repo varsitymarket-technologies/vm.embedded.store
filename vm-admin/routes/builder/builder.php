@@ -480,6 +480,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             <div class="fb-panel-tabs">
                 <button class="fb-ptab on" data-tab="layers" onclick="setLeftTab('layers')">Layers</button>
                 <button class="fb-ptab" data-tab="add" onclick="setLeftTab('add')">Add</button>
+                <button class="fb-ptab" data-tab="page" onclick="setLeftTab('page')">Page</button>
             </div>
 
             <div class="fb-panel-content" id="left-content">
@@ -552,6 +553,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         </div>
                     </div>
                 </div>
+
+                <!-- Page Settings Tab -->
+                <div id="tab-page" style="display:none"></div>
             </div>
         </div>
 
@@ -1374,7 +1378,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     window.setLeftTab = function(tab) {
         document.querySelectorAll('.fb-ptab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
         document.getElementById('tab-layers').style.display = tab === 'layers' ? 'block' : 'none';
-        document.getElementById('tab-add').style.display = tab === 'add' ? 'block' : 'none';
+        document.getElementById('tab-add').style.display    = tab === 'add'    ? 'block' : 'none';
+        document.getElementById('tab-page').style.display   = tab === 'page'   ? 'block' : 'none';
+        if (tab === 'page') requestHead();
     };
 
     window.setRightTab = function(tab) {
