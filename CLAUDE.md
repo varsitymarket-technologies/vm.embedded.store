@@ -72,6 +72,18 @@ Themes live in `/themes/` (gitignored). Synced from remote GitHub repo (`varsity
 
 Three export modes in `/services/`: frame (iFrame embed), link (hosted URL), source (code download). Site skeletons in `/skel/` provide base JS API (`vm.api.js`) and theme engine (`vm.theme.js`).
 
+### Page Builder (`/vm-admin/{domain}/builder`)
+
+Two-file architecture across an iframe boundary. `vm-admin/routes/builder/builder.php` is the parent chrome (Figma-style topbar + left/right panels) and loads each site's HTML — either from `sites/{domain}/builder.cache.html` or, on first edit, from the active theme's `index.php` — into an iframe via `doc.write`. `vm-admin/routes/builder/engine.js` is then injected into the iframe (`script#vb-engine-script[data-vb-engine]`) and drives selection, drag, inline editing, and head-tag editing.
+
+Parent ↔ iframe communicate via `postMessage`. Key contracts:
+- Engine → parent: `ENGINE_READY`, `ELEMENT_SELECTED`, `LAYERS_UPDATE`, `HTML_CONTENT`, `HEAD_DATA`, `CONTENT_CHANGED`.
+- Parent → engine: `SET_MODE`, `APPLY_STYLE`, `SET_ATTRIBUTE`, `INSERT_ELEMENT`, `DELETE_ELEMENT`, `GET_HTML`, `GET_HEAD`, `UPDATE_HEAD`.
+
+Save flow: parent dispatches `GET_HTML`, engine clones `documentElement` and strips its own debris (`#vb-engine-styles`, overlays, `script[data-vb-engine]`), parent POSTs the serialized HTML back to `builder.php` (`action=save_html`) which writes `builder.cache.html`.
+
+Left-panel tabs: **Layers** (live tree from the iframe body), **Add** (element templates), **Page** (head-tag editor: title, meta description/keywords/canonical/robots, Open Graph, Twitter, favicon/apple-touch-icon/theme-color, free-form custom head HTML between `vm-builder:custom-head:start/end` sentinel comments). Right panel: **Design** (per-element style props) and **Inspect** (HTML + computed CSS).
+
 ## Key Constants (defined in config.php)
 
 `__ACCOUNT_INDEX__`, `__USERNAME__`, `__DOMAIN__`, `__WEBSITE_DOMAIN__`, `__WEBSITE_THEME__`, `__WEBSITE_URL__`, `__WEBSITE_FRAME__`, `__CURRENCY_SIGN__`, `__WALLET_AMOUNT__`, `__WALLET_PERCENTAGE__`, `__BANKING_ACCOUNT_NUMBER__`, `__BANKING_ACCOUNT_TYPE__`, `__BANKING_SERVICE__`
