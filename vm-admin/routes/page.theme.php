@@ -253,7 +253,7 @@ $standard_count = count(array_filter($all_themes, fn($t) => $t['type'] === 'Stan
                                         <?php echo $theme['is_active'] ? 'Reapply' : 'Activate'; ?>
                                     </button>
                                 </form>
-                                <a href="/themes/<?php echo $theme['title']; ?>/interface" target="_blank"
+                                <a href="/themes/<?php echo $theme['title']; ?>/" target="_blank"
                                    class="bg-zinc-800/80 text-white p-2.5 rounded-lg hover:bg-zinc-700 transition-colors" title="Preview">
                                     <i class="bi bi-eye"></i>
                                 </a>
