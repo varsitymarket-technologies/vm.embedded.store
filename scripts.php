@@ -9,6 +9,116 @@
 define("__DB_MODULE__",initiate_database()); 
 define("__DB_WEBSITE__",initiate_web_database()); 
 
+function get_private_db($domain) {
+    if (empty($domain)) return null;
+    $store_hash = hash('sha256', $domain);
+    $base_dir = (dirname(__FILE__));
+    $private_dir = dirname($base_dir) . "/data/" . $store_hash;
+    if (!is_dir(dirname($base_dir) . "/data/") && !@mkdir(dirname($base_dir) . "/data/", 0755, true)) {
+        $private_dir = $base_dir . "/build/data/" . $store_hash;
+    }
+    if (!is_dir($private_dir)) {
+        @mkdir($private_dir, 0755, true);
+    }
+    $db_path = $private_dir . "/" . $domain;
+    $pdo = new PDO("sqlite:" . $db_path);
+    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $pdo->exec("CREATE TABLE IF NOT EXISTS api_keys (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        key_name VARCHAR(255),
+        api_key VARCHAR(255) UNIQUE,
+        active INTEGER DEFAULT 1,
+        last_used DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS api_logs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        api_key VARCHAR(255),
+        endpoint VARCHAR(255),
+        ip_address VARCHAR(45),
+        user_agent TEXT,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
+    $pdo->exec("CREATE TABLE IF NOT EXISTS cors_domains (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        domain VARCHAR(255) UNIQUE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )");
+    return $pdo;
+}
+
+function kick_start_application($domain){    
+    $key_name = htmlspecialchars(trim('STORE_WEBSITE'), ENT_QUOTES, 'UTF-8');
+    $prefix = 'vm_app_';
+    $api_key = $prefix . bin2hex(random_bytes(24));
+    $private_pdo = get_private_db($domain);
+    if ($private_pdo) {
+        $stmt = $private_pdo->prepare("INSERT INTO api_keys (key_name, api_key, active) VALUES (?, ?, 1)");
+        $stmt->execute([$key_name, $api_key]);
+    }
+    
+    $cors_domain = trim($domain);
+    if (!empty($cors_domain)) {
+        // Normalize: strip trailing slashes, ensure scheme
+        $cors_domain = rtrim($cors_domain, '/');
+        if (!preg_match('#^https?://#', $cors_domain)) {
+            $cors_domain = 'https://' . $cors_domain;
+        }
+        $private_pdo = get_private_db($domain);
+        if ($private_pdo) {
+            $stmt = $private_pdo->prepare("INSERT OR IGNORE INTO cors_domains (domain) VALUES (?)");
+            $stmt->execute([$cors_domain]);
+        }
+    }
+
+    $cors_domain = trim("localhost");
+    if (!empty($cors_domain)) {
+        // Normalize: strip trailing slashes, ensure scheme
+        $cors_domain = rtrim($cors_domain, '/');
+        if (!preg_match('#^https?://#', $cors_domain)) {
+            $cors_domain = 'https://' . $cors_domain;
+        }
+        $private_pdo = get_private_db($domain);
+        if ($private_pdo) {
+            $stmt = $private_pdo->prepare("INSERT OR IGNORE INTO cors_domains (domain) VALUES (?)");
+            $stmt->execute([$cors_domain]);
+        }
+    }
+
+}
+
+
+function get_store_keys($domain){
+    $private_pdo = get_private_db($domain);
+    if ($private_pdo) {
+        $stmt = $private_pdo->prepare("SELECT * FROM api_keys ORDER BY created_at DESC");
+        $stmt->execute();
+        $api_keys = $stmt->fetchAll(PDO::FETCH_ASSOC) ?: [];
+
+        return $api_keys; 
+    }
+}
+
+function get_default_keys($domain){
+    $e = get_store_keys($domain);
+
+    foreach ($e as $key => $value) {
+        if ($value['key_name'] == "STORE_WEBSITE"){
+            return $value['api_key']; 
+        }
+    }
+
+}
+
+function get_store_id( $domain , $db_engine = __DB_MODULE__ ){
+    $store_record = $db_engine->query("SELECT * FROM sys_websites WHERE account_index = ? LIMIT 1", [__ACCOUNT_INDEX__]);
+    if (empty($store_record) && !empty($domain)) {
+        $store_record = $db_engine->query("SELECT * FROM sys_websites WHERE domain = ? LIMIT 1", [$domain]);
+    }
+    $store_id = $store_record[0]['id'] ?? '';
+    return $store_id; 
+}
+
 
 function get_domain(){
     // Standard method
@@ -161,6 +271,8 @@ function create_enc_key(){
         }
         $service = dirname(__FILE__)."/services/website.install.php"; 
         @include_once $service; 
+
+        kick_start_application($domain); 
         return true; 
     }
 
