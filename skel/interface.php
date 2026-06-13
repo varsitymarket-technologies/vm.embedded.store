@@ -34,21 +34,13 @@ function e($data){echo $data;}
 $site_config = dirname(__FILE__)."/config.php"; 
 if (!file_exists($site_config)){
     $data_set = "<?php".PHP_EOL;
+    @include_once dirname(__FILE__)."/autofill.php";
+    $data_set .= construct_config_web_structure(); 
     foreach ($encode_node as $key => $value) {
         @include_once dirname( dirname( dirname(__FILE__)))."/config.php"; 
         
-        if ($value == "__SYSTEM_API__"){
-            $data_set .= 'define("'.$value.'","api.php");'.PHP_EOL;
-        }else if ($value == "__SYSTEM_JS_API__"){
-            $data_set .= 'define("'.$value.'","vm.api.js");'.PHP_EOL;
-        }else if ($value == "__SYSTEM_JS_THEME__"){
-            $data_set .= 'define("'.$value.'","vm.theme.js");'.PHP_EOL;
-        }else if ($value == "__SYSTEM_JS_CONNECT__"){
-            $data_set .= 'define("'.$value.'","vm.connect.js");'.PHP_EOL;
-        }else if ($value == "__SYSTEM_CURRENCY__"){
-            $data_set .= 'define("'.$value.'","'.__CURRENCY_SIGN__.'");'.PHP_EOL;
-        }else if ($value == "__SITE_TITLE__"){
-            $data_set .= 'define("'.$value.'","'.website_data('name').'");'.PHP_EOL;
+        if ($value == "__SITE_THEME_AUTOFILL__"){
+            $data_set .= 'define("'.$value.'","ACTIVE");'.PHP_EOL;
         }else{
             if (isset($auto_fill[$value])){
                 $auto_data = $auto_fill[$value]; 
@@ -57,8 +49,7 @@ if (!file_exists($site_config)){
             }
             $data_set .= 'define("'.$value.'","'.$auto_data.'");'.PHP_EOL;
         }
-
-         
+ 
     }
     file_put_contents($site_config, $data_set);
 }
