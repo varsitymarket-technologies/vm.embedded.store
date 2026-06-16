@@ -36,6 +36,13 @@ if (!is_dir($website_folder.$anchor_site)){
         file_put_contents($target_file,file_get_contents($file));
     }
 
+    $file = dirname($website_folder)."/skel/autofill.php"; 
+    $target_file = $website_folder.$anchor_site."/autofill.php"; 
+    # Start with autofill.php 
+    if (!file_exists($target_file)){
+        file_put_contents($target_file,file_get_contents($file));
+    }
+
 
     $element = "routes.php"; 
      $file = dirname($website_folder)."/skel/".$element;  
