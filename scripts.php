@@ -21,6 +21,7 @@ function get_private_db($domain) {
         @mkdir($private_dir, 0755, true);
     }
     $db_path = $private_dir . "/" . $domain;
+    
     $pdo = new PDO("sqlite:" . $db_path);
     $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     $pdo->exec("CREATE TABLE IF NOT EXISTS api_keys (
@@ -115,6 +116,7 @@ function get_store_id( $domain , $db_engine = __DB_MODULE__ ){
     if (empty($store_record) && !empty($domain)) {
         $store_record = $db_engine->query("SELECT * FROM sys_websites WHERE domain = ? LIMIT 1", [$domain]);
     }
+
     $store_id = $store_record[0]['id'] ?? '';
     return $store_id; 
 }

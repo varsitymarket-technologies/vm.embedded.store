@@ -21,6 +21,12 @@ $database = dirname(__FILE__)."/storage.data";
 $database_module = __DB_MODULE__; 
 $database_module->override_connection($database); 
 
+
+$site_preview = dirname(__FILE__)."/builder.cache.html"; 
+if (file_exists($site_preview)){
+    @include_once $site_preview;
+}else{
+
 # Configuration 
 $encode_node = extract_theme_nodes($theme_dir); 
 $encode_node = array_unique($encode_node); 
@@ -64,12 +70,10 @@ if (!file_exists($site_encode)){
     file_put_contents($site_encode, $template_structure);
 }
 
-$site_preview = dirname(__FILE__)."/builder.cache.html"; 
-if (file_exists($site_preview)){
-    @include_once $site_preview;
-}else{
     @include_once $site_encode;
 }
+
+
  
 
 ?>

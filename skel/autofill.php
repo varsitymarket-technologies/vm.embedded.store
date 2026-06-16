@@ -2,10 +2,15 @@
 
 
 function construct_config_web_structure(){
+    $file = (__FILE__);
+    $domain_ = dirname(dirname(__FILE__)).DIRECTORY_SEPARATOR;
+    $domain = str_ireplace($domain_, '',dirname($file));
+
+
     $skel_proto = "http"; 
-    $skel_domain = "localhost:8016";
-    $store_id = get_store_id("laurencia.com"); 
-    $store_api_keys = get_default_keys("laurencia.com"); 
+    $skel_domain = get_domain();
+    $store_id = get_store_id($domain); 
+    $store_api_keys = get_default_keys($domain); 
     $data_set = ""; 
 
     $value = "__SYSTEM_API__"; 
