@@ -1,4 +1,11 @@
 <?php 
+#   TITLE   : Application Config
+#   DESC    : This file contains the configuration settings for the application, including database connection details, encryption keys, and other essential parameters.
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 1.0.1.1
+#   AUTHOR  : HARDY HASTINGS  
+#   RELEASE : 2026/06/18
+
 @include_once "scripts.php";
 
 define("__ACCOUNT_INDEX__",__account_index__()); 
