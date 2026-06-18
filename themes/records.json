@@ -1,41 +1,36 @@
 {
-  "anti": {
-    "hash": "v1.0.1.4",
-    "files": [
-      "interface",
-      "index.html",
-      "poster.png"
-    ]
-  },
-  "aura": {
-    "hash": "v1.0.1.6",
-    "files": [
-      "interface",
-      "index.html",
-      "poster.png"
-    ]
-  },
   "austin": {
     "hash": "v2.0.1.1",
     "files": [
       "interface",
-      "index.html",
+      "autofill.json",
       "poster.png",
+      "index.html"
+    ]
+  },
+  "oaklyn": {
+    "hash": "v1.0.0.1",
+    "files": [
+      "interface",
+      "poster.png",
+      "index.html",
       "autofill.json"
     ]
   },
-  "corselle": {
-    "hash": "v1.0.1.4",
+  "boat": {
+    "hash": "v1.0.0.1",
     "files": [
       "interface",
+      "poster.png",
       "index.html",
-      "poster.png"
+      "autofill.json"
     ]
   },
-  "crown": {
-    "hash": "v1.0.1.6",
+  "anti": {
+    "hash": "v2.0.1.4",
     "files": [
       "interface",
+      "autofill.json",
       "index.html",
       "poster.png"
     ]
@@ -44,143 +39,49 @@
     "hash": "v1.0.0.1",
     "files": [
       "interface",
-      "index.html",
       "poster.png"
     ]
   },
-  "eros": {
-    "hash": "v1.0.2.7",
+  "pvt": {
+    "hash": "v1.0.1.4",
     "files": [
       "interface",
-      "index.html",
       "poster.png"
     ]
   },
-  "gta": {
-    "hash": "v1.0.0.1",
+  "crown": {
+    "hash": "v1.0.1.4",
     "files": [
       "interface",
-      "index.html"
+      "poster.png"
+    ]
+  },
+  "revenge": {
+    "hash": "v1.0.1.4",
+    "files": [
+      "interface",
+      "poster.png"
+    ]
+  },
+  "terra": {
+    "hash": "v1.0.1.4",
+    "files": [
+      "interface",
+      "poster.png"
+    ]
+  },
+  "oasis": {
+    "hash": "v1.0.1.4",
+    "files": [
+      "interface",
+      "poster.png"
     ]
   },
   "hastings.ego": {
     "hash": "v1.0.0.2",
     "files": [
       "interface",
-      "index.html",
-      "poster.png",
-      "autofill.json"
-    ]
-  },
-  "imara": {
-    "hash": "v1.0.0.3",
-    "files": [
-      "interface",
-      "index.html",
-      "poster.png"
-    ]
-  },
-  "kinetic": {
-    "hash": "v1.0.0.3",
-    "files": [
-      "interface",
-      "index.html",
-      "poster.png"
-    ]
-  },
-  "lafromage": {
-    "hash": "v1.0.0.1",
-    "files": [
-      "interface",
-      "index.html"
-    ]
-  },
-  "linus": {
-    "hash": "v1.0.0.3",
-    "files": [
-      "interface",
-      "index.html",
-      "poster.png"
-    ]
-  },
-  "lucid": {
-    "hash": "v1.0.0.3",
-    "files": [
-      "interface",
-      "index.html",
-      "poster.png"
-    ]
-  },
-  "makhesa": {
-    "hash": "v1.0.0.3",
-    "files": [
-      "interface",
-      "index.html",
-      "poster.png"
-    ]
-  },
-  "mashala": {
-    "hash": "v1.0.1.4",
-    "files": [
-      "interface",
-      "index.html",
-      "poster.png"
-    ]
-  },
-  "mono": {
-    "hash": "v1.0.0.3",
-    "files": [
-      "interface",
-      "index.html",
-      "poster.png"
-    ]
-  },
-  "oaklyn": {
-    "hash": "v1.0.0.1",
-    "files": [
-      "interface",
-      "index.html",
-      "poster.png",
-      "autofill.json"
-    ]
-  },
-  "oasis": {
-    "hash": "v1.0.1.8",
-    "files": [
-      "interface",
-      "index.html",
-      "poster.png"
-    ]
-  },
-  "osmossis": {
-    "hash": "v1.0.0.3",
-    "files": [
-      "interface",
-      "index.html",
-      "poster.png"
-    ]
-  },
-  "ourchieve": {
-    "hash": "v1.0.1.3",
-    "files": [
-      "interface",
-      "index.html",
-      "poster.png"
-    ]
-  },
-  "pvt": {
-    "hash": "v1.0.1.6",
-    "files": [
-      "interface",
-      "index.html",
-      "poster.png"
-    ]
-  },
-  "revenge": {
-    "hash": "v1.0.1.6",
-    "files": [
-      "interface",
-      "index.html",
+      "autofill.json",
       "poster.png"
     ]
   },
@@ -188,22 +89,104 @@
     "hash": "v1.0.1.4",
     "files": [
       "interface",
-      "index.html",
       "poster.png"
     ]
   },
-  "street": {
-    "hash": "v1.0.0.1",
+  "mashala": {
+    "hash": "v1.0.1.4",
     "files": [
       "interface",
-      "index.html"
+      "poster.png"
+    ]
+  },
+  "mono": {
+    "hash": "v1.0.1.4",
+    "files": [
+      "interface",
+      "poster.png"
     ]
   },
   "terra": {
+    "hash": "v1.0.1.4",
+    "files": [
+      "interface",
+      "poster.png"
+    ]
+  },
+  "aura": {
+    "hash": "v1.0.1.4",
+    "files": [
+      "interface",
+      "poster.png"
+    ]
+  },
+  "corselle": {
+    "hash": "v1.0.1.4",
+    "files": [
+      "interface",
+      "poster.png"
+    ]
+  },
+  "eros": {
+    "hash": "v1.0.2.5",
+    "files": [
+      "interface",
+      "poster.png"
+    ]
+  },
+  "imara": {
+    "hash": "v1.0.0.1",
+    "files": [
+      "interface",
+      "poster.png"
+    ]
+  },
+  "kinetic": {
+    "hash": "v1.0.0.1",
+    "files": [
+      "interface",
+      "poster.png"
+    ]
+  },
+  "linus": {
+    "hash": "v1.0.0.1",
+    "files": [
+      "interface",
+      "poster.png"
+    ]
+  },
+  "lucid": {
+    "hash": "v1.0.0.1",
+    "files": [
+      "interface",
+      "poster.png"
+    ]
+  },
+  "makhesa": {
+    "hash": "v1.0.0.1",
+    "files": [
+      "interface",
+      "poster.png"
+    ]
+  },
+  "mono": {
+    "hash": "v1.0.0.1",
+    "files": [
+      "interface",
+      "poster.png"
+    ]
+  },
+  "ourchieve": {
+    "hash": "v1.0.1.3",
+    "files": [
+      "interface",
+      "poster.png"
+    ]
+  },
+  "oasis": {
     "hash": "v1.0.1.6",
     "files": [
       "interface",
-      "index.html",
       "poster.png"
     ]
   }
