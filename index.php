@@ -1,4 +1,11 @@
 <?php 
+#   TITLE   : Control Panel Application   
+#   DESC    : The Interface handling the Application GUI 
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 1.0.1.1
+#   AUTHOR  : HARDY HASTINGS  
+#   RELEASE : 2026/06/18
+
 session_start(); 
 
 // Enable error logging
@@ -11,8 +18,8 @@ ini_set('error_log', dirname(__FILE__).'/build/error-file.log');
 error_reporting(E_ALL);
 
 
-@include_once ".register.php"; 
-@include_once "config.php";
+@include_once dirname(__FILE__)."/register.php"; 
+@include_once dirname(__FILE__)."/config.php";
 
 $map = map(); 
 
