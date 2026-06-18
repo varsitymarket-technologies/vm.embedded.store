@@ -1,4 +1,11 @@
 <?php 
+#   TITLE   : Application DEMO Account
+#   DESC    : This page is used to create a temporary demo account for users to test the application without signing up.
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 1.0.1.1
+#   AUTHOR  : HARDY HASTINGS  
+#   RELEASE : 2026/06/18
+
 session_start();
 
 @include dirname(__FILE__)."/config.php"; 
