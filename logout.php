@@ -1,5 +1,11 @@
+<?php 
+#   TITLE   : Application Logout
+#   DESC    : Shown when user is logged out
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 1.0.1.1
+#   AUTHOR  : HARDY HASTINGS  
+#   RELEASE : 2026/06/18
 
-<?php
 session_start();
 ?>
 
