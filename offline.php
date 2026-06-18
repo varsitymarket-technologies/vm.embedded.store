@@ -1,5 +1,11 @@
-<?php
-// offline.php — Shown when user is offline and page isn't cached
+<?php 
+#   TITLE   : Application Offline 
+#   DESC    : Shown when user is offline and page isn't cached
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 1.0.1.1
+#   AUTHOR  : HARDY HASTINGS  
+#   RELEASE : 2026/06/18
+
 http_response_code(503);
 ?>
 <!DOCTYPE html>
