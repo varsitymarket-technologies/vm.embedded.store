@@ -4,18 +4,11 @@
 @include_once dirname(__FILE__)."/config.php";
 
 
+@include_once "marketing.php";
 
-function _get_store_id( $domain , $db_engine = __DB_MODULE__ ){
-    $store_record = $db_engine->query("SELECT * FROM sys_websites WHERE account_index = ? LIMIT 1", [__ACCOUNT_INDEX__]);
-    if (empty($store_record) && !empty($domain)) {
-        $store_record = $db_engine->query("SELECT * FROM sys_websites WHERE domain = ? LIMIT 1", [$domain]);
-    }
-
-    
-    $store_id = $store_record[0]['id'] ?? '';
-    return $store_id; 
-}
-
-echo _get_store_id("secrets.state");
+$store_identity = ['name'=>'Reiddrop','email'=>'reiddrop@gmail.com','phone'=>'+27 82 123 4567']; 
+$domain = 'reiddrop.com';
+$business = ['description'=>'123 Main Street','industry'=>'Cape Town','country'=>'South Africa'];
+$e = send_notification_webhook($store_identity,$domain, $business) 
 
 ?>

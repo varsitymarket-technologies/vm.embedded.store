@@ -381,8 +381,13 @@
                             <input name="wb_name" type="text" placeholder="e.g. My Awesome Boutique" required>
                         </div>
                         <div class="input-group">
-                            <label>Store Subtitle (Optional)</label>
-                            <input name="wb_subtitle" type="text" placeholder="e.g. Premium Fashion & Accessories">
+                            <label>Store Email (Optional)</label>
+                            <input name="wb_email" type="email" placeholder="e.g. info@myawesomeboutique.com">
+                        </div>
+
+                        <div class="input-group">
+                            <label>Store Contact (Optional)</label>
+                            <input name="wb_contact" type="text" placeholder="e.g. 081 234 5678">
                         </div>
                     </div>
 
@@ -450,7 +455,7 @@
 
                     <!-- Step 4: Launch -->
                     <div class="form-step-content" id="step3">
-                        <div style="text-align: center; padding: 1.5rem 0 1rem;">
+                        <div style="text-align: center;">
                             <div style="font-size: 3rem; color: var(--primary-accent); margin-bottom: 1rem;">
                                 <i class="fas fa-rocket"></i>
                             </div>
@@ -472,6 +477,19 @@
                                 </div>
                             </label>
                         </div>
+
+                        <div style="margin-top: 1rem; border: 1px solid #33333300; border-radius: 12px; padding: 0 1.25rem; background: #fff0;">
+                            <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; margin: 0;">
+                                <input type="checkbox" name="promotion_data" value="1" style="width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary-accent); flex-shrink: 0; cursor: pointer;">
+                                <div>
+                                    <span style="font-weight: 700; font-size: 0.9rem; color: #fff;">Enhance User Experience</span>
+                                    <p style="font-size: 0.8rem; color: #888 !important; line-height: 1.5;">
+                                        We may also send you occasional tips and updates to help you get the most out of your store. You can opt out at any time. 
+                                    </p>
+                                </div>
+                            </label>
+                        </div>
+
                     </div>
                 </div>
 
