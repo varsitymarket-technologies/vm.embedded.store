@@ -12,9 +12,12 @@ function construct_config_web_structure(){
     $store_id = get_store_id($domain); 
     $store_api_keys = get_default_keys($domain); 
     $data_set = ""; 
+    $analytics_tag = '<script src="'.$skel_proto.'://'.$skel_domain.'/track/vm.analytics.js" data-store-id="'.$store_id.'" defer=""></script>'; 
 
     $value = "__SYSTEM_API__"; 
     $data_set .= 'define("'.$value.'","'.$skel_proto.'://'.$skel_domain.'/store-access/'.$store_id.'/");'.PHP_EOL;
+    $value = "__SYSTEM_ANALYTICS__"; 
+    $data_set .= 'define("'.$value.'","'.$analytics_tag.'");'.PHP_EOL;
     $value = "__SYSTEM_API_KEYS__"; 
     $data_set .= 'define("'.$value.'","'.$store_api_keys.'");'.PHP_EOL;
     $value = "__STORE_INDEX__"; 
