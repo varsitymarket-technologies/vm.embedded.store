@@ -49,9 +49,9 @@ session_unset();
 
 // destroy the session
 session_destroy();
-@include 'includes/notification.php';
+#@include 'includes/notification.php';
 
-constructNotificationModal("Logged Out", "You have been logged out of the system.");
+#constructNotificationModal("Logged Out", "You have been logged out of the system.");
 //print_r($_SESSION); 
 
 #echo "<script>window.location='/home/'</script>"

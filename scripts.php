@@ -111,7 +111,8 @@ function get_default_keys($domain){
 
 }
 
-function get_store_id( $domain , $db_engine = __DB_MODULE__ ){
+function get_store_id( $domains ){
+    $db_engine = initiate_database();
     $store_record = $db_engine->query("SELECT * FROM sys_websites WHERE account_index = ? LIMIT 1", [__ACCOUNT_INDEX__]);
     if (empty($store_record) && !empty($domain)) {
         $store_record = $db_engine->query("SELECT * FROM sys_websites WHERE domain = ? LIMIT 1", [$domain]);
@@ -163,9 +164,10 @@ function website_data($index,$auth=false){
     }else{
         $AUTH = $auth;
     } 
+    $db_engine = initiate_database();
     $tbl_index = $index; 
     $sql = "SELECT * FROM `sys_websites` WHERE (`account_index` = ?) LIMIT 1";
-    $e = __DB_MODULE__->query($sql, [$AUTH]);  
+    $e = $db_engine->query($sql, [$AUTH]);  
     $result = $e[0][$tbl_index] ?? false;
     return $result; 
 }
