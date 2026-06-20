@@ -158,7 +158,7 @@ ob_start();
 
                 <!-- Main -->
                 <a href="/home/" class="<?php echo nav_cls('dashboard', $current_page); ?>">
-                    <i class="bi bi-grid-1x2-fill mr-3"></i>
+                    <i class="bi bi-house-fill mr-3"></i>
                     <span>Dashboard</span>
                 </a>
 
@@ -430,8 +430,13 @@ ob_start();
                 <a></a>
 
                 <a href="<?php echo $admin_base; ?>" class="sesedesedwsedwdd">
-                    <i class="bi bi-grid-1x2-fill mr-3"></i>
+                    <i class="bi bi-house-fill mr-3"></i>
                     <span>Dashboard</span>
+                </a>
+
+                <a href="<?php echo $admin_base; ?>home" class="sesedesedwsedwdd">
+                    <i class="bi bi-grid-1x2-fill mr-3"></i>
+                    <span>Overview</span>
                 </a>
 
                 <a href="<?php echo $admin_base; ?>analytics" class="sesedesedwsedwdd">
