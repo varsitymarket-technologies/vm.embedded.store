@@ -122,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (!empty($_POST['promotion_data'])) {
-        @include_once dirname(__FILE__)."/includes/marketing.php";
+        @include_once dirname(dirname(__FILE__))."/includes/marketing.php";
 
         $store_identity = ['name'=>$name,
         'email'=>$_POST['wb_email'] ?? 'contact@' . $domain,

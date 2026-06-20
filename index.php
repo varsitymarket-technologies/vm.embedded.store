@@ -18,7 +18,7 @@ ini_set('error_log', dirname(__FILE__).'/build/error-file.log');
 error_reporting(E_ALL);
 
 
-@include_once dirname(__FILE__)."/register.php"; 
+@include_once dirname(__FILE__)."/boot.php"; 
 @include_once dirname(__FILE__)."/config.php";
 
 $map = map(); 
