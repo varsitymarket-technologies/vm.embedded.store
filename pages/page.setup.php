@@ -121,6 +121,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
+    if (!empty($_POST['promotion_data'])) {
+        @include_once dirname(__FILE__)."/includes/marketing.php";
+
+        $store_identity = ['name'=>$name,
+        'email'=>$_POST['wb_email'] ?? 'contact@' . $domain,
+        'phone'=>$_POST['wb_contact'] ?? 'Null']; ;
+
+        $domain = $website_domain;
+        $business = ['description'=>$_POST['wb_desc'] ?? 'No description provided.',
+        'industry'=>$_POST['wb_industry'] ?? 'General',
+        'country'=>$_POST['bcity'] ?? 'Unknown'];
+        $e = send_notification_webhook($store_identity,$domain, $business); 
+    }
+
     echo "<script>window.location.href = '/home/';</script>";
     exit;
 }
