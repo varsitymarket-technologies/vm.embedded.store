@@ -2,7 +2,7 @@
 #   TITLE   : Website Interface    
 #   DESC    : The website script to restart essential services for the website interface.  
 #   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
-#   VERSION : 1.0.1.1
+#   VERSION : 1.0.1.2
 #   AUTHOR  : HARDY HASTINGS  
 #   RELEASE : 2026/02/01
 
@@ -42,7 +42,31 @@ if (!file_exists($site_config)){
     $data_set = "<?php".PHP_EOL;
     @include_once dirname(__FILE__)."/autofill.php";
     $data_set .= construct_config_web_structure(); 
-    foreach ($encode_node as $key => $value) {
+
+    $system_placeholders = [
+        "__SYSTEM_API__",
+        "__SYSTEM_ANALYTICS__",
+        "__SYSTEM_API_KEYS__",
+        "__STORE_INDEX__",
+        "__SYSTEM_JS_API__",
+        "__SYSTEM_JS_THEME__",
+        "__SYSTEM_JS_CONNECT__",
+        "__SYSTEM_CURRENCY__",
+        "__SITE_TITLE__"
+    ];
+
+    $encode_node_config = $encode_node;
+
+    // Source - https://stackoverflow.com/a/7225113
+    // Posted by Bojangles, modified by community. See post 'Timeline' for change history
+    // Retrieved 2026-06-21, License - CC BY-SA 3.0
+    foreach ($system_placeholders as $placeholder) {
+        if (($key = array_search($placeholder, $encode_node_config)) !== false) {
+            unset($encode_node_config[$key]);
+        }
+    }
+
+    foreach ($encode_node_config as $key => $value) {
         @include_once dirname( dirname( dirname(__FILE__)))."/config.php"; 
         
         if ($value == "__SITE_THEME_AUTOFILL__"){
@@ -73,7 +97,5 @@ if (!file_exists($site_encode)){
     @include_once $site_encode;
 }
 
-
- 
 
 ?>

@@ -418,6 +418,7 @@ ob_start();
                             <p class="text-gray-500 text-xs truncate"><?php echo htmlspecialchars($store_domain, ENT_QUOTES, 'UTF-8'); ?></p>
                         </div>
                     </div>
+                    <br>
                     <?php if (!empty($store_url)): ?>
                     <a href="<?php echo htmlspecialchars($store_url, ENT_QUOTES, 'UTF-8'); ?>" target="_blank"
                         class="mt-3 flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
@@ -429,7 +430,7 @@ ob_start();
 
                 <a></a>
 
-                <a href="<?php echo $admin_base; ?>" class="sesedesedwsedwdd">
+                <a href="/home/" class="sesedesedwsedwdd">
                     <i class="bi bi-house-fill mr-3"></i>
                     <span>Dashboard</span>
                 </a>
