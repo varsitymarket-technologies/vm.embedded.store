@@ -1,4 +1,5 @@
-            <header class="flex h-16 items-center justify-between bg-gray-800 px-6 border-b border-white/10">
+
+<header class="flex h-16 items-center justify-between bg-gray-800 px-6 border-b border-white/10">
                 <button id="sidebarOpen" onclick="open_menu()" class="text-gray-400 hover:text-white md:hidden">
                     <i class="bi bi-list text-2xl"></i>
                 </button>

@@ -59,7 +59,8 @@ if (isset($_POST['save_code'])) {
                     if (strpos($domain, $parent_domain) !== false && $domain !== $parent_domain) {
                         $github_session->configure_subdomain($domain);
                     }
-                } catch (Exception $e) {}
+                } catch (Exception $e) {
+                }
 
                 echo "<script>alert('Published to GitHub and domain configured!');</script>";
             } else {
@@ -108,214 +109,224 @@ if (empty($current_code)) {
     $current_code = (export_application($target, $domain));
 }
 ?>
-        <!-- Main Content -->
-        <div class="flex flex-1 flex-col overflow-hidden">
-            <?php @include_once "header.php"; ?>
+<!-- Main Content -->
+<div class="flex flex-1 flex-col overflow-hidden">
+    <?php @include_once "header.php"; ?>
 
-            <main class="flex-1 overflow-y-auto overflow-x-hidden bg-[#09090b] p-6">
+    <main class="flex-1 overflow-y-auto overflow-x-hidden bg-[#09090b] p-6">
 
-                <!-- Page Header -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-                    <div>
-                        <h2 class="text-2xl font-bold text-white">Publish</h2>
-                        <p class="text-zinc-400 text-sm mt-1">Review, edit and deploy your webstore</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button onclick="downloadCode()" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-                            <i class="bi bi-download"></i> Download
-                        </button>
-                        <form method="POST" class="m-0" id="publish_form">
-                            <textarea name="code_content" id="hidden_code" class="hidden"></textarea>
-                            <button type="submit" name="save_code" onclick="syncCode()" class="bg-violet-600 hover:bg-violet-500 text-white px-5 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 shadow-lg shadow-violet-500/20">
-                                <i class="bi bi-rocket-takeoff"></i> Publish
-                            </button>
-                        </form>
-                    </div>
+        <!-- Page Header -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div>
+                <h2 class="text-2xl font-bold text-white">Publish</h2>
+                <p class="text-zinc-400 text-sm mt-1">Review, edit and deploy your webstore</p>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="downloadCode()" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                    <i class="bi bi-download"></i> Download
+                </button>
+                <form method="POST" class="m-0" id="publish_form">
+                    <textarea name="code_content" id="hidden_code" class="hidden"></textarea>
+                    <button type="submit" name="save_code" onclick="syncCode()" class="bg-violet-600 hover:bg-violet-500 text-white px-5 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 shadow-lg shadow-violet-500/20">
+                        <i class="bi bi-rocket-takeoff"></i> Publish
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Info Cards -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+            <!-- Domain Card -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-zinc-400 text-xs font-medium">Live Domain</span>
+                    <span class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                        <i class="bi bi-globe2 text-violet-400"></i>
+                    </span>
                 </div>
+                <p class="text-white text-sm font-medium truncate"><?php echo $site_url; ?></p>
+                <a href="<?php echo $site_url; ?>" target="_blank" class="text-violet-400 hover:text-violet-300 text-xs mt-1 inline-flex items-center gap-1">
+                    Visit <i class="bi bi-box-arrow-up-right text-[10px]"></i>
+                </a>
+            </div>
 
-                <!-- Info Cards -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-                    <!-- Domain Card -->
-                    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-zinc-400 text-xs font-medium">Live Domain</span>
-                            <span class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
-                                <i class="bi bi-globe2 text-violet-400"></i>
-                            </span>
-                        </div>
-                        <p class="text-white text-sm font-medium truncate"><?php echo $site_url; ?></p>
-                        <a href="<?php echo $site_url; ?>" target="_blank" class="text-violet-400 hover:text-violet-300 text-xs mt-1 inline-flex items-center gap-1">
-                            Visit <i class="bi bi-box-arrow-up-right text-[10px]"></i>
-                        </a>
+            <!-- GitHub Card -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-zinc-400 text-xs font-medium">GitHub</span>
+                    <span class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
+                        <i class="bi bi-github text-zinc-400"></i>
+                    </span>
+                </div>
+                <?php if ($github_connected): ?>
+                    <div class="flex items-center gap-2">
+                        <span class="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Connected
+                        </span>
                     </div>
-
-                    <!-- GitHub Card -->
-                    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-zinc-400 text-xs font-medium">GitHub</span>
-                            <span class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
-                                <i class="bi bi-github text-zinc-400"></i>
-                            </span>
-                        </div>
-                        <?php if ($github_connected): ?>
-                        <div class="flex items-center gap-2">
-                            <span class="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">
-                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Connected
-                            </span>
-                        </div>
-                        <div class="mt-2">
-                            <select id="repo_selector" name="github_repo" form="publish_form" onchange="handleRepoChange(this)"
-                                class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-violet-500 transition-colors">
-                                <option value="" disabled <?php echo empty($selected_repo) ? 'selected' : ''; ?>>Select repository</option>
-                                <?php foreach ($repositories as $repo): ?>
+                    <div class="mt-2">
+                        <select id="repo_selector" name="github_repo" form="publish_form" onchange="handleRepoChange(this)"
+                            class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-violet-500 transition-colors">
+                            <option value="" disabled <?php echo empty($selected_repo) ? 'selected' : ''; ?>>Select repository</option>
+                            <?php foreach ($repositories as $repo): ?>
                                 <option value="<?php echo htmlspecialchars($repo['name']); ?>" <?php echo $selected_repo == $repo['name'] ? 'selected' : ''; ?>>
                                     <?php echo htmlspecialchars($repo['name']); ?>
                                 </option>
-                                <?php endforeach; ?>
-                                <option value="__NEW__">+ New Repository</option>
-                            </select>
-                            <div id="new_repo_container" class="hidden mt-2 flex items-center gap-1">
-                                <input type="text" id="new_repo_name" name="new_repo_name_text" form="publish_form" placeholder="Repository name..."
-                                    class="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-violet-500 transition-colors">
-                                <button type="button" onclick="cancelNewRepo()" class="text-zinc-500 hover:text-white p-1"><i class="bi bi-x-circle"></i></button>
-                            </div>
-                            <input type="hidden" id="repo_action" name="repo_action" value="existing" form="publish_form">
+                            <?php endforeach; ?>
+                            <option value="__NEW__">+ New Repository</option>
+                        </select>
+                        <div id="new_repo_container" class="hidden mt-2 flex items-center gap-1">
+                            <input type="text" id="new_repo_name" name="new_repo_name_text" form="publish_form" placeholder="Repository name..."
+                                class="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-violet-500 transition-colors">
+                            <button type="button" onclick="cancelNewRepo()" class="text-zinc-500 hover:text-white p-1"><i class="bi bi-x-circle"></i></button>
                         </div>
-                        <?php else: ?>
-                        <p class="text-zinc-500 text-sm">Not connected</p>
-                        <a href="?tab=deployment" class="text-violet-400 hover:text-violet-300 text-xs mt-1 inline-flex items-center gap-1">
-                            <i class="bi bi-plug"></i> Connect GitHub
-                        </a>
-                        <?php endif; ?>
+                        <input type="hidden" id="repo_action" name="repo_action" value="existing" form="publish_form">
                     </div>
+                <?php else: ?>
+                    <p class="text-zinc-500 text-sm">Not connected</p>
+                    <a href="?tab=deployment" class="text-violet-400 hover:text-violet-300 text-xs mt-1 inline-flex items-center gap-1">
+                        <i class="bi bi-plug"></i> Connect GitHub
+                    </a>
+                <?php endif; ?>
+            </div>
 
-                    <!-- Theme Card -->
-                    <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                        <div class="flex items-center justify-between mb-3">
-                            <span class="text-zinc-400 text-xs font-medium">Active Theme</span>
-                            <span class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center">
-                                <i class="bi bi-palette text-sky-400"></i>
-                            </span>
-                        </div>
-                        <p class="text-white text-sm font-medium"><?php echo $active_theme_name ?: 'Default'; ?></p>
-                        <a href="/vm-admin/<?php echo __DOMAIN__; ?>/theme" class="text-violet-400 hover:text-violet-300 text-xs mt-1 inline-flex items-center gap-1">
-                            Change theme <i class="bi bi-arrow-right text-[10px]"></i>
-                        </a>
-                    </div>
+            <!-- Theme Card -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-zinc-400 text-xs font-medium">Active Theme</span>
+                    <span class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center">
+                        <i class="bi bi-palette text-sky-400"></i>
+                    </span>
                 </div>
-
-                <!-- Editor + Preview -->
-                <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden" style="height: calc(100vh - 340px); min-height: 400px;">
-                    <!-- Editor Toolbar -->
-                    <div class="flex items-center border-b border-zinc-800 bg-zinc-950/50">
-                        <button onclick="toggleView('split')" id="btn-split" class="px-4 py-2.5 text-xs font-medium text-violet-400 border-b-2 border-violet-500 transition-colors">
-                            <i class="bi bi-layout-split mr-1"></i>Split
-                        </button>
-                        <button onclick="toggleView('code')" id="btn-code" class="px-4 py-2.5 text-xs font-medium text-zinc-500 hover:text-zinc-300 border-b-2 border-transparent transition-colors">
-                            <i class="bi bi-code-slash mr-1"></i>Code
-                        </button>
-                        <button onclick="toggleView('preview')" id="btn-preview" class="px-4 py-2.5 text-xs font-medium text-zinc-500 hover:text-zinc-300 border-b-2 border-transparent transition-colors">
-                            <i class="bi bi-eye mr-1"></i>Preview
-                        </button>
-                        <div class="ml-auto pr-4">
-                            <span id="save_status" class="text-zinc-600 text-xs">Ready</span>
-                        </div>
-                    </div>
-
-                    <div class="flex h-full" id="editorContainer" style="height: calc(100% - 40px);">
-                        <!-- Code Panel -->
-                        <div id="editor_panel" class="w-1/2 flex flex-col border-r border-zinc-800">
-                            <textarea id="editor"
-                                class="flex-1 bg-zinc-950 text-emerald-400 p-5 font-mono text-sm outline-none resize-none leading-relaxed"
-                                spellcheck="false"><?php echo htmlspecialchars($current_code); ?></textarea>
-                        </div>
-
-                        <!-- Preview Panel -->
-                        <div id="preview_panel" class="w-1/2 flex flex-col bg-white">
-                            <iframe id="preview" class="w-full h-full border-none"></iframe>
-                        </div>
-                    </div>
-                </div>
-
-            </main>
+                <p class="text-white text-sm font-medium"><?php echo $active_theme_name ?: 'Default'; ?></p>
+                <a href="/vm-admin/<?php echo __DOMAIN__; ?>/theme" class="text-violet-400 hover:text-violet-300 text-xs mt-1 inline-flex items-center gap-1">
+                    Change theme <i class="bi bi-arrow-right text-[10px]"></i>
+                </a>
+            </div>
         </div>
 
+        <!-- Editor + Preview -->
+        <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden" style="height: calc(100vh - 340px); min-height: 400px;">
+            <!-- Editor Toolbar -->
+            <div class="flex items-center border-b border-zinc-800 bg-zinc-950/50">
+                <button onclick="toggleView('split')" id="btn-split" class="px-4 py-2.5 text-xs font-medium text-violet-400 border-b-2 border-violet-500 transition-colors">
+                    <i class="bi bi-layout-split mr-1"></i>Split
+                </button>
+                <button onclick="toggleView('code')" id="btn-code" class="px-4 py-2.5 text-xs font-medium text-zinc-500 hover:text-zinc-300 border-b-2 border-transparent transition-colors">
+                    <i class="bi bi-code-slash mr-1"></i>Code
+                </button>
+                <button onclick="toggleView('preview')" id="btn-preview" class="px-4 py-2.5 text-xs font-medium text-zinc-500 hover:text-zinc-300 border-b-2 border-transparent transition-colors">
+                    <i class="bi bi-eye mr-1"></i>Preview
+                </button>
+                <div class="ml-auto pr-4">
+                    <span id="save_status" class="text-zinc-600 text-xs">Ready</span>
+                </div>
+            </div>
+
+            <div class="flex h-full" id="editorContainer" style="height: calc(100% - 40px);">
+                <!-- Code Panel -->
+                <div id="editor_panel" class="w-1/2 flex flex-col border-r border-zinc-800">
+                    <textarea id="editor"
+                        class="flex-1 bg-zinc-950 text-emerald-400 p-5 font-mono text-sm outline-none resize-none leading-relaxed"
+                        spellcheck="false"><?php echo htmlspecialchars($current_code); ?></textarea>
+                </div>
+
+                <!-- Preview Panel -->
+                <div id="preview_panel" class="w-1/2 flex flex-col bg-white">
+                    <iframe id="preview" class="w-full h-full border-none"></iframe>
+                </div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
 <script>
-const editor = document.getElementById('editor');
-const preview = document.getElementById('preview');
-const hiddenInput = document.getElementById('hidden_code');
-const status = document.getElementById('save_status');
+    const editor = document.getElementById('editor');
+    const preview = document.getElementById('preview');
+    const hiddenInput = document.getElementById('hidden_code');
+    const status = document.getElementById('save_status');
 
-function updatePreview() {
-    const content = editor.value;
-    const doc = preview.contentDocument || preview.contentWindow.document;
-    doc.open();
-    doc.write(content);
-    doc.close();
-    status.innerText = "Unsaved changes";
-    status.className = "text-amber-400 text-xs";
-}
-
-function syncCode() {
-    hiddenInput.value = editor.value;
-}
-
-function downloadCode() {
-    const text = editor.value;
-    const blob = new Blob([text], { type: 'text/html' });
-    const a = document.createElement('a');
-    a.download = 'store.html';
-    a.href = window.URL.createObjectURL(blob);
-    a.click();
-}
-
-function toggleView(view) {
-    const ep = document.getElementById('editor_panel');
-    const pp = document.getElementById('preview_panel');
-    const btnS = document.getElementById('btn-split');
-    const btnC = document.getElementById('btn-code');
-    const btnP = document.getElementById('btn-preview');
-
-    [btnS, btnC, btnP].forEach(b => { b.className = b.className.replace('text-violet-400 border-violet-500', 'text-zinc-500 border-transparent'); });
-
-    if (view === 'split') {
-        ep.style.display = 'flex'; ep.style.width = '50%';
-        pp.style.display = 'flex'; pp.style.width = '50%';
-        btnS.className = btnS.className.replace('text-zinc-500 border-transparent', 'text-violet-400 border-violet-500');
-    } else if (view === 'code') {
-        ep.style.display = 'flex'; ep.style.width = '100%';
-        pp.style.display = 'none';
-        btnC.className = btnC.className.replace('text-zinc-500 border-transparent', 'text-violet-400 border-violet-500');
-    } else {
-        ep.style.display = 'none';
-        pp.style.display = 'flex'; pp.style.width = '100%';
-        btnP.className = btnP.className.replace('text-zinc-500 border-transparent', 'text-violet-400 border-violet-500');
+    function updatePreview() {
+        const content = editor.value;
+        const doc = preview.contentDocument || preview.contentWindow.document;
+        doc.open();
+        doc.write(content);
+        doc.close();
+        status.innerText = "Unsaved changes";
+        status.className = "text-amber-400 text-xs";
     }
-}
 
-<?php if ($github_connected): ?>
-function handleRepoChange(select) {
-    const newRepoContainer = document.getElementById('new_repo_container');
-    const repoAction = document.getElementById('repo_action');
-    if (select.value === '__NEW__') {
-        select.classList.add('hidden');
-        newRepoContainer.classList.remove('hidden');
-        document.getElementById('new_repo_name').focus();
-        repoAction.value = 'new';
-    } else {
-        repoAction.value = 'existing';
+    function syncCode() {
+        hiddenInput.value = editor.value;
     }
-}
-function cancelNewRepo() {
-    const select = document.getElementById('repo_selector');
-    const newRepoContainer = document.getElementById('new_repo_container');
-    select.classList.remove('hidden');
-    select.value = "";
-    newRepoContainer.classList.add('hidden');
-    document.getElementById('repo_action').value = 'existing';
-}
-<?php endif; ?>
 
-editor.addEventListener('input', updatePreview);
-window.onload = updatePreview;
+    function downloadCode() {
+        const text = editor.value;
+        const blob = new Blob([text], {
+            type: 'text/html'
+        });
+        const a = document.createElement('a');
+        a.download = 'store.html';
+        a.href = window.URL.createObjectURL(blob);
+        a.click();
+    }
+
+    function toggleView(view) {
+        const ep = document.getElementById('editor_panel');
+        const pp = document.getElementById('preview_panel');
+        const btnS = document.getElementById('btn-split');
+        const btnC = document.getElementById('btn-code');
+        const btnP = document.getElementById('btn-preview');
+
+        [btnS, btnC, btnP].forEach(b => {
+            b.className = b.className.replace('text-violet-400 border-violet-500', 'text-zinc-500 border-transparent');
+        });
+
+        if (view === 'split') {
+            ep.style.display = 'flex';
+            ep.style.width = '50%';
+            pp.style.display = 'flex';
+            pp.style.width = '50%';
+            btnS.className = btnS.className.replace('text-zinc-500 border-transparent', 'text-violet-400 border-violet-500');
+        } else if (view === 'code') {
+            ep.style.display = 'flex';
+            ep.style.width = '100%';
+            pp.style.display = 'none';
+            btnC.className = btnC.className.replace('text-zinc-500 border-transparent', 'text-violet-400 border-violet-500');
+        } else {
+            ep.style.display = 'none';
+            pp.style.display = 'flex';
+            pp.style.width = '100%';
+            btnP.className = btnP.className.replace('text-zinc-500 border-transparent', 'text-violet-400 border-violet-500');
+        }
+    }
+
+    <?php if ($github_connected): ?>
+
+        function handleRepoChange(select) {
+            const newRepoContainer = document.getElementById('new_repo_container');
+            const repoAction = document.getElementById('repo_action');
+            if (select.value === '__NEW__') {
+                select.classList.add('hidden');
+                newRepoContainer.classList.remove('hidden');
+                document.getElementById('new_repo_name').focus();
+                repoAction.value = 'new';
+            } else {
+                repoAction.value = 'existing';
+            }
+        }
+
+        function cancelNewRepo() {
+            const select = document.getElementById('repo_selector');
+            const newRepoContainer = document.getElementById('new_repo_container');
+            select.classList.remove('hidden');
+            select.value = "";
+            newRepoContainer.classList.add('hidden');
+            document.getElementById('repo_action').value = 'existing';
+        }
+    <?php endif; ?>
+
+    editor.addEventListener('input', updatePreview);
+    window.onload = updatePreview;
 </script>

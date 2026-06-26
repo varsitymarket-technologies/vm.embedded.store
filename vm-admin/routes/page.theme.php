@@ -60,13 +60,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // 3. Build Theme Library
 $path = dirname(dirname(dirname(__FILE__))) . '/themes/*';
 $directories = glob($path, GLOB_ONLYDIR);
-natcasesort($directories);
 
 $all_themes = [];
 $categories = ['All'];
 
 foreach ($directories as $key => $value) {
     $name = basename($value);
+    $registered_at = @filemtime($value) ?: 0;
     $type = (strpos($name, 'pro_') !== false) ? 'Premium' : 'Standard';
     if (!in_array($type, $categories)) $categories[] = $type;
 
@@ -77,14 +77,37 @@ foreach ($directories as $key => $value) {
         'author' => 'vmTECH',
         'type' => $type,
         'version' => '1.0',
+        'registered_at' => $registered_at,
         'is_active' => ($name === $active_theme)
     ];
 }
 
+usort($all_themes, function ($a, $b) {
+    if ($a['registered_at'] === $b['registered_at']) {
+        return strcasecmp($a['title'], $b['title']);
+    }
+
+    return $a['registered_at'] <=> $b['registered_at'];
+});
+
+$themes_per_page = 8;
 $total_themes = count($all_themes);
+$total_pages = max(1, (int) ceil($total_themes / $themes_per_page));
+$current_page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
+$current_page = min($current_page, $total_pages);
+$theme_offset = ($current_page - 1) * $themes_per_page;
+$paged_themes = array_slice($all_themes, $theme_offset, $themes_per_page);
+
 $active_count = count(array_filter($all_themes, fn($t) => $t['is_active']));
 $premium_count = count(array_filter($all_themes, fn($t) => $t['type'] === 'Premium'));
 $standard_count = count(array_filter($all_themes, fn($t) => $t['type'] === 'Standard'));
+
+function theme_page_url($page)
+{
+    $query = $_GET;
+    $query['page'] = $page;
+    return '?' . http_build_query($query);
+}
 ?>
 
 <style>
@@ -227,7 +250,7 @@ $standard_count = count(array_filter($all_themes, fn($t) => $t['type'] === 'Stan
         <!-- Theme Grid -->
         <div class="px-8 pb-8">
             <div id="themeGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                <?php foreach ($all_themes as $theme): ?>
+                <?php foreach ($paged_themes as $theme): ?>
                     <div class="theme-card bg-zinc-900/50 rounded-2xl overflow-hidden border <?php echo $theme['is_active'] ? 'border-violet-500/60 active-glow' : 'border-zinc-800/60 hover:border-zinc-700'; ?> flex flex-col"
                          data-name="<?php echo strtolower($theme['title']); ?>"
                          data-type="<?php echo $theme['type']; ?>">
@@ -296,6 +319,44 @@ $standard_count = count(array_filter($all_themes, fn($t) => $t['type'] === 'Stan
                 <h3 class="text-lg font-semibold text-zinc-400">No themes found</h3>
                 <p class="text-sm text-zinc-600 mt-1">Try adjusting your search or filter</p>
             </div>
+
+            <?php if ($total_pages > 1): ?>
+                <div class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <p class="text-xs text-zinc-500">
+                        Showing <?php echo $theme_offset + 1; ?>-<?php echo min($theme_offset + $themes_per_page, $total_themes); ?>
+                        of <?php echo $total_themes; ?> themes
+                    </p>
+                    <div class="flex items-center gap-2">
+                        <a
+                            href="<?php echo $current_page > 1 ? theme_page_url($current_page - 1) : '#'; ?>"
+                            class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm border <?php echo $current_page > 1 ? 'border-zinc-700/60 text-white hover:bg-white/5' : 'border-zinc-800/60 text-zinc-600 pointer-events-none'; ?>"
+                            <?php echo $current_page > 1 ? '' : 'aria-disabled="true" tabindex="-1"'; ?>
+                        >
+                            <i class="bi bi-chevron-left text-xs"></i>
+                            Prev
+                        </a>
+
+                        <?php for ($page = 1; $page <= $total_pages; $page++): ?>
+                            <a
+                                href="<?php echo theme_page_url($page); ?>"
+                                class="inline-flex items-center justify-center min-w-10 px-3 py-2 rounded-lg text-sm border <?php echo $page === $current_page ? 'bg-violet-500 border-violet-500 text-white' : 'border-zinc-700/60 text-zinc-300 hover:bg-white/5'; ?>"
+                                <?php echo $page === $current_page ? 'aria-current="page"' : ''; ?>
+                            >
+                                <?php echo $page; ?>
+                            </a>
+                        <?php endfor; ?>
+
+                        <a
+                            href="<?php echo $current_page < $total_pages ? theme_page_url($current_page + 1) : '#'; ?>"
+                            class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm border <?php echo $current_page < $total_pages ? 'border-zinc-700/60 text-white hover:bg-white/5' : 'border-zinc-800/60 text-zinc-600 pointer-events-none'; ?>"
+                            <?php echo $current_page < $total_pages ? '' : 'aria-disabled="true" tabindex="-1"'; ?>
+                        >
+                            Next
+                            <i class="bi bi-chevron-right text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+            <?php endif; ?>
         </div>
     </main>
 </div>

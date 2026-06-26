@@ -251,7 +251,7 @@ ob_start();
                             <i class="bi bi-layout-wtf mr-3"></i>
                             <span>Page Builder</span>
                         </a>
-                        <a href="<?php echo $admin_base; ?>deploy" class="<?php echo nav_cls('deploy', $current_page); ?>">
+                        <a href="<?php echo $admin_base; ?>publish" class="<?php echo nav_cls('deploy', $current_page); ?>">
                             <i class="bi bi-rocket-takeoff-fill mr-3"></i>
                             <span>Publish</span>
                         </a>
@@ -505,7 +505,7 @@ ob_start();
                     <i class="bi bi-layout-wtf mr-3"></i>
                     <span>Page Builder</span>
                 </a>
-                <a href="<?php echo $admin_base; ?>deploy" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>publish" class="sesedesedwsedwdd">
                     <i class="bi bi-rocket-takeoff-fill mr-3"></i>
                     <span>Publish</span>
                 </a>

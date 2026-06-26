@@ -484,7 +484,7 @@ function deploy_engine_website(string $domain, string $site_contents = "", strin
 
     $encryption = new encryption_services($engine_tokens); 
     $local_signature = $encryption->encryption_threading($user);
-    $this->encryption_keys = ['threading' => $user,'silk'=>$user]; 
+    $encryption->encryption_keys = ['threading' => $user,'silk'=>$user]; 
     $remote_signature = $encryption->encryption_threading($domain);
     echo $signature; 
     exit(); 
