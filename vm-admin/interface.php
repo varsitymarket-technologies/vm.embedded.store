@@ -30,7 +30,14 @@ ob_start();
                         purple: {
                             500: '#7a1aab',
                             600: '#7a1aab',
-                        }
+                        },
+                        shopifyBg: '#1a1a1a',      /* Shopify Admin Dark base background */
+                        shopifyCard: '#202123',    /* Surface containers */
+                        shopifyBorder: '#303134',  /* Subtle, crisp dividers */
+                        shopifyText: '#e3e3e3',    /* Primary text */
+                        shopifySecondary: '#a9a9a9',/* Secondary labels */
+                        shopifyGreen: '#008060',    /* Shopify Core Green brand asset */
+                        shopifyGreenHover: '#006e52'
                     }
                 }
             }

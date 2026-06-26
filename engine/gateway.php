@@ -31,6 +31,15 @@ final class WebPublisherClient
         return $this->request('POST', '/publish', $payload);
     }
 
+    public function publishWebsite(string $domain, array $html, array $options = []):array
+    {
+        $payload = array_merge($options, [
+            'action' => 'publish.website',
+            'domain' => $domain,
+            'html' => $html,
+        ]);
+    }
+
     public function publishZip(string $domain, string $zipBase64, array $options = []): array
     {
         $payload = array_merge($options, [

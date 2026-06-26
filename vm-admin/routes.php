@@ -22,6 +22,7 @@ $data = [
     "analytics" => "page.analytics.php",
     "theme" => "page.theme.php",
     "deploy" => "page.deploy.php",
+    "publish" => "page.publish.php",
     "payments" => "page.payments.php",
     "forms" => "page.forms.php",
     "session" => "page.session-expired.php",
