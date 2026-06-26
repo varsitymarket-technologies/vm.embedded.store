@@ -97,6 +97,17 @@
         <i class="bi bi-chevron-right text-zinc-700 absolute right-4 top-1/2 -translate-y-1/2 group-hover:text-violet-400 transition-colors"></i>
     </a>
 
+    <a href="?tab=agent" class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-violet-500/30 transition-all group relative overflow-hidden">
+        <div class="flex items-center gap-3 mb-3">
+            <span class="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
+                <i class="bi bi-robot text-cyan-400"></i>
+            </span>
+            <span class="font-semibold text-white">AI Agent</span>
+        </div>
+        <p class="text-zinc-500 text-xs leading-relaxed">Configure the admin-only AI assistant and its MCP tools</p>
+        <i class="bi bi-chevron-right text-zinc-700 absolute right-4 top-1/2 -translate-y-1/2 group-hover:text-violet-400 transition-colors"></i>
+    </a>
+
     <a href="?tab=deployment" class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-violet-500/30 transition-all group relative overflow-hidden">
         <div class="flex items-center gap-3 mb-3">
             <span class="w-10 h-10 rounded-lg bg-zinc-700/50 flex items-center justify-center group-hover:bg-zinc-600/50 transition-colors">

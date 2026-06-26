@@ -62,6 +62,7 @@ if (!empty($domain) && $db_site === null) {
 // --- Encryption Helpers ---
 $config_key = create_enc_key();
 $config_path = dirname(dirname(dirname(__FILE__))) . "/sites/$domain/email.config.enc";
+$agent_path = dirname(dirname(dirname(__FILE__))) . "/sites/$domain/ai_agent.config.enc";
 
 function save_encrypted_config($path, $data, $key)
 {
@@ -232,6 +233,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit;
     }
 
+    if ($_POST['action'] === 'save_ai_agent') {
+        $agent_config = $_POST['agent'] ?? [];
+        $agent_config['enabled'] = (($agent_config['enabled'] ?? '0') === '1') ? '1' : '0';
+        $agent_config['admin_only'] = (($agent_config['admin_only'] ?? '0') === '1') ? '1' : '0';
+        $agent_config['mcp_enabled'] = (($agent_config['mcp_enabled'] ?? '0') === '1') ? '1' : '0';
+        $agent_config['allowed_scopes'] = array_values(array_filter($agent_config['allowed_scopes'] ?? [], fn($value) => $value !== ''));
+        save_encrypted_config($agent_path, $agent_config, $config_key);
+        header("Location: ?tab=agent&saved=1");
+        exit;
+    }
+
     if ($_POST['action'] === 'save_discord') {
         $discord = $_POST['discord'] ?? [];
         foreach ($discord as $key => $val) {
@@ -277,6 +289,27 @@ $cur_accepted = json_decode(get_setting($db_site, 'accepted_currencies', '["ZAR"
 $payment_path = dirname(dirname(dirname(__FILE__))) . "/sites/$domain/payment.config.enc";
 $payment_current = load_encrypted_config($payment_path, $config_key);
 
+// AI assistant settings
+$agent_current = load_encrypted_config($agent_path, $config_key);
+$agent_current = array_merge([
+    'enabled' => '1',
+    'admin_only' => '1',
+    'assistant_name' => 'Store Copilot',
+    'assistant_role' => 'Admin-only operations assistant',
+    'provider' => 'openai',
+    'model' => 'gpt-5',
+    'temperature' => '0.2',
+    'max_output_tokens' => '1200',
+    'response_style' => 'concise',
+    'system_prompt' => "You are the store's internal admin assistant. Help with operations, reporting, inventory, orders, customers, settings, and publishing. Never act on public storefront requests. Ask before destructive actions and summarize the impact before making changes.",
+    'mcp_enabled' => '1',
+    'mcp_server_name' => 'vm-admin-mcp',
+    'mcp_server_url' => '',
+    'mcp_transport' => 'http',
+    'mcp_auth_header' => 'X-MCP-Key',
+    'allowed_scopes' => ['orders', 'products', 'customers', 'settings'],
+], $agent_current ?: []);
+
 // Discord settings
 $discord_webhook = get_setting($db_site, 'discord_webhook_url', '');
 $discord_enabled = get_setting($db_site, 'discord_enabled', '0');
@@ -309,6 +342,7 @@ $tab_files = [
     'dev'        => 'settings.dev.php',
     'console'    => 'settings.console.php',
     'app'        => 'settings.app.php',
+    'agent'      => 'settings.agent.php',
 ];
 ?>
 
