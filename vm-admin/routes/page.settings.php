@@ -82,6 +82,125 @@ function load_encrypted_config($path, $key)
     return json_decode($json, true) ?: [];
 }
 
+if (!function_exists('vm_settings_normalize_domain')) {
+    function vm_settings_normalize_domain(string $domain): string
+    {
+        $domain = trim(strtolower($domain));
+        $domain = preg_replace('#^https?://#', '', $domain);
+        $domain = rtrim($domain, '/');
+        return $domain;
+    }
+}
+
+if (!function_exists('vm_settings_recursive_copy')) {
+    function vm_settings_recursive_copy(string $source, string $destination): bool
+    {
+        if (!file_exists($source)) {
+            return true;
+        }
+
+        if (is_file($source)) {
+            $target_dir = dirname($destination);
+            if (!is_dir($target_dir)) {
+                @mkdir($target_dir, 0777, true);
+            }
+            return @copy($source, $destination);
+        }
+
+        if (!is_dir($destination)) {
+            @mkdir($destination, 0777, true);
+        }
+
+        $items = scandir($source);
+        if ($items === false) {
+            return false;
+        }
+
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+            if (!vm_settings_recursive_copy($source . '/' . $item, $destination . '/' . $item)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+}
+
+if (!function_exists('vm_settings_recursive_delete')) {
+    function vm_settings_recursive_delete(string $path): bool
+    {
+        if (!file_exists($path)) {
+            return true;
+        }
+
+        if (is_file($path) || is_link($path)) {
+            return @unlink($path);
+        }
+
+        $items = scandir($path);
+        if ($items === false) {
+            return false;
+        }
+
+        foreach ($items as $item) {
+            if ($item === '.' || $item === '..') {
+                continue;
+            }
+            if (!vm_settings_recursive_delete($path . '/' . $item)) {
+                return false;
+            }
+        }
+
+        return @rmdir($path);
+    }
+}
+
+if (!function_exists('vm_settings_move_tree')) {
+    function vm_settings_move_tree(string $source, string $destination): bool
+    {
+        if ($source === $destination || !file_exists($source)) {
+            return true;
+        }
+
+        if (file_exists($destination)) {
+            return false;
+        }
+
+        if (@rename($source, $destination)) {
+            return true;
+        }
+
+        if (!vm_settings_recursive_copy($source, $destination)) {
+            return false;
+        }
+
+        return vm_settings_recursive_delete($source);
+    }
+}
+
+if (!function_exists('vm_settings_store_dir')) {
+    function vm_settings_store_dir(string $domain): string
+    {
+        return dirname(dirname(dirname(__FILE__))) . '/sites/' . $domain;
+    }
+}
+
+if (!function_exists('vm_settings_private_dir')) {
+    function vm_settings_private_dir(string $domain): string
+    {
+        $root = dirname(dirname(dirname(__FILE__)));
+        $store_hash = hash('sha256', $domain);
+        $primary = dirname($root) . '/data/' . $store_hash;
+        if (is_dir(dirname($root) . '/data/') || @mkdir(dirname($root) . '/data/', 0755, true)) {
+            return $primary;
+        }
+        return $root . '/build/data/' . $store_hash;
+    }
+}
+
 // --- Helper: load a setting from the site DB ---
 function get_setting($db, $key, $default = '') {
     if ($db === null) return $default;
@@ -143,10 +262,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     if ($_POST['action'] === 'save_branding') {
         $branding = $_POST['branding'] ?? [];
+        $current_domain = vm_settings_normalize_domain((string)$domain);
+        $requested_domain = vm_settings_normalize_domain((string)($branding['domain'] ?? $current_domain));
+        $requested_name = trim((string)($branding['wb_name'] ?? ''));
+
+        if ($requested_domain === '') {
+            $requested_domain = $current_domain;
+        }
+
+        if (!preg_match('/^(?!-)[a-z0-9.-]+(?<!-)$/i', $requested_domain) || strpos($requested_domain, '.') === false) {
+            header("Location: ?tab=branding&error=invalid_domain");
+            exit;
+        }
+
+        if ($requested_name === '') {
+            $requested_name = $site_name ?: $requested_domain;
+        }
+
+        $domain_changed = $requested_domain !== '' && $requested_domain !== $current_domain;
+        if ($domain_changed) {
+            $conflict = $db_engine->query(
+                "SELECT id FROM sys_websites WHERE domain = ? AND account_index != ? LIMIT 1",
+                [$requested_domain, __ACCOUNT_INDEX__]
+            );
+            if (!empty($conflict)) {
+                header("Location: ?tab=branding&error=domain_taken");
+                exit;
+            }
+        }
+
         foreach ($branding as $key => $val) {
+            if ($key === 'domain') {
+                continue;
+            }
             $db_site->query("INSERT INTO settings (`key`, `value`) VALUES (?, ?) ON CONFLICT(`key`) DO UPDATE SET value = ?", [$key, $val, $val]);
         }
-        header("Location: ?tab=branding&saved=1");
+
+        if ($domain_changed) {
+            $old_site_dir = vm_settings_store_dir($current_domain);
+            $new_site_dir = vm_settings_store_dir($requested_domain);
+            $old_private_dir = vm_settings_private_dir($current_domain);
+            $new_private_dir = vm_settings_private_dir($requested_domain);
+            $site_moved = false;
+
+            if (!vm_settings_move_tree($old_site_dir, $new_site_dir)) {
+                header("Location: ?tab=branding&error=domain_move_failed");
+                exit;
+            }
+            $site_moved = true;
+
+            if ($old_private_dir !== $new_private_dir && file_exists($old_private_dir)) {
+                if (!vm_settings_move_tree($old_private_dir, $new_private_dir)) {
+                    if (file_exists($new_private_dir)) {
+                        vm_settings_recursive_delete($new_private_dir);
+                    }
+                    if ($site_moved) {
+                        vm_settings_move_tree($new_site_dir, $old_site_dir);
+                    }
+                    header("Location: ?tab=branding&error=domain_move_failed");
+                    exit;
+                }
+            }
+        }
+
+        $db_engine->query(
+            "UPDATE sys_websites SET name = ?, domain = ? WHERE account_index = ?",
+            [$requested_name, $requested_domain, __ACCOUNT_INDEX__]
+        );
+
+        $redirect_target = $domain_changed
+            ? '/vm-admin/' . $requested_domain . '/settings?tab=branding&saved=1'
+            : '?tab=branding&saved=1';
+        header("Location: " . $redirect_target);
         exit;
     }
 
@@ -354,6 +541,8 @@ $tab_files = [
     'app'        => 'settings.app.php',
     'agent'      => 'settings.agent.php',
 ];
+
+$settings_error = $_GET['error'] ?? '';
 ?>
 
 <!-- Main Content -->
@@ -367,6 +556,20 @@ $tab_files = [
             <i class="bi bi-check-circle"></i> Changes saved successfully
         </div>
         <script>setTimeout(() => document.getElementById('saveToast').remove(), 4000);</script>
+        <?php endif; ?>
+
+        <?php if ($settings_error === 'domain_taken'): ?>
+        <div class="mb-4 flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-200 px-4 py-2.5 rounded-lg text-sm font-medium">
+            <i class="bi bi-exclamation-triangle"></i> That domain is already assigned to another store.
+        </div>
+        <?php elseif ($settings_error === 'domain_move_failed'): ?>
+        <div class="mb-4 flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-200 px-4 py-2.5 rounded-lg text-sm font-medium">
+            <i class="bi bi-exclamation-triangle"></i> The domain record was updated, but the store files could not be moved cleanly.
+        </div>
+        <?php elseif ($settings_error === 'invalid_domain'): ?>
+        <div class="mb-4 flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-200 px-4 py-2.5 rounded-lg text-sm font-medium">
+            <i class="bi bi-exclamation-triangle"></i> Please enter a valid domain name like <span class="font-mono">store.example.com</span>.
+        </div>
         <?php endif; ?>
 
         <?php if ($active_tab == 'general'): ?>

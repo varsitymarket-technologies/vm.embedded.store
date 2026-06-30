@@ -20,6 +20,7 @@ $data = [
     "builder" => "page.builder.php",
     "settings" => "page.settings.php",
     "agent" => "page.agent.php",
+    "account" => "page.account.php",
     "analytics" => "page.analytics.php",
     "theme" => "page.theme.php",
     "deploy" => "page.deploy.php",

@@ -20,11 +20,14 @@
 
             <div>
                 <label class="block text-zinc-400 text-xs font-medium mb-1.5">Primary Public URL</label>
-                <div class="relative">
-                    <input type="text" value="<?= htmlspecialchars($site_domain) ?>" readonly
-                        class="w-full bg-zinc-800/50 border border-zinc-700/50 rounded-lg px-3 py-2 text-zinc-500 text-sm cursor-not-allowed">
-                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-medium bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded">Connected</span>
-                </div>
+                <input
+                    type="text"
+                    name="branding[domain]"
+                    value="<?= htmlspecialchars($site_domain) ?>"
+                    class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition-colors font-mono"
+                    placeholder="store.example.com"
+                >
+                <p class="text-zinc-500 text-xs mt-1.5">Changing this will move the store files to the new domain path and update the store registry.</p>
             </div>
         </div>
         <div class="px-5 py-4 border-t border-zinc-800 flex justify-end">

@@ -284,6 +284,10 @@ ob_start();
                             <i class="bi bi-gear-fill mr-3"></i>
                             <span>Settings</span>
                         </a>
+                        <a href="<?php echo $admin_base; ?>account" class="<?php echo nav_cls('account', $current_page); ?>">
+                            <i class="bi bi-person-badge-fill mr-3"></i>
+                            <span>Account</span>
+                        </a>
                     </div>
                 </div>
 
@@ -292,12 +296,14 @@ ob_start();
             <!-- User Footer -->
             <div class="px-3 py-4 border-t border-white/5">
                 <div class="flex items-center gap-3">
-                    <div class="h-8 w-8 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
-                        <span class="text-white text-xs font-bold"><?php echo strtoupper(substr(__USERNAME__ ?? 'U', 0, 1)); ?></span>
-                    </div>
-                    <div class="min-w-0 flex-1">
-                        <p class="text-white text-sm font-medium truncate"><?php echo htmlspecialchars(__USERNAME__ ?? 'User', ENT_QUOTES, 'UTF-8'); ?></p>
-                    </div>
+                    <a href="<?php echo $admin_base; ?>account" class="flex min-w-0 flex-1 items-center gap-3 rounded-lg p-1 -m-1 transition-colors hover:bg-white/5">
+                        <div class="h-8 w-8 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
+                            <span class="text-white text-xs font-bold"><?php echo strtoupper(substr(__USERNAME__ ?? 'U', 0, 1)); ?></span>
+                        </div>
+                        <div class="min-w-0 flex-1">
+                            <p class="text-white text-sm font-medium truncate"><?php echo htmlspecialchars(__USERNAME__ ?? 'User', ENT_QUOTES, 'UTF-8'); ?></p>
+                        </div>
+                    </a>
                     <a href="/logout.php" title="Sign out" class="text-gray-500 hover:text-red-400 transition-colors">
                         <i class="bi bi-box-arrow-right"></i>
                     </a>
