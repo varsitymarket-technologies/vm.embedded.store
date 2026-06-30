@@ -272,7 +272,7 @@ if ($domain_connected == true){
                             <tr class="bg-shopifyBg/40 border-b border-shopifyBorder text-shopifySecondary font-medium">
                                 <th class="p-3.5 pl-5">Version &amp; Build</th>
                                 <th class="p-3.5">Status</th>
-                                <th class="p-3.5">Commit Message / Actions Log</th>
+                                <th class="p-3.5">Actions Log</th>
                                 <th class="p-3.5">Author</th>
                                 <th class="p-3.5 pr-5 text-right">Date Modified</th>
                             </tr>

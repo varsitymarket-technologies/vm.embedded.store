@@ -138,6 +138,52 @@ function get_domain()
 }
 
 
+function engine_validate_domain($domain){
+    // Fetch only A records
+    $domain = strtolower($domain);
+    $dnsRecords = dns_get_record($domain, DNS_A);
+    $engine_server_ip = $_SERVER['__SERVER_IP__'] ?? false; 
+
+    if ($dnsRecords === false) {
+        return false; 
+        echo "Failed to perform DNS query.";
+        exit;
+    }
+
+    if (empty($dnsRecords)) {
+        return false; 
+        echo "No A records found for {$domain}.";
+    } else {
+        echo "A records for {$domain}:\n";
+        print_r($dnsRecords); 
+
+        foreach ($dnsRecords as $record) {
+            if ($record['ip'] == $engine_server_ip){
+                return true; 
+            }
+            // Each record is an associative array containing 'host', 'ttl', 'class', 'type', and 'ip'
+            //echo "- IP: " . $record['ip'] . " (TTL: " . $record['ttl'] . "s)\n";
+        }
+    }
+
+    return false;
+}
+
+function engine_validate_domain_ownership($domain){
+    $domain = strtolower($domain); 
+    // To look up TXT verification records instead
+    $dnsRecords = dns_get_record($domain, DNS_TXT);
+    $target = "vm_".hash("sha256",$domain); 
+
+    foreach ($dnsRecords as $record) {
+      if ($record['txt'] == $target){
+        return true;
+      }
+    }
+    return false; 
+}
+
+
 function map()
 {
     $e = [
