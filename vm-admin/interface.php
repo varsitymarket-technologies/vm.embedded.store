@@ -173,6 +173,13 @@ ob_start();
                     <i class="bi bi-grid-1x2-fill mr-3"></i>
                     <span>Overview</span>
                 </a>
+                <?php if (isset($_SERVER['__AI_EXTENSION__'])): ?> 
+                <?php if ($_SERVER['__AI_EXTENSION__']): ?>
+                    <a href="<?php echo $admin_base; ?>agent" class="<?php echo nav_cls('agent', $current_page); ?>">
+                        <i class="bi bi-robot mr-3"></i>
+                        <span>AI Agent</span>
+                    </a>
+                <?php endif; endif; ?>
 
                 <a href="<?php echo $admin_base; ?>analytics" class="<?php echo nav_cls('analytics', $current_page); ?>">
                     <i class="bi bi-graph-up mr-3"></i>
