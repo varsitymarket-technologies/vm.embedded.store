@@ -79,6 +79,15 @@ $sql_settings = "CREATE TABLE IF NOT EXISTS settings (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 )";
 
+// 5b. Deployments Table
+$sql_deployments = "CREATE TABLE IF NOT EXISTS deployments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    version_hash TEXT NOT NULL,
+    html_content TEXT NOT NULL,
+    status TEXT DEFAULT 'active',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)";
+
 // Execute creation queries
 // Assuming database_manager has a query() method
 $db->query($sql_categories);
@@ -95,6 +104,8 @@ $db->query($sql_orders);
 
 $db->query($sql_settings);
 //echo "Table 'settings' checked/created.\n";
+
+$db->query($sql_deployments);
 
 // 6. Customers Table (sub-project A)
 $sql_customers = "CREATE TABLE IF NOT EXISTS customers (

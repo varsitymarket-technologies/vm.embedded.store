@@ -38,6 +38,8 @@ final class WebPublisherClient
             'domain' => $domain,
             'html' => $html,
         ]);
+        
+        return $this->request('POST', '/publish', $payload);
     }
 
     public function publishZip(string $domain, string $zipBase64, array $options = []): array

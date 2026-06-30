@@ -234,11 +234,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 
     if ($_POST['action'] === 'save_ai_agent') {
+        $existing_agent = load_encrypted_config($agent_path, $config_key);
         $agent_config = $_POST['agent'] ?? [];
         $agent_config['enabled'] = (($agent_config['enabled'] ?? '0') === '1') ? '1' : '0';
         $agent_config['admin_only'] = (($agent_config['admin_only'] ?? '0') === '1') ? '1' : '0';
         $agent_config['mcp_enabled'] = (($agent_config['mcp_enabled'] ?? '0') === '1') ? '1' : '0';
         $agent_config['allowed_scopes'] = array_values(array_filter($agent_config['allowed_scopes'] ?? [], fn($value) => $value !== ''));
+        $new_api_key = trim($agent_config['openai_api_key'] ?? '');
+        if ($new_api_key === '') {
+            $agent_config['openai_api_key'] = $existing_agent['openai_api_key'] ?? '';
+        } else {
+            $agent_config['openai_api_key'] = $new_api_key;
+        }
+        $agent_config['openai_org_id'] = trim($agent_config['openai_org_id'] ?? '');
         save_encrypted_config($agent_path, $agent_config, $config_key);
         header("Location: ?tab=agent&saved=1");
         exit;
@@ -297,7 +305,9 @@ $agent_current = array_merge([
     'assistant_name' => 'Store Copilot',
     'assistant_role' => 'Admin-only operations assistant',
     'provider' => 'openai',
-    'model' => 'gpt-5',
+    'model' => 'gpt-4o-mini',
+    'openai_api_key' => '',
+    'openai_org_id' => '',
     'temperature' => '0.2',
     'max_output_tokens' => '1200',
     'response_style' => 'concise',
