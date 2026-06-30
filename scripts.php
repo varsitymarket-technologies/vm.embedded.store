@@ -154,8 +154,6 @@ function engine_validate_domain($domain){
         return false; 
         echo "No A records found for {$domain}.";
     } else {
-        echo "A records for {$domain}:\n";
-        print_r($dnsRecords); 
 
         foreach ($dnsRecords as $record) {
             if ($record['ip'] == $engine_server_ip){

@@ -1,6 +1,6 @@
 <?php
 $admin_base = '/vm-admin/' . (__DOMAIN__ ?? '') . '/';
-$site_url = "https://" . __DOMAIN__;
+$site_url = "http://" . __DOMAIN__;
 
 // Init Local Deployment DB
 $db = initiate_web_database();
@@ -60,17 +60,17 @@ try {
 } catch (Exception $e) {
 }
 
-$verification_domain = true;
-$domain_connected = false;
+$verification_domain = engine_validate_domain_ownership(__DOMAIN__);
+$domain_connected = engine_validate_domain(__DOMAIN__);
 
-if ($domain_connected == true){
-    $domain_source = $site_url; 
-}else if ($verification_domain == true){
-    $domain_source = "http://".get_domain()."/pages/error.500.deployment.php";
-}else{
-    $domain_source = "http://".get_domain()."/pages/error.500.verification.php";
+if ($domain_connected == true) {
+    $domain_source = $site_url;
+} else if ($verification_domain == true) {
+    $domain_source = "http://" . get_domain() . "/pages/error.500.deployment.php";
+} else {
+    $domain_source = "http://" . get_domain() . "/pages/error.500.verification.php";
 }
- 
+
 ?>
 <!-- Main Content -->
 <div class="flex flex-1 flex-col overflow-hidden">
@@ -160,7 +160,7 @@ if ($domain_connected == true){
 
                         </div>
                         <div class="w-full sm:w-auto flex sm:flex-col gap-2 justify-end">
-                            <button
+                            <button id="openModal"
                                 class="flex-1 sm:flex-none text-center bg-[#2c2d30] hover:bg-[#36373a] border border-shopifyBorder text-white px-3 py-1.5 rounded-lg font-medium text-xs transition">
                                 Verify Domain
                             </button>
@@ -203,7 +203,7 @@ if ($domain_connected == true){
 
                         </div>
                         <div class="w-full sm:w-auto flex sm:flex-col gap-2 justify-end">
-                            <button
+                            <button id="openModal"
                                 class="flex-1 sm:flex-none text-center bg-[#2c2d30] hover:bg-[#36373a] border border-shopifyBorder text-white px-3 py-1.5 rounded-lg font-medium text-xs transition">
                                 Connect Domain
                             </button>
@@ -320,3 +320,223 @@ if ($domain_connected == true){
         </div>
     </div>
 </div>
+
+<style>
+    /* Trigger Button */
+    .open-btn {
+        background-color: #2563eb;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+    }
+
+    .open-btn:hover {
+        background-color: #1d4ed8;
+    }
+
+    /* Modal Styles */
+    dialog {
+        border: none;
+        border-radius: 8px;
+        padding: 24px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    }
+
+    dialog::backdrop {
+        background-color: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+    }
+
+    h2 {
+        margin-top: 0;
+        color: #111827;
+        font-size: 1.25rem;
+    }
+
+    p {
+        color: #4b5563;
+        font-size: 0.95rem;
+        line-height: 1.5;
+    }
+
+    /* DNS Record Data Box */
+    .dns-table {
+        width: 100%;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 12px;
+        margin: 20px 0;
+        font-family: monospace;
+        font-size: 0.9rem;
+        border-collapse: collapse;
+    }
+
+    .dns-table td {
+        padding: 6px 8px;
+    }
+
+    .label {
+        color: #6b7280;
+        font-weight: bold;
+        width: 80px;
+    }
+
+    .value {
+        color: #111827;
+        word-break: break-all;
+    }
+
+    /* Action Buttons */
+    .modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 24px;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 500;
+        cursor: pointer;
+        font-size: 0.95rem;
+    }
+
+    .btn-secondary {
+        background: transparent;
+        border: 1px solid #d1d5db;
+        color: #374151;
+    }
+
+    .btn-secondary:hover {
+        background: #f9fafb;
+    }
+
+    .btn-primary {
+        background: #2563eb;
+        border: none;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #1d4ed8;
+    }
+</style>
+
+
+<!-- The Modal -->
+<dialog id="dnsModal">
+    <?php
+    if (($domain_connected == false) && ($verification_domain == true)):
+    ?>
+        <h2>DNS Authentication Required</h2>
+        <p>To verify ownership of your domain, please add the following TXT record to your DNS provider configurations (Cloudflare, GoDaddy, Namecheap, etc.).</p>
+
+        <table class="dns-table">
+            <tr>
+                <td class="label">Type</td>
+                <td class="value">A record</td>
+            </tr>
+            <tr>
+                <td class="label">Name</td>
+                <td class="value">@</td>
+            </tr>
+            <tr>
+                <td class="label">Value</td>
+                <td class="value"><?php echo $_SERVER['__SERVER_IP__'] ?? 'Unconfigured' ?></td>
+            </tr>
+            <tr>
+                <td class="label">TTL</td>
+                <td class="value">3600 (or Automatic)</td>
+            </tr>
+        </table>
+
+        <p class="value" style="font-size: 0.85rem; color: #6b7280;">Note: DNS changes can take anywhere from a few minutes up to 24 hours to propagate globally.</p>
+
+        <div class="modal-actions">
+            <button class="btn btn-secondary" id="closeModal">Cancel</button>
+            <button class="btn btn-primary" id="verifyBtn">Check DNS Record</button>
+        </div>
+    <?php elseif (($verification_domain !== true)): ?>
+
+        <h2>DNS Authentication Required</h2>
+        <p>To verify ownership of your domain, please add the following TXT record to your DNS provider configurations (Cloudflare, GoDaddy, Namecheap, etc.).</p>
+
+        <table class="dns-table">
+            <tr>
+                <td class="label">Type</td>
+                <td class="value">TXT</td>
+            </tr>
+            <tr>
+                <td class="label">Name</td>
+                <td class="value">@</td>
+            </tr>
+            <tr>
+                <td class="label">Value</td>
+                <td class="value"><?php echo "vm_".hash("sha256",__DOMAIN__); ?></td>
+            </tr>
+            <tr>
+                <td class="label">TTL</td>
+                <td class="value">3600 (or Automatic)</td>
+            </tr>
+        </table>
+
+        <p class="value" style="font-size: 0.85rem; color: #6b7280;">Note: DNS changes can take anywhere from a few minutes up to 24 hours to propagate globally.</p>
+
+        <div class="modal-actions">
+            <button class="btn btn-secondary" id="closeModal">Cancel</button>
+            <button class="btn btn-primary" id="verifyBtn">Check DNS Record</button>
+        </div>
+
+    <?php endif; ?>
+</dialog>
+
+<script>
+    const modal = document.getElementById('dnsModal');
+    const openBtn = document.getElementById('openModal');
+    const closeBtn = document.getElementById('closeModal');
+    const verifyBtn = document.getElementById('verifyBtn');
+
+    // Open modal using native showModal() for backdrop support
+    openBtn.addEventListener('click', () => {
+        modal.showModal();
+    });
+
+    // Close modal
+    closeBtn.addEventListener('click', () => {
+        modal.close();
+    });
+
+    // Handle verification action
+    verifyBtn.addEventListener('click', () => {
+        verifyBtn.textContent = 'Verifying...';
+        verifyBtn.disabled = true;
+
+        // Simulating a backend API check
+        setTimeout(() => {
+            alert('DNS record not found yet. Please wait a few minutes and try again.');
+            verifyBtn.textContent = 'Check DNS Record';
+            verifyBtn.disabled = false;
+        }, 1500);
+    });
+
+    // Close modal if user clicks outside of the dialog box
+    modal.addEventListener('click', (e) => {
+        const dialogDimensions = modal.getBoundingClientRect();
+        if (
+            e.clientX < dialogDimensions.left ||
+            e.clientX > dialogDimensions.right ||
+            e.clientY < dialogDimensions.top ||
+            e.clientY > dialogDimensions.bottom
+        ) {
+            modal.close();
+        }
+    });
+</script>
