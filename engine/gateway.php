@@ -36,7 +36,7 @@ final class WebPublisherClient
         $payload = array_merge($options, [
             'action' => 'publish.website',
             'domain' => $domain,
-            'html' => $html,
+            'html' => $html['html'] ?? '',
         ]);
         
         return $this->request('POST', '/publish', $payload);
@@ -151,6 +151,7 @@ final class WebPublisherClient
         ]);
 
         $response = @file_get_contents($url, false, $context);
+        debug($response, "Gateway response for $method $url: ");
         $responseHeaders = $http_response_header ?? [];
         $status = $this->parseStatus($responseHeaders);
         $parsedHeaders = $this->parseHeaders($responseHeaders);

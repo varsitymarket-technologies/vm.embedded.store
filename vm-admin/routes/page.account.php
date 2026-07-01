@@ -11,37 +11,15 @@ $account_store_theme = website_data('theme') ?: 'default';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'save_account_profile') {
     $profile = $_POST['account'] ?? [];
-    $new_name = trim((string)($profile['name'] ?? ''));
-    $new_email = trim((string)($profile['email'] ?? ''));
     $new_image = trim((string)($profile['image'] ?? ''));
-
-    if ($new_name === '') {
-        header('Location: ?error=name');
-        exit;
-    }
-
-    if ($new_email === '') {
-        header('Location: ?error=email');
-        exit;
-    }
-
-    $conflict = __DB_MODULE__->query(
-        "SELECT id FROM sys_account WHERE (name = ? OR email = ?) AND auth != ? LIMIT 1",
-        [$new_name, $new_email, __ACCOUNT_INDEX__]
-    );
-
-    if (!empty($conflict)) {
-        header('Location: ?error=conflict');
-        exit;
-    }
 
     if ($new_image === '') {
         $new_image = $account_image;
     }
 
     __DB_MODULE__->query(
-        "UPDATE sys_account SET name = ?, email = ?, image = ? WHERE auth = ?",
-        [$new_name, $new_email, $new_image, __ACCOUNT_INDEX__]
+        "UPDATE sys_account SET image = ? WHERE auth = ?",
+        [$new_image, __ACCOUNT_INDEX__]
     );
 
     header('Location: ?saved=1');
@@ -56,7 +34,7 @@ $account_error = $_GET['error'] ?? '';
 
     <main class="flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8">
         <div class="mx-auto flex w-full max-w-6xl flex-col gap-4">
-            <section class="rounded-[2rem] border border-white/10 bg-white/[0.03] px-5 py-4 shadow-2xl shadow-black/20 backdrop-blur-sm">
+            <section class="rounded-[1rem] border border-white/10 bg-white/[0.03] px-5 py-4 shadow-2xl shadow-black/20 backdrop-blur-sm">
                 <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div class="space-y-2">
                         <div class="flex flex-wrap items-center gap-3">
@@ -81,9 +59,9 @@ $account_error = $_GET['error'] ?? '';
             </section>
 
             <div class="grid grid-cols-1 xl:grid-cols-[1.25fr_0.75fr] gap-4">
-                <section class="rounded-[2rem] border border-white/10 bg-[#0b0b0f] shadow-2xl shadow-black/30 overflow-hidden">
+                <section class="rounded-[1rem] border border-white/10 bg-[#0b0b0f] shadow-2xl shadow-black/30 overflow-hidden">
                     <div class="border-b border-white/5 px-5 py-4">
-                        <p class="text-xs uppercase tracking-[0.3em] text-zinc-600">Profile</p>
+                        <p class="text-xs uppercase  text-zinc-600">Profile</p>
                         <h3 class="mt-1 text-base font-semibold text-white">Edit your details</h3>
                     </div>
                     <form method="POST" class="space-y-5 px-5 py-5">
@@ -103,14 +81,7 @@ $account_error = $_GET['error'] ?? '';
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="mb-1.5 block text-xs font-medium text-zinc-400">Display name</label>
-                                <input type="text" name="account[name]" value="<?= htmlspecialchars($account_name, ENT_QUOTES, 'UTF-8') ?>" class="w-full rounded-xl border border-white/10 bg-[#07070a] px-4 py-3 text-sm text-white focus:border-cyan-500/50 focus:outline-none" placeholder="Your name">
-                            </div>
-                            <div>
-                                <label class="mb-1.5 block text-xs font-medium text-zinc-400">Email address</label>
-                                <input type="email" name="account[email]" value="<?= htmlspecialchars($account_email, ENT_QUOTES, 'UTF-8') ?>" class="w-full rounded-xl border border-white/10 bg-[#07070a] px-4 py-3 text-sm text-white focus:border-cyan-500/50 focus:outline-none" placeholder="you@example.com">
-                            </div>
+                           
                         </div>
 
                         <div>
@@ -120,7 +91,7 @@ $account_error = $_GET['error'] ?? '';
                         </div>
 
                         <div class="flex items-center justify-end">
-                            <button type="submit" class="inline-flex items-center gap-2 rounded-full bg-cyan-500 px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-cyan-400">
+                            <button type="submit" class="inline-flex text-white items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-cyan-400">
                                 <i class="bi bi-check2"></i>
                                 Save profile
                             </button>
@@ -129,39 +100,35 @@ $account_error = $_GET['error'] ?? '';
                 </section>
 
                 <aside class="space-y-4">
-                    <section class="rounded-[2rem] border border-white/10 bg-[#0b0b0f] shadow-2xl shadow-black/30 overflow-hidden">
+                    <section class="rounded-[1rem] border border-white/10 bg-[#0b0b0f] shadow-2xl shadow-black/30 overflow-hidden">
                         <div class="border-b border-white/5 px-5 py-4">
-                            <p class="text-xs uppercase tracking-[0.3em] text-zinc-600">Linked store</p>
+                            <p class="text-xs uppercase text-zinc-600">Linked store</p>
                             <h3 class="mt-1 text-base font-semibold text-white">Current context</h3>
                         </div>
                         <div class="space-y-3 px-5 py-5">
                             <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                                <p class="text-[10px] uppercase tracking-[0.3em] text-zinc-600">Store name</p>
+                                <p class="text-[10px] uppercase  text-zinc-600">Store name</p>
                                 <p class="mt-2 text-sm font-medium text-white"><?= htmlspecialchars($account_store_name, ENT_QUOTES, 'UTF-8') ?></p>
                             </div>
                             <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                                <p class="text-[10px] uppercase tracking-[0.3em] text-zinc-600">Domain</p>
+                                <p class="text-[10px] uppercase  text-zinc-600">Domain</p>
                                 <p class="mt-2 text-sm font-medium text-white"><?= htmlspecialchars($account_store_domain, ENT_QUOTES, 'UTF-8') ?></p>
                             </div>
                             <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                                <p class="text-[10px] uppercase tracking-[0.3em] text-zinc-600">Theme</p>
+                                <p class="text-[10px] uppercase  text-zinc-600">Theme</p>
                                 <p class="mt-2 text-sm font-medium text-white"><?= htmlspecialchars($account_store_theme, ENT_QUOTES, 'UTF-8') ?></p>
                             </div>
                         </div>
                     </section>
 
-                    <section class="rounded-[2rem] border border-white/10 bg-[#0b0b0f] shadow-2xl shadow-black/30 overflow-hidden">
+                    <section class="rounded-[1rem] border border-white/10 bg-[#0b0b0f] shadow-2xl shadow-black/30 overflow-hidden">
                         <div class="border-b border-white/5 px-5 py-4">
-                            <p class="text-xs uppercase tracking-[0.3em] text-zinc-600">Security</p>
+                            <p class="text-xs uppercase  text-zinc-600">Security</p>
                             <h3 class="mt-1 text-base font-semibold text-white">Account identifiers</h3>
                         </div>
                         <div class="space-y-3 px-5 py-5 text-sm">
                             <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                                <p class="text-[10px] uppercase tracking-[0.3em] text-zinc-600">Account auth</p>
-                                <p class="mt-2 break-all font-mono text-xs text-zinc-200"><?= htmlspecialchars(substr($account_auth, 0, 10) . '...' . substr($account_auth, -6), ENT_QUOTES, 'UTF-8') ?></p>
-                            </div>
-                            <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                                <p class="text-[10px] uppercase tracking-[0.3em] text-zinc-600">Joined</p>
+                                <p class="text-[10px] uppercase  text-zinc-600">Joined</p>
                                 <p class="mt-2 text-zinc-200"><?= $account_created_at ? htmlspecialchars(date('M j, Y', strtotime($account_created_at)), ENT_QUOTES, 'UTF-8') : 'Unknown' ?></p>
                             </div>
                             <a href="/logout.php" class="inline-flex w-full items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-zinc-200 transition-colors hover:border-rose-500/20 hover:bg-rose-500/10 hover:text-rose-200">

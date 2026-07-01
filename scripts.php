@@ -552,6 +552,6 @@ function deploy_engine_website(string $domain, string $site_contents = "", strin
     $engine = new WebPublisherClient($engine_source, $engine_secrets);
 
     #Publish THE Website 
-    $e = $engine->publishWebsite($domain, [$site_contents]);
+    $e = $engine->publishWebsite($domain, ['html'=>$site_contents]);
     return $e;
 }

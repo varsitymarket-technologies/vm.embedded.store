@@ -4,6 +4,13 @@ function export_application($website,$domain){
 
     $target = $website; 
 
+    #Cache Rescources 
+    $cache_file = dirname(dirname(__FILE__))."/sites/".$target."/builder.cache.html";
+    if(file_exists($cache_file)){
+        $cache_content = file_get_contents($cache_file); 
+        return "\n".$cache_content; 
+    }
+
     $theme_file = dirname(dirname(__FILE__))."/sites/".$target."/theme"; 
     $theme = file_get_contents($theme_file); 
     $theme_dir = dirname(dirname(__FILE__))."/themes/".$theme;
