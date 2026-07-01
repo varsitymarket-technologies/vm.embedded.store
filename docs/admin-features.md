@@ -21,17 +21,20 @@ can only see admin pages for sites they own.
 
 Inventory CRUD with stat cards (total, in stock, out of stock, total
 value), search, category filter, stock filter. Add Product opens a
-modal with name/description/price/stock/image/category. Image upload
-supports drag-drop, file picker, or pasted URL.
+modal with name/description/price/stock/image/gallery/variations/category.
+Image upload supports drag-drop, file picker, or pasted URL. Each
+variation can carry its own image, and gallery URLs are stored for
+multi-image product views.
 
 **Import from Shopify** — a second header button opens a 3-state
 modal:
 
 1. **Upload** — drop a Shopify products export CSV (≤ 20 MB).
-2. **Preview** — table classifying each row as Insert / Update /
-   Skip. Update matches by case-insensitive name. Variants become
-   individual products (e.g. "T-Shirt - Small / Red"). Skipped rows
-   show a reason ("Variant Price is not numeric", etc.).
+2. **Preview** — table classifying each product as Insert / Update /
+   Skip. Update matches by case-insensitive name. Shopify variants are
+   preserved as a product-level variation list, and product images are
+   collected into a gallery. Skipped rows show a reason ("Variant Price
+   is not numeric", etc.).
 3. **Result** — counts and a list of skipped rows.
 
 Categories auto-create from the Shopify `Type` column. Image URLs

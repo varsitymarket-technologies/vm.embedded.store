@@ -48,6 +48,8 @@ $sql_products = "CREATE TABLE IF NOT EXISTS products (
     price REAL NOT NULL,
     image TEXT,
     stock INTEGER DEFAULT 0,
+    gallery_json TEXT DEFAULT '[]',
+    variants_json TEXT DEFAULT '[]',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (category_id) REFERENCES categories(id)
 )";

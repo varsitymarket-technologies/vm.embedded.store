@@ -1,9 +1,9 @@
 <?php
 #   TITLE   : Shopify CSV Parser
 #   DESC    : Parses a Shopify products export CSV into normalized rows
-#             suitable for our flat `products` table. One emitted row per
-#             Shopify variant; categories surface as a plain string (resolved
-#             to category_id by the caller).
+#             suitable for our product table. One emitted row per Shopify
+#             handle/product; variants and gallery images are preserved as
+#             arrays so the admin can store richer product metadata.
 #   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
 
 /**
@@ -18,8 +18,19 @@
  *       description: string,
  *       category: string,
  *       image: string,
+ *       gallery: array<int, string>,
+ *       variants: array<int, array{
+ *           label: string,
+ *           price: float,
+ *           stock: int,
+ *           image: string,
+ *           sku: string,
+ *       }>,
+ *       variant_count: int,
+ *       gallery_count: int,
  *       price: float,
  *       stock: int,
+ *       notes: array<int, string>,
  *       parse_error: string|null,
  *   }>
  * }
@@ -106,10 +117,27 @@ function parse_shopify_csv(string $filePath): array
             }
         }
 
+        $gallery = [];
+        $variants = [];
+        $primaryImage = '';
+        $defaultPrice = null;
+        $totalStock = 0;
+        $parseErrors = [];
+
         foreach ($group as $r) {
+            $rowImage = isset($idx['Image Src']) ? trim((string)($r[$idx['Image Src']] ?? '')) : '';
+            if ($rowImage !== '' && !in_array($rowImage, $gallery, true)) {
+                $gallery[] = $rowImage;
+            }
+
             $rawPrice = isset($idx['Variant Price']) ? trim((string)($r[$idx['Variant Price']] ?? '')) : '';
             if ($rawPrice === '') {
                 // Image-only or metadata row — skip silently.
+                continue;
+            }
+
+            if (!is_numeric($rawPrice)) {
+                $parseErrors[] = 'Variant price is not numeric';
                 continue;
             }
 
@@ -121,39 +149,63 @@ function parse_shopify_csv(string $filePath): array
                 $suffix = '';
             }
 
-            $name = $baseTitle;
-            if ($suffix !== '') {
-                $name .= ' - ' . $suffix;
-            }
-            if (function_exists('mb_substr')) {
-                $name = mb_substr($name, 0, 255);
-            } else {
-                $name = substr($name, 0, 255);
-            }
-
             $variantImage = isset($idx['Variant Image']) ? trim((string)($r[$idx['Variant Image']] ?? '')) : '';
-            $image = $variantImage !== '' ? $variantImage : $baseImage;
+            if ($variantImage !== '' && !in_array($variantImage, $gallery, true)) {
+                $gallery[] = $variantImage;
+            }
+            $image = $variantImage !== '' ? $variantImage : ($rowImage !== '' ? $rowImage : $baseImage);
 
             $rawStock = isset($idx['Variant Inventory Qty']) ? trim((string)($r[$idx['Variant Inventory Qty']] ?? '')) : '';
             $stock = is_numeric($rawStock) ? (int)$rawStock : 0;
+            $totalStock += $stock;
 
-            $parseError = null;
-            if (!is_numeric($rawPrice)) {
-                $parseError = 'Variant Price is not numeric';
-            } elseif ($baseTitle === '') {
-                $parseError = 'Title is empty';
+            if ($primaryImage === '' && $image !== '') {
+                $primaryImage = $image;
             }
 
-            $rows[] = [
-                'name'        => $name,
-                'description' => $baseBody,
-                'category'    => $baseType,
-                'image'       => $image,
-                'price'       => (float)$rawPrice,
-                'stock'       => $stock,
-                'parse_error' => $parseError,
+            $variants[] = [
+                'label' => $suffix !== '' ? $suffix : 'Default',
+                'price' => (float)$rawPrice,
+                'stock' => $stock,
+                'image' => $image,
+                'sku' => isset($idx['Variant SKU']) ? trim((string)($r[$idx['Variant SKU']] ?? '')) : '',
             ];
+
+            if ($defaultPrice === null) {
+                $defaultPrice = (float)$rawPrice;
+            }
         }
+
+        $gallery = array_values(array_unique(array_filter(array_merge([$baseImage], $gallery), fn($v) => trim((string)$v) !== '')));
+        if ($primaryImage === '') {
+            $primaryImage = $gallery[0] ?? $baseImage;
+        }
+
+        $parseError = null;
+        if ($baseTitle === '') {
+            $parseError = 'Title is empty';
+        } elseif (empty($variants)) {
+            $parseError = 'No valid variants found';
+        }
+
+        if ($defaultPrice === null) {
+            $defaultPrice = 0.0;
+        }
+
+        $rows[] = [
+            'name'         => $baseTitle,
+            'description'  => $baseBody,
+            'category'     => $baseType,
+            'image'        => $primaryImage,
+            'gallery'      => $gallery,
+            'variants'     => $variants,
+            'variant_count' => count($variants),
+            'gallery_count' => count($gallery),
+            'price'        => $defaultPrice,
+            'stock'        => $totalStock,
+            'parse_error'  => $parseError,
+            'notes'        => $parseErrors,
+        ];
     }
 
     return ['ok' => true, 'error' => null, 'rows' => $rows];

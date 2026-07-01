@@ -3,37 +3,230 @@
 
 $db = initiate_web_database();
 
+if (!function_exists('vm_products_json_array')) {
+    function vm_products_json_array($value): array
+    {
+        if (is_array($value)) {
+            return array_values($value);
+        }
+
+        if (!is_string($value) || trim($value) === '') {
+            return [];
+        }
+
+        $decoded = json_decode($value, true);
+        return is_array($decoded) ? array_values($decoded) : [];
+    }
+}
+
+if (!function_exists('vm_products_unique_values')) {
+    function vm_products_unique_values(array $values): array
+    {
+        $clean = [];
+        foreach ($values as $value) {
+            $value = trim((string)$value);
+            if ($value === '') {
+                continue;
+            }
+            if (!in_array($value, $clean, true)) {
+                $clean[] = $value;
+            }
+        }
+        return $clean;
+    }
+}
+
+if (!function_exists('vm_products_split_urls')) {
+    function vm_products_split_urls($value): array
+    {
+        if (is_array($value)) {
+            return vm_products_unique_values($value);
+        }
+
+        if (!is_string($value)) {
+            return [];
+        }
+
+        $value = trim($value);
+        if ($value === '') {
+            return [];
+        }
+
+        if ($value[0] === '[' || $value[0] === '{') {
+            $decoded = json_decode($value, true);
+            if (is_array($decoded)) {
+                return vm_products_unique_values($decoded);
+            }
+        }
+
+        $parts = preg_split('/[\r\n,;]+/', $value) ?: [];
+        return vm_products_unique_values($parts);
+    }
+}
+
+if (!function_exists('vm_products_prepare_variants')) {
+    function vm_products_prepare_variants(array $source, string $fallback_name, float $fallback_price, int $fallback_stock, string $fallback_image): array
+    {
+        $labels = $source['variant_label'] ?? [];
+        $prices = $source['variant_price'] ?? [];
+        $stocks = $source['variant_stock'] ?? [];
+        $images = $source['variant_image'] ?? [];
+        $skus   = $source['variant_sku'] ?? [];
+
+        if (!is_array($labels)) $labels = [];
+        if (!is_array($prices)) $prices = [];
+        if (!is_array($stocks)) $stocks = [];
+        if (!is_array($images)) $images = [];
+        if (!is_array($skus))   $skus = [];
+
+        $count = max(count($labels), count($prices), count($stocks), count($images), count($skus));
+        $variants = [];
+        $errors = [];
+
+        for ($i = 0; $i < $count; $i++) {
+            $label = trim((string)($labels[$i] ?? ''));
+            $price_raw = trim((string)($prices[$i] ?? ''));
+            $stock_raw = trim((string)($stocks[$i] ?? ''));
+            $image = trim((string)($images[$i] ?? ''));
+            $sku = trim((string)($skus[$i] ?? ''));
+
+            $has_any_content = ($label !== '' || $price_raw !== '' || $stock_raw !== '' || $image !== '' || $sku !== '');
+            if (!$has_any_content) {
+                continue;
+            }
+
+            if ($label === '') {
+                $label = $fallback_name !== '' ? 'Default' : 'Variant ' . ($i + 1);
+            }
+
+            if ($price_raw === '' || !is_numeric($price_raw)) {
+                $errors[] = 'Variation "' . $label . '" needs a numeric price.';
+                continue;
+            }
+
+            if ($stock_raw === '' || !is_numeric($stock_raw)) {
+                $stock_raw = '0';
+            }
+
+            $variants[] = [
+                'label' => $label,
+                'price' => (float)$price_raw,
+                'stock' => (int)$stock_raw,
+                'image' => $image,
+                'sku' => $sku,
+            ];
+        }
+
+        if (!empty($errors)) {
+            return ['ok' => false, 'error' => implode(' ', $errors), 'variants' => []];
+        }
+
+        if (empty($variants)) {
+            $variants[] = [
+                'label' => 'Default',
+                'price' => $fallback_price,
+                'stock' => $fallback_stock,
+                'image' => $fallback_image,
+                'sku' => '',
+            ];
+        }
+
+        return ['ok' => true, 'error' => null, 'variants' => $variants];
+    }
+}
+
+if (!function_exists('vm_products_ensure_schema')) {
+    function vm_products_ensure_schema($db): void
+    {
+        $columns = [];
+        foreach ($db->query("PRAGMA table_info(products)") ?: [] as $col) {
+            if (!empty($col['name'])) {
+                $columns[] = $col['name'];
+            }
+        }
+
+        if (!in_array('gallery_json', $columns, true)) {
+            $db->query("ALTER TABLE products ADD COLUMN gallery_json TEXT DEFAULT '[]'");
+        }
+        if (!in_array('variants_json', $columns, true)) {
+            $db->query("ALTER TABLE products ADD COLUMN variants_json TEXT DEFAULT '[]'");
+        }
+    }
+}
+
+vm_products_ensure_schema($db);
+
 // Handle Form Submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'add_product') {
-        $name = $_POST['name'] ?? '';
-        $description = $_POST['description'] ?? '';
-        $price = $_POST['price'] ?? 0;
-        $stock = $_POST['stock'] ?? 0;
-        $image = $_POST['image'] ?? '';
+        $name = trim((string)($_POST['name'] ?? ''));
+        $description = trim((string)($_POST['description'] ?? ''));
+        $price = (float)($_POST['price'] ?? 0);
+        $stock = (int)($_POST['stock'] ?? 0);
+        $image = trim((string)($_POST['image'] ?? ''));
+        $gallery = vm_products_split_urls((string)($_POST['gallery_urls'] ?? ''));
         $category_id = $_POST['category_id'] ?? null;
         $category_id = $category_id === '' ? null : (int)$category_id;
 
-        $sql = "INSERT INTO products (name, description, price, stock, image, category_id) VALUES (?, ?, ?, ?, ?, ?)";
-        $db->query($sql, [$name, $description, $price, $stock, $image, $category_id]);
+        $variant_payload = vm_products_prepare_variants($_POST, $name, $price, $stock, $image);
+        if (!$variant_payload['ok']) {
+            header('Location: ?error=' . urlencode($variant_payload['error']));
+            exit;
+        }
+        $variants = $variant_payload['variants'];
+        $primary_image = $image !== '' ? $image : ($variants[0]['image'] ?? '');
+        if ($primary_image !== '' && !in_array($primary_image, $gallery, true)) {
+            array_unshift($gallery, $primary_image);
+        }
+        $gallery = vm_products_unique_values($gallery);
+        if ($primary_image === '' && !empty($gallery)) {
+            $primary_image = $gallery[0];
+        }
+        $price = (float)($variants[0]['price'] ?? $price);
+        $stock = array_sum(array_map(fn($variant) => (int)($variant['stock'] ?? 0), $variants));
+        $gallery_json = json_encode($gallery);
+        $variants_json = json_encode($variants);
+
+        $sql = "INSERT INTO products (name, description, price, stock, image, category_id, gallery_json, variants_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        $db->query($sql, [$name, $description, $price, $stock, $primary_image, $category_id, $gallery_json, $variants_json]);
 
         echo "<script>window.location.href = window.location.href;</script>";
         exit;
 
     } elseif ($action === 'update_product') {
         $id = $_POST['id'] ?? 0;
-        $name = $_POST['name'] ?? '';
-        $description = $_POST['description'] ?? '';
-        $price = $_POST['price'] ?? 0;
-        $stock = $_POST['stock'] ?? 0;
-        $image = $_POST['image'] ?? '';
+        $name = trim((string)($_POST['name'] ?? ''));
+        $description = trim((string)($_POST['description'] ?? ''));
+        $price = (float)($_POST['price'] ?? 0);
+        $stock = (int)($_POST['stock'] ?? 0);
+        $image = trim((string)($_POST['image'] ?? ''));
+        $gallery = vm_products_split_urls((string)($_POST['gallery_urls'] ?? ''));
         $category_id = $_POST['category_id'] ?? null;
         $category_id = $category_id === '' ? null : (int)$category_id;
 
-        $sql = "UPDATE products SET name = ?, description = ?, price = ?, stock = ?, image = ?, category_id = ? WHERE id = ?";
-        $db->query($sql, [$name, $description, $price, $stock, $image, $category_id, $id]);
+        $variant_payload = vm_products_prepare_variants($_POST, $name, $price, $stock, $image);
+        if (!$variant_payload['ok']) {
+            header('Location: ?error=' . urlencode($variant_payload['error']));
+            exit;
+        }
+        $variants = $variant_payload['variants'];
+        $primary_image = $image !== '' ? $image : ($variants[0]['image'] ?? '');
+        if ($primary_image !== '' && !in_array($primary_image, $gallery, true)) {
+            array_unshift($gallery, $primary_image);
+        }
+        $gallery = vm_products_unique_values($gallery);
+        if ($primary_image === '' && !empty($gallery)) {
+            $primary_image = $gallery[0];
+        }
+        $price = (float)($variants[0]['price'] ?? $price);
+        $stock = array_sum(array_map(fn($variant) => (int)($variant['stock'] ?? 0), $variants));
+        $gallery_json = json_encode($gallery);
+        $variants_json = json_encode($variants);
+
+        $sql = "UPDATE products SET name = ?, description = ?, price = ?, stock = ?, image = ?, category_id = ?, gallery_json = ?, variants_json = ? WHERE id = ?";
+        $db->query($sql, [$name, $description, $price, $stock, $primary_image, $category_id, $gallery_json, $variants_json, $id]);
 
         echo "<script>window.location.href = window.location.href;</script>";
         exit;
@@ -91,9 +284,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'action'   => $action_for_row,
                 'name'     => $row['name'],
                 'category' => $row['category'],
+                'variants' => count($row['variants'] ?? []),
+                'gallery'  => count($row['gallery'] ?? []),
                 'price'    => $row['price'],
                 'stock'    => $row['stock'],
                 'image'    => $row['image'],
+                'notes'    => $row['notes'] ?? [],
                 'reason'   => $reason,
             ];
         }
@@ -196,14 +392,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 if (!empty($existing)) {
                     $db->query(
-                        "UPDATE products SET description = ?, price = ?, stock = ?, image = ?, category_id = ? WHERE id = ?",
-                        [$row['description'], $row['price'], $row['stock'], $row['image'], $categoryId, $existing[0]['id']]
+                        "UPDATE products SET description = ?, price = ?, stock = ?, image = ?, category_id = ?, gallery_json = ?, variants_json = ? WHERE id = ?",
+                        [
+                            $row['description'],
+                            $row['price'],
+                            $row['stock'],
+                            $row['image'],
+                            $categoryId,
+                            json_encode($row['gallery'] ?? []),
+                            json_encode($row['variants'] ?? []),
+                            $existing[0]['id'],
+                        ]
                     );
                     $counts['updated']++;
                 } else {
                     $db->query(
-                        "INSERT INTO products (name, description, price, stock, image, category_id) VALUES (?, ?, ?, ?, ?, ?)",
-                        [$row['name'], $row['description'], $row['price'], $row['stock'], $row['image'], $categoryId]
+                        "INSERT INTO products (name, description, price, stock, image, category_id, gallery_json, variants_json) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        [
+                            $row['name'],
+                            $row['description'],
+                            $row['price'],
+                            $row['stock'],
+                            $row['image'],
+                            $categoryId,
+                            json_encode($row['gallery'] ?? []),
+                            json_encode($row['variants'] ?? []),
+                        ]
                     );
                     $counts['inserted']++;
                 }
@@ -365,6 +579,10 @@ foreach ($products as $p) {
                                 <?php else: ?>
                                     <?php foreach ($products as $product):
                                         $stock = (int)$product['stock'];
+                                        $product_gallery = vm_products_json_array($product['gallery_json'] ?? []);
+                                        $product_variants = vm_products_json_array($product['variants_json'] ?? []);
+                                        $gallery_count = count($product_gallery);
+                                        $variant_count = count($product_variants);
                                         if ($stock <= 0) {
                                             $badgeClass = 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20';
                                             $badgeText = 'Out of Stock';
@@ -392,6 +610,20 @@ foreach ($products as $p) {
                                                 <div class="min-w-0">
                                                     <div class="font-medium text-white truncate"><?php echo htmlspecialchars($product['name']); ?></div>
                                                     <div class="text-xs text-gray-500 truncate max-w-[220px]"><?php echo htmlspecialchars(substr($product['description'] ?? '', 0, 50)) . (strlen($product['description'] ?? '') > 50 ? '...' : ''); ?></div>
+                                                    <?php if ($variant_count > 1 || $gallery_count > 0): ?>
+                                                        <div class="mt-1 flex flex-wrap gap-1.5">
+                                                            <?php if ($variant_count > 0): ?>
+                                                                <span class="inline-flex items-center rounded-full bg-cyan-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-cyan-300 ring-1 ring-cyan-500/20">
+                                                                    <?= $variant_count ?> variant<?= $variant_count !== 1 ? 's' : '' ?>
+                                                                </span>
+                                                            <?php endif; ?>
+                                                            <?php if ($gallery_count > 0): ?>
+                                                                <span class="inline-flex items-center rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-violet-300 ring-1 ring-violet-500/20">
+                                                                    <?= $gallery_count ?> image<?= $gallery_count !== 1 ? 's' : '' ?>
+                                                                </span>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    <?php endif; ?>
                                                 </div>
                                             </div>
                                         </td>
@@ -460,7 +692,7 @@ foreach ($products as $p) {
                 <div id="modalBackdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal()"></div>
 
                 <!-- Modal Panel -->
-                <div id="modalPanel" class="relative w-full max-w-lg bg-gray-800 rounded-2xl shadow-2xl shadow-black/40 border border-white/10 transform transition-all duration-300 scale-95 opacity-0 max-h-[90vh] flex flex-col">
+                <div id="modalPanel" class="relative w-full max-w-3xl bg-gray-800 rounded-2xl shadow-2xl shadow-black/40 border border-white/10 transform transition-all duration-300 scale-95 opacity-0 max-h-[90vh] flex flex-col">
                     <form method="POST" id="productForm">
                         <input type="hidden" name="action" id="formAction" value="add_product">
                         <input type="hidden" name="id" id="productId">
@@ -477,7 +709,7 @@ foreach ($products as $p) {
                         </div>
 
                         <!-- Modal Body (scrollable) -->
-                        <div class="px-6 py-5 space-y-5 overflow-y-auto" style="max-height: calc(90vh - 140px);">
+                        <div class="px-6 py-5 space-y-5 overflow-y-auto" style="max-height: calc(90vh - 160px);">
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-1.5">Product Name <span class="text-red-400">*</span></label>
                                 <input type="text" name="name" id="productName" required class="w-full bg-gray-700 border border-white/5 rounded-lg px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors placeholder-gray-500" placeholder="e.g. Classic T-Shirt">
@@ -509,40 +741,77 @@ foreach ($products as $p) {
                                 </div>
                             </div>
 
-                            <div class="space-y-3">
-                                <label class="block text-sm font-medium text-gray-300">Product Image</label>
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                                <div class="space-y-3">
+                                    <label class="block text-sm font-medium text-gray-300">Product Image</label>
 
-                                <!-- Image Preview -->
-                                <div id="imagePreviewContainer" class="hidden">
-                                    <div class="relative inline-block rounded-xl overflow-hidden bg-gray-900 border border-white/10 group">
-                                        <img id="imagePreview" src="" class="h-28 w-28 object-cover">
-                                        <button type="button" onclick="removeImage()" class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                                            <i class="bi bi-trash text-white text-lg"></i>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <!-- Upload Area -->
-                                <label class="relative block cursor-pointer">
-                                    <div class="flex items-center justify-center gap-3 bg-gray-700/40 border border-dashed border-white/10 rounded-xl px-4 py-5 text-gray-400 hover:border-purple-500/50 hover:text-gray-300 hover:bg-gray-700/60 transition-all duration-200">
-                                        <i class="bi bi-cloud-arrow-up text-xl"></i>
-                                        <div>
-                                            <span class="text-sm font-medium">Click to upload</span>
-                                            <span class="text-xs text-gray-500 block">PNG, JPG, GIF, WEBP</span>
+                                    <!-- Image Preview -->
+                                    <div id="imagePreviewContainer" class="hidden">
+                                        <div class="relative inline-block rounded-xl overflow-hidden bg-gray-900 border border-white/10 group">
+                                            <img id="imagePreview" src="" class="h-28 w-28 object-cover">
+                                            <button type="button" onclick="removeImage()" class="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                                <i class="bi bi-trash text-white text-lg"></i>
+                                            </button>
                                         </div>
                                     </div>
-                                    <input type="file" id="productImageFile" accept="image/*" class="hidden" onchange="handleImageUpload(this)">
-                                </label>
 
-                                <!-- URL Input -->
-                                <div class="relative">
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <div class="h-px flex-1 bg-white/5"></div>
-                                        <span class="text-[10px] text-gray-600 font-semibold uppercase tracking-widest">or paste URL</span>
-                                        <div class="h-px flex-1 bg-white/5"></div>
+                                    <!-- Upload Area -->
+                                    <label class="relative block cursor-pointer">
+                                        <div class="flex items-center justify-center gap-3 bg-gray-700/40 border border-dashed border-white/10 rounded-xl px-4 py-5 text-gray-400 hover:border-purple-500/50 hover:text-gray-300 hover:bg-gray-700/60 transition-all duration-200">
+                                            <i class="bi bi-cloud-arrow-up text-xl"></i>
+                                            <div>
+                                                <span class="text-sm font-medium">Click to upload</span>
+                                                <span class="text-xs text-gray-500 block">PNG, JPG, GIF, WEBP</span>
+                                            </div>
+                                        </div>
+                                        <input type="file" id="productImageFile" accept="image/*" class="hidden" onchange="handleImageUpload(this)">
+                                    </label>
+
+                                    <!-- URL Input -->
+                                    <div class="relative">
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="h-px flex-1 bg-white/5"></div>
+                                            <span class="text-[10px] text-gray-600 font-semibold uppercase tracking-widest">or paste URL</span>
+                                            <div class="h-px flex-1 bg-white/5"></div>
+                                        </div>
+                                        <input type="text" name="image" id="productImage" class="w-full bg-gray-700 border border-white/5 rounded-lg px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors placeholder-gray-500" placeholder="https://example.com/image.jpg" oninput="previewUrlImage(this.value)">
                                     </div>
-                                    <input type="text" name="image" id="productImage" class="w-full bg-gray-700 border border-white/5 rounded-lg px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors placeholder-gray-500" placeholder="https://example.com/image.jpg" oninput="previewUrlImage(this.value)">
                                 </div>
+
+                                <div class="space-y-3">
+                                    <label class="block text-sm font-medium text-gray-300">Gallery Images</label>
+                                    <input type="hidden" name="gallery_urls" id="productGallery">
+                                    <input type="file" id="productGalleryFiles" accept="image/*" multiple class="hidden" onchange="handleGalleryUpload(this)">
+                                    <div class="rounded-xl border border-dashed border-white/10 bg-gray-700/30 p-4 space-y-4">
+                                        <div class="flex items-center justify-between gap-3">
+                                            <div>
+                                                <p class="text-sm font-medium text-white">Add gallery images</p>
+                                                <p class="text-[11px] text-gray-500 mt-0.5">Select multiple files and we’ll store them as the product gallery.</p>
+                                            </div>
+                                            <button type="button" onclick="document.getElementById('productGalleryFiles').click()" class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white transition-colors hover:border-purple-500/40 hover:bg-purple-500/10">
+                                                <i class="bi bi-folder-plus"></i> Choose files
+                                            </button>
+                                        </div>
+                                        <div id="galleryPreviewEmpty" class="rounded-lg border border-white/5 bg-gray-800/40 px-4 py-5 text-center text-xs text-gray-500">
+                                            No gallery images selected yet.
+                                        </div>
+                                        <div id="galleryPreviewGrid" class="grid grid-cols-2 gap-3"></div>
+                                    </div>
+                                    <p class="text-[11px] text-gray-500 leading-relaxed">The main image stays as the primary image. Gallery images are saved in order and used for product slides.</p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div class="flex items-center justify-between gap-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-300">Variations</label>
+                                        <p class="text-[11px] text-gray-500 mt-0.5">Add size, color, or any other option. Each row can have its own image.</p>
+                                    </div>
+                                    <button type="button" onclick="addVariantRow()" class="inline-flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium text-white transition-colors hover:border-purple-500/40 hover:bg-purple-500/10">
+                                        <i class="bi bi-plus-lg"></i> Add variation
+                                    </button>
+                                </div>
+                                <div id="variantList" class="space-y-3"></div>
                             </div>
                         </div>
 
@@ -615,6 +884,8 @@ foreach ($products as $p) {
                                         <th class="px-2 py-2 font-semibold">Action</th>
                                         <th class="px-2 py-2 font-semibold">Name</th>
                                         <th class="px-2 py-2 font-semibold">Category</th>
+                                        <th class="px-2 py-2 font-semibold text-right">Variants</th>
+                                        <th class="px-2 py-2 font-semibold text-right">Images</th>
                                         <th class="px-2 py-2 font-semibold text-right">Price</th>
                                         <th class="px-2 py-2 font-semibold text-right">Stock</th>
                                     </tr>
@@ -689,6 +960,184 @@ foreach ($products as $p) {
             document.getElementById('imagePreviewContainer').classList.add('hidden');
         }
 
+        let galleryImages = [];
+
+        function readFileAsDataUrl(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = e => resolve({
+                    name: file.name || 'Gallery image',
+                    src: e.target.result
+                });
+                reader.onerror = () => reject(new Error('Unable to read ' + (file.name || 'file')));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function syncGalleryField() {
+            const galleryField = document.getElementById('productGallery');
+            if (!galleryField) return;
+            galleryField.value = JSON.stringify(galleryImages.map(item => item.src));
+        }
+
+        function renderGalleryPreviews() {
+            const grid = document.getElementById('galleryPreviewGrid');
+            const empty = document.getElementById('galleryPreviewEmpty');
+            if (!grid || !empty) return;
+
+            grid.innerHTML = '';
+            galleryImages.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'group relative overflow-hidden rounded-xl border border-white/10 bg-gray-900/60';
+                card.innerHTML = `
+                    <img src="${escapeHtmlAttr(item.src)}" alt="" class="h-28 w-full object-cover">
+                    <div class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/80 via-black/25 to-transparent p-3">
+                        <div class="min-w-0">
+                            <p class="truncate text-[11px] font-medium text-white">${escapeHtmlAttr(item.name || 'Gallery image')}</p>
+                            <p class="text-[10px] text-gray-300">Image ${index + 1}</p>
+                        </div>
+                        <button type="button" onclick="removeGalleryImage(${index})" class="rounded-md bg-black/45 px-2 py-1 text-[11px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/70">
+                            Remove
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+
+            empty.classList.toggle('hidden', galleryImages.length > 0);
+            grid.classList.toggle('hidden', galleryImages.length === 0);
+            syncGalleryField();
+        }
+
+        async function handleGalleryUpload(input) {
+            if (!input.files || input.files.length === 0) {
+                return;
+            }
+
+            const files = Array.from(input.files);
+            try {
+                const loaded = await Promise.all(files.map(readFileAsDataUrl));
+                galleryImages = galleryImages.concat(loaded);
+                renderGalleryPreviews();
+            } catch (error) {
+                console.error(error);
+            } finally {
+                input.value = '';
+            }
+        }
+
+        function removeGalleryImage(index) {
+            if (index < 0 || index >= galleryImages.length) return;
+            galleryImages.splice(index, 1);
+            renderGalleryPreviews();
+        }
+
+        function setGalleryImagesFromList(urls) {
+            galleryImages = (Array.isArray(urls) ? urls : []).map((src, index) => ({
+                name: 'Gallery image ' + (index + 1),
+                src: src
+            }));
+            renderGalleryPreviews();
+        }
+
+        function clearGalleryImages() {
+            galleryImages = [];
+            const input = document.getElementById('productGalleryFiles');
+            if (input) input.value = '';
+            renderGalleryPreviews();
+        }
+
+        function safeParseJsonArray(value) {
+            if (!value) return [];
+            if (Array.isArray(value)) return value;
+            try {
+                const parsed = JSON.parse(value);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function escapeHtmlAttr(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function buildVariantRow(variant = {}) {
+            const row = document.createElement('div');
+            row.className = 'variant-row rounded-xl border border-white/5 bg-gray-700/30 p-4';
+            row.innerHTML = `
+                <div class="mb-3 flex items-center justify-between gap-3">
+                    <div>
+                        <p class="text-[10px] uppercase tracking-[0.3em] text-gray-500">Variation</p>
+                        <p class="text-xs text-gray-400 mt-0.5">Give each variant its own image and price.</p>
+                    </div>
+                    <button type="button" class="text-gray-400 hover:text-red-400 transition-colors" onclick="removeVariantRow(this)">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-medium text-gray-400 mb-1">Label</label>
+                        <input type="text" name="variant_label[]" value="${escapeHtmlAttr(variant.label || variant.name || '')}" class="w-full bg-gray-700 border border-white/5 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors placeholder-gray-500" placeholder="Small / Red">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-gray-400 mb-1">Image URL</label>
+                        <input type="text" name="variant_image[]" value="${escapeHtmlAttr(variant.image || '')}" class="w-full bg-gray-700 border border-white/5 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors placeholder-gray-500" placeholder="https://example.com/variant.jpg">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-gray-400 mb-1">Price</label>
+                        <input type="number" step="0.01" min="0" name="variant_price[]" value="${variant.price ?? ''}" class="w-full bg-gray-700 border border-white/5 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors placeholder-gray-500" placeholder="0.00">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-medium text-gray-400 mb-1">Stock</label>
+                        <input type="number" min="0" name="variant_stock[]" value="${variant.stock ?? 0}" class="w-full bg-gray-700 border border-white/5 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors placeholder-gray-500" placeholder="0">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="block text-[11px] font-medium text-gray-400 mb-1">SKU</label>
+                        <input type="text" name="variant_sku[]" value="${escapeHtmlAttr(variant.sku || '')}" class="w-full bg-gray-700 border border-white/5 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors placeholder-gray-500" placeholder="Optional SKU">
+                    </div>
+                </div>
+            `;
+            return row;
+        }
+
+        function addVariantRow(variant = {}) {
+            const list = document.getElementById('variantList');
+            if (!list) return;
+            list.appendChild(buildVariantRow(variant));
+        }
+
+        function clearVariantRows() {
+            const list = document.getElementById('variantList');
+            if (!list) return;
+            list.innerHTML = '';
+        }
+
+        function renderVariantRows(variants) {
+            clearVariantRows();
+            const list = document.getElementById('variantList');
+            if (!list) return;
+            const rows = Array.isArray(variants) ? variants : [];
+            if (rows.length === 0) {
+                addVariantRow();
+                return;
+            }
+            rows.forEach(variant => addVariantRow(variant));
+        }
+
+        function removeVariantRow(button) {
+            const row = button.closest('.variant-row');
+            if (row) row.remove();
+            const list = document.getElementById('variantList');
+            if (list && list.children.length === 0) {
+                addVariantRow();
+            }
+        }
+
         // --- Modal ---
         function openModal(mode, product = null) {
             const modal = document.getElementById('productModal');
@@ -724,6 +1173,24 @@ foreach ($products as $p) {
                 document.getElementById('productStock').value = product.stock;
                 document.getElementById('productImage').value = product.image || '';
                 document.getElementById('productCategory').value = product.category_id || '';
+                const galleryItems = safeParseJsonArray(product.gallery_json);
+                if (product.image && !galleryItems.includes(product.image)) {
+                    galleryItems.unshift(product.image);
+                }
+                setGalleryImagesFromList(galleryItems);
+
+                const existingVariants = safeParseJsonArray(product.variants_json);
+                if (existingVariants.length > 0) {
+                    renderVariantRows(existingVariants);
+                } else {
+                    renderVariantRows([{
+                        label: 'Default',
+                        price: product.price,
+                        stock: product.stock,
+                        image: product.image || '',
+                        sku: ''
+                    }]);
+                }
 
                 if (product.image) {
                     preview.src = product.image;
@@ -739,7 +1206,10 @@ foreach ($products as $p) {
                 form.reset();
                 document.getElementById('productId').value = '';
                 document.getElementById('productCategory').value = '';
+                clearGalleryImages();
                 container.classList.add('hidden');
+                clearVariantRows();
+                addVariantRow();
             }
         }
 
@@ -925,8 +1395,11 @@ foreach ($products as $p) {
                     <td class="px-2 py-1.5 align-top text-white">
                         ${esc(r.name)}
                         ${r.reason ? `<div class="text-[10px] text-gray-500 mt-0.5">${esc(r.reason)}</div>` : ''}
+                        ${r.notes && r.notes.length ? `<div class="text-[10px] text-amber-400 mt-0.5">${esc(r.notes.join(' '))}</div>` : ''}
                     </td>
                     <td class="px-2 py-1.5 align-top">${r.category ? esc(r.category) : '<span class="text-gray-600 italic">—</span>'}</td>
+                    <td class="px-2 py-1.5 align-top text-right tabular-nums">${r.variants ?? 0}</td>
+                    <td class="px-2 py-1.5 align-top text-right tabular-nums">${r.gallery ?? 0}</td>
                     <td class="px-2 py-1.5 align-top text-right tabular-nums">${r.price != null && r.action !== 'skip' ? Number(r.price).toFixed(2) : '—'}</td>
                     <td class="px-2 py-1.5 align-top text-right tabular-nums">${r.stock != null && r.action !== 'skip' ? esc(r.stock) : '—'}</td>
                 `;

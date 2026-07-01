@@ -226,27 +226,25 @@ if (isset($_GET['sent'])) {
 
     <main class="flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8">
         <div class="mx-auto flex h-full w-full max-w-6xl flex-col gap-4">
-            <section class="rounded-[2rem] border border-white/10 bg-white/[0.03] px-5 py-4 shadow-2xl shadow-black/20 backdrop-blur-sm">
+            <section class="rounded-[1rem] border border-white/10 bg-white/[0.03] px-5 py-4 shadow-2xl shadow-black/20 backdrop-blur-sm">
                 <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div class="space-y-2">
                         <div class="flex flex-wrap items-center gap-3">
                             <h2 class="text-xl font-semibold tracking-tight text-white sm:text-2xl"><?= htmlspecialchars($assistant_name, ENT_QUOTES, 'UTF-8') ?></h2>
-                            <span class="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] <?= $agent_enabled ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400' : 'border-zinc-700 bg-zinc-800 text-zinc-400' ?>">
-                                <span class="h-1.5 w-1.5 rounded-full <?= $agent_enabled ? 'bg-emerald-400' : 'bg-zinc-500' ?>"></span>
-                                <?= $agent_enabled ? 'Enabled' : 'Disabled' ?>
-                            </span>
+                            
                         </div>
                         <p class="max-w-2xl text-sm text-zinc-500"><?= htmlspecialchars($assistant_role, ENT_QUOTES, 'UTF-8') ?></p>
                     </div>
 
                     <div class="flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em]">
-                        <span class="rounded-full border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-zinc-300"><?= htmlspecialchars($agent_model, ENT_QUOTES, 'UTF-8') ?></span>
-                        <span class="rounded-full border <?= $agent_openai_connected ? 'border-cyan-500/20 bg-cyan-500/10 text-cyan-300' : 'border-amber-500/20 bg-amber-500/10 text-amber-300' ?> px-3 py-1.5">
-                            <?= $agent_openai_connected ? 'Connected' : 'Needs API key' ?>
-                        </span>
-                        <button type="button" onclick="openAgentModal('agentOptionsModal')" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-zinc-200 transition-colors hover:border-white/20 hover:bg-white/10">
-                            Options
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="openAgentModal('agentPromptModal')" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-zinc-200 transition-colors hover:border-cyan-500/30 hover:bg-[#ffffffc2]/10 hover:text-cyan-200">
+                                Prompts
+                            </button>
+                            <button type="button" onclick="openAgentModal('agentStatusModal')" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-zinc-200 transition-colors hover:border-white/20 hover:bg-white/10">
+                                Status
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <?php if ($agent_notice !== ''): ?>
@@ -254,28 +252,13 @@ if (isset($_GET['sent'])) {
                 <?php endif; ?>
             </section>
 
-            <section class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] border border-white/10 bg-[#0b0b0f] shadow-2xl shadow-black/30">
-                <div class="flex items-center justify-between gap-3 border-b border-white/5 px-5 py-4">
-                    <div>
-                        <p class="text-xs uppercase tracking-[0.3em] text-zinc-600">Admin chat</p>
-                        <p class="mt-1 text-sm text-zinc-400">Minimal workspace for internal assistant tasks.</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button type="button" onclick="openAgentModal('agentPromptModal')" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-zinc-200 transition-colors hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-200">
-                            Prompts
-                        </button>
-                        <button type="button" onclick="openAgentModal('agentStatusModal')" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-zinc-200 transition-colors hover:border-white/20 hover:bg-white/10">
-                            Status
-                        </button>
-                    </div>
-                </div>
-
+            <section class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1rem] border border-white/10 bg-[#0b0b0f] shadow-2xl shadow-black/30">
                 <div id="agentChatScroll" class="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
                     <div class="mx-auto flex max-w-3xl flex-col gap-4">
                         <?php if (empty($history)): ?>
-                            <div class="rounded-[1.5rem] border border-cyan-500/15 bg-cyan-500/5 px-5 py-5">
+                            <div class="rounded-[1.5rem] border border-cyan-500/15 bg-[#ffffffc2]/5 px-5 py-5">
                                 <div class="flex items-start gap-4">
-                                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-500/20 bg-cyan-500/10 text-cyan-300">
+                                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-500/20 bg-[#ffffffc2]/10 text-cyan-300">
                                         <i class="bi bi-robot"></i>
                                     </div>
                                     <div class="space-y-2">
@@ -285,7 +268,7 @@ if (isset($_GET['sent'])) {
                                 </div>
                                 <div class="mt-4 flex flex-wrap gap-2">
                                     <?php foreach ($agent_quick_prompts as $prompt): ?>
-                                        <button type="button" onclick="setAgentPrompt(<?= htmlspecialchars(json_encode($prompt['prompt']), ENT_QUOTES, 'UTF-8') ?>)" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:border-cyan-500/30 hover:bg-cyan-500/10 hover:text-cyan-200">
+                                        <button type="button" onclick="setAgentPrompt(<?= htmlspecialchars(json_encode($prompt['prompt']), ENT_QUOTES, 'UTF-8') ?>)" class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:border-cyan-500/30 hover:bg-[#ffffffc2]/10 hover:text-cyan-200">
                                             <?= htmlspecialchars($prompt['label'], ENT_QUOTES, 'UTF-8') ?>
                                         </button>
                                     <?php endforeach; ?>
@@ -295,13 +278,13 @@ if (isset($_GET['sent'])) {
 
                         <?php foreach ($history as $entry): ?>
                             <?php
-                                $role = $entry['role'] ?? 'assistant';
-                                $content = $entry['content'] ?? '';
-                                $time = isset($entry['time']) ? date('g:i A', (int)$entry['time']) : '';
-                                $is_error = !empty($entry['error']);
+                            $role = $entry['role'] ?? 'assistant';
+                            $content = $entry['content'] ?? '';
+                            $time = isset($entry['time']) ? date('g:i A', (int)$entry['time']) : '';
+                            $is_error = !empty($entry['error']);
                             ?>
                             <div class="flex <?= $role === 'user' ? 'justify-end' : 'justify-start' ?>">
-                                <div class="max-w-[88%] rounded-[1.5rem] border px-4 py-3 sm:max-w-[78%] <?= $role === 'user' ? 'rounded-br-md border-cyan-400/30 bg-cyan-500 text-black' : ($is_error ? 'rounded-bl-md border-rose-500/20 bg-rose-500/10 text-rose-100' : 'rounded-bl-md border-zinc-800 bg-zinc-900 text-zinc-200') ?>">
+                                <div class="max-w-[88%] rounded-[1.5rem] border px-4 py-3 sm:max-w-[78%] <?= $role === 'user' ? 'rounded-br-md border-cyan-400/30 bg-[#ffffffc2] text-black' : ($is_error ? 'rounded-bl-md border-rose-500/20 bg-[#272624a8] text-rose-100' : 'rounded-bl-md border-zinc-800 bg-zinc-900 text-zinc-200') ?>">
                                     <div class="whitespace-pre-wrap text-sm leading-relaxed"><?= htmlspecialchars($content, ENT_QUOTES, 'UTF-8') ?></div>
                                     <div class="mt-2 text-[10px] uppercase tracking-[0.22em] <?= $role === 'user' ? 'text-black/60' : 'text-zinc-500' ?>">
                                         <?= $role === 'user' ? 'You' : ($is_error ? 'Connection issue' : $assistant_name) ?>
@@ -323,15 +306,14 @@ if (isset($_GET['sent'])) {
                             name="message"
                             rows="3"
                             class="w-full resize-none rounded-[1.25rem] border border-white/10 bg-[#07070a] px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-cyan-500/50 focus:outline-none"
-                            placeholder="Ask the assistant to review orders, look up a customer, summarize sales, or explain a setting..."
-                        ></textarea>
+                            placeholder="Ask the assistant to review orders, look up a customer, summarize sales, or explain a setting..."></textarea>
                         <div class="flex flex-wrap items-center justify-between gap-3">
                             <p class="text-xs text-zinc-500">Use the modal options for quick actions and status.</p>
                             <div class="flex items-center gap-2">
                                 <button type="button" onclick="openAgentModal('agentOptionsModal')" class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-zinc-200 transition-colors hover:border-white/20 hover:bg-white/10">
                                     Options
                                 </button>
-                                <button type="submit" class="inline-flex items-center gap-2 rounded-full bg-cyan-500 px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-cyan-400">
+                                <button type="submit" class="inline-flex items-center gap-2 rounded-full bg-[#ffffffc2] px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-cyan-400">
                                     <i class="bi bi-send"></i>
                                     Send
                                 </button>
@@ -357,14 +339,14 @@ if (isset($_GET['sent'])) {
             </div>
 
             <div class="mt-5 grid gap-3">
-                <button type="button" onclick="closeAgentModal('agentOptionsModal'); openAgentModal('agentStatusModal');" class="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-left transition-colors hover:border-cyan-500/20 hover:bg-cyan-500/5">
+                <button type="button" onclick="closeAgentModal('agentOptionsModal'); openAgentModal('agentStatusModal');" class="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-left transition-colors hover:border-cyan-500/20 hover:bg-[#ffffffc2]/5">
                     <span>
                         <span class="block text-sm font-medium text-white">View status</span>
                         <span class="mt-1 block text-xs text-zinc-500">See provider, model, and scope details.</span>
                     </span>
                     <i class="bi bi-chevron-right text-zinc-500"></i>
                 </button>
-                <button type="button" onclick="closeAgentModal('agentOptionsModal'); openAgentModal('agentPromptModal');" class="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-left transition-colors hover:border-cyan-500/20 hover:bg-cyan-500/5">
+                <button type="button" onclick="closeAgentModal('agentOptionsModal'); openAgentModal('agentPromptModal');" class="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-left transition-colors hover:border-cyan-500/20 hover:bg-[#ffffffc2]/5">
                     <span>
                         <span class="block text-sm font-medium text-white">Quick prompts</span>
                         <span class="mt-1 block text-xs text-zinc-500">Drop a ready-made prompt into the composer.</span>
@@ -380,7 +362,7 @@ if (isset($_GET['sent'])) {
                 </a>
                 <form method="POST" onsubmit="closeAgentModal('agentOptionsModal')" class="rounded-2xl border border-rose-500/15 bg-rose-500/5">
                     <input type="hidden" name="action" value="clear_ai_agent_chat">
-                    <button type="submit" class="flex w-full items-center justify-between px-4 py-4 text-left transition-colors hover:bg-rose-500/10">
+                    <button type="submit" class="flex w-full items-center justify-between px-4 py-4 text-left transition-colors hover:bg-[#272624a8]">
                         <span>
                             <span class="block text-sm font-medium text-rose-100">Clear chat</span>
                             <span class="mt-1 block text-xs text-rose-200/70">Remove the current conversation from this session.</span>
@@ -424,7 +406,7 @@ if (isset($_GET['sent'])) {
                 </div>
             </div>
 
-            <div class="mt-4 rounded-2xl border <?= $agent_openai_connected ? 'border-cyan-500/20 bg-cyan-500/5' : 'border-amber-500/20 bg-amber-500/5' ?> p-4">
+            <div class="mt-4 rounded-2xl border <?= $agent_openai_connected ? 'border-cyan-500/20 bg-[#ffffffc2]/5' : 'border-amber-500/20 bg-amber-500/5' ?> p-4">
                 <p class="<?= $agent_openai_connected ? 'text-cyan-300' : 'text-amber-300' ?> text-sm font-medium"><?= $agent_openai_connected ? 'OpenAI connected' : 'No API key connected' ?></p>
                 <p class="mt-1 text-sm text-zinc-400"><?= $agent_openai_connected ? 'Messages are sent live and the response is rendered in the chat panel.' : 'Connect an API key in Settings to enable live responses.' ?></p>
             </div>
@@ -446,7 +428,7 @@ if (isset($_GET['sent'])) {
 
             <div class="mt-5 grid gap-3">
                 <?php foreach ($agent_quick_prompts as $prompt): ?>
-                    <button type="button" onclick="setAgentPrompt(<?= htmlspecialchars(json_encode($prompt['prompt']), ENT_QUOTES, 'UTF-8') ?>)" class="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-left transition-colors hover:border-cyan-500/20 hover:bg-cyan-500/5">
+                    <button type="button" onclick="setAgentPrompt(<?= htmlspecialchars(json_encode($prompt['prompt']), ENT_QUOTES, 'UTF-8') ?>)" class="rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-left transition-colors hover:border-cyan-500/20 hover:bg-[#ffffffc2]/5">
                         <span class="block text-sm font-medium text-white"><?= htmlspecialchars($prompt['label'], ENT_QUOTES, 'UTF-8') ?></span>
                         <span class="mt-1 block text-xs leading-relaxed text-zinc-500"><?= htmlspecialchars($prompt['prompt'], ENT_QUOTES, 'UTF-8') ?></span>
                     </button>
@@ -478,14 +460,14 @@ if (isset($_GET['sent'])) {
             closeAgentModal('agentPromptModal');
         }
 
-        document.addEventListener('keydown', function (event) {
+        document.addEventListener('keydown', function(event) {
             if (event.key !== 'Escape') return;
-            ['agentOptionsModal', 'agentStatusModal', 'agentPromptModal'].forEach(function (id) {
+            ['agentOptionsModal', 'agentStatusModal', 'agentPromptModal'].forEach(function(id) {
                 closeAgentModal(id);
             });
         });
 
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', function() {
             var scroller = document.getElementById('agentChatScroll');
             if (scroller) {
                 scroller.scrollTop = scroller.scrollHeight;
