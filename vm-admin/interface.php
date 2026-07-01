@@ -31,12 +31,18 @@ ob_start();
                             500: '#7a1aab',
                             600: '#7a1aab',
                         },
-                        shopifyBg: '#1a1a1a',      /* Shopify Admin Dark base background */
-                        shopifyCard: '#202123',    /* Surface containers */
-                        shopifyBorder: '#303134',  /* Subtle, crisp dividers */
-                        shopifyText: '#e3e3e3',    /* Primary text */
-                        shopifySecondary: '#a9a9a9',/* Secondary labels */
-                        shopifyGreen: '#008060',    /* Shopify Core Green brand asset */
+                        shopifyBg: '#1a1a1a',
+                        /* Shopify Admin Dark base background */
+                        shopifyCard: '#202123',
+                        /* Surface containers */
+                        shopifyBorder: '#303134',
+                        /* Subtle, crisp dividers */
+                        shopifyText: '#e3e3e3',
+                        /* Primary text */
+                        shopifySecondary: '#a9a9a9',
+                        /* Secondary labels */
+                        shopifyGreen: '#008060',
+                        /* Shopify Core Green brand asset */
                         shopifyGreenHover: '#006e52'
                     }
                 }
@@ -57,258 +63,257 @@ ob_start();
 
     <style>
         /* Modern browsers — Chrome 121+, Edge 121+, Firefox, Safari 18.2+ */
-* {
-  scrollbar-width: 8px;
-  scrollbar-color:#64606b #09090b00;
-}
+        * {
+            scrollbar-width: 8px;
+            scrollbar-color: #64606b #09090b00;
+        }
 
-/* Legacy WebKit — older Chrome/Edge/Safari, radius, borders & shadows */
-*::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
+        /* Legacy WebKit — older Chrome/Edge/Safari, radius, borders & shadows */
+        *::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
 
-*::-webkit-scrollbar-track {
-  background-color: #1e1b4b;
-  border-radius: 4px;
-  padding: 1px;
-}
+        *::-webkit-scrollbar-track {
+            background-color: #1e1b4b;
+            border-radius: 4px;
+            padding: 1px;
+        }
 
-*::-webkit-scrollbar-track:hover {
-  background-color: #312e81;
-}
+        *::-webkit-scrollbar-track:hover {
+            background-color: #312e81;
+        }
 
-*::-webkit-scrollbar-track:active {
-  background-color: #3730a3;
-}
+        *::-webkit-scrollbar-track:active {
+            background-color: #3730a3;
+        }
 
-*::-webkit-scrollbar-thumb {
-  background-color: #7c3aed;
-  border-radius: 4px;
-  min-height: 30px;
-  box-shadow: 0 0 6px rgba(129,140,248, 0.60);
-}
+        *::-webkit-scrollbar-thumb {
+            background-color: #7c3aed;
+            border-radius: 4px;
+            min-height: 30px;
+            box-shadow: 0 0 6px rgba(129, 140, 248, 0.60);
+        }
 
-*::-webkit-scrollbar-thumb:hover {
-  background-color: #818cf8;
-}
+        *::-webkit-scrollbar-thumb:hover {
+            background-color: #818cf8;
+        }
 
-*::-webkit-scrollbar-thumb:active {
-  background-color: #a5b4fc;
-}
+        *::-webkit-scrollbar-thumb:active {
+            background-color: #a5b4fc;
+        }
 
-*::-webkit-scrollbar-button {
-  display: none;
-  width: 0;
-  height: 0;
-}
-</style>
+        *::-webkit-scrollbar-button {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+    </style>
 </head>
 
 <body class="bg-gray-900 text-white font-sans antialiased">
     <div class="flex h-screen overflow-hidden">
         <!-- Sidebar -->
         <?php
-            $admin_base = '/vm-admin/' . (__DOMAIN__ ?? '') . '/';
-            $current_page = ex(3) ?: 'home';
-            $store_name = website_data('name') ?: 'My Store';
-            $store_domain = __DOMAIN__ ?? '';
-            $store_url = __WEBSITE_FRAME__ ?? '';
+        $admin_base = '/vm-admin/' . (__DOMAIN__ ?? '') . '/';
+        $current_page = ex(3) ?: 'home';
+        $store_name = website_data('name') ?: 'My Store';
+        $store_domain = __DOMAIN__ ?? '';
+        $store_url = __WEBSITE_FRAME__ ?? '';
 
-            // Helper for nav link classes
-            function nav_cls($page, $current) {
-                $base = 'group mt-1 flex items-center rounded-lg px-4 py-2 transition-colors';
-                return $page === $current
-                    ? $base . ' bg-purple-600 text-white'
-                    : $base . ' text-gray-400 hover:bg-gray-700 hover:text-white';
+        // Helper for nav link classes
+        function nav_cls($page, $current)
+        {
+            $base = 'group mt-1 flex items-center rounded-lg px-4 py-2 transition-colors';
+            return $page === $current
+                ? $base . ' bg-purple-600 text-white'
+                : $base . ' text-gray-400 hover:bg-gray-700 hover:text-white';
+        }
+
+        // Lightweight badge counts
+        $pending_orders = 0;
+        try {
+            $site_db = __DB_WEBSITE__;
+            if ($site_db) {
+                $oc = $site_db->query("SELECT COUNT(*) as cnt FROM orders WHERE status = 'pending'");
+                $pending_orders = (int)($oc[0]['cnt'] ?? 0);
             }
-
-            // Lightweight badge counts
-            $pending_orders = 0;
-            try {
-                $site_db = __DB_WEBSITE__;
-                if ($site_db) {
-                    $oc = $site_db->query("SELECT COUNT(*) as cnt FROM orders WHERE status = 'pending'");
-                    $pending_orders = (int)($oc[0]['cnt'] ?? 0);
-                }
-            } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+        }
         ?>
         <aside id="sidebar" style="overflow:auto;"
             class="absolute z-20 h-full w-64 -translate-x-full transform bg-gray-800 transition-transform duration-300 ease-in-out md:relative md:translate-x-0 border-r border-white/10">
             <div class="flex flex-col h-full">
-            <nav class="mt-4 px-2 flex-1">
-                <div style="display: flex; align-items: center; justify-content: flex-end;">
-                    <button id="sidebarClose" class="md:hidden text-gray-400 hover:text-white">
-                        <i class="bi bi-x-lg text-xl"></i>
-                    </button>
-                </div>
-
-                <!-- Store Identity -->
-                <div class="px-3 pb-4 mb-3 border-b border-white/5">
-                    <div class="flex items-center gap-3">
-                        <div class="h-10 w-10 rounded-xl bg-purple-600 flex items-center justify-center shrink-0">
-                            <i class="bi bi-shop text-white text-lg"></i>
-                        </div>
-                        <div class="min-w-0">
-                            <p class="text-white text-sm font-bold truncate"><?php echo htmlspecialchars($store_name, ENT_QUOTES, 'UTF-8'); ?></p>
-                            <p class="text-gray-500 text-xs truncate"><?php echo htmlspecialchars($store_domain, ENT_QUOTES, 'UTF-8'); ?></p>
-                        </div>
+                <nav class="mt-4 px-2 flex-1">
+                    <div style="display: flex; align-items: center; justify-content: flex-end;">
+                        <button id="sidebarClose" class="md:hidden text-gray-400 hover:text-white">
+                            <i class="bi bi-x-lg text-xl"></i>
+                        </button>
                     </div>
-                    <?php if (!empty($store_url)): ?>
-                    <a href="<?php echo htmlspecialchars($store_url, ENT_QUOTES, 'UTF-8'); ?>" target="_blank"
-                        class="mt-3 flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
-                        <i class="bi bi-box-arrow-up-right"></i>
-                        <span>View Store</span>
-                    </a>
-                    <?php endif; ?>
-                </div>
 
-                <!-- Main -->
-                <a href="/home/" class="<?php echo nav_cls('dashboard', $current_page); ?>">
-                    <i class="bi bi-house-fill mr-3"></i>
-                    <span>Dashboard</span>
-                </a>
-
-                <a href="<?php echo $admin_base; ?>" class="<?php echo nav_cls('home', $current_page); ?>">
-                    <i class="bi bi-grid-1x2-fill mr-3"></i>
-                    <span>Overview</span>
-                </a>
-                <?php if (isset($_SERVER['__AI_EXTENSION__'])): ?> 
-                <?php if ($_SERVER['__AI_EXTENSION__']): ?>
-                    <a href="<?php echo $admin_base; ?>agent" class="<?php echo nav_cls('agent', $current_page); ?>">
-                        <i class="bi bi-robot mr-3"></i>
-                        <span>AI Agent</span>
-                    </a>
-                <?php endif; endif; ?>
-
-                <a href="<?php echo $admin_base; ?>analytics" class="<?php echo nav_cls('analytics', $current_page); ?>">
-                    <i class="bi bi-graph-up mr-3"></i>
-                    <span>Analytics</span>
-                </a>
-
-                <!-- Catalog -->
-                <div class="sidebar-section" data-section="catalog">
-                    <button onclick="toggleSection('catalog')" class="w-full flex items-center justify-between mt-4 mb-1 px-3 cursor-pointer group">
-                        <span style="font-size: 9px;" class="uppercase tracking-widest text-gray-500 group-hover:text-gray-300 transition-colors">Catalog</span>
-                        <i class="bi bi-chevron-down text-gray-600 text-xs transition-transform" id="chevron-catalog"></i>
-                    </button>
-                    <div id="section-catalog">
-                        <a href="<?php echo $admin_base; ?>products" class="<?php echo nav_cls('products', $current_page); ?>">
-                            <i class="bi bi-box-seam-fill mr-3"></i>
-                            <span>Products</span>
-                        </a>
-                        <a href="<?php echo $admin_base; ?>categories" class="<?php echo nav_cls('categories', $current_page); ?>">
-                            <i class="bi bi-tags-fill mr-3"></i>
-                            <span>Categories</span>
-                        </a>
-                        <a href="<?php echo $admin_base; ?>discounts" class="<?php echo nav_cls('discounts', $current_page); ?>">
-                            <i class="bi bi-percent mr-3"></i>
-                            <span>Discounts</span>
-                        </a>
-                        <a href="<?php echo $admin_base; ?>sales" class="<?php echo nav_cls('sales', $current_page); ?>">
-                            <i class="bi bi-lightning-fill mr-3"></i>
-                            <span>Flash Sales</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Orders & Fulfillment -->
-                <div class="sidebar-section" data-section="orders">
-                    <button onclick="toggleSection('orders')" class="w-full flex items-center justify-between mt-4 mb-1 px-3 cursor-pointer group">
-                        <span style="font-size: 9px;" class="uppercase tracking-widest text-gray-500 group-hover:text-gray-300 transition-colors">Orders & Fulfillment</span>
-                        <i class="bi bi-chevron-down text-gray-600 text-xs transition-transform" id="chevron-orders"></i>
-                    </button>
-                    <div id="section-orders">
-                        <a href="<?php echo $admin_base; ?>orders" class="<?php echo nav_cls('orders', $current_page); ?> justify-between">
-                            <div class="flex items-center">
-                                <i class="bi bi-receipt mr-3"></i>
-                                <span>Orders</span>
+                    <!-- Store Identity -->
+                    <div class="px-3 pb-4 mb-3 border-b border-white/5">
+                        <div class="flex items-center gap-3">
+                            <div class="h-10 w-10 rounded-xl bg-purple-600 flex items-center justify-center shrink-0">
+                                <i class="bi bi-shop text-white text-lg"></i>
                             </div>
-                            <?php if ($pending_orders > 0): ?>
-                            <span class="bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-[20px] flex items-center justify-center px-1.5"><?php echo $pending_orders > 99 ? '99+' : $pending_orders; ?></span>
-                            <?php endif; ?>
-                        </a>
-                        <a href="<?php echo $admin_base; ?>payments" class="<?php echo nav_cls('payments', $current_page); ?>">
-                            <i class="bi bi-wallet2 mr-3"></i>
-                            <span>Payments</span>
-                        </a>
-                        <a href="<?php echo $admin_base; ?>delivery" class="<?php echo nav_cls('delivery', $current_page); ?>">
-                            <i class="bi bi-truck mr-3"></i>
-                            <span>Delivery</span>
-                        </a>
-                        <a href="<?php echo $admin_base; ?>logistics" class="<?php echo nav_cls('logistics', $current_page); ?>">
-                            <i class="bi bi-globe-americas mr-3"></i>
-                            <span>Logistics</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Website -->
-                <div class="sidebar-section" data-section="website">
-                    <button onclick="toggleSection('website')" class="w-full flex items-center justify-between mt-4 mb-1 px-3 cursor-pointer group">
-                        <span style="font-size: 9px;" class="uppercase tracking-widest text-gray-500 group-hover:text-gray-300 transition-colors">Website</span>
-                        <i class="bi bi-chevron-down text-gray-600 text-xs transition-transform" id="chevron-website"></i>
-                    </button>
-                    <div id="section-website">
-                        <a href="<?php echo $admin_base; ?>theme" class="<?php echo nav_cls('theme', $current_page); ?>">
-                            <i class="bi bi-palette-fill mr-3"></i>
-                            <span>Themes</span>
-                        </a>
-                        <a href="<?php echo $admin_base; ?>builder" class="<?php echo nav_cls('builder', $current_page); ?>">
-                            <i class="bi bi-layout-wtf mr-3"></i>
-                            <span>Page Builder</span>
-                        </a>
-                        <a href="<?php echo $admin_base; ?>publish" class="<?php echo nav_cls('deploy', $current_page); ?>">
-                            <i class="bi bi-rocket-takeoff-fill mr-3"></i>
-                            <span>Publish</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- System -->
-                <div class="sidebar-section" data-section="system">
-                    <button onclick="toggleSection('system')" class="w-full flex items-center justify-between mt-4 mb-1 px-3 cursor-pointer group">
-                        <span style="font-size: 9px;" class="uppercase tracking-widest text-gray-500 group-hover:text-gray-300 transition-colors">System</span>
-                        <i class="bi bi-chevron-down text-gray-600 text-xs transition-transform" id="chevron-system"></i>
-                    </button>
-                    <div id="section-system">
-                        <a href="<?php echo $admin_base; ?>users" class="<?php echo nav_cls('users', $current_page); ?>">
-                            <i class="bi bi-people-fill mr-3"></i>
-                            <span>Customers</span>
-                        </a>
-                        <a href="<?php echo $admin_base; ?>forms" class="<?php echo nav_cls('forms', $current_page); ?>">
-                            <i class="bi bi-ui-checks-grid mr-3"></i>
-                            <span>Forms</span>
-                        </a>
-                        <a href="<?php echo $admin_base; ?>settings" class="<?php echo nav_cls('settings', $current_page); ?>">
-                            <i class="bi bi-gear-fill mr-3"></i>
-                            <span>Settings</span>
-                        </a>
-                        <a href="<?php echo $admin_base; ?>account" class="<?php echo nav_cls('account', $current_page); ?>">
-                            <i class="bi bi-person-badge-fill mr-3"></i>
-                            <span>Account</span>
-                        </a>
-                    </div>
-                </div>
-
-            </nav>
-
-            <!-- User Footer -->
-            <div class="px-3 py-4 border-t border-white/5">
-                <div class="flex items-center gap-3">
-                    <a href="<?php echo $admin_base; ?>account" class="flex min-w-0 flex-1 items-center gap-3 rounded-lg p-1 -m-1 transition-colors hover:bg-white/5">
-                        <div class="h-8 w-8 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
-                            <span class="text-white text-xs font-bold"><?php echo strtoupper(substr(__USERNAME__ ?? 'U', 0, 1)); ?></span>
+                            <div class="min-w-0">
+                                <p class="text-white text-sm font-bold truncate"><?php echo htmlspecialchars($store_name, ENT_QUOTES, 'UTF-8'); ?></p>
+                                <p class="text-gray-500 text-xs truncate"><?php echo htmlspecialchars($store_domain, ENT_QUOTES, 'UTF-8'); ?></p>
+                            </div>
                         </div>
-                        <div class="min-w-0 flex-1">
-                            <p class="text-white text-sm font-medium truncate"><?php echo htmlspecialchars(__USERNAME__ ?? 'User', ENT_QUOTES, 'UTF-8'); ?></p>
+                        <?php if (!empty($store_url)): ?>
+                            <a href="<?php echo htmlspecialchars($store_url, ENT_QUOTES, 'UTF-8'); ?>" target="_blank"
+                                class="mt-3 flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+                                <i class="bi bi-box-arrow-up-right"></i>
+                                <span>View Store</span>
+                            </a>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Main -->
+                    <a href="/home/" class="<?php echo nav_cls('dashboard', $current_page); ?>">
+                        <i class="bi bi-house-fill mr-3"></i>
+                        <span>Dashboard</span>
+                    </a>
+
+                    <a href="<?php echo $admin_base; ?>" class="<?php echo nav_cls('home', $current_page); ?>">
+                        <i class="bi bi-grid-1x2-fill mr-3"></i>
+                        <span>Overview</span>
+                    </a>
+                    <?php if (isset($_SERVER['__AI_EXTENSION__'])): ?>
+                        <?php if ($_SERVER['__AI_EXTENSION__']): ?>
+                            <a href="<?php echo $admin_base; ?>agent" class="<?php echo nav_cls('agent', $current_page); ?>">
+                                <i class="bi bi-robot mr-3"></i>
+                                <span>AI Agent</span>
+                            </a>
+                    <?php endif;
+                    endif; ?>
+
+                    <a href="<?php echo $admin_base; ?>analytics" class="<?php echo nav_cls('analytics', $current_page); ?>">
+                        <i class="bi bi-graph-up mr-3"></i>
+                        <span>Analytics</span>
+                    </a>
+
+                    <!-- Catalog -->
+                    <div class="sidebar-section" data-section="catalog">
+                        <button onclick="toggleSection('catalog')" class="w-full flex items-center justify-between mt-4 mb-1 px-3 cursor-pointer group">
+                            <span style="font-size: 9px;" class="uppercase tracking-widest text-gray-500 group-hover:text-gray-300 transition-colors">Catalog</span>
+                            <i class="bi bi-chevron-down text-gray-600 text-xs transition-transform" id="chevron-catalog"></i>
+                        </button>
+                        <div id="section-catalog">
+                            <a href="<?php echo $admin_base; ?>products" class="<?php echo nav_cls('products', $current_page); ?>">
+                                <i class="bi bi-box-seam-fill mr-3"></i>
+                                <span>Products</span>
+                            </a>
+                            <a href="<?php echo $admin_base; ?>categories" class="<?php echo nav_cls('categories', $current_page); ?>">
+                                <i class="bi bi-tags-fill mr-3"></i>
+                                <span>Categories</span>
+                            </a>
+                            <a href="<?php echo $admin_base; ?>discounts" class="<?php echo nav_cls('discounts', $current_page); ?>">
+                                <i class="bi bi-percent mr-3"></i>
+                                <span>Discounts</span>
+                            </a>
+                            <a href="<?php echo $admin_base; ?>sales" class="<?php echo nav_cls('sales', $current_page); ?>">
+                                <i class="bi bi-lightning-fill mr-3"></i>
+                                <span>Flash Sales</span>
+                            </a>
                         </div>
-                    </a>
-                    <a href="/logout.php" title="Sign out" class="text-gray-500 hover:text-red-400 transition-colors">
-                        <i class="bi bi-box-arrow-right"></i>
-                    </a>
+                    </div>
+
+                    <!-- Orders & Fulfillment -->
+                    <div class="sidebar-section" data-section="orders">
+                        <button onclick="toggleSection('orders')" class="w-full flex items-center justify-between mt-4 mb-1 px-3 cursor-pointer group">
+                            <span style="font-size: 9px;" class="uppercase tracking-widest text-gray-500 group-hover:text-gray-300 transition-colors">Orders & Fulfillment</span>
+                            <i class="bi bi-chevron-down text-gray-600 text-xs transition-transform" id="chevron-orders"></i>
+                        </button>
+                        <div id="section-orders">
+                            <a href="<?php echo $admin_base; ?>orders" class="<?php echo nav_cls('orders', $current_page); ?> justify-between">
+                                <div class="flex items-center">
+                                    <i class="bi bi-receipt mr-3"></i>
+                                    <span>Orders</span>
+                                </div>
+                                <?php if ($pending_orders > 0): ?>
+                                    <span class="bg-red-500 text-white text-xs font-bold rounded-full h-5 min-w-[20px] flex items-center justify-center px-1.5"><?php echo $pending_orders > 99 ? '99+' : $pending_orders; ?></span>
+                                <?php endif; ?>
+                            </a>
+                            <a href="<?php echo $admin_base; ?>payments" class="<?php echo nav_cls('payments', $current_page); ?>">
+                                <i class="bi bi-wallet2 mr-3"></i>
+                                <span>Payments</span>
+                            </a>
+                            <a href="<?php echo $admin_base; ?>delivery" class="<?php echo nav_cls('delivery', $current_page); ?>">
+                                <i class="bi bi-truck mr-3"></i>
+                                <span>Delivery</span>
+                            </a>
+                            <a href="<?php echo $admin_base; ?>logistics" class="<?php echo nav_cls('logistics', $current_page); ?>">
+                                <i class="bi bi-globe-americas mr-3"></i>
+                                <span>Logistics</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Website -->
+                    <div class="sidebar-section" data-section="website">
+                        <button onclick="toggleSection('website')" class="w-full flex items-center justify-between mt-4 mb-1 px-3 cursor-pointer group">
+                            <span style="font-size: 9px;" class="uppercase tracking-widest text-gray-500 group-hover:text-gray-300 transition-colors">Website</span>
+                            <i class="bi bi-chevron-down text-gray-600 text-xs transition-transform" id="chevron-website"></i>
+                        </button>
+                        <div id="section-website">
+                            <a href="<?php echo $admin_base; ?>theme" class="<?php echo nav_cls('theme', $current_page); ?>">
+                                <i class="bi bi-palette-fill mr-3"></i>
+                                <span>Themes</span>
+                            </a>
+                            <a href="<?php echo $admin_base; ?>builder" class="<?php echo nav_cls('builder', $current_page); ?>">
+                                <i class="bi bi-layout-wtf mr-3"></i>
+                                <span>Page Builder</span>
+                            </a>
+                            <a href="<?php echo $admin_base; ?>publish" class="<?php echo nav_cls('deploy', $current_page); ?>">
+                                <i class="bi bi-rocket-takeoff-fill mr-3"></i>
+                                <span>Publish</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- System -->
+                    <div class="sidebar-section" data-section="system">
+                        <button onclick="toggleSection('system')" class="w-full flex items-center justify-between mt-4 mb-1 px-3 cursor-pointer group">
+                            <span style="font-size: 9px;" class="uppercase tracking-widest text-gray-500 group-hover:text-gray-300 transition-colors">System</span>
+                            <i class="bi bi-chevron-down text-gray-600 text-xs transition-transform" id="chevron-system"></i>
+                        </button>
+                        <div id="section-system">
+                            <a href="<?php echo $admin_base; ?>users" class="<?php echo nav_cls('users', $current_page); ?>">
+                                <i class="bi bi-people-fill mr-3"></i>
+                                <span>Customers</span>
+                            </a>
+                            <a href="<?php echo $admin_base; ?>forms" class="<?php echo nav_cls('forms', $current_page); ?>">
+                                <i class="bi bi-ui-checks-grid mr-3"></i>
+                                <span>Forms</span>
+                            </a>
+                            <a href="<?php echo $admin_base; ?>settings" class="<?php echo nav_cls('settings', $current_page); ?>">
+                                <i class="bi bi-gear-fill mr-3"></i>
+                                <span>Settings</span>
+                            </a>
+                        </div>
+                    </div>
+
+                </nav>
+
+                <!-- User Footer -->
+                <div class="px-3 py-4 border-t border-white/5">
+                    <div class="flex items-center gap-3">
+                        <a href="<?php echo $admin_base; ?>account" class="flex min-w-0 flex-1 items-center gap-3 rounded-lg p-1 -m-1 transition-colors hover:bg-white/5">
+                            <div class="h-8 w-8 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
+                                <span class="text-white text-xs font-bold"><?php echo strtoupper(substr(__USERNAME__ ?? 'U', 0, 1)); ?></span>
+                            </div>
+                            <div class="min-w-0 flex-1">
+                                <p class="text-white text-sm font-medium truncate"><?php echo htmlspecialchars(__USERNAME__ ?? 'User', ENT_QUOTES, 'UTF-8'); ?></p>
+                            </div>
+                        </a>
+                        <a href="/logout.php" title="Sign out" class="text-gray-500 hover:text-red-400 transition-colors">
+                            <i class="bi bi-box-arrow-right"></i>
+                        </a>
+                    </div>
                 </div>
-            </div>
             </div>
         </aside>
 
@@ -440,11 +445,11 @@ ob_start();
                     </div>
                     <br>
                     <?php if (!empty($store_url)): ?>
-                    <a href="<?php echo htmlspecialchars($store_url, ENT_QUOTES, 'UTF-8'); ?>" target="_blank"
-                        class="mt-3 flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
-                        <i class="bi bi-box-arrow-up-right"></i>
-                        <span>View Store</span>
-                    </a>
+                        <a href="<?php echo htmlspecialchars($store_url, ENT_QUOTES, 'UTF-8'); ?>" target="_blank"
+                            class="mt-3 flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-1.5 text-xs text-gray-400 hover:bg-gray-700 hover:text-white transition-colors">
+                            <i class="bi bi-box-arrow-up-right"></i>
+                            <span>View Store</span>
+                        </a>
                     <?php endif; ?>
                 </div>
 
@@ -459,6 +464,14 @@ ob_start();
                     <i class="bi bi-grid-1x2-fill mr-3"></i>
                     <span>Overview</span>
                 </a>
+                <?php if (isset($_SERVER['__AI_EXTENSION__'])): ?>
+                    <?php if ($_SERVER['__AI_EXTENSION__']): ?>
+                        <a href="<?php echo $admin_base; ?>agent" class="sesedesedwsedwdd">
+                            <i class="bi bi-robot mr-3"></i>
+                            <span>AI Agent</span>
+                        </a>
+                <?php endif;
+                endif; ?>
 
                 <a href="<?php echo $admin_base; ?>analytics" class="sesedesedwsedwdd">
                     <i class="bi bi-graph-up mr-3"></i>
@@ -492,7 +505,7 @@ ob_start();
 
                 <a href="<?php echo $admin_base; ?>orders" class="sesedesedwsedwdd">
                     <i class="bi bi-receipt mr-3"></i>
-                    <span>Orders<?php if ($pending_orders > 0) echo ' <span style="background:#7a1aab;padding:1px 6px;border-radius:99px;font-size:0.6rem;margin-left:4px;">'.$pending_orders.'</span>'; ?></span>
+                    <span>Orders<?php if ($pending_orders > 0) echo ' <span style="background:#7a1aab;padding:1px 6px;border-radius:99px;font-size:0.6rem;margin-left:4px;">' . $pending_orders . '</span>'; ?></span>
                 </a>
                 <a href="<?php echo $admin_base; ?>payments" class="sesedesedwsedwdd">
                     <i class="bi bi-wallet2 mr-3"></i>
@@ -542,7 +555,7 @@ ob_start();
                 <a style="margin:1rem"></a>
                 <br>
                 <div style="padding: 1rem 2rem 8rem; display: flex; align-items: center; gap: 0.75rem;">
-                    <div style="width:28px;height:28px;border-radius:50%;background:#7a1aab;display:flex;align-items:center;justify-content:center;">
+                    <div onclick="window.location.href='<?php echo $admin_base; ?>account'" style="width:28px;height:28px;border-radius:50%;background:#7a1aab;display:flex;align-items:center;justify-content:center;">
                         <span style="font-size:0.65rem;font-weight:700;color:#fff;"><?php echo strtoupper(substr(__USERNAME__ ?? 'U', 0, 1)); ?></span>
                     </div>
                     <span style="font-size:0.75rem;color:#999;"><?php echo htmlspecialchars(__USERNAME__ ?? 'User', ENT_QUOTES, 'UTF-8'); ?></span>
