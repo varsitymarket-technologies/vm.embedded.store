@@ -42,12 +42,11 @@ $store_url = __WEBSITE_URL__ ?? '#';
         <!-- Quick Info Cards -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
             <!-- Store Status -->
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 relative overflow-hidden">
+            <div onclick="window.open('<?php echo $store_url; ?>', '_blank')" class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 relative overflow-hidden">
                 <div class="flex items-center justify-between mb-4">
                     <span class="text-zinc-400 text-xs font-medium uppercase tracking-wider">Store Status</span>
-                    <span
-                        class="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Live
+                    <span class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
+                        <i class="bi bi-globe text-white"></i>
                     </span>
                 </div>
                 <p class="text-white font-semibold text-lg"><?php echo htmlspecialchars($store_domain); ?></p>
@@ -59,11 +58,11 @@ $store_url = __WEBSITE_URL__ ?? '#';
             </div>
 
             <!-- Theme -->
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 relative overflow-hidden">
+            <div onclick="window.open('<?php echo $admin_base; ?>theme','_blank')" class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 relative overflow-hidden">
                 <div class="flex items-center justify-between mb-4">
                     <span class="text-zinc-400 text-xs font-medium uppercase tracking-wider">Active Theme</span>
                     <span class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
-                        <i class="bi bi-palette text-violet-400"></i>
+                        <i class="bi bi-palette text-white"></i>
                     </span>
                 </div>
                 <p class="text-white font-semibold text-lg capitalize"><?php echo htmlspecialchars($store_theme); ?></p>

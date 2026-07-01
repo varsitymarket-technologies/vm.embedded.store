@@ -39,7 +39,6 @@ $account_error = $_GET['error'] ?? '';
                     <div class="space-y-2">
                         <div class="flex flex-wrap items-center gap-3">
                             <h2 class="text-xl font-semibold tracking-tight text-white sm:text-2xl">Account</h2>
-                            <span class="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-zinc-300">Profile</span>
                         </div>
                         <p class="max-w-2xl text-sm text-zinc-500">Update your operator identity and review the store you are connected to.</p>
                     </div>
@@ -59,59 +58,58 @@ $account_error = $_GET['error'] ?? '';
             </section>
 
             <div class="grid grid-cols-1 xl:grid-cols-[1.25fr_0.75fr] gap-4">
-                <section class="rounded-[1rem] border border-white/10 bg-[#0b0b0f] shadow-2xl shadow-black/30 overflow-hidden">
-                    <div class="border-b border-white/5 px-5 py-4">
-                        <p class="text-xs uppercase  text-zinc-600">Profile</p>
-                        <h3 class="mt-1 text-base font-semibold text-white">Edit your details</h3>
-                    </div>
-                    <form method="POST" class="space-y-5 px-5 py-5">
-                        <input type="hidden" name="action" value="save_account_profile">
-                        <div class="flex items-center gap-4">
-                            <div class="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5">
-                                <?php if (!empty($account_image)): ?>
-                                    <img src="<?= htmlspecialchars($account_image, ENT_QUOTES, 'UTF-8') ?>" alt="Account avatar" class="h-full w-full object-cover">
-                                <?php else: ?>
-                                    <span class="text-lg font-semibold text-white"><?= htmlspecialchars(strtoupper(substr($account_name, 0, 1)), ENT_QUOTES, 'UTF-8') ?></span>
-                                <?php endif; ?>
+                <section>
+                    <div class="rounded-[1rem] border border-white/10 bg-[#0b0b0f] shadow-2xl shadow-black/30 overflow-hidden">
+                        <div class="border-b border-white/5 px-5 py-4">
+                            <p class="text-xs uppercase  text-zinc-600">Profile</p>
+                            <h3 class="mt-1 text-base font-semibold text-white">Edit your details</h3>
+                        </div>
+                        <form method="POST" class="space-y-5 px-5 py-5">
+                            <input type="hidden" name="action" value="save_account_profile">
+                            <div class="flex items-center gap-4">
+                                <div class="flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+                                    <?php if (!empty($account_image)): ?>
+                                        <img src="<?= htmlspecialchars($account_image, ENT_QUOTES, 'UTF-8') ?>" alt="Account avatar" class="h-full w-full object-cover">
+                                    <?php else: ?>
+                                        <span class="text-lg font-semibold text-white"><?= htmlspecialchars(strtoupper(substr($account_name, 0, 1)), ENT_QUOTES, 'UTF-8') ?></span>
+                                    <?php endif; ?>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-white"><?= htmlspecialchars($account_name, ENT_QUOTES, 'UTF-8') ?></p>
+                                    <p class="text-xs text-zinc-500"><?= htmlspecialchars($account_email ?: 'No email set', ENT_QUOTES, 'UTF-8') ?></p>
+                                </div>
                             </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            </div>
+
                             <div>
-                                <p class="text-sm font-medium text-white"><?= htmlspecialchars($account_name, ENT_QUOTES, 'UTF-8') ?></p>
-                                <p class="text-xs text-zinc-500"><?= htmlspecialchars($account_email ?: 'No email set', ENT_QUOTES, 'UTF-8') ?></p>
+                                <label class="mb-1.5 block text-xs font-medium text-zinc-400">Avatar URL</label>
+                                <input type="url" name="account[image]" value="<?= htmlspecialchars($account_image, ENT_QUOTES, 'UTF-8') ?>" class="w-full rounded-xl border border-white/10 bg-[#07070a] px-4 py-3 text-sm text-white focus:border-cyan-500/50 focus:outline-none" placeholder="https://...">
+                                <p class="mt-1.5 text-xs text-zinc-500">Optional. Used only for the admin profile display.</p>
                             </div>
-                        </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                           
-                        </div>
+                            <div class="flex items-center justify-end">
+                                <button type="submit" style="color:white;" class="inline-flex items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-gray-400">
+                                    <i class="bi bi-check2"></i>
+                                    Save profile
+                                </button>
+                            </div>
+                        </form>
 
-                        <div>
-                            <label class="mb-1.5 block text-xs font-medium text-zinc-400">Avatar URL</label>
-                            <input type="url" name="account[image]" value="<?= htmlspecialchars($account_image, ENT_QUOTES, 'UTF-8') ?>" class="w-full rounded-xl border border-white/10 bg-[#07070a] px-4 py-3 text-sm text-white focus:border-cyan-500/50 focus:outline-none" placeholder="https://...">
-                            <p class="mt-1.5 text-xs text-zinc-500">Optional. Used only for the admin profile display.</p>
-                        </div>
-
-                        <div class="flex items-center justify-end">
-                            <button type="submit" class="inline-flex text-white items-center gap-2 rounded-full bg-purple-600 px-4 py-2 text-sm font-medium text-black transition-colors hover:bg-cyan-400">
-                                <i class="bi bi-check2"></i>
-                                Save profile
-                            </button>
-                        </div>
-                    </form>
+                    </div>
                 </section>
 
                 <aside class="space-y-4">
                     <section class="rounded-[1rem] border border-white/10 bg-[#0b0b0f] shadow-2xl shadow-black/30 overflow-hidden">
-                        <div class="border-b border-white/5 px-5 py-4">
-                            <p class="text-xs uppercase text-zinc-600">Linked store</p>
-                            <h3 class="mt-1 text-base font-semibold text-white">Current context</h3>
-                        </div>
                         <div class="space-y-3 px-5 py-5">
                             <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
                                 <p class="text-[10px] uppercase  text-zinc-600">Store name</p>
                                 <p class="mt-2 text-sm font-medium text-white"><?= htmlspecialchars($account_store_name, ENT_QUOTES, 'UTF-8') ?></p>
                             </div>
                             <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                                <p class="text-[10px] uppercase  text-zinc-600">Domain</p>
+                                <p class="text-[10px] uppercase  text-zinc-600">Website</p>
                                 <p class="mt-2 text-sm font-medium text-white"><?= htmlspecialchars($account_store_domain, ENT_QUOTES, 'UTF-8') ?></p>
                             </div>
                             <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
@@ -123,8 +121,8 @@ $account_error = $_GET['error'] ?? '';
 
                     <section class="rounded-[1rem] border border-white/10 bg-[#0b0b0f] shadow-2xl shadow-black/30 overflow-hidden">
                         <div class="border-b border-white/5 px-5 py-4">
-                            <p class="text-xs uppercase  text-zinc-600">Security</p>
-                            <h3 class="mt-1 text-base font-semibold text-white">Account identifiers</h3>
+                            <p class="text-xs uppercase  text-zinc-600">Account Info</p>
+                            <h3 class="mt-1 text-base font-semibold text-white">Account Operations</h3>
                         </div>
                         <div class="space-y-3 px-5 py-5 text-sm">
                             <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
