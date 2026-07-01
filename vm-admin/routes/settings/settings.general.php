@@ -1,122 +1,248 @@
-<!-- Page Header -->
-<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-    <div>
-        <h2 class="text-2xl font-bold text-white">Settings</h2>
-        <p class="text-zinc-400 text-sm mt-1">Configure your store environment, branding, and integrations</p>
-    </div>
+<?php 
+
+#   TITLE   : Admin Settings General Page
+#   DESC    : The Admin settings page for the control panel
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 1.0.1.1
+#   AUTHOR  : HARDY HASTINGS
+#   RELEASE : 2026/07/01
+
+
+?>
+
+<!-- Header -->
+<div class="mb-8">
+    <h1 class="text-3xl font-bold text-white">Settings</h1>
+    <p class="text-sm text-zinc-400 mt-1">
+        Manage your store preferences, checkout, integrations and system configuration.
+    </p>
 </div>
 
-<!-- Settings Grid -->
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+<div class="space-y-8">
 
-    <a href="?tab=branding" class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-violet-500/30 transition-all group relative overflow-hidden">
-        <div class="flex items-center gap-3 mb-3">
-            <span class="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center group-hover:bg-violet-500/20 transition-colors">
-                <i class="bi bi-brush text-violet-400"></i>
-            </span>
-            <span class="font-semibold text-white">Store Branding</span>
+    <!-- Store -->
+    <section>
+        <div class="mb-4">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-zinc-500">Store</h2>
         </div>
-        <p class="text-zinc-500 text-xs leading-relaxed">Logo, store name, description and visual identity</p>
-        <i class="bi bi-chevron-right text-zinc-700 absolute right-4 top-1/2 -translate-y-1/2 group-hover:text-violet-400 transition-colors"></i>
-    </a>
 
-    <a href="?tab=payment" class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-violet-500/30 transition-all group relative overflow-hidden">
-        <div class="flex items-center gap-3 mb-3">
-            <span class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center group-hover:bg-emerald-500/20 transition-colors">
-                <i class="bi bi-credit-card text-emerald-400"></i>
-            </span>
-            <span class="font-semibold text-white">Payment Methods</span>
-        </div>
-        <p class="text-zinc-500 text-xs leading-relaxed">Configure COD, YOCO, PayPal and other gateways</p>
-        <i class="bi bi-chevron-right text-zinc-700 absolute right-4 top-1/2 -translate-y-1/2 group-hover:text-violet-400 transition-colors"></i>
-    </a>
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
 
-    <a href="?tab=currency" class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-violet-500/30 transition-all group relative overflow-hidden">
-        <div class="flex items-center gap-3 mb-3">
-            <span class="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-colors">
-                <i class="bi bi-currency-exchange text-amber-400"></i>
-            </span>
-            <span class="font-semibold text-white">Currency</span>
-        </div>
-        <p class="text-zinc-500 text-xs leading-relaxed">Default currency, formatting and accepted currencies</p>
-        <i class="bi bi-chevron-right text-zinc-700 absolute right-4 top-1/2 -translate-y-1/2 group-hover:text-violet-400 transition-colors"></i>
-    </a>
+            <a href="?tab=branding" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
+                <div class="flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-xl bg-violet-500/10 flex items-center justify-center">
+                        <i class="bi bi-shop text-violet-400 text-lg"></i>
+                    </div>
 
-    <a href="?tab=email" class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-violet-500/30 transition-all group relative overflow-hidden">
-        <div class="flex items-center gap-3 mb-3">
-            <span class="w-10 h-10 rounded-lg bg-sky-500/10 flex items-center justify-center group-hover:bg-sky-500/20 transition-colors">
-                <i class="bi bi-envelope text-sky-400"></i>
-            </span>
-            <span class="font-semibold text-white">Email Configuration</span>
-        </div>
-        <p class="text-zinc-500 text-xs leading-relaxed">SMTP settings and email templates for notifications</p>
-        <i class="bi bi-chevron-right text-zinc-700 absolute right-4 top-1/2 -translate-y-1/2 group-hover:text-violet-400 transition-colors"></i>
-    </a>
+                    <div>
+                        <h3 class="text-white font-medium">Store Details</h3>
+                        <p class="text-sm text-zinc-500">
+                            Name, logo, description and branding.
+                        </p>
+                    </div>
+                </div>
 
-    <a href="?tab=domain" class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-violet-500/30 transition-all group relative overflow-hidden">
-        <div class="flex items-center gap-3 mb-3">
-            <span class="w-10 h-10 rounded-lg bg-teal-500/10 flex items-center justify-center group-hover:bg-teal-500/20 transition-colors">
-                <i class="bi bi-globe text-teal-400"></i>
-            </span>
-            <span class="font-semibold text-white">Connect Domain</span>
-        </div>
-        <p class="text-zinc-500 text-xs leading-relaxed">Link a custom domain to your storefront</p>
-        <i class="bi bi-chevron-right text-zinc-700 absolute right-4 top-1/2 -translate-y-1/2 group-hover:text-violet-400 transition-colors"></i>
-    </a>
+                <i class="bi bi-chevron-right text-zinc-600"></i>
+            </a>
 
-    <a href="?tab=dev" class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-violet-500/30 transition-all group relative overflow-hidden">
-        <div class="flex items-center gap-3 mb-3">
-            <span class="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center group-hover:bg-orange-500/20 transition-colors">
-                <i class="bi bi-code-slash text-orange-400"></i>
-            </span>
-            <span class="font-semibold text-white">Developer Settings</span>
-        </div>
-        <p class="text-zinc-500 text-xs leading-relaxed">API keys, CORS domains and SDK configuration</p>
-        <i class="bi bi-chevron-right text-zinc-700 absolute right-4 top-1/2 -translate-y-1/2 group-hover:text-violet-400 transition-colors"></i>
-    </a>
+            <a href="?tab=currency" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
+                <div class="flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                        <i class="bi bi-cash-stack text-amber-400 text-lg"></i>
+                    </div>
 
-    <a href="?tab=app" class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-violet-500/30 transition-all group relative overflow-hidden">
-        <div class="flex items-center gap-3 mb-3">
-            <span class="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center group-hover:bg-indigo-500/20 transition-colors">
-                <i class="bi bi-plug text-indigo-400"></i>
-            </span>
-            <span class="font-semibold text-white">App Extensions</span>
-        </div>
-        <p class="text-zinc-500 text-xs leading-relaxed">Discord webhooks and third-party integrations</p>
-        <i class="bi bi-chevron-right text-zinc-700 absolute right-4 top-1/2 -translate-y-1/2 group-hover:text-violet-400 transition-colors"></i>
-    </a>
+                    <div>
+                        <h3 class="text-white font-medium">Markets & Currency</h3>
+                        <p class="text-sm text-zinc-500">
+                            Currency formatting, regions and pricing.
+                        </p>
+                    </div>
+                </div>
 
-    <a href="?tab=console" class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-violet-500/30 transition-all group relative overflow-hidden">
-        <div class="flex items-center gap-3 mb-3">
-            <span class="w-10 h-10 rounded-lg bg-pink-500/10 flex items-center justify-center group-hover:bg-pink-500/20 transition-colors">
-                <i class="bi bi-phone text-pink-400"></i>
-            </span>
-            <span class="font-semibold text-white">Mobile App Console</span>
-        </div>
-        <p class="text-zinc-500 text-xs leading-relaxed">Connect your store to the mobile app</p>
-        <i class="bi bi-chevron-right text-zinc-700 absolute right-4 top-1/2 -translate-y-1/2 group-hover:text-violet-400 transition-colors"></i>
-    </a>
+                <i class="bi bi-chevron-right text-zinc-600"></i>
+            </a>
 
-    <a href="?tab=agent" class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-violet-500/30 transition-all group relative overflow-hidden">
-        <div class="flex items-center gap-3 mb-3">
-            <span class="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center group-hover:bg-cyan-500/20 transition-colors">
-                <i class="bi bi-robot text-cyan-400"></i>
-            </span>
-            <span class="font-semibold text-white">AI Agent</span>
-        </div>
-        <p class="text-zinc-500 text-xs leading-relaxed">Configure the admin-only AI assistant and its MCP tools</p>
-        <i class="bi bi-chevron-right text-zinc-700 absolute right-4 top-1/2 -translate-y-1/2 group-hover:text-violet-400 transition-colors"></i>
-    </a>
+            <a href="?tab=domain" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
+                <div class="flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-xl bg-teal-500/10 flex items-center justify-center">
+                        <i class="bi bi-globe2 text-teal-400 text-lg"></i>
+                    </div>
 
-    <a href="?tab=deployment" class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-violet-500/30 transition-all group relative overflow-hidden">
-        <div class="flex items-center gap-3 mb-3">
-            <span class="w-10 h-10 rounded-lg bg-zinc-700/50 flex items-center justify-center group-hover:bg-zinc-600/50 transition-colors">
-                <i class="bi bi-github text-zinc-300"></i>
-            </span>
-            <span class="font-semibold text-white">GitHub Deployment</span>
+                    <div>
+                        <h3 class="text-white font-medium">Domains</h3>
+                        <p class="text-sm text-zinc-500">
+                            Connect custom domains and manage DNS.
+                        </p>
+                    </div>
+                </div>
+
+                <i class="bi bi-chevron-right text-zinc-600"></i>
+            </a>
+
         </div>
-        <p class="text-zinc-500 text-xs leading-relaxed">Connect source code for automated deployment</p>
-        <i class="bi bi-chevron-right text-zinc-700 absolute right-4 top-1/2 -translate-y-1/2 group-hover:text-violet-400 transition-colors"></i>
-    </a>
+    </section>
+
+    <!-- Checkout -->
+    <section>
+        <div class="mb-4">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-zinc-500">Checkout</h2>
+        </div>
+
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
+
+            <a href="?tab=payment" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
+                <div class="flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                        <i class="bi bi-credit-card text-emerald-400 text-lg"></i>
+                    </div>
+
+                    <div>
+                        <h3 class="text-white font-medium">Payments</h3>
+                        <p class="text-sm text-zinc-500">
+                            YOCO, PayPal, COD and payment providers.
+                        </p>
+                    </div>
+                </div>
+
+                <i class="bi bi-chevron-right text-zinc-600"></i>
+            </a>
+
+            <a href="?tab=email" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
+                <div class="flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-xl bg-sky-500/10 flex items-center justify-center">
+                        <i class="bi bi-envelope text-sky-400 text-lg"></i>
+                    </div>
+
+                    <div>
+                        <h3 class="text-white font-medium">Notifications</h3>
+                        <p class="text-sm text-zinc-500">
+                            SMTP, order emails and customer notifications.
+                        </p>
+                    </div>
+                </div>
+
+                <i class="bi bi-chevron-right text-zinc-600"></i>
+            </a>
+
+        </div>
+    </section>
+
+    <!-- Apps -->
+    <section>
+        <div class="mb-4">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-zinc-500">Apps & Integrations</h2>
+        </div>
+
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
+
+            <a href="?tab=app" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
+                <div class="flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-xl bg-indigo-500/10 flex items-center justify-center">
+                        <i class="bi bi-grid text-indigo-400 text-lg"></i>
+                    </div>
+
+                    <div>
+                        <h3 class="text-white font-medium">Apps</h3>
+                        <p class="text-sm text-zinc-500">
+                            Installed apps, webhooks and integrations.
+                        </p>
+                    </div>
+                </div>
+
+                <i class="bi bi-chevron-right text-zinc-600"></i>
+            </a>
+
+            <a href="?tab=console" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
+                <div class="flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-xl bg-pink-500/10 flex items-center justify-center">
+                        <i class="bi bi-phone text-pink-400 text-lg"></i>
+                    </div>
+
+                    <div>
+                        <h3 class="text-white font-medium">Mobile App</h3>
+                        <p class="text-sm text-zinc-500">
+                            Configure mobile application access.
+                        </p>
+                    </div>
+                </div>
+
+                <i class="bi bi-chevron-right text-zinc-600"></i>
+            </a>
+
+        </div>
+    </section>
+
+    <!-- AI -->
+    <section>
+        <div class="mb-4">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-zinc-500">Automation</h2>
+        </div>
+
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
+
+            <a href="?tab=agent" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
+                <div class="flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                        <i class="bi bi-stars text-cyan-400 text-lg"></i>
+                    </div>
+
+                    <div>
+                        <h3 class="text-white font-medium">AI Assistant</h3>
+                        <p class="text-sm text-zinc-500">
+                            Configure prompts, tools and permissions.
+                        </p>
+                    </div>
+                </div>
+
+                <i class="bi bi-chevron-right text-zinc-600"></i>
+            </a>
+
+        </div>
+    </section>
+
+    <!-- Advanced -->
+    <section>
+        <div class="mb-4">
+            <h2 class="text-xs font-semibold uppercase tracking-widest text-zinc-500">Advanced</h2>
+        </div>
+
+        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
+
+            <a href="?tab=dev" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
+                <div class="flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                        <i class="bi bi-code-slash text-orange-400 text-lg"></i>
+                    </div>
+
+                    <div>
+                        <h3 class="text-white font-medium">Developer</h3>
+                        <p class="text-sm text-zinc-500">
+                            API keys, CORS, SDKs and developer access.
+                        </p>
+                    </div>
+                </div>
+
+                <i class="bi bi-chevron-right text-zinc-600"></i>
+            </a>
+
+            <a href="?tab=deployment" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
+                <div class="flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-xl bg-zinc-700/50 flex items-center justify-center">
+                        <i class="bi bi-github text-zinc-300 text-lg"></i>
+                    </div>
+
+                    <div>
+                        <h3 class="text-white font-medium">Deployment</h3>
+                        <p class="text-sm text-zinc-500">
+                            GitHub repository and deployment pipeline.
+                        </p>
+                    </div>
+                </div>
+
+                <i class="bi bi-chevron-right text-zinc-600"></i>
+            </a>
+
+        </div>
+    </section>
 
 </div>

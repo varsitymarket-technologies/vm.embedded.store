@@ -1,4 +1,11 @@
 <?php
+#   TITLE   : Admin Profile Page
+#   DESC    : The Admin profile page for the control panel
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 1.0.1.1
+#   AUTHOR  : HARDY HASTINGS
+#   RELEASE : 2026/07/01
+
 $account_row = __DB_MODULE__->query("SELECT * FROM sys_account WHERE auth = ? LIMIT 1", [__ACCOUNT_INDEX__])[0] ?? [];
 $account_name = $account_row['name'] ?? (__USERNAME__ ?? 'User');
 $account_email = $account_row['email'] ?? '';

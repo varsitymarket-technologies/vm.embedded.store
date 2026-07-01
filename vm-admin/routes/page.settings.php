@@ -1,4 +1,11 @@
 <?php
+#   TITLE   : Admin Settings Page
+#   DESC    : The Admin settings page for the control panel
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 1.0.1.1
+#   AUTHOR  : HARDY HASTINGS
+#   RELEASE : 2026/07/01
+
 /**
  * page.settings.php - Settings Router
  * Delegates each tab to its own file under settings/
