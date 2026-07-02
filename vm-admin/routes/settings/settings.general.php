@@ -172,6 +172,8 @@
         </div>
     </section>
 
+    <?php if (isset($_SERVER['__AI_EXTENSION__'])): ?>
+    <?php if ($_SERVER['__AI_EXTENSION__']): ?>
     <!-- AI -->
     <section>
         <div class="mb-4">
@@ -199,6 +201,8 @@
 
         </div>
     </section>
+    <?php endif; ?>
+    <?php endif; ?>
 
     <!-- Advanced -->
     <section>

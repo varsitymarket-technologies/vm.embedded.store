@@ -76,6 +76,22 @@ if ($domain_connected == true) {
 <div class="flex flex-1 flex-col overflow-hidden">
     <?php @include_once "header.php"; ?>
 
+    <?php if (!isset($_SERVER['__ENGINE_SOURCE__'])): ?>
+        <div style="max-width: 25rem; margin:10rem auto; padding: 2rem 1rem;">
+
+        <div class="bg-[#1e2a27] border border-[#2b5c4b] rounded-xl p-4 flex items-center justify-between transition-all">
+            <div class="flex items-center gap-3">
+                <div class="text-sm">
+                    <span class="font-semibold text-white">Embedded Engine not connected</span>
+                    <br>
+                    <span class="text-shopifySecondary ml-1">This embededd engine is not connected to the remote server. Your website cannot be published with this engine.</span>
+                </div>
+            </div>
+        </div>
+
+        </div>
+    <?php else: ?>
+
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
@@ -319,6 +335,8 @@ if ($domain_connected == true) {
 
         </div>
     </div>
+
+    <?php endif; ?>
 </div>
 
 <style>

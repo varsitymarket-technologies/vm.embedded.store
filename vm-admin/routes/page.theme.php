@@ -223,6 +223,8 @@ function theme_page_url($page)
             </div>
         </div>
 
+        <div style="margin: 5rem;"></div>
+
         <!-- Search & Filters -->
         <div class="px-8 pb-4">
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
