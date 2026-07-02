@@ -74,7 +74,8 @@ function kick_start_application($domain)
         }
     }
 
-    $cors_domain = trim("localhost");
+    $tracking_host = ($_SERVER['HTTP_HOST'] ?? 'localhost:8016');
+    $cors_domain = trim($tracking_host);
     if (!empty($cors_domain)) {
         // Normalize: strip trailing slashes, ensure scheme
         $cors_domain = rtrim($cors_domain, '/');

@@ -14,9 +14,9 @@
 
         <?php } ?>
 
-        <h1>Embedded Webstores</h1>
+        <h1>Embedded Store Engine</h1>
         <p>
-            A lightweight, plug-and-play e-commerce micro-service.
+            A lightweight, plug-and-play e-commerce embedded engine.
         </p>
 
         <?php
