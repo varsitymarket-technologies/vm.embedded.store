@@ -8,6 +8,9 @@ if (!file_exists($database_build)) {
     exit(0);  
 }
 
+if (file_exists(dirname(__FILE__)."/apk.php") == true) {
+    @include_once dirname(__FILE__)."/apk.php"; 
+}
 
 function sync_themes() {
     $remote_manifest_url = "https://raw.githubusercontent.com/varsitymarket-technologies/embedded-themes/refs/heads/main/collection/records.json";
