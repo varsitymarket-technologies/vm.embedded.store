@@ -6,21 +6,51 @@
 
         /* Modal Styles */
         .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
             background: var(--bg-overlay);
-            display: none; justify-content: center; align-items: center;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 1rem;
+            box-sizing: border-box;
+            overflow-y: auto;
         }
 
         .modal-overlay.active { display: flex; }
 
         .modal-content {
-            background: var(--card-bg); padding: 2rem; border-radius: 12px;
-            width: 100%; max-width: 450px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 450px;
+            max-height: calc(100dvh - 2rem);
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
 
         /* Progress Indicator */
-        .steps-indicator { display: flex; justify-content: space-between; margin: 2rem 4rem 2rem 4rem; }
-        .step-dot { width: 30px; height: 30px; border-radius: 50%; background: #e5e7eb; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: bold; }
+        .steps-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin: 1.25rem 2rem 1.75rem;
+            gap: 0.5rem;
+        }
+        .step-dot {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            flex: 0 0 auto;
+        }
         .step-dot.active { background: var(--purple-primary); color: white; }
 
         /* Form Steps */
@@ -28,12 +58,35 @@
         .form-step.active { display: block; }
 
         .form-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 600; }
-        input { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 6px; box-sizing: border-box; }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        input {
+            width: 100%;
+            padding: 0.875rem;
+            border: 1px solid #d1d5db;
+            border-radius: 10px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
 
         /* Buttons */
-        .btn-group { display: flex; justify-content: space-between; margin-top: 2rem; }
-        button { padding: 0.75rem 1.5rem; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; }
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            gap: 0.75rem;
+            margin-top: 2rem;
+        }
+        button {
+            padding: 0.875rem 1.5rem;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+        }
         .btn-next { background: var(--purple-primary); color: white; margin-left: auto; }
         .btn-prev { background: #e5e7eb; color: #374151; }
         .hidden { display: none; }
@@ -41,10 +94,70 @@
         .input-group {
             margin-bottom:1rem;
         }
+
+        .modal-title {
+            margin: 0 0 0.35rem;
+            font-size: 1.35rem;
+            line-height: 1.2;
+        }
+
+        .modal-subtitle {
+            margin: 0;
+            color: #9ca3af;
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 640px) {
+            .modal-overlay {
+                align-items: flex-start;
+                padding: 0.5rem;
+            }
+
+            .modal-content {
+                max-width: none;
+                max-height: calc(100dvh - 1rem);
+                border-radius: 20px;
+                padding: 1.25rem;
+            }
+
+            .steps-indicator {
+                margin: 0.5rem 0 1.25rem;
+            }
+
+            .step-dot {
+                width: 26px;
+                height: 26px;
+                font-size: 0.75rem;
+            }
+
+            .btn-group {
+                flex-direction: column-reverse;
+                margin-top: 1.5rem;
+            }
+
+            .btn-group button {
+                width: 100%;
+            }
+
+            .btn-next {
+                margin-left: 0;
+            }
+
+            label {
+                font-size: 0.85rem;
+            }
+
+            input {
+                padding: 0.8rem 0.875rem;
+            }
+        }
 </style>
 
 <div class="modal-overlay active" id="modalOverlay">
     <div class="modal-content">
+        <h2 class="modal-title">Setup Your Billing</h2>
+        <p class="modal-subtitle">Complete these details once so we can register your website and payment profile.</p>
+
         <div class="steps-indicator">
             <div class="step-dot active" data-step="1"></div>
             <div class="step-dot" data-step="2"></div>
@@ -56,11 +169,11 @@
                 <p class="subtext">Please Fill In Your Website Details </p> 
                 <div class="input-group">
                     <label>Website Name</label>
-                    <input name="wb_name" type="text" placeholder="" required>
+                    <input name="wb_name" type="text" placeholder="" required autocomplete="organization">
                 </div>
                 <div class="input-group">
                     <label>Website Domain</label>
-                    <input name="wb_domain" type="text" placeholder="example.co.za" required>
+                    <input name="wb_domain" type="text" placeholder="example.co.za" required autocomplete="url" inputmode="url">
                 </div>
             </div>
 
@@ -68,23 +181,23 @@
                 <p class="subtext">Please Fill In Your Billing Information</p> 
                 <div class="input-group">
                     <label>Street Address</label>
-                    <input name="bstreet" type="text" placeholder="">
+                    <input name="bstreet" type="text" placeholder="" autocomplete="street-address">
                 </div>
                 <div class="input-group">
                     <label>Zip Code</label>
-                    <input name="bzip" type="text" placeholder="">
+                    <input name="bzip" type="text" placeholder="" autocomplete="postal-code" inputmode="numeric">
                 </div>
                 <div class="input-group">
                     <label>Province</label>
-                    <input name="bstate" type="text" placeholder="">
+                    <input name="bstate" type="text" placeholder="" autocomplete="address-level1">
                 </div>
                 <div class="input-group">
                     <label>City</label>
-                    <input name="bcity" type="text" placeholder="">
+                    <input name="bcity" type="text" placeholder="" autocomplete="address-level2">
                 </div>
                 <div class="input-group">
                     <label>Country</label>
-                    <input name="bcountry" type="text" placeholder="">
+                    <input name="bcountry" type="text" placeholder="" autocomplete="country-name">
                 </div>
             </div>
 
@@ -92,22 +205,22 @@
                 <p class="subtext">Please Fill In Your Payment Information</p>
                 <div class="input-group">
                     <label>Select Bank</label>
-                    <input name="account_provider" type="text" placeholder="">
+                    <input name="account_provider" type="text" placeholder="" autocomplete="organization">
                 </div>
 
                 <div class="input-group">
                     <label>Account Number</label>
-                    <input name="account_number" type="text" placeholder="" required>
+                    <input name="account_number" type="text" placeholder="" required autocomplete="off" inputmode="numeric">
                 </div>
 
                 <div class="input-group">
                     <label>Account Type</label>
-                    <input name="account_type" type="text" placeholder="">
+                    <input name="account_type" type="text" placeholder="" autocomplete="off">
                 </div>
 
                 <div class="input-group">
                     <label>Branch Code</label>
-                    <input name="account_branch" type="text" placeholder="">
+                    <input name="account_branch" type="text" placeholder="" autocomplete="off" inputmode="numeric">
                 </div>
             </div>
 
@@ -171,5 +284,4 @@
         }
     };
 </script>
-
 

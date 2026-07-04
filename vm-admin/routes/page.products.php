@@ -36,6 +36,27 @@ if (!function_exists('vm_products_unique_values')) {
     }
 }
 
+if (!function_exists('vm_products_upload_error_message')) {
+    function vm_products_upload_error_message(int $errorCode): string
+    {
+        switch ($errorCode) {
+            case UPLOAD_ERR_INI_SIZE:
+            case UPLOAD_ERR_FORM_SIZE:
+                return 'File exceeds the allowed upload size.';
+            case UPLOAD_ERR_PARTIAL:
+                return 'Upload was interrupted before completion.';
+            case UPLOAD_ERR_NO_TMP_DIR:
+                return 'Upload failed because the server temporary folder is missing.';
+            case UPLOAD_ERR_CANT_WRITE:
+                return 'Upload failed because the server could not write the file.';
+            case UPLOAD_ERR_EXTENSION:
+                return 'Upload was blocked by a server extension.';
+            default:
+                return 'Upload failed.';
+        }
+    }
+}
+
 if (!function_exists('vm_products_split_urls')) {
     function vm_products_split_urls($value): array
     {
@@ -61,6 +82,136 @@ if (!function_exists('vm_products_split_urls')) {
 
         $parts = preg_split('/[\r\n,;]+/', $value) ?: [];
         return vm_products_unique_values($parts);
+    }
+}
+
+if (!function_exists('vm_products_normalize_uploads')) {
+    function vm_products_normalize_uploads($files): array
+    {
+        if (!is_array($files) || empty($files['name'])) {
+            return [];
+        }
+
+        if (!is_array($files['name'])) {
+            return [$files];
+        }
+
+        $normalized = [];
+        foreach ($files['name'] as $index => $name) {
+            $normalized[] = [
+                'name' => $name,
+                'type' => $files['type'][$index] ?? '',
+                'tmp_name' => $files['tmp_name'][$index] ?? '',
+                'error' => $files['error'][$index] ?? UPLOAD_ERR_NO_FILE,
+                'size' => $files['size'][$index] ?? 0,
+            ];
+        }
+
+        return $normalized;
+    }
+}
+
+if (!function_exists('vm_products_store_uploaded_images')) {
+    function vm_products_store_uploaded_images($files, string $prefix): array
+    {
+        $uploads = vm_products_normalize_uploads($files);
+        if (empty($uploads)) {
+            return ['ok' => true, 'error' => null, 'paths' => []];
+        }
+
+        $targetDir = dirname(dirname(dirname(__FILE__))) . '/img/uploads/products';
+        if (!is_dir($targetDir) && !@mkdir($targetDir, 0775, true) && !is_dir($targetDir)) {
+            return ['ok' => false, 'error' => 'Unable to create the product upload directory.', 'paths' => []];
+        }
+
+        $allowedMimes = [
+            'image/jpeg' => 'jpg',
+            'image/jpg' => 'jpg',
+            'image/png' => 'png',
+            'image/gif' => 'gif',
+            'image/webp' => 'webp',
+            'image/avif' => 'avif',
+            'image/bmp' => 'bmp',
+        ];
+
+        $storedPaths = [];
+        foreach ($uploads as $upload) {
+            $errorCode = (int)($upload['error'] ?? UPLOAD_ERR_NO_FILE);
+            if ($errorCode === UPLOAD_ERR_NO_FILE) {
+                continue;
+            }
+
+            if ($errorCode !== UPLOAD_ERR_OK) {
+                return [
+                    'ok' => false,
+                    'error' => vm_products_upload_error_message($errorCode),
+                    'paths' => $storedPaths,
+                ];
+            }
+
+            $tmpPath = (string)($upload['tmp_name'] ?? '');
+            if ($tmpPath === '' || !is_uploaded_file($tmpPath)) {
+                return [
+                    'ok' => false,
+                    'error' => 'One of the selected files could not be processed.',
+                    'paths' => $storedPaths,
+                ];
+            }
+
+            if ((int)($upload['size'] ?? 0) > 8 * 1024 * 1024) {
+                return [
+                    'ok' => false,
+                    'error' => 'Each image must be 8 MB or smaller.',
+                    'paths' => $storedPaths,
+                ];
+            }
+
+            $mime = '';
+            if (class_exists('finfo')) {
+                $finfo = new finfo(FILEINFO_MIME_TYPE);
+                $mime = (string)($finfo->file($tmpPath) ?: '');
+            }
+            if ($mime === '' && function_exists('mime_content_type')) {
+                $mime = (string)(mime_content_type($tmpPath) ?: '');
+            }
+
+            $extension = $allowedMimes[$mime] ?? '';
+            if ($extension === '') {
+                $fallbackExt = strtolower(pathinfo((string)($upload['name'] ?? ''), PATHINFO_EXTENSION));
+                if ($fallbackExt !== '' && in_array($fallbackExt, array_values($allowedMimes), true)) {
+                    $extension = $fallbackExt;
+                }
+            }
+
+            if ($extension === '') {
+                return [
+                    'ok' => false,
+                    'error' => 'Only JPG, PNG, GIF, WEBP, AVIF, and BMP images are allowed.',
+                    'paths' => $storedPaths,
+                ];
+            }
+
+            $filename = sprintf(
+                '%s-%s-%s.%s',
+                $prefix,
+                date('YmdHis'),
+                bin2hex(random_bytes(4)),
+                $extension
+            );
+            $destination = $targetDir . '/' . $filename;
+
+            if (!@move_uploaded_file($tmpPath, $destination)) {
+                return [
+                    'ok' => false,
+                    'error' => 'Unable to save one of the uploaded images.',
+                    'paths' => $storedPaths,
+                ];
+            }
+
+            $storedPaths[] = '/img/uploads/products/' . $filename;
+        }
+
+        return ['ok' => true, 'error' => null, 'paths' => $storedPaths];
     }
 }
 
@@ -170,16 +321,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $category_id = $_POST['category_id'] ?? null;
         $category_id = $category_id === '' ? null : (int)$category_id;
 
+        $product_image_upload = vm_products_store_uploaded_images($_FILES['product_image_file'] ?? [], 'product');
+        if (!$product_image_upload['ok']) {
+            header('Location: ?error=' . urlencode($product_image_upload['error']));
+            exit;
+        }
+
+        $gallery_uploads = vm_products_store_uploaded_images($_FILES['gallery_image_files'] ?? [], 'gallery');
+        if (!$gallery_uploads['ok']) {
+            header('Location: ?error=' . urlencode($gallery_uploads['error']));
+            exit;
+        }
+
         $variant_payload = vm_products_prepare_variants($_POST, $name, $price, $stock, $image);
         if (!$variant_payload['ok']) {
             header('Location: ?error=' . urlencode($variant_payload['error']));
             exit;
         }
         $variants = $variant_payload['variants'];
-        $primary_image = $image !== '' ? $image : ($variants[0]['image'] ?? '');
+        $primary_image = $product_image_upload['paths'][0] ?? ($image !== '' ? $image : ($variants[0]['image'] ?? ''));
         if ($primary_image !== '' && !in_array($primary_image, $gallery, true)) {
             array_unshift($gallery, $primary_image);
         }
+        $gallery = array_merge($gallery, $gallery_uploads['paths']);
         $gallery = vm_products_unique_values($gallery);
         if ($primary_image === '' && !empty($gallery)) {
             $primary_image = $gallery[0];
@@ -206,16 +370,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $category_id = $_POST['category_id'] ?? null;
         $category_id = $category_id === '' ? null : (int)$category_id;
 
+        $product_image_upload = vm_products_store_uploaded_images($_FILES['product_image_file'] ?? [], 'product');
+        if (!$product_image_upload['ok']) {
+            header('Location: ?error=' . urlencode($product_image_upload['error']));
+            exit;
+        }
+
+        $gallery_uploads = vm_products_store_uploaded_images($_FILES['gallery_image_files'] ?? [], 'gallery');
+        if (!$gallery_uploads['ok']) {
+            header('Location: ?error=' . urlencode($gallery_uploads['error']));
+            exit;
+        }
+
         $variant_payload = vm_products_prepare_variants($_POST, $name, $price, $stock, $image);
         if (!$variant_payload['ok']) {
             header('Location: ?error=' . urlencode($variant_payload['error']));
             exit;
         }
         $variants = $variant_payload['variants'];
-        $primary_image = $image !== '' ? $image : ($variants[0]['image'] ?? '');
+        $primary_image = $product_image_upload['paths'][0] ?? ($image !== '' ? $image : ($variants[0]['image'] ?? ''));
         if ($primary_image !== '' && !in_array($primary_image, $gallery, true)) {
             array_unshift($gallery, $primary_image);
         }
+        $gallery = array_merge($gallery, $gallery_uploads['paths']);
         $gallery = vm_products_unique_values($gallery);
         if ($primary_image === '' && !empty($gallery)) {
             $primary_image = $gallery[0];
@@ -486,6 +663,13 @@ foreach ($products as $p) {
                     </div>
                 </div>
 
+                <?php if (isset($_GET['error'])): ?>
+                    <div class="bg-red-500/10 border border-red-500/20 text-red-300 p-4 rounded-xl mb-6 flex items-center gap-3">
+                        <i class="bi bi-exclamation-triangle-fill text-xl"></i>
+                        <span class="text-sm font-medium"><?php echo htmlspecialchars($_GET['error']); ?></span>
+                    </div>
+                <?php endif; ?>
+
                 <!-- Stat Cards -->
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
                     <div class="bg-gray-800 rounded-xl border border-white/5 p-5 transition-all duration-200 hover:border-white/10">
@@ -687,18 +871,18 @@ foreach ($products as $p) {
 
         <!-- Modal -->
         <div id="productModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-center justify-center min-h-screen px-4 py-6">
+            <div class="flex items-start sm:items-center justify-center min-h-[100dvh] px-3 py-3 sm:px-4 sm:py-6">
                 <!-- Backdrop -->
                 <div id="modalBackdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeModal()"></div>
 
                 <!-- Modal Panel -->
-                <div id="modalPanel" class="relative w-full max-w-3xl bg-gray-800 rounded-2xl shadow-2xl shadow-black/40 border border-white/10 transform transition-all duration-300 scale-95 opacity-0 max-h-[90vh] flex flex-col">
-                    <form method="POST" id="productForm">
+                <div id="modalPanel" class="relative w-full max-w-3xl bg-gray-800 rounded-t-3xl sm:rounded-2xl shadow-2xl shadow-black/40 border border-white/10 transform transition-all duration-300 scale-95 opacity-0 max-h-[calc(100dvh-1.5rem)] flex flex-col overflow-hidden">
+                    <form method="POST" id="productForm" enctype="multipart/form-data" class="flex flex-col flex-1 min-h-0">
                         <input type="hidden" name="action" id="formAction" value="add_product">
                         <input type="hidden" name="id" id="productId">
 
                         <!-- Modal Header -->
-                        <div class="flex justify-between items-center px-6 pt-6 pb-4 border-b border-white/5">
+                        <div class="flex justify-between items-center px-4 sm:px-6 pt-4 sm:pt-6 pb-4 border-b border-white/5">
                             <div>
                                 <h3 class="text-lg font-semibold text-white" id="modalTitle">Add New Product</h3>
                                 <p class="text-xs text-gray-500 mt-0.5" id="modalSubtitle">Fill in the details below</p>
@@ -709,7 +893,7 @@ foreach ($products as $p) {
                         </div>
 
                         <!-- Modal Body (scrollable) -->
-                        <div class="px-6 py-5 space-y-5 overflow-y-auto" style="max-height: calc(90vh - 160px);">
+                        <div class="px-4 sm:px-6 py-4 sm:py-5 space-y-5 overflow-y-auto flex-1 min-h-0">
                             <div>
                                 <label class="block text-sm font-medium text-gray-300 mb-1.5">Product Name <span class="text-red-400">*</span></label>
                                 <input type="text" name="name" id="productName" required class="w-full bg-gray-700 border border-white/5 rounded-lg px-3.5 py-2.5 text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-colors placeholder-gray-500" placeholder="e.g. Classic T-Shirt">
@@ -764,7 +948,7 @@ foreach ($products as $p) {
                                                 <span class="text-xs text-gray-500 block">PNG, JPG, GIF, WEBP</span>
                                             </div>
                                         </div>
-                                        <input type="file" id="productImageFile" accept="image/*" class="hidden" onchange="handleImageUpload(this)">
+                                        <input type="file" name="product_image_file" id="productImageFile" accept="image/*" class="hidden" onchange="handleImageUpload(this)">
                                     </label>
 
                                     <!-- URL Input -->
@@ -781,7 +965,7 @@ foreach ($products as $p) {
                                 <div class="space-y-3">
                                     <label class="block text-sm font-medium text-gray-300">Gallery Images</label>
                                     <input type="hidden" name="gallery_urls" id="productGallery">
-                                    <input type="file" id="productGalleryFiles" accept="image/*" multiple class="hidden" onchange="handleGalleryUpload(this)">
+                                    <input type="file" name="gallery_image_files[]" id="productGalleryFiles" accept="image/*" multiple class="hidden" onchange="handleGalleryUpload(this)">
                                     <div class="rounded-xl border border-dashed border-white/10 bg-gray-700/30 p-4 space-y-4">
                                         <div class="flex items-center justify-between gap-3">
                                             <div>
@@ -816,7 +1000,7 @@ foreach ($products as $p) {
                         </div>
 
                         <!-- Modal Footer -->
-                        <div class="px-6 py-4 border-t border-white/5 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                        <div class="px-4 sm:px-6 py-4 border-t border-white/5 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 bg-gray-800/95 backdrop-blur">
                             <button type="button" onclick="closeModal()" class="px-4 py-2.5 rounded-lg border border-white/10 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-150">
                                 Cancel
                             </button>
@@ -831,13 +1015,13 @@ foreach ($products as $p) {
 
         <!-- Shopify Import Modal -->
         <div id="importModal" class="fixed inset-0 z-50 hidden" aria-labelledby="import-modal-title" role="dialog" aria-modal="true">
-            <div class="flex items-center justify-center min-h-screen px-4 py-6">
+            <div class="flex items-start sm:items-center justify-center min-h-[100dvh] px-3 py-3 sm:px-4 sm:py-6">
                 <div id="importBackdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="closeImportModal()"></div>
 
-                <div id="importPanel" class="relative w-full max-w-3xl bg-gray-800 rounded-2xl shadow-2xl shadow-black/40 border border-white/10 transform transition-all duration-300 scale-95 opacity-0 max-h-[90vh] flex flex-col">
+                <div id="importPanel" class="relative w-full max-w-3xl bg-gray-800 rounded-t-3xl sm:rounded-2xl shadow-2xl shadow-black/40 border border-white/10 transform transition-all duration-300 scale-95 opacity-0 max-h-[calc(100dvh-1.5rem)] flex flex-col overflow-hidden">
 
                     <!-- Modal Header -->
-                    <div class="flex justify-between items-center px-6 pt-6 pb-4 border-b border-white/5">
+                    <div class="flex justify-between items-center px-4 sm:px-6 pt-4 sm:pt-6 pb-4 border-b border-white/5">
                         <div>
                             <h3 class="text-lg font-semibold text-white" id="import-modal-title">Import from Shopify</h3>
                             <p class="text-xs text-gray-500 mt-0.5" id="importSubtitle">Upload a Shopify products CSV export</p>
@@ -848,7 +1032,7 @@ foreach ($products as $p) {
                     </div>
 
                     <!-- State: Upload -->
-                    <div id="importStateUpload" class="px-6 py-8">
+                    <div id="importStateUpload" class="px-4 sm:px-6 py-6 sm:py-8 overflow-y-auto flex-1 min-h-0">
                         <label id="importDropzone" class="relative block cursor-pointer">
                             <div class="flex flex-col items-center justify-center gap-3 bg-gray-700/30 border-2 border-dashed border-white/10 rounded-xl px-6 py-12 text-gray-400 hover:border-purple-500/50 hover:text-gray-300 hover:bg-gray-700/50 transition-all duration-200">
                                 <i class="bi bi-cloud-arrow-up text-4xl"></i>
@@ -864,7 +1048,7 @@ foreach ($products as $p) {
 
                     <!-- State: Preview -->
                     <div id="importStatePreview" class="hidden flex-1 flex flex-col min-h-0">
-                        <div class="px-6 pt-4 pb-3 border-b border-white/5">
+                        <div class="px-4 sm:px-6 pt-4 pb-3 border-b border-white/5">
                             <div class="flex flex-wrap gap-2" id="importSummary">
                                 <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-green-500/10 text-green-400 ring-1 ring-green-500/20 text-xs font-medium">
                                     <i class="bi bi-plus-circle"></i> <span id="importSummaryInsert">0</span> to insert
@@ -877,7 +1061,7 @@ foreach ($products as $p) {
                                 </span>
                             </div>
                         </div>
-                        <div class="flex-1 overflow-y-auto px-6 py-3" style="max-height: calc(90vh - 240px);">
+                        <div class="flex-1 overflow-y-auto px-4 sm:px-6 py-3 min-h-0">
                             <table class="w-full text-left text-xs text-gray-400">
                                 <thead class="text-[10px] uppercase text-gray-500 tracking-wider">
                                     <tr>
@@ -896,7 +1080,7 @@ foreach ($products as $p) {
                     </div>
 
                     <!-- State: Result -->
-                    <div id="importStateResult" class="hidden px-6 py-10 text-center">
+                    <div id="importStateResult" class="hidden px-4 sm:px-6 py-10 text-center overflow-y-auto flex-1 min-h-0">
                         <div class="h-14 w-14 mx-auto rounded-full bg-green-500/10 flex items-center justify-center mb-4">
                             <i class="bi bi-check-lg text-2xl text-green-400"></i>
                         </div>
@@ -909,7 +1093,7 @@ foreach ($products as $p) {
                     </div>
 
                     <!-- Modal Footer -->
-                    <div class="px-6 py-4 border-t border-white/5 flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                    <div class="px-4 sm:px-6 py-4 border-t border-white/5 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 bg-gray-800/95 backdrop-blur">
                         <button type="button" id="importBackBtn" onclick="importGoToUpload()" class="hidden px-4 py-2.5 rounded-lg border border-white/10 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 transition-all duration-150">
                             Back
                         </button>
@@ -933,17 +1117,19 @@ foreach ($products as $p) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    const base64String = e.target.result;
-                    document.getElementById('productImage').value = base64String;
-                    showPreview(base64String);
+                    showPreview(e.target.result);
                 };
                 reader.readAsDataURL(input.files[0]);
+                const urlInput = document.getElementById('productImage');
+                if (urlInput) urlInput.value = '';
             }
         }
 
         function previewUrlImage(url) {
             if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
                 showPreview(url);
+                const fileInput = document.getElementById('productImageFile');
+                if (fileInput) fileInput.value = '';
             }
         }
 
@@ -961,13 +1147,15 @@ foreach ($products as $p) {
         }
 
         let galleryImages = [];
+        let galleryPreviewToken = 0;
 
         function readFileAsDataUrl(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = e => resolve({
                     name: file.name || 'Gallery image',
-                    src: e.target.result
+                    src: e.target.result,
+                    persist: false
                 });
                 reader.onerror = () => reject(new Error('Unable to read ' + (file.name || 'file')));
                 reader.readAsDataURL(file);
@@ -977,7 +1165,7 @@ foreach ($products as $p) {
         function syncGalleryField() {
             const galleryField = document.getElementById('productGallery');
             if (!galleryField) return;
-            galleryField.value = JSON.stringify(galleryImages.map(item => item.src));
+            galleryField.value = JSON.stringify(galleryImages.filter(item => item.persist !== false).map(item => item.src));
         }
 
         function renderGalleryPreviews() {
@@ -994,7 +1182,7 @@ foreach ($products as $p) {
                     <div class="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/80 via-black/25 to-transparent p-3">
                         <div class="min-w-0">
                             <p class="truncate text-[11px] font-medium text-white">${escapeHtmlAttr(item.name || 'Gallery image')}</p>
-                            <p class="text-[10px] text-gray-300">Image ${index + 1}</p>
+                            <p class="text-[10px] text-gray-300">${item.persist === false ? 'New upload' : 'Image ' + (index + 1)}</p>
                         </div>
                         <button type="button" onclick="removeGalleryImage(${index})" class="rounded-md bg-black/45 px-2 py-1 text-[11px] font-medium text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-red-500/70">
                             Remove
@@ -1014,9 +1202,11 @@ foreach ($products as $p) {
                 return;
             }
 
+            const token = ++galleryPreviewToken;
             const files = Array.from(input.files);
             try {
                 const loaded = await Promise.all(files.map(readFileAsDataUrl));
+                if (token !== galleryPreviewToken) return;
                 galleryImages = galleryImages.concat(loaded);
                 renderGalleryPreviews();
             } catch (error) {
@@ -1035,13 +1225,15 @@ foreach ($products as $p) {
         function setGalleryImagesFromList(urls) {
             galleryImages = (Array.isArray(urls) ? urls : []).map((src, index) => ({
                 name: 'Gallery image ' + (index + 1),
-                src: src
+                src: src,
+                persist: true
             }));
             renderGalleryPreviews();
         }
 
         function clearGalleryImages() {
             galleryImages = [];
+            galleryPreviewToken++;
             const input = document.getElementById('productGalleryFiles');
             if (input) input.value = '';
             renderGalleryPreviews();
@@ -1150,6 +1342,8 @@ foreach ($products as $p) {
             const container = document.getElementById('imagePreviewContainer');
             const preview = document.getElementById('imagePreview');
             const submitBtn = document.getElementById('submitBtnText');
+            const productImageFile = document.getElementById('productImageFile');
+            const galleryFiles = document.getElementById('productGalleryFiles');
 
             modal.classList.remove('hidden');
 
@@ -1166,6 +1360,9 @@ foreach ($products as $p) {
                 subtitle.textContent = 'Update the product details';
                 action.value = 'update_product';
                 submitBtn.textContent = 'Save Changes';
+                galleryPreviewToken++;
+                if (productImageFile) productImageFile.value = '';
+                if (galleryFiles) galleryFiles.value = '';
                 document.getElementById('productId').value = product.id;
                 document.getElementById('productName').value = product.name || '';
                 document.getElementById('productDescription').value = product.description || '';
@@ -1204,8 +1401,11 @@ foreach ($products as $p) {
                 action.value = 'add_product';
                 submitBtn.textContent = 'Add Product';
                 form.reset();
+                galleryPreviewToken++;
                 document.getElementById('productId').value = '';
                 document.getElementById('productCategory').value = '';
+                if (productImageFile) productImageFile.value = '';
+                if (galleryFiles) galleryFiles.value = '';
                 clearGalleryImages();
                 container.classList.add('hidden');
                 clearVariantRows();

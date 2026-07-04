@@ -567,9 +567,13 @@ ob_start();
             </div>
         </div>
 
+        <?php @include_once dirname(dirname(__FILE__)) . '/includes/landing.php'; ?>
+    
+
         <?php @include_once "routes.php"; ?>
 
     </div>
+
     <script src="admin.js"></script>
     <script src="/assets/pwa.js"></script>
 </body>

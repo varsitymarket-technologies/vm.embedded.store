@@ -44,5 +44,7 @@ function app_intro()
 }
 ?>
 
-<!-- Starting Application -->
-<!-- <?php echo app_intro(); ?> -->
+<!-- Engine Runing -->
+<!-- 
+<?php echo app_intro(); ?> 
+-->
