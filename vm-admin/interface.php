@@ -439,7 +439,7 @@ ob_start();
             <div class="overlay-content">
 
                 <div class="px-8 pb-4 mb-3 border-white/5">
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-1">
                         <div class="h-10 w-10 rounded-xl bg-purple-600 flex items-center justify-center shrink-0">
                             <i class="bi bi-shop text-white text-lg"></i>
                         </div>
