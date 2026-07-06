@@ -159,7 +159,21 @@ if (empty($current_code)) {
         </div>
 
         <!-- Embed Code -->
-        <div style="max-height: 60vh; height:100%; " class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
+        <div style="max-height: 8rem; height:100%; " class="my-4 bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-gray-300">Embed Link Code</h3>
+                <button onclick="copyEmbedCode()" class="text-xs bg-accent hover:bg-accent-hover bg-[#333] hover:bg-zinc-700 text-black font-semibold px-3 py-1.5 rounded-lg transition-all duration-150 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="9" y="9" width="13" height="13" rx="2" stroke-width="2"></rect>
+                        <path stroke-linecap="round" stroke-width="2" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+                    </svg> Copy Code
+                </button>
+            </div>
+            <pre style="height: calc(100% - 2rem);" class="code-block p-4 text-xs overflow-y-auto" id="embedCodeBlock"><?php @include_once dirname(dirname(__DIR__))."/services/export.store.link.php"; echo (embedd_link_application(__DOMAIN__,"https://".get_domain())); ?></pre>
+        </div>
+
+        <!-- Embed Code -->
+        <div style="max-height: 40vh; height:100%; " class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
             <div class="flex items-center justify-between">
                 <h3 class="text-sm font-semibold text-gray-300">Embed Code</h3>
                 <button onclick="copyEmbedCode()" class="text-xs bg-accent hover:bg-accent-hover bg-[#333] hover:bg-zinc-700 text-black font-semibold px-3 py-1.5 rounded-lg transition-all duration-150 flex items-center gap-1.5">
