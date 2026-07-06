@@ -22,7 +22,7 @@
     <link rel="manifest" href="/manifest.json">
 
     <!-- Theme Color -->
-    <meta name="theme-color" content="#7a1aab">
+    <meta name="theme-color" content="#1a1a1a">
 
     <!-- iOS PWA Support -->
     <meta name="apple-mobile-web-app-capable" content="yes">

@@ -268,13 +268,13 @@ ob_start();
                                 <i class="bi bi-layout-wtf mr-3"></i>
                                 <span>Page Builder</span>
                             </a>
-                            <a href="<?php echo $admin_base; ?>export" class="<?php echo nav_cls('export', $current_page); ?>">
-                                <i class="bi bi-code-slash mr-3"></i>
-                                <span>Export</span>
-                            </a>
                             <a href="<?php echo $admin_base; ?>publish" class="<?php echo nav_cls('deploy', $current_page); ?>">
                                 <i class="bi bi-rocket-takeoff-fill mr-3"></i>
                                 <span>Publish</span>
+                            </a>
+                            <a href="<?php echo $admin_base; ?>export" class="<?php echo nav_cls('export', $current_page); ?>">
+                                <i class="bi bi-code-slash mr-3"></i>
+                                <span>Export</span>
                             </a>
                         </div>
                     </div>
