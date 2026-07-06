@@ -1,6 +1,6 @@
 <?php 
 
-function export_application($website,$domain){ 
+function embedd_application($website,$domain){ 
   $website_hash = hash("sha256",$website); 
   $e = '<div class="iframe-container">
     <iframe 
@@ -14,7 +14,10 @@ function export_application($website,$domain){
       sandbox="allow-scripts allow-same-origin allow-forms">
     </iframe>
   </div>'; 
-  return $e; 
+
+  $pre = str_replace("<","&lt;",$e);
+  $pre = str_replace(">","&gt;",$pre);
+  return $pre; 
 }
 ?>
 

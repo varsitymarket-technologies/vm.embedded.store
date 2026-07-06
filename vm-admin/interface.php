@@ -11,6 +11,7 @@ ob_start();
 <!DOCTYPE html>
 <html lang="en" class="dark">
 <?php @include_once dirname(__FILE__) . '/signature'; ?>
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -266,6 +267,10 @@ ob_start();
                             <a href="<?php echo $admin_base; ?>builder" class="<?php echo nav_cls('builder', $current_page); ?>">
                                 <i class="bi bi-layout-wtf mr-3"></i>
                                 <span>Page Builder</span>
+                            </a>
+                            <a href="<?php echo $admin_base; ?>export" class="<?php echo nav_cls('export', $current_page); ?>">
+                                <i class="bi bi-code-slash mr-3"></i>
+                                <span>Export</span>
                             </a>
                             <a href="<?php echo $admin_base; ?>publish" class="<?php echo nav_cls('deploy', $current_page); ?>">
                                 <i class="bi bi-rocket-takeoff-fill mr-3"></i>
@@ -535,6 +540,10 @@ ob_start();
                     <i class="bi bi-rocket-takeoff-fill mr-3"></i>
                     <span>Publish</span>
                 </a>
+                <a href="<?php echo $admin_base; ?>export" class="sesedesedwsedwdd">
+                    <i class="bi bi-code-slash mr-3"></i>
+                    <span>Export</span>
+                </a>
 
                 <a class="anch_item">
                     <span>System</span>
@@ -568,7 +577,7 @@ ob_start();
         </div>
 
         <?php @include_once dirname(dirname(__FILE__)) . '/includes/landing.php'; ?>
-    
+
 
         <?php @include_once "routes.php"; ?>
 

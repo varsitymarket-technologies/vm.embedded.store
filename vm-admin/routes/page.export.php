@@ -118,105 +118,23 @@ if (empty($current_code)) {
         <!-- Page Header -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div>
-                <h2 class="text-2xl font-bold text-white">Publish</h2>
-                <p class="text-zinc-400 text-sm mt-1">Review, edit and deploy your webstore</p>
+                <h2 class="text-2xl font-bold text-white">Export </h2>
+                <p class="text-zinc-400 text-sm mt-1">Download your webstore code</p>
             </div>
             <div class="flex items-center gap-2">
-                <button onclick="downloadCode()" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-                    <i class="bi bi-download"></i> Download
-                </button>
-                <form method="POST" class="m-0" id="publish_form">
-                    <textarea name="code_content" id="hidden_code" class="hidden"></textarea>
-                    <button type="submit" name="save_code" onclick="syncCode()" class="bg-violet-600 hover:bg-violet-500 text-white px-5 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 shadow-lg shadow-violet-500/20">
-                        <i class="bi bi-rocket-takeoff"></i> Publish
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Info Cards -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-            <!-- Domain Card -->
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-zinc-400 text-xs font-medium">Live Domain</span>
-                    <span class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
-                        <i class="bi bi-globe2 text-violet-400"></i>
-                    </span>
-                </div>
-                <p class="text-white text-sm font-medium truncate"><?php echo $site_url; ?></p>
-                <a href="<?php echo $site_url; ?>" target="_blank" class="text-violet-400 hover:text-violet-300 text-xs mt-1 inline-flex items-center gap-1">
-                    Visit <i class="bi bi-box-arrow-up-right text-[10px]"></i>
-                </a>
-            </div>
-
-            <!-- GitHub Card -->
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-zinc-400 text-xs font-medium">GitHub</span>
-                    <span class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
-                        <i class="bi bi-github text-zinc-400"></i>
-                    </span>
-                </div>
-                <?php if ($github_connected): ?>
-                    <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Connected
-                        </span>
-                    </div>
-                    <div class="mt-2">
-                        <select id="repo_selector" name="github_repo" form="publish_form" onchange="handleRepoChange(this)"
-                            class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-violet-500 transition-colors">
-                            <option value="" disabled <?php echo empty($selected_repo) ? 'selected' : ''; ?>>Select repository</option>
-                            <?php foreach ($repositories as $repo): ?>
-                                <option value="<?php echo htmlspecialchars($repo['name']); ?>" <?php echo $selected_repo == $repo['name'] ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($repo['name']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                            <option value="__NEW__">+ New Repository</option>
-                        </select>
-                        <div id="new_repo_container" class="hidden mt-2 flex items-center gap-1">
-                            <input type="text" id="new_repo_name" name="new_repo_name_text" form="publish_form" placeholder="Repository name..."
-                                class="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-violet-500 transition-colors">
-                            <button type="button" onclick="cancelNewRepo()" class="text-zinc-500 hover:text-white p-1"><i class="bi bi-x-circle"></i></button>
-                        </div>
-                        <input type="hidden" id="repo_action" name="repo_action" value="existing" form="publish_form">
-                    </div>
-                <?php else: ?>
-                    <p class="text-zinc-500 text-sm">Not connected</p>
-                    <a href="?tab=deployment" class="text-violet-400 hover:text-violet-300 text-xs mt-1 inline-flex items-center gap-1">
-                        <i class="bi bi-plug"></i> Connect GitHub
-                    </a>
-                <?php endif; ?>
-            </div>
-
-            <!-- Theme Card -->
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-zinc-400 text-xs font-medium">Active Theme</span>
-                    <span class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center">
-                        <i class="bi bi-palette text-sky-400"></i>
-                    </span>
-                </div>
-                <p class="text-white text-sm font-medium"><?php echo $active_theme_name ?: 'Default'; ?></p>
-                <a href="/vm-admin/<?php echo __DOMAIN__; ?>/theme" class="text-violet-400 hover:text-violet-300 text-xs mt-1 inline-flex items-center gap-1">
-                    Change theme <i class="bi bi-arrow-right text-[10px]"></i>
-                </a>
             </div>
         </div>
 
         <!-- Editor + Preview -->
-        <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden" style="height: calc(100vh - 340px); min-height: 400px;">
+        <div style="display:none;" class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden" style="height: calc(100vh - 340px); min-height: 400px;">
             <!-- Editor Toolbar -->
             <div class="flex items-center border-b border-zinc-800 bg-zinc-950/50">
-                <!--
                 <button onclick="toggleView('split')" id="btn-split" class="px-4 py-2.5 text-xs font-medium text-violet-400 border-b-2 border-violet-500 transition-colors">
                     <i class="bi bi-layout-split mr-1"></i>Split
                 </button>
                 <button onclick="toggleView('code')" id="btn-code" class="px-4 py-2.5 text-xs font-medium text-zinc-500 hover:text-zinc-300 border-b-2 border-transparent transition-colors">
                     <i class="bi bi-code-slash mr-1"></i>Code
                 </button>
-                -->
                 <button onclick="toggleView('preview')" id="btn-preview" class="px-4 py-2.5 text-xs font-medium text-zinc-500 hover:text-zinc-300 border-b-2 border-transparent transition-colors">
                     <i class="bi bi-eye mr-1"></i>Preview
                 </button>
@@ -226,12 +144,12 @@ if (empty($current_code)) {
             </div>
 
             <div class="flex h-full" id="editorContainer" style="height: calc(100% - 40px);">
-                <div id="editor_panel" style="display:none;" class="w-1/2 flex flex-col border-r border-zinc-800">
+                <!-- Code Panel -->
+                <div style="display:none;" id="editor_panel" class="w-1/2 flex flex-col border-r border-zinc-800">
                     <textarea id="editor"
                         class="flex-1 bg-zinc-950 text-emerald-400 p-5 font-mono text-sm outline-none resize-none leading-relaxed"
                         spellcheck="false"><?php echo htmlspecialchars($current_code); ?></textarea>
                 </div>
-                
 
                 <!-- Preview Panel -->
                 <div id="preview_panel" class="w-full flex flex-col bg-white">
@@ -239,6 +157,63 @@ if (empty($current_code)) {
                 </div>
             </div>
         </div>
+
+        <!-- Embed Code -->
+        <div style="max-height: 60vh; height:100%; " class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-semibold text-gray-300">Embed Code</h3>
+                <button onclick="copyEmbedCode()" class="text-xs bg-accent hover:bg-accent-hover bg-[#333] hover:bg-zinc-700 text-black font-semibold px-3 py-1.5 rounded-lg transition-all duration-150 flex items-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <rect x="9" y="9" width="13" height="13" rx="2" stroke-width="2"></rect>
+                        <path stroke-linecap="round" stroke-width="2" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+                    </svg> Copy Code
+                </button>
+            </div>
+            <pre style="height: calc(100% - 2rem);" class="code-block p-4 text-xs overflow-y-auto" id="embedCodeBlock">&lt;!-- Embedded Webstore --&gt; <?php @include_once dirname(dirname(__DIR__))."/services/export.store.frame.php"; echo (embedd_application(__DOMAIN__,"https://".get_domain())); ?></pre>
+        </div>
+
+
+        <!-- DOWNLOAD STORE WEBSITE (THE ACTUAL STORE CODE) -->
+        <div class="bg-zinc-900 border border-zinc-800 my-4 rounded-xl p-5 space-y-4 relative overflow-hidden">
+            <div class="absolute top-0 right-0 bg-accent text-black text-xs font-bold px-3 py-1 rounded-bl-lg">MAIN FEATURE</div>
+            <h3 class="text-sm font-semibold text-gray-300 flex items-center gap-2">
+                <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 12v8m0 0l-3-3m3 3l3-3M4 4h16v4H4z"></path>
+                </svg>
+                Download Store Website (HTML)
+            </h3>
+            <p class="text-xs text-gray-400">Get a complete, standalone HTML file of your store with all active products. Dark theme, ready to host or share.</p>
+        
+
+            <button onclick="downloadCode()" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
+                <i class="bi bi-download"></i> Download
+            </button>
+        </div>
+
+
+        <!-- Export Product Data
+        <div class="bg-surface-card border border-surface-border rounded-xl p-5 space-y-4">
+            <h3 class="text-sm font-semibold text-gray-300">Export Product Data</h3>
+            <div class="flex flex-wrap gap-3">
+                <button onclick="exportCSV()" class="flex items-center gap-2 bg-surface-elevated hover:bg-surface-border text-gray-200 px-4 py-2.5 rounded-lg text-sm border border-surface-border transition-all duration-150">
+                    <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 12v8m0 0l-3-3m3 3l3-3M4 4h16v4H4z"></path>
+                    </svg> Export as CSV
+                </button>
+                <button onclick="exportJSON()" class="flex items-center gap-2 bg-surface-elevated hover:bg-surface-border text-gray-200 px-4 py-2.5 rounded-lg text-sm border border-surface-border transition-all duration-150">
+                    <svg class="w-4 h-4 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 12v8m0 0l-3-3m3 3l3-3M4 4h16v4H4z"></path>
+                    </svg> Export as JSON
+                </button>
+                <button onclick="downloadDashboardHTML()" class="flex items-center gap-2 bg-surface-elevated hover:bg-surface-border text-gray-200 px-4 py-2.5 rounded-lg text-sm border border-surface-border transition-all duration-150" title="Download this admin dashboard for backup">
+                    <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 12v8m0 0l-3-3m3 3l3-3M4 4h16v4H4z"></path>
+                    </svg> Download Dashboard HTML
+                </button>
+            </div>
+        </div>
+         -->
+
 
     </main>
 </div>
@@ -303,31 +278,6 @@ if (empty($current_code)) {
             btnP.className = btnP.className.replace('text-zinc-500 border-transparent', 'text-violet-400 border-violet-500');
         }
     }
-
-    <?php if ($github_connected): ?>
-
-        function handleRepoChange(select) {
-            const newRepoContainer = document.getElementById('new_repo_container');
-            const repoAction = document.getElementById('repo_action');
-            if (select.value === '__NEW__') {
-                select.classList.add('hidden');
-                newRepoContainer.classList.remove('hidden');
-                document.getElementById('new_repo_name').focus();
-                repoAction.value = 'new';
-            } else {
-                repoAction.value = 'existing';
-            }
-        }
-
-        function cancelNewRepo() {
-            const select = document.getElementById('repo_selector');
-            const newRepoContainer = document.getElementById('new_repo_container');
-            select.classList.remove('hidden');
-            select.value = "";
-            newRepoContainer.classList.add('hidden');
-            document.getElementById('repo_action').value = 'existing';
-        }
-    <?php endif; ?>
 
     editor.addEventListener('input', updatePreview);
     window.onload = updatePreview;

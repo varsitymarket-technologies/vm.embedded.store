@@ -26,6 +26,7 @@ $data = [
     "deploy" => "page.deploy.php",
     "publish" => "page.publish.php",
     "payments" => "page.payments.php",
+    "export" => "page.export.php",
     "forms" => "page.forms.php",
     "session" => "page.session-expired.php",
 ];
