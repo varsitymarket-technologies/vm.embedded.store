@@ -6,8 +6,6 @@
 #   VERSION : 1.0.1.1
 #   AUTHOR  : HARDY HASTINGS
 #   RELEASE : 2026/07/01
-
-
 ?>
 
 <!-- Header -->
@@ -30,8 +28,8 @@
 
             <a href="?tab=branding" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
                 <div class="flex items-center gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-violet-500/10 flex items-center justify-center">
-                        <i class="bi bi-shop text-violet-400 text-lg"></i>
+                    <div class="w-11 h-11 rounded-xl bg-zinc-700/50 flex items-center justify-center">
+                        <i class="bi bi-shop text-zinc-300 text-lg"></i>
                     </div>
 
                     <div>
@@ -47,8 +45,8 @@
 
             <a href="?tab=currency" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
                 <div class="flex items-center gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                        <i class="bi bi-cash-stack text-amber-400 text-lg"></i>
+                    <div class="w-11 h-11 rounded-xl bg-zinc-700/50 flex items-center justify-center">
+                        <i class="bi bi-cash-stack text-zinc-300 text-lg"></i>
                     </div>
 
                     <div>
@@ -64,8 +62,8 @@
 
             <a href="?tab=domain" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
                 <div class="flex items-center gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-teal-500/10 flex items-center justify-center">
-                        <i class="bi bi-globe2 text-teal-400 text-lg"></i>
+                    <div class="w-11 h-11 rounded-xl bg-zinc-700/50 flex items-center justify-center">
+                        <i class="bi bi-globe2 text-zinc-300 text-lg"></i>
                     </div>
 
                     <div>
@@ -92,8 +90,8 @@
 
             <a href="?tab=payment" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
                 <div class="flex items-center gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                        <i class="bi bi-credit-card text-emerald-400 text-lg"></i>
+                    <div class="w-11 h-11 rounded-xl bg-zinc-700/50 flex items-center justify-center">
+                        <i class="bi bi-credit-card text-zinc-300 text-lg"></i>
                     </div>
 
                     <div>
@@ -109,8 +107,8 @@
 
             <a href="?tab=email" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
                 <div class="flex items-center gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-sky-500/10 flex items-center justify-center">
-                        <i class="bi bi-envelope text-sky-400 text-lg"></i>
+                    <div class="w-11 h-11 rounded-xl bg-zinc-700/50 flex items-center justify-center">
+                        <i class="bi bi-envelope text-zinc-300 text-lg"></i>
                     </div>
 
                     <div>
@@ -137,8 +135,8 @@
 
             <a href="?tab=app" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
                 <div class="flex items-center gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-                        <i class="bi bi-grid text-indigo-400 text-lg"></i>
+                    <div class="w-11 h-11 rounded-xl bg-zinc-700/50 flex items-center justify-center">
+                        <i class="bi bi-grid text-zinc-300 text-lg"></i>
                     </div>
 
                     <div>
@@ -154,8 +152,8 @@
 
             <a href="?tab=console" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
                 <div class="flex items-center gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-pink-500/10 flex items-center justify-center">
-                        <i class="bi bi-phone text-pink-400 text-lg"></i>
+                    <div class="w-11 h-11 rounded-xl bg-zinc-700/50 flex items-center justify-center">
+                        <i class="bi bi-phone text-zinc-300 text-lg"></i>
                     </div>
 
                     <div>
@@ -214,8 +212,8 @@
 
             <a href="?tab=dev" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
                 <div class="flex items-center gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                        <i class="bi bi-code-slash text-orange-400 text-lg"></i>
+                    <div class="w-11 h-11 rounded-xl  bg-zinc-700/50  flex items-center justify-center">
+                        <i class="bi bi-code-slash text-zinc-300 text-lg"></i>
                     </div>
 
                     <div>

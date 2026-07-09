@@ -98,7 +98,7 @@ $sdk_url = __WEBSITE_DOMAIN__ . "/store-access/" . $store_id . "/sdk/vm-store.js
             </div>
 
             <!-- Endpoints -->
-            <div class="bg-zinc-800 rounded-lg p-4">
+            <div class="bg-zinc-800 rounded-lg p-4 hidden">
                 <h4 class="text-white font-medium text-sm mb-3"><i class="bi bi-book"></i> Available Endpoints</h4>
                 <div class="space-y-1.5 text-xs">
                     <p class="text-zinc-500 text-[10px] uppercase tracking-wider font-medium mb-1">Read Data</p>
@@ -247,7 +247,7 @@ $sdk_url = __WEBSITE_DOMAIN__ . "/store-access/" . $store_id . "/sdk/vm-store.js
     </div>
 
     <!-- JavaScript SDK -->
-    <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+    <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden hidden">
         <div class="px-5 py-4 border-b border-zinc-800">
             <h3 class="text-white font-semibold text-sm">JavaScript SDK</h3>
             <p class="text-zinc-500 text-xs mt-0.5">Drop-in storefront SDK for external websites</p>
