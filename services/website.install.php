@@ -34,10 +34,38 @@ if (!is_dir($website_folder.$anchor_site)){
     # Start with .htaccess 
     if (!file_exists($target_file)){
         file_put_contents($target_file,file_get_contents($file));
-    }
+    } 
 
     $file = dirname($website_folder)."/skel/autofill.php"; 
     $target_file = $website_folder.$anchor_site."/autofill.php"; 
+    # Start with autofill.php 
+    if (!file_exists($target_file)){
+        file_put_contents($target_file,file_get_contents($file));
+    }
+
+    $file = dirname($website_folder)."/skel/compiler.php"; 
+    $target_file = $website_folder.$anchor_site."/compiler.php"; 
+    # Start with autofill.php 
+    if (!file_exists($target_file)){
+        file_put_contents($target_file,file_get_contents($file));
+    }
+
+    $file = dirname($website_folder)."/skel/api.kit"; 
+    $target_file = $website_folder.$anchor_site."/api.kit"; 
+    # Start with autofill.php 
+    if (!file_exists($target_file)){
+        file_put_contents($target_file,file_get_contents($file));
+    }
+
+    $file = dirname($website_folder)."/skel/styles.kit"; 
+    $target_file = $website_folder.$anchor_site."/styles.kit"; 
+    # Start with autofill.php 
+    if (!file_exists($target_file)){
+        file_put_contents($target_file,file_get_contents($file));
+    }
+
+    $file = dirname($website_folder)."/skel/structure.kit"; 
+    $target_file = $website_folder.$anchor_site."/structure.kit"; 
     # Start with autofill.php 
     if (!file_exists($target_file)){
         file_put_contents($target_file,file_get_contents($file));
