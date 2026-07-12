@@ -1,0 +1,52 @@
+<?php
+
+#   TITLE   : Application Structure Kit   
+#   DESC    : The processing Structure For The Base Applications
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 1.0.1.1
+#   AUTHOR  : HARDY HASTINGS  
+#   RELEASE : 2026/07/12
+
+$override = __DIR__ . "/theme.structure.kit";
+
+if (file_exists($override)) {
+    require_once $override;
+} else {
+    function structure()
+    {
+        return new class {
+            public function create_products_ui($products)
+            {
+                $output = "";
+                $product_template = template()->return_products();
+                foreach ($products as $key => $value) {
+                    # code...
+                    $build = str_ireplace(template()->return_products('id'), [$value['id'], $value['name'], $value['description'], $value['price']], $product_template);
+                    $output .= $build;
+                }
+                return print($output);
+            }
+
+            public function create_category_ui($categories)
+            {
+                //print_r($categories); 
+                $output = "";
+                $category_template = template()->return_category();
+                foreach ($categories as $key => $value) {
+                    $build = str_ireplace(template()->return_category('id'), [$value['name'], $value['description'], $value['image']], $category_template);
+                    $output .= $build;
+                }
+                return print($output);
+            }
+        };
+    }
+}
+
+function routes($section)
+{
+    $x = $_SERVER['REQUEST_URI'];
+    // Strip query string from the URI to ensure clean segment matching
+    $x = strtok($x, '?');
+    $_xm = explode("/", $x);
+    return $_xm[$section] ?? '';
+}

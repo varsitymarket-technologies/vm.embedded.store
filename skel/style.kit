@@ -1,0 +1,61 @@
+<?php
+
+#   TITLE   : Application Theme Style Kit   
+#   DESC    : How The System communicates with the API
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 1.0.1.1
+#   AUTHOR  : HARDY HASTINGS  
+#   RELEASE : 2026/07/12
+
+//Check if Override exists
+$Override = __DIR__ . "/theme.style.kit";
+if (file_exists($Override)) {
+    @include_once $Override;
+} else {
+    function template()
+    {
+        return new class {
+            public function return_category($state = "categories")
+            {
+                $item_template = '<div class="card" onclick="location.hash=\'product\'">
+                                    <div class="card-img"><img src="(#item_image)"></div>
+                                    <div class="card-body">
+                                        <h3>(#item_name)</h3>
+                                        <p>(#item_description)</p>
+                                    </div>
+                                </div>';
+                $item_input = ['(#item_name)', '(#item_description)', '(#item_image)'];
+
+                if ($state == "categories") {
+                    return $item_template;
+                } else {
+                    return $item_input;
+                }
+            }
+
+            public function return_products($state = "products")
+            {
+                $product_template = '
+                                <div class="card" onclick="navigate(\'product-item\')">
+                                    <div class="card-img" style="background-image: url((#item_image))"></div>
+                                    <div class="card-body">
+                                        <span class="tag">Category</span>
+                                        <h4>(#item_name)</h4>
+                                        <p>Reflections and Observations on Death</p>
+                                        <div class="card-price">R110.00</div>
+                                    </div>
+                                <div class="card-footer">
+                                    <button class="btn btn-dark" style="padding:8px 16px;font-size:0.7rem" onclick="event.stopPropagation();showToast(\'Added to cart\')">Add</button></div>
+                                </div>';
+
+                $product_input = ['(#item_id)', '(#item_name)', '(#item_description)', '(#item_image)'];
+
+                if ($state == "products") {
+                    return $product_template;
+                } else {
+                    return $product_input;
+                }
+            }
+        };
+    }
+}
