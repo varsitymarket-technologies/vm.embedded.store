@@ -57,8 +57,8 @@ if (!is_dir($website_folder.$anchor_site)){
         file_put_contents($target_file,file_get_contents($file));
     }
 
-    $file = dirname($website_folder)."/skel/styles.kit"; 
-    $target_file = $website_folder.$anchor_site."/styles.kit"; 
+    $file = dirname($website_folder)."/skel/style.kit"; 
+    $target_file = $website_folder.$anchor_site."/style.kit"; 
     # Start with autofill.php 
     if (!file_exists($target_file)){
         file_put_contents($target_file,file_get_contents($file));

@@ -6,6 +6,11 @@
 #   AUTHOR  : HARDY HASTINGS  
 #   RELEASE : 2026/07/12
 
+@include_once __DIR__."/style.kit"; #GUI of the Website Not including The HTML
+@include_once __DIR__."/script.kit"; #The Script That The Website Will execute 
+@include_once __DIR__."/api.kit";    # How The System communicates with the API
+@include_once __DIR__."/structure.kit"; #The processing Structure For The Base Applications
+
 class compiler{
     public $html; 
     public function __construct($html){

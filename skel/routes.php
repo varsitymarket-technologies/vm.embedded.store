@@ -17,10 +17,7 @@ ini_set('error_log', dirname(__FILE__).'/error-file.log');
 // Set the error reporting level
 error_reporting(E_ALL);
 
-@include_once __DIR__."/style.kit"; #GUI of the Website Not including The HTML
-@include_once __DIR__."/script.kit"; #The Script That The Website Will execute 
-@include_once __DIR__."/api.kit";    # How The System communicates with the API
-@include_once __DIR__."/structure.kit"; #The processing Structure For The Base Applications
+@include_once __DIR__."/compiler.php"; 
 
 @include_once dirname(__FILE__)."/interface.php"; 
 ?>
