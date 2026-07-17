@@ -64,7 +64,7 @@ $verification_domain = engine_validate_domain_ownership(__DOMAIN__);
 $domain_connected = engine_validate_domain(__DOMAIN__);
 
 if ($domain_connected == true) {
-    $domain_source = $site_url;
+    $domain_source =  "http://" . __DOMAIN__;
 } else if ($verification_domain == true) {
     $domain_source = "http://" . get_domain() . "/pages/error.500.deployment.php";
 } else {
