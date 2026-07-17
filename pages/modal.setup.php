@@ -336,8 +336,29 @@
         background: #1a1a1a;
         border: 1px solid #1a1a1a;
     }
+    /* Error banner */
+    .setup-error-banner {
+        display: none;
+        position: fixed;
+        top: 1.25rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #ef4444;
+        color: #fff;
+        padding: 0.75rem 1.5rem;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        z-index: 10000;
+        box-shadow: 0 4px 20px rgba(239,68,68,0.4);
+        max-width: 90vw;
+        text-align: center;
+        animation: fadeIn 0.3s ease;
+    }
+    .setup-error-banner.visible { display: block; }
 </style>
 
+<div id="setupErrorBanner" class="setup-error-banner"></div>
 <div class="modal-overlay active" id="modalOverlay">
     <div class="setup-container">
         <!-- Sidebar -->
@@ -401,7 +422,7 @@
                             <?php if (isset($_SERVER['PARENT_DOMAIN'])): ?>
                                 <div class="choice-card selected" id="choiceSubdomain" onclick="setDomainType('subdomain')">
                                     <i class="fas fa-magic"></i>
-                                    <span>Free Subdomain</span>
+                                    <span style="color: #fff;">Free Subdomain</span>
                                     <small
                                         style="font-size: 0.75rem; color: var(--text-muted)">*.<?php echo $_SERVER['PARENT_DOMAIN']; ?></small>
                                 </div>
@@ -409,7 +430,7 @@
                             <div class="choice-card <?php echo !isset($_SERVER['PARENT_DOMAIN']) ? 'selected' : ''; ?>"
                                 id="choiceCustom" onclick="setDomainType('custom')">
                                 <i class="fas fa-globe"></i>
-                                <span>Own Domain</span>
+                                <span style="color: #fff;">Own Domain</span>
                                 <small style="font-size: 0.75rem; color: var(--text-muted)">e.g. yourstore.com</small>
                             </div>
                         </div>
@@ -459,32 +480,44 @@
                             <div style="font-size: 3rem; color: var(--primary-accent); margin-bottom: 1rem;">
                                 <i class="fas fa-rocket"></i>
                             </div>
-                            <h4 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: #fff !important;">Almost There!</h4>
+                            <h4
+                                style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: #fff !important;">
+                                Almost There!</h4>
                             <p style="color: var(--text-muted)">Your store is ready to be deployed. Click finish to
                                 launch your online presence.</p>
                         </div>
 
                         <!-- Demo Data Toggle -->
-                        <div style="margin-top: 1rem; border: 1px solid #333; border-radius: 12px; padding: 1.25rem; background: #111;">
-                            <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; margin: 0;">
+                        <div
+                            style="margin-top: 1rem; border: 1px solid #333; border-radius: 12px; padding: 1.25rem; background: #111;">
+                            <label
+                                style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; margin: 0;">
                                 <input type="checkbox" name="load_demo_data" value="1"
                                     style="width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary-accent); flex-shrink: 0; cursor: pointer;">
                                 <div>
-                                    <span style="font-weight: 700; font-size: 0.9rem; color: #fff;">Load sample data</span>
-                                    <p style="font-size: 0.8rem; color: #888 !important; margin-top: 4px; line-height: 1.5;">
-                                        Populate your store with demo categories, products, and orders so you can explore all features right away. You can remove them later.
+                                    <span style="font-weight: 700; font-size: 0.9rem; color: #fff;">Load sample
+                                        data</span>
+                                    <p
+                                        style="font-size: 0.8rem; color: #888 !important; margin-top: 4px; line-height: 1.5;">
+                                        Populate your store with demo categories, products, and orders so you can
+                                        explore all features right away. You can remove them later.
                                     </p>
                                 </div>
                             </label>
                         </div>
 
-                        <div style="margin-top: 1rem; border: 1px solid #33333300; border-radius: 12px; padding: 0 1.25rem; background: #fff0;">
-                            <label style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; margin: 0;">
-                                <input type="checkbox" name="promotion_data" value="1" style="width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary-accent); flex-shrink: 0; cursor: pointer;">
+                        <div
+                            style="margin-top: 1rem; border: 1px solid #33333300; border-radius: 12px; padding: 0 1.25rem; background: #fff0;">
+                            <label
+                                style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; margin: 0;">
+                                <input type="checkbox" name="promotion_data" value="1"
+                                    style="width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary-accent); flex-shrink: 0; cursor: pointer;">
                                 <div>
-                                    <span style="font-weight: 700; font-size: 0.9rem; color: #fff;">Enhance User Experience</span>
+                                    <span style="font-weight: 700; font-size: 0.9rem; color: #fff;">Enhance User
+                                        Experience</span>
                                     <p style="font-size: 0.8rem; color: #888 !important; line-height: 1.5;">
-                                        We may also send you occasional tips and updates to help you get the most out of your store. You can opt out at any time. 
+                                        We may also send you occasional tips and updates to help you get the most out of
+                                        your store. You can opt out at any time.
                                     </p>
                                 </div>
                             </label>
@@ -577,4 +610,24 @@
         navigateStep(1);
         return false;
     }
+
+    // Show domain-taken error from server redirect
+    (function () {
+        const err = sessionStorage.getItem('setup_error');
+        if (err) {
+            sessionStorage.removeItem('setup_error');
+            const banner = document.getElementById('setupErrorBanner');
+            banner.textContent = err;
+            banner.classList.add('visible');
+            // Jump straight to the Domain Setup step so the user can correct it
+            // Trigger navigation to step 1 (domain step)
+            setTimeout(function () {
+                while (currentStep < 1) navigateStep(1);
+            }, 100);
+            // Auto-dismiss after 8 seconds
+            setTimeout(function () {
+                banner.classList.remove('visible');
+            }, 8000);
+        }
+    })();
 </script>

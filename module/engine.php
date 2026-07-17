@@ -1,5 +1,5 @@
 <?php
-     
+
 class emb_engine
 {
 
@@ -40,7 +40,7 @@ class emb_engine
         $ch = curl_init();
         curl_setopt_array($ch, $options);
         $response = curl_exec($ch);
-        print_r($response); 
+
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
