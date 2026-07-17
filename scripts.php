@@ -11,7 +11,8 @@ define("__DB_WEBSITE__", initiate_web_database());
 
 function get_private_db($domain)
 {
-    if (empty($domain)) return null;
+    if (empty($domain))
+        return null;
     $store_hash = hash('sha256', $domain);
     $base_dir = (dirname(__FILE__));
     $private_dir = dirname($base_dir) . "/data/" . $store_hash;
@@ -139,26 +140,27 @@ function get_domain()
 }
 
 
-function engine_validate_domain($domain){
+function engine_validate_domain($domain)
+{
     // Fetch only A records
     $domain = strtolower($domain);
     $dnsRecords = dns_get_record($domain, DNS_A);
-    $engine_server_ip = $_SERVER['__SERVER_IP__'] ?? false; 
+    $engine_server_ip = $_SERVER['__ENGINE_SOURCE__'] ?? false;
 
     if ($dnsRecords === false) {
-        return false; 
+        return false;
         echo "Failed to perform DNS query.";
         exit;
     }
 
     if (empty($dnsRecords)) {
-        return false; 
+        return false;
         echo "No A records found for {$domain}.";
     } else {
 
         foreach ($dnsRecords as $record) {
-            if ($record['ip'] == $engine_server_ip){
-                return true; 
+            if ($record['ip'] == $engine_server_ip) {
+                return true;
             }
             // Each record is an associative array containing 'host', 'ttl', 'class', 'type', and 'ip'
             //echo "- IP: " . $record['ip'] . " (TTL: " . $record['ttl'] . "s)\n";
@@ -168,18 +170,19 @@ function engine_validate_domain($domain){
     return false;
 }
 
-function engine_validate_domain_ownership($domain){
-    $domain = strtolower($domain); 
+function engine_validate_domain_ownership($domain)
+{
+    $domain = strtolower($domain);
     // To look up TXT verification records instead
     $dnsRecords = dns_get_record($domain, DNS_TXT);
-    $target = "vm_".hash("sha256",$domain); 
+    $target = "vm_" . hash("sha256", $domain);
 
     foreach ($dnsRecords as $record) {
-      if ($record['txt'] == $target){
-        return true;
-      }
+        if ($record['txt'] == $target) {
+            return true;
+        }
     }
-    return false; 
+    return false;
 }
 
 
@@ -553,6 +556,6 @@ function deploy_engine_website(string $domain, string $site_contents = "", strin
     $engine = new WebPublisherClient($engine_source, $engine_secrets);
 
     #Publish THE Website 
-    $e = $engine->publishWebsite($domain, ['html'=>$site_contents]);
+    $e = $engine->publishWebsite($domain, ['html' => $site_contents]);
     return $e;
 }

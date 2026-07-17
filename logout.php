@@ -1,77 +1,85 @@
-<?php 
+<?php
 #   TITLE   : Application Logout
 #   DESC    : Shown when user is logged out
 #   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
-#   VERSION : 1.0.1.1
-#   AUTHOR  : HARDY HASTINGS  
+#   VERSION : 1.0.1.2
+#   AUTHOR  : HARDY HASTINGS
 #   RELEASE : 2026/06/18
 
+// Unified session termination at the top of the file
 session_start();
+session_unset();
+session_destroy();
 ?>
-
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sorry to see you leave</title>
-    <link rel="stylesheet" href="/assets/style.css">
+    <title>Logged Out | Varsity Market</title>
 
+    <!-- Original Meta & Links -->
     <meta name="description" content="Varsity Market — Premium Embedded Store Engine">
     <meta name="keywords" content="store, ecommerce, embedded, varsity market">
-
-    <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json">
-
-    <!-- Theme Color -->
     <meta name="theme-color" content="#7a1aab">
-
-    <!-- iOS PWA Support -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Embedded Admin Store ">
 
-    <!-- Favicons -->
     <link href="/assets/favicon.png" rel="icon">
     <link href="/assets/favicon.png" rel="apple-touch-icon">
-
-    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
-    <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- Tailwind CSS (via CDN for immediate styling) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: '#7a1aab',
+                        brandHover: '#601289'
+                    }
+                }
+            }
+        }
+    </script>
 </head>
 
-<body>
-<?php
-// remove all session variables
-session_unset();
+<body
+    class="bg-[#1a1b1b] text-gray-800 font-sans h-screen flex flex-col items-center justify-center antialiased selection:bg-brand selection:text-white">
 
-// destroy the session
-session_destroy();
-#@include 'includes/notification.php';
+    <!-- Main Auth Container -->
+    <div class="w-full max-w-sm px-6 text-center">
 
-#constructNotificationModal("Logged Out", "You have been logged out of the system.");
-//print_r($_SESSION); 
+        <!-- Logo -->
+        <div class="flex justify-center mb-6">
+            <img src="/assets/favicon.png" alt="Varsity Market" class="w-12 h-12 rounded-sm shadow-sm">
+        </div>
 
-#echo "<script>window.location='/home/'</script>"
-?>
+        <!-- Typography -->
+        <h1 class="text-3xl text-white font-bold tracking-tight mb-2 text-gray-900">You have been logged out</h1>
+        <p class="text-gray-500 mb-8 text-sm">Sorry to see you leave. Have a great day.</p>
 
-<?php
+        <!-- Actions -->
+        <div class="flex flex-col gap-3">
+            <a href="/"
+                class="w-full flex justify-center items-center py-3 px-4 rounded-md text-white bg-brand hover:bg-brandHover focus:ring-2 focus:ring-offset-2 focus:ring-brand font-semibold transition-colors duration-200">
+                Log back in
+            </a>
+            <a href="/home/" class="text-white hover:underline text-sm font-medium mt-2">
+                Return to homepage
+            </a>
+        </div>
 
-?>
-<!-- AUTH SECTION -->
-<div id="auth-container" class="container center-content">
-    <div class="auth-card" style="margin: 10px;">
-        <img src="/assets/favicon.png">
-
-
-        <h1>You have been logged out.</h1>
-        <p>
-           Sorry to see you leave.
-        </p>
     </div>
-</div>
 
 </body>
+
 </html>
