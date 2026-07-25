@@ -145,7 +145,7 @@ function engine_validate_domain($domain)
     // Fetch only A records
     $domain = strtolower($domain);
     $dnsRecords = dns_get_record($domain, DNS_A);
-    $engine_server_ip = $_SERVER['__ENGINE_SOURCE__'] ?? false;
+    $engine_server_ip = $_SERVER['__SERVER_IP__'] ?? false;
 
     if ($dnsRecords === false) {
         return false;
@@ -547,15 +547,20 @@ function deploy_engine_website(string $domain, string $site_contents = "", strin
     @include_once dirname(__FILE__) . "/engine/gateway.php";
     @include_once dirname(__FILE__) . "/engine/encryption.php";
 
-    $engine_tokens = $_SERVER['__ENGINE_TOKENS__'] ?? '12345678901234567890';
-    $engine_secrets = $_SERVER['__ENGINE_SECRETS__'] ?? '';
+    $e = vmpages_deploy($domain,dirname(__FILE__)."/sites/".$domain); 
+    return $e; 
+
+
+    $engine_tokens = $_SERVER['__ENGINE_TOKENS__'];
+    $engine_secrets = $_SERVER['__ENGINE_SECRETS__'];
     // Provide a default source if generic
-    $engine_source = $_SERVER['__ENGINE_SOURCE__'] ?? 'http://localhost/engine';
+    $engine_source = $_SERVER['__ENGINE_SOURCE__'];
 
     #Create The Engine Connection 
     $engine = new WebPublisherClient($engine_source, $engine_secrets);
 
     #Publish THE Website 
     $e = $engine->publishWebsite($domain, ['html' => $site_contents]);
+    debug(json_encode($e,true)); 
     return $e;
 }
