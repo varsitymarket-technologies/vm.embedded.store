@@ -1,5 +1,77 @@
 <?php
-declare(strict_types=1);
+
+function vmpages_deploy($domain, $path)
+{
+    $engine_tokens = $_SERVER['__ENGINE_TOKENS__'];
+    $engine_secrets = $_SERVER['__ENGINE_SECRETS__'];
+    // Provide a default source if generic
+    $engine_source = $_SERVER['__ENGINE_SOURCE__'];
+    $apiUrl = $engine_source;
+
+    $directoryToUpload = $path;
+    $sourceDir = $directoryToUpload . '';
+    $apiKey = $engine_secrets;
+
+    if (!is_dir($sourceDir)) {
+        die("Source directory does not exist.\n");
+    }
+
+    // Recursively iterate through the directory
+    $iterator = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($sourceDir, RecursiveDirectoryIterator::SKIP_DOTS)
+    );
+
+    $successCount = 0;
+    $failCount = 0;
+
+    foreach ($iterator as $file) {
+        if ($file->isDir()) continue; // Skip directories, they are created automatically by the server
+
+        $filePath = $file->getRealPath();
+
+        // Calculate the relative path to send to the server
+        $relativePath = substr($filePath, strlen(realpath($sourceDir)) + 1);
+        $relativePath = str_replace('\\', '/', $relativePath); // Normalize for Windows clients
+
+        // Prepare the multipart form data
+        $postFields = [
+            'domain' => $domain,
+            'relative_path' => $relativePath,
+            'file' => new CURLFile($filePath)
+        ];
+
+        // Initialize cURL
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $apiUrl);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+            'X-API-Key: ' . $apiKey
+        ]);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30); // 30-second timeout per file
+
+        // Execute upload
+        $response = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $curlError = curl_error($ch);
+        curl_close($ch);
+
+        // Handle response
+        if ($httpCode === 200) {
+            echo "[SUCCESS] Uploaded: $relativePath\n";
+            $successCount++;
+        } else {
+            echo "[FAILED] $relativePath (HTTP $httpCode)\n";
+            if ($curlError) {
+                // echo "         cURL Error: $curlError\n";
+            } else {
+                 echo "         Server Response: $response\n";
+            }
+            $failCount++;
+        }
+    }
+}
 
 final class WebPublisherClient
 {
@@ -31,14 +103,14 @@ final class WebPublisherClient
         return $this->request('POST', '/publish', $payload);
     }
 
-    public function publishWebsite(string $domain, array $html, array $options = []):array
+    public function publishWebsite(string $domain, array $html, array $options = []): array
     {
         $payload = array_merge($options, [
             'action' => 'publish.website',
             'domain' => $domain,
             'html' => $html['html'] ?? '',
         ]);
-        
+
         return $this->request('POST', '/publish', $payload);
     }
 
@@ -108,6 +180,8 @@ final class WebPublisherClient
             [$status, $headers, $body] = $this->dispatch($method, $url, $payload);
 
             if ($status !== 429 || $attempt >= $this->maxRetries) {
+                //debug(json_decode($body, true));
+
                 return [
                     'status' => $status,
                     'headers' => $headers,
@@ -147,11 +221,11 @@ final class WebPublisherClient
                 'content' => $body,
                 'ignore_errors' => true,
                 'timeout' => $this->timeout,
-            ], static fn ($value) => $value !== null),
+            ], static fn($value) => $value !== null),
         ]);
 
         $response = @file_get_contents($url, false, $context);
-        debug($response, "Gateway response for $method $url: ");
+        debug($body . "Gateway response for $method $url: ");
         $responseHeaders = $http_response_header ?? [];
         $status = $this->parseStatus($responseHeaders);
         $parsedHeaders = $this->parseHeaders($responseHeaders);
@@ -160,6 +234,7 @@ final class WebPublisherClient
         if (!is_array($decoded)) {
             $decoded = ['raw' => $response === false ? '' : $response];
         }
+        print_r($decoded);
 
         return [$status, $parsedHeaders, $decoded];
     }

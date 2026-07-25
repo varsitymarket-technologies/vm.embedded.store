@@ -1,0 +1,12 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^php -r 'require \"build/site/customer-store\\.php\"; echo file_exists\\(dirname\\(__DIR__, 2\\)\\.\"/module/database\\.php\"\\) \\? \"ok\" : \"missing\";'$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^ls module/database\\.php && php -r 'require \"build/site/customer-store\\.php\"; echo \"ok\\\\n\";'$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

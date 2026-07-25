@@ -7,12 +7,198 @@
 $domain = defined('__DOMAIN__') ? __DOMAIN__ : '';
 $root_dir = dirname(dirname(dirname(dirname(__FILE__))));
 $site_dir = $root_dir . "/sites/" . $domain;
+$pages_dir = $site_dir . "/pages";
 $builder_cache = $site_dir . "/builder.cache.html";
 $admin_base = '/vm-admin/' . $domain . '/';
 
-// Load HTML content directly for iframe injection
+// ── Page management helpers ──────────────────────────────────
+function pm_sanitize_slug($name) {
+    $name = strtolower(trim($name));
+    $name = preg_replace('/[^a-z0-9\-_]/', '-', $name);
+    $name = preg_replace('/-+/', '-', $name);
+    return trim($name, '-') ?: 'page';
+}
+
+function pm_list_pages($pages_dir, $site_dir) {
+    $pages = [];
+    // Always include the legacy builder.cache (index)
+    $cache = $site_dir . '/builder.cache.html';
+    if (is_dir($pages_dir)) {
+        foreach (glob($pages_dir . '/*.html') as $f) {
+            $slug = basename($f, '.html');
+            $pages[] = [
+                'slug'     => $slug,
+                'label'    => ucfirst(str_replace('-', ' ', $slug)),
+                'file'     => $f,
+                'modified' => filemtime($f),
+            ];
+        }
+    }
+    // If no pages directory yet, synthesise one entry from builder.cache
+    if (empty($pages) && file_exists($cache)) {
+        $pages[] = [
+            'slug'     => 'index',
+            'label'    => 'Home',
+            'file'     => $cache,
+            'modified' => filemtime($cache),
+        ];
+    }
+    usort($pages, fn($a, $b) => strcmp($a['slug'], $b['slug']));
+    return $pages;
+}
+
+function pm_starter_html($title = 'New Page') {
+    return '<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>' . htmlspecialchars($title) . '</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Inter, system-ui, sans-serif; background: #fafafa; color: #1a1a1a; }
+.hero { padding: 80px 24px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
+.hero h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 12px; }
+.hero p { font-size: 1.1rem; opacity: 0.9; max-width: 500px; margin: 0 auto 24px; }
+.hero a { display: inline-block; background: #fff; color: #764ba2; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 1rem; font-weight: 600; }
+.section { padding: 60px 24px; max-width: 900px; margin: 0 auto; }
+.section h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 16px; }
+.section p { color: #555; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="hero">
+    <h1>' . htmlspecialchars($title) . '</h1>
+    <p>Edit this page using the builder.</p>
+    <a href="#">Get Started</a>
+</div>
+<div class="section">
+    <h2>Section</h2>
+    <p>Add content to this section using the builder panel.</p>
+</div>
+</body>
+</html>';
+}
+
+// ── POST action handler ──────────────────────────────────────
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    header('Content-Type: application/json');
+    $action = $_POST['action'];
+
+    // ── save_html (legacy + current page save) ──
+    if ($action === 'save_html') {
+        $html = $_POST['html'] ?? '';
+        $slug = pm_sanitize_slug($_POST['page_slug'] ?? 'index');
+        if (!empty($html) && !empty($domain)) {
+            if (!is_dir($site_dir)) @mkdir($site_dir, 0755, true);
+            // Always update legacy cache for backward-compat
+            if ($slug === 'index') file_put_contents($builder_cache, $html);
+            // Save into pages directory
+            if (!is_dir($pages_dir)) @mkdir($pages_dir, 0755, true);
+            file_put_contents($pages_dir . '/' . $slug . '.html', $html);
+            echo json_encode(['success' => true, 'slug' => $slug]);
+        } else {
+            echo json_encode(['error' => 'Missing data']);
+        }
+        exit;
+    }
+
+    // ── list_pages ──
+    if ($action === 'list_pages') {
+        $pages = pm_list_pages($pages_dir, $site_dir);
+        $out = array_map(fn($p) => ['slug' => $p['slug'], 'label' => $p['label'], 'modified' => $p['modified']], $pages);
+        echo json_encode(['success' => true, 'pages' => $out]);
+        exit;
+    }
+
+    // ── load_page ──
+    if ($action === 'load_page') {
+        $slug = pm_sanitize_slug($_POST['slug'] ?? 'index');
+        $file = $pages_dir . '/' . $slug . '.html';
+        // Fallback: legacy cache for index
+        if (!file_exists($file) && $slug === 'index' && file_exists($builder_cache)) {
+            $file = $builder_cache;
+        }
+        if (file_exists($file)) {
+            echo json_encode(['success' => true, 'html' => file_get_contents($file), 'slug' => $slug]);
+        } else {
+            echo json_encode(['error' => 'Page not found', 'slug' => $slug]);
+        }
+        exit;
+    }
+
+    // ── create_page ──
+    if ($action === 'create_page') {
+        $name  = trim($_POST['name'] ?? 'New Page');
+        $slug  = pm_sanitize_slug($_POST['slug'] ?? $name);
+        if (!is_dir($pages_dir)) @mkdir($pages_dir, 0755, true);
+        $file  = $pages_dir . '/' . $slug . '.html';
+        if (file_exists($file)) {
+            echo json_encode(['error' => 'A page with that slug already exists', 'slug' => $slug]);
+        } else {
+            file_put_contents($file, pm_starter_html($name));
+            echo json_encode(['success' => true, 'slug' => $slug, 'label' => $name]);
+        }
+        exit;
+    }
+
+    // ── duplicate_page ──
+    if ($action === 'duplicate_page') {
+        $src_slug  = pm_sanitize_slug($_POST['slug'] ?? '');
+        $new_slug  = pm_sanitize_slug($_POST['new_slug'] ?? ($src_slug . '-copy'));
+        $new_label = trim($_POST['new_label'] ?? (ucfirst(str_replace('-', ' ', $src_slug)) . ' Copy'));
+        if (!is_dir($pages_dir)) @mkdir($pages_dir, 0755, true);
+        $src_file  = $pages_dir . '/' . $src_slug . '.html';
+        if (!file_exists($src_file) && $src_slug === 'index' && file_exists($builder_cache)) $src_file = $builder_cache;
+        $dest_file = $pages_dir . '/' . $new_slug . '.html';
+        if (!file_exists($src_file)) {
+            echo json_encode(['error' => 'Source page not found']);
+        } elseif (file_exists($dest_file)) {
+            echo json_encode(['error' => 'Destination slug already exists', 'slug' => $new_slug]);
+        } else {
+            copy($src_file, $dest_file);
+            echo json_encode(['success' => true, 'slug' => $new_slug, 'label' => $new_label]);
+        }
+        exit;
+    }
+
+    // ── rename_page ──
+    if ($action === 'rename_page') {
+        $old_slug = pm_sanitize_slug($_POST['old_slug'] ?? '');
+        $new_slug = pm_sanitize_slug($_POST['new_slug'] ?? '');
+        $new_label = trim($_POST['new_label'] ?? ucfirst(str_replace('-', ' ', $new_slug)));
+        if (!$old_slug || !$new_slug) { echo json_encode(['error' => 'Missing slugs']); exit; }
+        if ($old_slug === 'index') { echo json_encode(['error' => 'Cannot rename the home page']); exit; }
+        $old_file = $pages_dir . '/' . $old_slug . '.html';
+        $new_file = $pages_dir . '/' . $new_slug . '.html';
+        if (!file_exists($old_file)) { echo json_encode(['error' => 'Page not found']); exit; }
+        if (file_exists($new_file)) { echo json_encode(['error' => 'Slug already in use']); exit; }
+        rename($old_file, $new_file);
+        echo json_encode(['success' => true, 'old_slug' => $old_slug, 'slug' => $new_slug, 'label' => $new_label]);
+        exit;
+    }
+
+    // ── delete_page ──
+    if ($action === 'delete_page') {
+        $slug = pm_sanitize_slug($_POST['slug'] ?? '');
+        if ($slug === 'index') { echo json_encode(['error' => 'Cannot delete the home page']); exit; }
+        $file = $pages_dir . '/' . $slug . '.html';
+        if (file_exists($file)) { unlink($file); echo json_encode(['success' => true]); }
+        else { echo json_encode(['error' => 'Page not found']); }
+        exit;
+    }
+
+    echo json_encode(['error' => 'Unknown action']);
+    exit;
+}
+
+// ── Load initial page content ────────────────────────────────
+// Load index page (pages/index.html -> fallback builder.cache -> fallback theme)
+$index_page_file = $pages_dir . '/index.html';
 $site_html_content = '';
-if (file_exists($builder_cache)) {
+if (file_exists($index_page_file)) {
+    $site_html_content = file_get_contents($index_page_file);
+} elseif (file_exists($builder_cache)) {
     $site_html_content = file_get_contents($builder_cache);
 } else {
     $active_theme_file = $site_dir . "/theme";
@@ -33,51 +219,14 @@ if (file_exists($builder_cache)) {
 
 // Fallback starter template
 if (empty(trim($site_html_content ?? ''))) {
-    $site_html_content = '<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>My Store</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: Inter, system-ui, sans-serif; background: #fafafa; color: #1a1a1a; }
-.hero { padding: 80px 24px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
-.hero h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 12px; }
-.hero p { font-size: 1.1rem; opacity: 0.9; max-width: 500px; margin: 0 auto 24px; }
-.hero button { background: #fff; color: #764ba2; border: none; padding: 14px 32px; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; }
-.section { padding: 60px 24px; max-width: 900px; margin: 0 auto; }
-.section h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 16px; }
-.section p { color: #555; line-height: 1.7; }
-</style>
-</head>
-<body>
-<div class="hero">
-    <h1>Welcome to My Store</h1>
-    <p>Edit this page using the builder. Click any element to modify it.</p>
-    <button>Shop Now</button>
-</div>
-<div class="section">
-    <h2>About Us</h2>
-    <p>This is your store template. Double-click text to edit inline, or use the properties panel on the right to adjust styles.</p>
-</div>
-</body>
-</html>';
+    $site_html_content = pm_starter_html('My Store');
 }
 
-// Save handler
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    header('Content-Type: application/json');
-    if ($_POST['action'] === 'save_html') {
-        $html = $_POST['html'] ?? '';
-        if (!empty($html) && !empty($domain)) {
-            if (!is_dir($site_dir)) @mkdir($site_dir, 0755, true);
-            file_put_contents($builder_cache, $html);
-            echo json_encode(['success' => true]);
-        } else {
-            echo json_encode(['error' => 'Missing data']);
-        }
-        exit;
+// Seed the pages/index.html if it doesn't exist yet
+if (!empty($domain) && !empty(trim($site_html_content))) {
+    if (!is_dir($pages_dir)) @mkdir($pages_dir, 0755, true);
+    if (!file_exists($index_page_file)) {
+        file_put_contents($index_page_file, $site_html_content);
     }
 }
 ?>
@@ -431,6 +580,208 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         transition: all 0.25s ease;
     }
     .fb-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+
+    /* ── Pages Manager Modal ── */
+    .fb-pages-modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.72);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 200000; opacity: 0; pointer-events: none;
+        transition: opacity 0.22s;
+        backdrop-filter: blur(4px);
+    }
+    .fb-pages-modal-overlay.show { opacity: 1; pointer-events: auto; }
+    .fb-pages-modal {
+        background: var(--fig-surface); border: 1px solid var(--fig-border);
+        border-radius: 16px; width: 720px; max-width: calc(100vw - 40px);
+        max-height: calc(100vh - 60px); display: flex; flex-direction: column;
+        box-shadow: 0 32px 80px rgba(0,0,0,0.7);
+        transform: scale(0.96) translateY(16px); transition: transform 0.22s;
+        overflow: hidden;
+    }
+    .fb-pages-modal-overlay.show .fb-pages-modal { transform: scale(1) translateY(0); }
+
+    .fb-pm-header {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 20px 24px 0;
+        flex-shrink: 0;
+    }
+    .fb-pm-header-left { display: flex; align-items: center; gap: 12px; }
+    .fb-pm-title {
+        font-size: 16px; font-weight: 700; color: var(--fig-text);
+    }
+    .fb-pm-count {
+        font-size: 11px; color: var(--fig-text4);
+        background: var(--fig-surface2); border: 1px solid var(--fig-border-subtle);
+        padding: 2px 8px; border-radius: 20px;
+    }
+    .fb-pm-close {
+        width: 32px; height: 32px; border: 1px solid var(--fig-border-subtle);
+        border-radius: 8px; background: transparent; color: var(--fig-text3);
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        font-size: 16px; transition: all 0.12s; flex-shrink: 0;
+    }
+    .fb-pm-close:hover { background: var(--fig-surface2); color: var(--fig-text); }
+
+    .fb-pm-toolbar {
+        display: flex; align-items: center; gap: 8px;
+        padding: 16px 24px 16px;
+        border-bottom: 1px solid var(--fig-border-subtle);
+        flex-shrink: 0;
+    }
+    .fb-pm-search {
+        flex: 1; height: 34px; background: var(--fig-bg);
+        border: 1px solid var(--fig-border); border-radius: 8px;
+        padding: 0 12px 0 34px; color: var(--fig-text); font-size: 12px;
+        font-family: inherit; outline: none; transition: border-color 0.12s;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+        background-repeat: no-repeat; background-position: 10px center;
+    }
+    .fb-pm-search:focus { border-color: var(--fig-accent); }
+    .fb-pm-search::placeholder { color: var(--fig-text4); }
+    .fb-pm-new-btn {
+        height: 34px; padding: 0 14px; border-radius: 8px;
+        background: var(--fig-accent); color: #fff; border: none;
+        font-size: 12px; font-weight: 600; cursor: pointer;
+        display: flex; align-items: center; gap: 6px;
+        font-family: inherit; transition: background 0.12s; white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .fb-pm-new-btn:hover { background: var(--fig-accent-hover); }
+    .fb-pm-new-btn i { font-size: 14px; }
+
+    .fb-pm-body {
+        flex: 1; overflow-y: auto; padding: 20px 24px 24px;
+    }
+    .fb-pm-body::-webkit-scrollbar { width: 5px; }
+    .fb-pm-body::-webkit-scrollbar-track { background: transparent; }
+    .fb-pm-body::-webkit-scrollbar-thumb { background: var(--fig-border); border-radius: 4px; }
+
+    .fb-pm-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 12px;
+    }
+
+    .fb-pm-card {
+        background: var(--fig-bg); border: 1px solid var(--fig-border-subtle);
+        border-radius: 10px; overflow: hidden; cursor: pointer;
+        transition: all 0.15s; position: relative; flex-direction: column;
+        display: flex;
+    }
+    .fb-pm-card:hover { border-color: var(--fig-accent); transform: translateY(-1px);
+        box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
+    .fb-pm-card.active { border-color: var(--fig-accent);
+        box-shadow: 0 0 0 2px rgba(13,153,255,0.25); }
+
+    .fb-pm-card-thumb {
+        height: 100px; background: linear-gradient(135deg, #2a2a2a 0%, #1a1a2e 100%);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 28px; color: var(--fig-border); position: relative;
+        overflow: hidden;
+    }
+    .fb-pm-card.active .fb-pm-card-thumb {
+        background: linear-gradient(135deg, #0d2444 0%, #0a1a35 100%);
+        color: rgba(13,153,255,0.4);
+    }
+    .fb-pm-card-active-badge {
+        position: absolute; top: 8px; right: 8px;
+        background: var(--fig-accent); color: #fff; font-size: 9px;
+        font-weight: 700; padding: 2px 7px; border-radius: 10px;
+        text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .fb-pm-card-home-badge {
+        position: absolute; top: 8px; left: 8px;
+        background: rgba(255,255,255,0.1); color: var(--fig-text3); font-size: 9px;
+        font-weight: 600; padding: 2px 7px; border-radius: 10px;
+        text-transform: uppercase; letter-spacing: 0.04em; border: 1px solid var(--fig-border);
+    }
+
+    .fb-pm-card-body { padding: 12px; }
+    .fb-pm-card-label {
+        font-size: 12px; font-weight: 600; color: var(--fig-text);
+        margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .fb-pm-card-slug {
+        font-size: 10px; color: var(--fig-text4); font-family: monospace;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    .fb-pm-card-footer {
+        display: flex; align-items: center; gap: 2px;
+        padding: 0 8px 8px; justify-content: flex-end;
+    }
+    .fb-pm-card-btn {
+        width: 26px; height: 26px; border: none; border-radius: 6px;
+        background: transparent; color: var(--fig-text4); cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 12px; transition: all 0.1s;
+    }
+    .fb-pm-card-btn:hover { background: var(--fig-surface2); color: var(--fig-text); }
+    .fb-pm-card-btn.danger:hover { background: rgba(242,72,34,0.12); color: var(--fig-danger); }
+
+    .fb-pm-empty {
+        grid-column: 1/-1; display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        padding: 60px 24px; color: var(--fig-text4); text-align: center;
+    }
+    .fb-pm-empty i { font-size: 36px; margin-bottom: 12px; color: var(--fig-border); }
+    .fb-pm-empty p { font-size: 12px; line-height: 1.6; }
+
+    /* Page crumb as clickable button */
+    .fb-page-crumb-btn {
+        display: flex; align-items: center; gap: 6px;
+        height: 32px; padding: 0 10px; border: 1px solid var(--fig-border-subtle);
+        border-radius: 6px; background: transparent; color: var(--fig-text2);
+        cursor: pointer; font-size: 11px; font-family: inherit;
+        transition: all 0.12s; white-space: nowrap; max-width: 160px;
+    }
+    .fb-page-crumb-btn:hover { background: var(--fig-surface2); border-color: var(--fig-border); color: var(--fig-text); }
+    .fb-page-crumb-btn i { font-size: 13px; color: var(--fig-text4); flex-shrink: 0; }
+    .fb-page-crumb-btn .crumb-label {
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        font-weight: 600; flex: 1;
+    }
+    .fb-page-crumb-btn .crumb-chevron { font-size: 9px; color: var(--fig-text4); flex-shrink: 0; }
+
+    /* ── Sub-modal (create/rename/duplicate/delete) ── */
+    .fb-modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+        display: flex; align-items: center; justify-content: center;
+        z-index: 210000; opacity: 0; pointer-events: none;
+        transition: opacity 0.2s;
+    }
+    .fb-modal-overlay.show { opacity: 1; pointer-events: auto; }
+    .fb-modal {
+        background: var(--fig-surface); border: 1px solid var(--fig-border);
+        border-radius: 12px; padding: 24px; width: 340px;
+        box-shadow: 0 24px 64px rgba(0,0,0,0.6);
+        transform: translateY(12px); transition: transform 0.2s;
+    }
+    .fb-modal-overlay.show .fb-modal { transform: translateY(0); }
+    .fb-modal-title { font-size: 14px; font-weight: 700; color: var(--fig-text); margin-bottom: 20px; }
+    .fb-modal-field { margin-bottom: 14px; }
+    .fb-modal-label {
+        font-size: 10px; font-weight: 600; color: var(--fig-text3);
+        text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; display: block;
+    }
+    .fb-modal-input {
+        width: 100%; height: 34px; background: var(--fig-bg);
+        border: 1px solid var(--fig-border); border-radius: 6px;
+        padding: 0 10px; color: var(--fig-text); font-size: 12px;
+        font-family: inherit; outline: none; transition: border-color 0.12s; box-sizing: border-box;
+    }
+    .fb-modal-input:focus { border-color: var(--fig-accent); }
+    .fb-modal-hint { font-size: 9px; color: var(--fig-text4); margin-top: 4px; }
+    .fb-modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+    .fb-modal-btn {
+        height: 32px; padding: 0 16px; border-radius: 6px; border: none;
+        font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.12s;
+    }
+    .fb-modal-btn.cancel { background: var(--fig-surface2); color: var(--fig-text2); border: 1px solid var(--fig-border); }
+    .fb-modal-btn.cancel:hover { background: var(--fig-bg); }
+    .fb-modal-btn.primary { background: var(--fig-accent); color: #fff; }
+    .fb-modal-btn.primary:hover { background: var(--fig-accent-hover); }
+    .fb-modal-btn.danger-btn { background: var(--fig-danger); color: #fff; }
+    .fb-modal-btn.danger-btn:hover { background: #d93a1a; }
 </style>
 
 <div class="fb-root">
@@ -467,6 +818,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         </div>
 
         <div class="fb-topbar-right">
+            <button class="fb-page-crumb-btn" id="page-crumb" onclick="openPagesModal()" title="Manage Pages">
+                <i class="bi bi-file-earmark-text"></i>
+                <span class="crumb-label" id="page-crumb-label">Home</span>
+                <i class="bi bi-chevron-down crumb-chevron"></i>
+            </button>
+            <div class="fb-sep"></div>
             <button class="fb-tbtn" onclick="previewSite()" title="Preview"><i class="bi bi-play-fill"></i></button>
             <div class="fb-sep"></div>
             <button class="fb-tbtn fb-tbtn-accent" onclick="saveSite()">Save</button>
@@ -480,7 +837,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             <div class="fb-panel-tabs">
                 <button class="fb-ptab on" data-tab="layers" onclick="setLeftTab('layers')">Layers</button>
                 <button class="fb-ptab" data-tab="add" onclick="setLeftTab('add')">Add</button>
-                <button class="fb-ptab" data-tab="page" onclick="setLeftTab('page')">Page</button>
+                <button class="fb-ptab" data-tab="page" onclick="setLeftTab('page')">SEO</button>
             </div>
 
             <div class="fb-panel-content" id="left-content">
@@ -554,7 +911,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     </div>
                 </div>
 
-                <!-- Page Settings Tab -->
+                <!-- Page / SEO Settings Tab -->
                 <div id="tab-page" style="display:none">
 
                     <!-- SEO -->
@@ -1095,6 +1452,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     <!-- Toast -->
     <div class="fb-toast" id="toast">Saved</div>
+
+    <!-- ── Pages Manager (full modal) ── -->
+    <div class="fb-pages-modal-overlay" id="pages-manager-modal">
+        <div class="fb-pages-modal">
+            <div class="fb-pm-header">
+                <div class="fb-pm-header-left">
+                    <span class="fb-pm-title">Pages</span>
+                    <span class="fb-pm-count" id="pm-page-count">0 pages</span>
+                </div>
+                <button class="fb-pm-close" onclick="closePagesModal()" title="Close"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="fb-pm-toolbar">
+                <input class="fb-pm-search" id="pm-search" type="text" placeholder="Search pages…" oninput="filterPagesGrid(this.value)">
+                <button class="fb-pm-new-btn" onclick="openNewPageModal()">
+                    <i class="bi bi-plus-lg"></i> New Page
+                </button>
+            </div>
+            <div class="fb-pm-body">
+                <div class="fb-pm-grid" id="pm-grid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Sub-modal (create / rename / duplicate / delete) ── -->
+    <div class="fb-modal-overlay" id="pm-modal">
+        <div class="fb-modal">
+            <div class="fb-modal-title" id="pm-modal-title">New Page</div>
+
+            <div class="fb-modal-field" id="pm-field-name">
+                <label class="fb-modal-label" for="pm-input-name">Page Name</label>
+                <input class="fb-modal-input" id="pm-input-name" type="text" placeholder="e.g. About Us" maxlength="60">
+            </div>
+
+            <div class="fb-modal-field" id="pm-field-slug">
+                <label class="fb-modal-label" for="pm-input-slug">URL Slug</label>
+                <input class="fb-modal-input" id="pm-input-slug" type="text" placeholder="e.g. about-us" maxlength="60">
+                <div class="fb-modal-hint">Only lowercase letters, numbers, and hyphens. Used in the URL path.</div>
+            </div>
+
+            <div class="fb-modal-footer">
+                <button class="fb-modal-btn cancel" onclick="closePageModal()">Cancel</button>
+                <button class="fb-modal-btn primary" id="pm-modal-confirm" onclick="submitPageModal()">Create</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -1113,6 +1515,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     let headData = {};
     let suppressHeadEcho = false;
     const headDebounce = {};
+    let currentPageSlug = 'index';
+    let currentPageLabel = 'Home';
+    let pageList = []; // [{slug, label}]
+    let pmModalMode = null; // 'new' | 'duplicate' | 'rename' | 'delete'
+    let pmModalTargetSlug = null;
 
     // ── Load site into iframe ──
     const siteHtmlContent = <?php echo json_encode($site_html_content); ?>;
@@ -1562,7 +1969,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         document.querySelectorAll('.fb-ptab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
         document.getElementById('tab-layers').style.display = tab === 'layers' ? 'block' : 'none';
         document.getElementById('tab-add').style.display    = tab === 'add'    ? 'block' : 'none';
+        document.getElementById('tab-pages').style.display  = tab === 'pages'  ? 'block' : 'none';
         document.getElementById('tab-page').style.display   = tab === 'page'   ? 'block' : 'none';
+        if (tab === 'pages') loadPageList();
         if (tab === 'page') requestHead();
     };
 
@@ -1605,10 +2014,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         const form = new FormData();
         form.append('action', 'save_html');
         form.append('html', html);
+        form.append('page_slug', currentPageSlug);
         fetch(window.location.href, { method: 'POST', body: form })
             .then(r => r.json())
             .then(data => {
-                showToast(data.success ? 'Saved' : 'Save failed: ' + (data.error || 'Unknown'));
+                showToast(data.success ? '✓ Saved — ' + currentPageSlug : 'Save failed: ' + (data.error || 'Unknown'));
             })
             .catch(() => showToast('Save failed'));
     }
@@ -1661,7 +2071,220 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if (k === 'm') { setMode('drag');        e.preventDefault(); }
     });
 
+    // ── Page Manager ──────────────────────────────────────────────
+    function apiPost(data) {
+        const form = new FormData();
+        Object.entries(data).forEach(([k, v]) => form.append(k, v));
+        return fetch(window.location.href, { method: 'POST', body: form }).then(r => r.json());
+    }
+
+    function loadPageList(selectSlug) {
+        apiPost({ action: 'list_pages' }).then(data => {
+            if (data.success) {
+                pageList = data.pages;
+                renderPageList(selectSlug || currentPageSlug);
+            }
+        });
+    }
+
+    function renderPageList(activeSlug) {
+        const container = document.getElementById('pages-list');
+        if (!pageList.length) {
+            container.innerHTML = '<div class="fb-empty" style="height:140px"><i class="bi bi-file-earmark"></i><p>No pages yet</p></div>';
+            return;
+        }
+        container.innerHTML = pageList.map(p => {
+            const isHome = p.slug === 'index';
+            const isActive = p.slug === activeSlug;
+            return `<div class="fb-page-item${isActive ? ' active' : ''}" onclick="switchPage('${p.slug}','${escHtml(p.label)}')">
+                <i class="bi bi-file-earmark-text fb-page-icon"></i>
+                <span class="fb-page-label">${escHtml(p.label)}</span>
+                ${isHome ? '<span class="fb-page-home-badge">Home</span>' : `<span class="fb-page-slug">/${p.slug}</span>`}
+                <span class="fb-page-actions" onclick="event.stopPropagation()">
+                    <button class="fb-page-act-btn" onclick="openDuplicateModal('${p.slug}','${escHtml(p.label)}')" title="Duplicate"><i class="bi bi-copy"></i></button>
+                    ${!isHome ? `<button class="fb-page-act-btn" onclick="openRenameModal('${p.slug}','${escHtml(p.label)}')" title="Rename"><i class="bi bi-pencil"></i></button>` : ''}
+                    ${!isHome ? `<button class="fb-page-act-btn danger" onclick="openDeleteModal('${p.slug}','${escHtml(p.label)}')" title="Delete"><i class="bi bi-trash3"></i></button>` : ''}
+                </span>
+            </div>`;
+        }).join('');
+    }
+
+    function escHtml(s) {
+        return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;');
+    }
+
+    // Switch to a different page — auto-saves the current one first
+    window.switchPage = function(slug, label) {
+        if (slug === currentPageSlug) return;
+        // Save current page first, then switch
+        new Promise(resolve => {
+            sendToIframe({ type: 'GET_HTML' });
+            const handler = e => {
+                if (e.data && e.data.type === 'HTML_CONTENT') {
+                    window.removeEventListener('message', handler);
+                    const form = new FormData();
+                    form.append('action', 'save_html');
+                    form.append('html', e.data.html);
+                    form.append('page_slug', currentPageSlug);
+                    fetch(window.location.href, { method: 'POST', body: form })
+                        .then(() => resolve())
+                        .catch(() => resolve());
+                }
+            };
+            window.addEventListener('message', handler);
+            setTimeout(resolve, 2000); // safety timeout
+        }).then(() => {
+            // Load new page
+            return apiPost({ action: 'load_page', slug });
+        }).then(data => {
+            if (data.success) {
+                currentPageSlug = slug;
+                currentPageLabel = label || ucFirst(slug.replace(/-/g,' '));
+                document.getElementById('page-crumb-label').textContent = currentPageLabel;
+                // Reload iframe with new content
+                const doc = iframe.contentDocument || iframe.contentWindow.document;
+                doc.open(); doc.write(data.html); doc.close();
+                setTimeout(injectEngine, 100);
+                currentElement = null; hideProperties();
+                renderPageList(slug);
+                showToast('Switched to “' + currentPageLabel + '”');
+            } else {
+                showToast('Could not load page: ' + (data.error || ''));
+            }
+        });
+    };
+
+    function ucFirst(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    // ── Modal helpers ──
+    const pmModal = document.getElementById('pm-modal');
+    const pmModalTitle = document.getElementById('pm-modal-title');
+    const pmInputName = document.getElementById('pm-input-name');
+    const pmInputSlug = document.getElementById('pm-input-slug');
+    const pmFieldName = document.getElementById('pm-field-name');
+    const pmFieldSlug = document.getElementById('pm-field-slug');
+    const pmConfirmBtn = document.getElementById('pm-modal-confirm');
+
+    // Auto-generate slug from name
+    pmInputName.addEventListener('input', function() {
+        if (pmModalMode === 'new' || pmModalMode === 'duplicate') {
+            pmInputSlug.value = this.value
+                .toLowerCase().trim()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '');
+        }
+    });
+
+    function openModal(title, mode, confirmLabel, { name = '', slug = '' } = {}) {
+        pmModalMode = mode;
+        pmModalTitle.textContent = title;
+        pmInputName.value = name;
+        pmInputSlug.value = slug;
+        pmConfirmBtn.textContent = confirmLabel;
+        pmConfirmBtn.className = 'fb-modal-btn ' + (mode === 'delete' ? 'danger-btn' : 'primary');
+        // Show/hide fields
+        const showName = mode !== 'delete';
+        const showSlug = mode === 'new' || mode === 'duplicate';
+        pmFieldName.style.display = showName ? 'block' : 'none';
+        pmFieldSlug.style.display = showSlug ? 'block' : 'none';
+        pmModal.classList.add('show');
+        if (showName) setTimeout(() => pmInputName.focus(), 50);
+    }
+
+    window.closePageModal = function() {
+        pmModal.classList.remove('show');
+        pmModalMode = null; pmModalTargetSlug = null;
+    };
+    pmModal.addEventListener('click', e => { if (e.target === pmModal) window.closePageModal(); });
+
+    window.openNewPageModal = function() {
+        pmModalTargetSlug = null;
+        openModal('Create New Page', 'new', 'Create', { name: '', slug: '' });
+    };
+
+    window.openDuplicateModal = function(slug, label) {
+        pmModalTargetSlug = slug;
+        openModal('Duplicate Page', 'duplicate', 'Duplicate', {
+            name: label + ' Copy',
+            slug: slug + '-copy'
+        });
+    };
+
+    window.openRenameModal = function(slug, label) {
+        pmModalTargetSlug = slug;
+        openModal('Rename Page', 'rename', 'Rename', { name: label, slug });
+        pmFieldSlug.style.display = 'block';
+        pmInputSlug.value = slug;
+    };
+
+    window.openDeleteModal = function(slug, label) {
+        pmModalTargetSlug = slug;
+        openModal(`Delete “${label}”?`, 'delete', 'Delete Page');
+        pmFieldName.innerHTML = `<p style="font-size:12px;color:var(--fig-text2);line-height:1.6">This will permanently remove <strong style="color:var(--fig-text)">${escHtml(label)}</strong> (/${slug}). This action cannot be undone.</p>`;
+        pmFieldName.style.display = 'block';
+    };
+
+    window.submitPageModal = function() {
+        const mode = pmModalMode;
+        if (!mode) return;
+
+        if (mode === 'new') {
+            const name = pmInputName.value.trim();
+            const slug = pmInputSlug.value.trim();
+            if (!name || !slug) { showToast('Please fill in all fields'); return; }
+            apiPost({ action: 'create_page', name, slug }).then(data => {
+                if (data.success) {
+                    closePageModal();
+                    loadPageList();
+                    showToast('Page “' + name + '” created');
+                    // Switch to new page
+                    window.switchPage(data.slug, data.label);
+                } else { showToast(data.error || 'Error'); }
+            });
+        } else if (mode === 'duplicate') {
+            const new_label = pmInputName.value.trim();
+            const new_slug  = pmInputSlug.value.trim();
+            if (!new_label || !new_slug) { showToast('Please fill in all fields'); return; }
+            apiPost({ action: 'duplicate_page', slug: pmModalTargetSlug, new_slug, new_label }).then(data => {
+                if (data.success) {
+                    closePageModal();
+                    loadPageList();
+                    showToast('Page duplicated as “' + new_label + '”');
+                    window.switchPage(data.slug, data.label);
+                } else { showToast(data.error || 'Error'); }
+            });
+        } else if (mode === 'rename') {
+            const new_label = pmInputName.value.trim();
+            const new_slug  = pmInputSlug.value.trim();
+            if (!new_label || !new_slug) { showToast('Please fill in all fields'); return; }
+            apiPost({ action: 'rename_page', old_slug: pmModalTargetSlug, new_slug, new_label }).then(data => {
+                if (data.success) {
+                    closePageModal();
+                    // If we renamed the current page, update label/slug
+                    if (pmModalTargetSlug === currentPageSlug) {
+                        currentPageSlug = data.slug;
+                        currentPageLabel = data.label;
+                        document.getElementById('page-crumb-label').textContent = data.label;
+                    }
+                    loadPageList(currentPageSlug);
+                    showToast('Page renamed');
+                } else { showToast(data.error || 'Error'); }
+            });
+        } else if (mode === 'delete') {
+            apiPost({ action: 'delete_page', slug: pmModalTargetSlug }).then(data => {
+                if (data.success) {
+                    closePageModal();
+                    const wasActive = pmModalTargetSlug === currentPageSlug;
+                    loadPageList();
+                    if (wasActive) window.switchPage('index', 'Home');
+                    showToast('Page deleted');
+                } else { showToast(data.error || 'Error'); }
+            });
+        }
+    };
+
     // ── Init ──
     loadSite();
+    loadPageList('index');
 })();
 </script>
