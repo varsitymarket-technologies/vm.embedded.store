@@ -22,17 +22,38 @@ $database_module = __DB_MODULE__;
 $database_module->override_connection($database);
 
 
-$site_preview = dirname(__FILE__) . "/builder.cache.html";
+$page_slug = routes(1);
+if (empty($page_slug) || $page_slug === 'home') {
+    $page_slug = 'index';
+}
+
+$segment2 = routes(2);
+if ($page_slug === 'product') {
+    $GLOBALS['product_id'] = !empty($segment2) ? $segment2 : 1;
+}
+
+$pages_dir = dirname(__FILE__) . "/pages/";
+$site_preview = $pages_dir . $page_slug . ".html";
+
+if (!file_exists($site_preview)) {
+    if ($page_slug === 'product' && file_exists($pages_dir . "product.html")) {
+        $site_preview = $pages_dir . "product.html";
+    } elseif (file_exists($pages_dir . "500.html")) {
+        $site_preview = $pages_dir . "500.html";
+    }
+}
+
+// Fallback to builder.cache.html if pages directory routing didn't find anything
+if (!file_exists($site_preview) && file_exists(dirname(__FILE__) . "/builder.cache.html")) {
+    $site_preview = dirname(__FILE__) . "/builder.cache.html";
+}
+
 if (file_exists($site_preview)) {
     //@include_once $site_preview;
     $website_sontents = file_get_contents($site_preview); 
     $website = new compiler($website_sontents); 
     $website->run(); 
 } else {
-
-    # Configuration 
-    $encode_node = extract_theme_nodes($theme_dir);
-    $encode_node = array_unique($encode_node);
 
     # Extract The Auto Fill 
     $auto_fill_file = dirname($theme_dir) . "/autofill.json";
@@ -61,45 +82,32 @@ if (file_exists($site_preview)) {
             "__SITE_TITLE__"
         ];
 
-        $encode_node_config = $encode_node;
-
-        // Source - https://stackoverflow.com/a/7225113
-        // Posted by Bojangles, modified by community. See post 'Timeline' for change history
-        // Retrieved 2026-06-21, License - CC BY-SA 3.0
-        foreach ($system_placeholders as $placeholder) {
-            if (($key = array_search($placeholder, $encode_node_config)) !== false) {
-                unset($encode_node_config[$key]);
-            }
-        }
-
-        foreach ($encode_node_config as $key => $value) {
-            @include_once dirname(dirname(dirname(__FILE__))) . "/config.php";
-
-            if ($value == "__SITE_THEME_AUTOFILL__") {
-                $data_set .= 'define("' . $value . '","ACTIVE");' . PHP_EOL;
-            } else {
-                if (isset($auto_fill[$value])) {
-                    $auto_data = $auto_fill[$value];
-                } else {
-                    $auto_data = "";
-                }
-                $data_set .= 'define("' . $value . '","' . $auto_data . '");' . PHP_EOL;
-            }
-        }
         file_put_contents($site_config, $data_set);
     }
 
     @include_once $site_config;
-    $site_encode = dirname(__FILE__) . "/encode.php";
+    $site_encode = dirname(__FILE__) . "/data/encode.php";
     if (!file_exists($site_encode)) {
-        $template_structure = file_get_contents($theme_dir);
-        foreach ($encode_node as $key => $value) {
-            $template_structure = str_ireplace("e(" . $value . ")", '<?php e(' . $value . '); ?>', $template_structure);
-        }
-        file_put_contents($site_encode, $template_structure);
+        $template_theme = file_get_contents(dirname($site_encode)."/body.php"); 
+        $template = $template_theme; 
+        $pattern = '/e\(\$([a-zA-Z0-9_]+)\)/';
+        $result = preg_replace_callback($pattern, function($matches) {
+            $key = $matches[1];
+
+            if (defined($key)) {
+                return constant($key);
+            }
+
+            return $matches[0];
+        }, $template);
+
+        file_put_contents(dirname($site_encode)."/body.php",$result); 
+        file_put_contents($site_encode, '<?php #The Encode File ?>');
     }
-    $website_sontents = file_get_contents($site_encode); 
-    $website = new compiler($website_sontents); 
-    $website->run(); 
-    //@include_once $site_encode;
+
+    # REPLACE THE PLACEHOLDERS ON THE THEME
+
+
+    @include_once __DIR__."/trace.php";
+    die(); 
 }

@@ -7,6 +7,7 @@
 #   AUTHOR  : HARDY HASTINGS  
 #   RELEASE : 2026/07/12
 
+@include_once __DIR__ . "/config.php";
 @include_once dirname(dirname(dirname(__FILE__))) . "/scripts.php";
 
 function api()
@@ -16,55 +17,141 @@ function api()
         public $index;
         public $api_key;
 
+        private function fallback_products()
+        {
+            return [
+                ['id' => 1, 'name' => 'Classic Denim Jacket', 'description' => 'A tailored jacket built for everyday style.', 'image' => '/assets/images/product-01.jpg', 'price' => 'R249.00', 'category' => 'Women', 'category_name' => 'Women', 'category_id' => 1],
+                ['id' => 2, 'name' => 'Minimal Leather Tote', 'description' => 'A refined everyday tote with premium texture.', 'image' => '/assets/images/product-02.jpg', 'price' => 'R389.00', 'category' => 'Accessories', 'category_name' => 'Accessories', 'category_id' => 2],
+                ['id' => 3, 'name' => 'Everyday Knit Sweater', 'description' => 'Soft knitwear that balances comfort and shape.', 'image' => '/assets/images/product-03.jpg', 'price' => 'R189.00', 'category' => 'Men', 'category_name' => 'Men', 'category_id' => 3],
+                ['id' => 4, 'name' => 'Summer Linen Shirt', 'description' => 'Lightweight and breathable for warmer days.', 'image' => '/assets/images/product-04.jpg', 'price' => 'R159.00', 'category' => 'Men', 'category_name' => 'Men', 'category_id' => 3],
+                ['id' => 5, 'name' => 'Contour Runner', 'description' => 'Comfort-first footwear for all day movement.', 'image' => '/assets/images/product-05.jpg', 'price' => 'R329.00', 'category' => 'Shoes', 'category_name' => 'Shoes', 'category_id' => 4],
+                ['id' => 6, 'name' => 'Studio Watch', 'description' => 'A slim watch with a matte finish and clean dial.', 'image' => '/assets/images/product-06.jpg', 'price' => 'R489.00', 'category' => 'Watches', 'category_name' => 'Watches', 'category_id' => 5],
+            ];
+        }
+
+        private function fallback_product($id = null)
+        {
+            $products = $this->fallback_products();
+            if ($id !== null) {
+                foreach ($products as $product) {
+                    if ((string) ($product['id']) === (string) $id) {
+                        return $product;
+                    }
+                }
+            }
+            return $products[0] ?? false;
+        }
+
+        private function fallback_categories()
+        {
+            return [
+                ['id' => 1, 'name' => 'Women', 'description' => 'Modern essentials for everyday dressing.', 'image' => '/assets/images/product-01.jpg'],
+                ['id' => 2, 'name' => 'Accessories', 'description' => 'Polished details that complete the look.', 'image' => '/assets/images/product-02.jpg'],
+                ['id' => 3, 'name' => 'Men', 'description' => 'Clean silhouettes with practical comfort.', 'image' => '/assets/images/product-03.jpg'],
+            ];
+        }
+
+        private function build_request_url()
+        {
+            $base = trim((string) ($this->source ?? ''));
+            if ($base === '' || strpos($base, 'store-access') === false) {
+                $base = 'http://' . get_domain() . '/store-access/' . ($this->index ?: 'demo') . '/';
+            } else {
+                $base = rtrim($base, '/') . '/';
+            }
+
+            $base.= $this->index."/"; 
+            return $base;
+        }
+
+        private function decode_response($response, $fallback = null)
+        {
+            if (empty($response)) {
+                return $fallback;
+            }
+
+            $decoded = json_decode($response, true);
+            if (is_array($decoded) && isset($decoded['data'])) {
+                return $decoded['data'];
+            }
+            if (is_array($decoded)) {
+                return $decoded;
+            }
+            return $fallback;
+        }
+
         public function credentials()
         {
-            $skel_proto = "http";
-            $skel_domain = get_domain();
+            //$this->source = defined('__SYSTEM_API__') ? __SYSTEM_API__ : $skel_proto . '://' . $skel_domain . '/store-access/';
+            //$this->index = defined('__STORE_INDEX__') ? __STORE_INDEX__ : get_store_id($domain);
+            //$this->api_key = defined('__SYSTEM_API_KEYS__') ? __SYSTEM_API_KEYS__ : get_default_keys($domain);
 
-            $this->source = $skel_proto . '://' . $skel_domain . '/store-access/';
-            $file = (__FILE__);
-            $domain_ = dirname(dirname(__FILE__)) . DIRECTORY_SEPARATOR;
-            $domain = str_ireplace($domain_, '', dirname($file));
+            include_once dirname(__FILE__)."/config.php"; 
 
-            $this->index = get_store_id($domain);
-            $this->api_key = get_default_keys($domain);
+            $this->source = __SYSTEM_API__;
+            $this->index = __STORE_INDEX__; 
+            $this->api_key = __SYSTEM_API_KEYS__; 
         }
 
         public function async_products()
         {
             $this->credentials();
-            $url = $this->source . $this->index . "/";
+            $url = $this->build_request_url();
             $data = [
                 'state' => 'products',
             ];
             $output = $this->execute_request($url, 'GET', $data, $this->api_key);
-            $data = json_decode($output, JSON_PRETTY_PRINT);
-            return $data['data'] ?? false;
+            $products = $this->decode_response($output, $this->fallback_products());
+            if (empty($products)) {
+                return $this->fallback_products();
+            }
+            return $products;
         }
 
         public function async_single_products($product_id)
         {
             $this->credentials();
-            $url = $this->source . $this->index . "/";
+            $url = $this->build_request_url();
             $data = [
                 'state' => 'product',
                 'id' => $product_id,
             ];
             $output = $this->execute_request($url, 'GET', $data, $this->api_key);
-            $data = json_decode($output, JSON_PRETTY_PRINT);
-            return $data['data'] ?? false;
+            $product = $this->decode_response($output, $this->fallback_product($product_id));
+            if (empty($product)) {
+                return $this->fallback_product($product_id);
+            }
+            return $product;
+        }
+
+        public function async_related_products($product_id){
+            $product = $this->async_single_products($product_id);             
+            $product_db = $this->async_products(); 
+            $output = []; 
+
+            foreach ($product_db as $key => $value) {
+                # code...
+                if ($product['category_id'] == $value['category_id']){
+                    $output[] = $value; 
+                }
+            }
+
+            return $output; 
         }
 
         public function async_categories()
         {
             $this->credentials();
-            $url = $this->source . $this->index . "/";
+            $url = $this->build_request_url();
             $data = [
                 'state' => 'categories',
             ];
             $output = $this->execute_request($url, 'GET', $data, $this->api_key);
-            $data = json_decode($output, JSON_PRETTY_PRINT);
-            return $data['data'] ?? false;
+            $categories = $this->decode_response($output, $this->fallback_categories());
+            if (empty($categories)) {
+                return $this->fallback_categories();
+            }
+            return $categories;
         }
 
         public function async_search($search)
@@ -83,7 +170,7 @@ function api()
         public function async_discounts()
         {
             $this->credentials();
-            $url = $this->source . $this->$index . "/";
+            $url = $this->source . $this->index . "/";
             $data = [
                 'state' => 'discounts'
             ];
@@ -95,7 +182,7 @@ function api()
         public function async_store()
         {
             $this->credentials();
-            $url = $this->source . $this->$index . "/";
+            $url = $this->source . $this->index . "/";
             $data = [
                 'state' => 'site'
             ];
@@ -107,7 +194,7 @@ function api()
         public function async_order($email)
         {
             $this->credentials();
-            $url = $this->source . $this->$index . "/";
+            $url = $this->source . $this->index . "/";
             $data = [
                 'state' => 'order',
                 'email' => $email,
@@ -120,7 +207,7 @@ function api()
         public function async_cart($id)
         {
             $this->credentials();
-            $url = $this->source . $this->$index . "/";
+            $url = $this->source . $this->index . "/";
             $data = [
                 'state' => 'cart',
                 'cart_id' => $id,
@@ -132,7 +219,6 @@ function api()
 
         public function execute_request($url, $method = "GET", $data, $apiKey)
         {
-
             $ch = curl_init();
             $method = strtoupper($method);
             $headers = [
@@ -151,30 +237,11 @@ function api()
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+            curl_setopt($ch, CURLOPT_TIMEOUT, 20);
 
             $response = curl_exec($ch);
-            $error = null;
-            return $response;
-
-            if ($response === false) {
-                $error = curl_error($ch);
-                $success = false;
-            } else {
-                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-                $success = ($httpCode >= 200 && $httpCode < 300);
-                if (!success) {
-                    $error = "HTTP Error Code: " . $httpCode;
-                }
-            }
-
-            $data = json_decode($response);
             curl_close($ch);
-            return [
-                'success' => $success,
-                'response' => $response,
-                'error' => $error,
-            ];
+            return $response;
         }
     };
 }

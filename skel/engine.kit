@@ -1,0 +1,94 @@
+<?php 
+
+#   TITLE   : Application Engine  
+#   DESC    : How The Engine Runs The Websites
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 1.0.1.1
+#   AUTHOR  : HARDY HASTINGS  
+#   RELEASE : 2026/07/20
+
+
+# $file = __DIR__."/exec.a29c2123a01df1d0febb9d308a20d8a2fe3d40a91ca8b1294f59f08f9773ebea.tmp.php"; 
+# $file_contents = file_get_contents($file); 
+
+class engine_nodes{
+    public $app_html; 
+
+    function load_html(string $html){
+        $this->app_html = $html; 
+    } 
+
+    function extract($tag,$tag_end){
+        $e = $this->extract_nodes($this->app_html,$tag,$tag_end); 
+        return $e;
+    }
+
+    function extract_nodes($html,$node_opening,$node_closing){
+        
+        $startMarker = preg_quote($node_opening, '/');
+        $endMarker   = preg_quote($node_closing, '/');
+
+        $pattern = '/' . $startMarker . '(.*?)' . $endMarker . '/s';
+
+        if (preg_match($pattern, $html, $matches)) {
+            return $matches[1]; // Returns the captured content inside the markers
+        }
+
+        return null;
+
+    }
+}
+
+# How To Use
+$engine = new engine_nodes(); 
+$engine->load_html($file_contents); 
+
+# Get The header
+$header = $engine->extract(
+    '<!-- #/engine/head/encode/:BEGIN -->',
+    '<!-- #/engine/head/encode/:END; -->'); 
+
+# Get The Navbar 
+$navbar = $engine->extract(
+    '<!-- #/engine/navbar/encode/:BEGIN -->',
+    '<!-- #/engine/navbar/encode/:END; -->'); 
+
+#Get The Body 
+$body = $engine->extract(
+    '<!-- #/engine/body/encode/:BEGIN -->',
+    '<!-- #/engine/body/encode/:END; -->'); 
+
+# Replace The Navbar Scripts 
+$file_contents = str_ireplace(
+    '<!-- #/engine/navbar/encode/:BEGIN -->'.$navbar.'<!-- #/engine/navbar/encode/:END; -->',
+    '# $app()->card(navbar);',
+    $file_contents);
+
+# Replace The Body Scripts 
+$file_contents = str_ireplace(
+    '<!-- #/engine/body/encode/:BEGIN -->'.$body.'<!-- #/engine/body/encode/:END; -->',
+    '# $app()->page(e); ',
+    $file_contents);
+
+# Replace The PHP Scripts Tag
+$file_contents = str_ireplace(
+    '<?php',
+    '<!-- #!/engine/node/',
+    $file_contents);
+
+$file_contents = str_ireplace(
+    '<?=',
+    '<!-- #!/engine/node/ echo',
+    $file_contents);
+
+$file_contents = str_ireplace(
+    '?>',
+    '-->',
+    $file_contents);
+
+# Replace The HTML contents for the placeholder
+# file_put_contents('sample.txt',$file_contents); 
+
+# print_r($body); 
+
+# Get The Webpage

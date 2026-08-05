@@ -1,0 +1,96 @@
+<?php
+
+function template()
+{
+    return new class {
+
+        public function return_shop($state = "products")
+        {
+            $product_template = '
+            <div class="group">
+                <div class="relative overflow-hidden bg-gray-100 aspect-square mb-4">
+                    <img src="(#item_image)"
+                         alt="(#item_name)"
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                </div>
+
+                <a href="/product/(#item_id)/" class="block">
+                    <p class="text-xs uppercase text-gray-600 font-semibold mb-2 group-hover:text-black transition-colors">
+                        (#item_category)
+                    </p>
+                    <p class="font-medium text-black text-sm mb-3 group-hover:underline underline-offset-4 transition-colors line-clamp-2">
+                        (#item_name)
+                    </p>
+                    <p class="font-semibold text-black">(#item_price)</p>
+                </a>
+            </div>';
+
+            $product_input = ['(#item_id)', '(#item_name)', '(#item_description)', '(#item_image)', '(#item_price)', '(#item_category)'];
+
+            return $state === 'products' ? $product_template : $product_input;
+        }
+
+        public function return_related_shop($state = "products")
+        {
+            $product_template = '
+            <div class="group">
+                <div class="relative overflow-hidden bg-gray-100 aspect-square mb-4">
+                    <img src="(#item_image)"
+                         alt="(#item_name)"
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                </div>
+
+                <a href="/product/(#item_id)/" class="block">
+                    <p class="text-xs uppercase text-gray-600 font-semibold mb-2">
+                        (#item_category)
+                    </p>
+                    <p class="font-medium text-black text-sm mb-2 line-clamp-1">
+                        (#item_name)
+                    </p>
+                    <p class="font-semibold text-black">(#item_price)</p>
+                </a>
+            </div>';
+
+            $product_input = ['(#item_id)', '(#item_name)', '(#item_description)', '(#item_image)', '(#item_price)', '(#item_category)'];
+
+            return $state === 'products' ? $product_template : $product_input;
+        }
+
+        public function return_category($state = "categories")
+        {
+            $category_template = '
+            <a href="/shop?cat=(#cat_name)" class="group block">
+                <div class="relative overflow-hidden bg-gray-100 aspect-square mb-4">
+                    <img src="(#cat_image)"
+                         alt="(#cat_name)"
+                         class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 opacity-50">
+                </div>
+                <p class="font-medium text-black text-sm group-hover:underline underline-offset-4">(#cat_name)</p>
+            </a>';
+
+            $category_input = ['(#cat_name)', '(#cat_description)', '(#cat_image)'];
+
+            return $state === 'categories' ? $category_template : $category_input;
+        }
+
+        public function return_product($state = "products")
+        {
+            $product_template = '
+            <section class="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-20">
+                <div class="bg-gray-100 aspect-square overflow-hidden sticky top-20">
+                    <img src="(#item_image)" alt="(#item_name)" class="w-full h-full object-cover">
+                </div>
+                <div class="flex flex-col justify-center">
+                    <p class="text-xs uppercase tracking-wider text-gray-600 font-semibold mb-3">(#item_category)</p>
+                    <h1 class="font-display text-5xl font-bold text-black mb-6">(#item_name)</h1>
+                    <p class="text-3xl font-light text-black mb-8">(#item_price)</p>
+                    <p class="text-gray-600 text-base leading-relaxed mb-12">(#item_desc)</p>
+                </div>
+            </section>';
+
+            $product_input = ['(#item_id)', '(#item_name)', '(#item_desc)', '(#item_image)', '(#item_price)', '(#item_category)'];
+
+            return $state === 'products' ? $product_template : $product_input;
+        }
+    };
+}

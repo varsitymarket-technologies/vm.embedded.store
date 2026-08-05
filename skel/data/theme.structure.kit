@@ -1,0 +1,73 @@
+<?php
+
+function app()
+{
+    return new class {
+
+        public function create_shop_ui($products)
+        {
+            $output        = "";
+            $shop_template = template()->return_shop();
+
+            foreach ($products as $value) {
+                @$build = str_ireplace(
+                    template()->return_shop('id'),
+                    [$value['id'], $value['name'], $value['description'], $value['image'], $value['price'], $value['category']],
+                    $shop_template
+                );
+                $output .= $build;
+            }
+
+            return print($output);
+        }
+
+        public function create_related_products_ui($products)
+        {
+            $output        = "";
+            $shop_template = template()->return_related_shop();
+
+            foreach ($products as $value) {
+                @$build = str_ireplace(
+                    template()->return_related_shop('id'),
+                    [$value['id'], $value['name'], $value['description'], $value['image'], $value['price'], $value['category']],
+                    $shop_template
+                );
+                $output .= $build;
+            }
+
+            return print($output);
+        }
+
+        public function create_product_ui($product)
+        {
+            $output           = "";
+            $product_template = template()->return_product();
+
+            $build = str_ireplace(
+                template()->return_product('id'),
+                [$product['id'], $product['name'], $product['description'], $product['image'], $product['price'], $product['category_name']],
+                $product_template
+            );
+            $output .= $build;
+
+            return print($output);
+        }
+
+        public function create_category_ui($categories)
+        {
+            $output            = "";
+            $category_template = template()->return_category();
+
+            foreach ($categories as $value) {
+                $build   = str_ireplace(
+                    template()->return_category('id'),
+                    [$value['name'], $value['description'], $value['image']],
+                    $category_template
+                );
+                $output .= $build;
+            }
+
+            return print($output);
+        }
+    };
+}

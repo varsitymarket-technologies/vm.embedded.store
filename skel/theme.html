@@ -1,0 +1,1464 @@
+<!DOCTYPE html>
+<!-- saved from url=(0026)#/shop -->
+<html lang="en"><!-- 
+
+    #   TITLE   : Black-Sheep Application Interface
+    #   DESC    : This is the interface for the Black-Sheep Application, which is a collection of tools and features designed to enhance user experience and provide additional functionality. The interface is designed to be user-friendly and intuitive, allowing users to easily navigate and access the various features of the application.
+    #   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+    #   VERSION : v2.1.1.1
+    #   AUTHOR  : LEVIDOC AGENCY  
+    #   RELEASE : 2026/07/18
+    #   CATEGORY: CLOTHING
+
+-->
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Thoughtfully curated essentials. Minimal design, maximum impact.">
+    <title>Black Sheep | The Black Sheep Online Store</title>
+
+
+
+    <!-- Tailwind CSS CDN -->
+    <script src="./theme/saved_resource"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        black: '#000000',
+                        white: '#FFFFFF',
+                        gray: {
+                            50: '#FAFAFA',
+                            100: '#F5F5F5',
+                            200: '#EEEEEE',
+                            300: '#E0E0E0',
+                            400: '#BDBDBD',
+                            500: '#9E9E9E',
+                            600: '#757575',
+                            700: '#616161',
+                            800: '#424242',
+                            900: '#212121',
+                        }
+                    },
+                    fontFamily: {
+                        display: ['"Playfair Display"', 'serif'],
+                        body: ['"Outfit"', 'sans-serif'],
+                    },
+                    spacing: {
+                        '128': '32rem',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts: Playfair Display + Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com/">
+    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin="">
+    <link href="./theme/css2" rel="stylesheet">
+
+    <!-- Lucide Icons -->
+    <script src="./theme/lucide.js.download"></script>
+
+    <!-- Theme stylesheet -->
+    <link rel="stylesheet" href="./theme/main.css">
+    <style>
+        *,
+        ::before,
+        ::after {
+            --tw-border-spacing-x: 0;
+            --tw-border-spacing-y: 0;
+            --tw-translate-x: 0;
+            --tw-translate-y: 0;
+            --tw-rotate: 0;
+            --tw-skew-x: 0;
+            --tw-skew-y: 0;
+            --tw-scale-x: 1;
+            --tw-scale-y: 1;
+            --tw-pan-x: ;
+            --tw-pan-y: ;
+            --tw-pinch-zoom: ;
+            --tw-scroll-snap-strictness: proximity;
+            --tw-gradient-from-position: ;
+            --tw-gradient-via-position: ;
+            --tw-gradient-to-position: ;
+            --tw-ordinal: ;
+            --tw-slashed-zero: ;
+            --tw-numeric-figure: ;
+            --tw-numeric-spacing: ;
+            --tw-numeric-fraction: ;
+            --tw-ring-inset: ;
+            --tw-ring-offset-width: 0px;
+            --tw-ring-offset-color: #fff;
+            --tw-ring-color: rgb(59 130 246 / 0.5);
+            --tw-ring-offset-shadow: 0 0 #0000;
+            --tw-ring-shadow: 0 0 #0000;
+            --tw-shadow: 0 0 #0000;
+            --tw-shadow-colored: 0 0 #0000;
+            --tw-blur: ;
+            --tw-brightness: ;
+            --tw-contrast: ;
+            --tw-grayscale: ;
+            --tw-hue-rotate: ;
+            --tw-invert: ;
+            --tw-saturate: ;
+            --tw-sepia: ;
+            --tw-drop-shadow: ;
+            --tw-backdrop-blur: ;
+            --tw-backdrop-brightness: ;
+            --tw-backdrop-contrast: ;
+            --tw-backdrop-grayscale: ;
+            --tw-backdrop-hue-rotate: ;
+            --tw-backdrop-invert: ;
+            --tw-backdrop-opacity: ;
+            --tw-backdrop-saturate: ;
+            --tw-backdrop-sepia: ;
+            --tw-contain-size: ;
+            --tw-contain-layout: ;
+            --tw-contain-paint: ;
+            --tw-contain-style:
+        }
+
+        ::backdrop {
+            --tw-border-spacing-x: 0;
+            --tw-border-spacing-y: 0;
+            --tw-translate-x: 0;
+            --tw-translate-y: 0;
+            --tw-rotate: 0;
+            --tw-skew-x: 0;
+            --tw-skew-y: 0;
+            --tw-scale-x: 1;
+            --tw-scale-y: 1;
+            --tw-pan-x: ;
+            --tw-pan-y: ;
+            --tw-pinch-zoom: ;
+            --tw-scroll-snap-strictness: proximity;
+            --tw-gradient-from-position: ;
+            --tw-gradient-via-position: ;
+            --tw-gradient-to-position: ;
+            --tw-ordinal: ;
+            --tw-slashed-zero: ;
+            --tw-numeric-figure: ;
+            --tw-numeric-spacing: ;
+            --tw-numeric-fraction: ;
+            --tw-ring-inset: ;
+            --tw-ring-offset-width: 0px;
+            --tw-ring-offset-color: #fff;
+            --tw-ring-color: rgb(59 130 246 / 0.5);
+            --tw-ring-offset-shadow: 0 0 #0000;
+            --tw-ring-shadow: 0 0 #0000;
+            --tw-shadow: 0 0 #0000;
+            --tw-shadow-colored: 0 0 #0000;
+            --tw-blur: ;
+            --tw-brightness: ;
+            --tw-contrast: ;
+            --tw-grayscale: ;
+            --tw-hue-rotate: ;
+            --tw-invert: ;
+            --tw-saturate: ;
+            --tw-sepia: ;
+            --tw-drop-shadow: ;
+            --tw-backdrop-blur: ;
+            --tw-backdrop-brightness: ;
+            --tw-backdrop-contrast: ;
+            --tw-backdrop-grayscale: ;
+            --tw-backdrop-hue-rotate: ;
+            --tw-backdrop-invert: ;
+            --tw-backdrop-opacity: ;
+            --tw-backdrop-saturate: ;
+            --tw-backdrop-sepia: ;
+            --tw-contain-size: ;
+            --tw-contain-layout: ;
+            --tw-contain-paint: ;
+            --tw-contain-style:
+        }
+
+        /* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */
+        *,
+        ::after,
+        ::before {
+            box-sizing: border-box;
+            border-width: 0;
+            border-style: solid;
+            border-color: #EEEEEE
+        }
+
+        ::after,
+        ::before {
+            --tw-content: ''
+        }
+
+        :host,
+        html {
+            line-height: 1.5;
+            -webkit-text-size-adjust: 100%;
+            -moz-tab-size: 4;
+            tab-size: 4;
+            font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+            font-feature-settings: normal;
+            font-variation-settings: normal;
+            -webkit-tap-highlight-color: transparent
+        }
+
+        body {
+            margin: 0;
+            line-height: inherit
+        }
+
+        hr {
+            height: 0;
+            color: inherit;
+            border-top-width: 1px
+        }
+
+        abbr:where([title]) {
+            -webkit-text-decoration: underline dotted;
+            text-decoration: underline dotted
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-size: inherit;
+            font-weight: inherit
+        }
+
+        a {
+            color: inherit;
+            text-decoration: inherit
+        }
+
+        b,
+        strong {
+            font-weight: bolder
+        }
+
+        code,
+        kbd,
+        pre,
+        samp {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-feature-settings: normal;
+            font-variation-settings: normal;
+            font-size: 1em
+        }
+
+        small {
+            font-size: 80%
+        }
+
+        sub,
+        sup {
+            font-size: 75%;
+            line-height: 0;
+            position: relative;
+            vertical-align: baseline
+        }
+
+        sub {
+            bottom: -.25em
+        }
+
+        sup {
+            top: -.5em
+        }
+
+        table {
+            text-indent: 0;
+            border-color: inherit;
+            border-collapse: collapse
+        }
+
+        button,
+        input,
+        optgroup,
+        select,
+        textarea {
+            font-family: inherit;
+            font-feature-settings: inherit;
+            font-variation-settings: inherit;
+            font-size: 100%;
+            font-weight: inherit;
+            line-height: inherit;
+            letter-spacing: inherit;
+            color: inherit;
+            margin: 0;
+            padding: 0
+        }
+
+        button,
+        select {
+            text-transform: none
+        }
+
+        button,
+        input:where([type=button]),
+        input:where([type=reset]),
+        input:where([type=submit]) {
+            -webkit-appearance: button;
+            background-color: transparent;
+            background-image: none
+        }
+
+        :-moz-focusring {
+            outline: auto
+        }
+
+        :-moz-ui-invalid {
+            box-shadow: none
+        }
+
+        progress {
+            vertical-align: baseline
+        }
+
+        ::-webkit-inner-spin-button,
+        ::-webkit-outer-spin-button {
+            height: auto
+        }
+
+        [type=search] {
+            -webkit-appearance: textfield;
+            outline-offset: -2px
+        }
+
+        ::-webkit-search-decoration {
+            -webkit-appearance: none
+        }
+
+        ::-webkit-file-upload-button {
+            -webkit-appearance: button;
+            font: inherit
+        }
+
+        summary {
+            display: list-item
+        }
+
+        blockquote,
+        dd,
+        dl,
+        figure,
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6,
+        hr,
+        p,
+        pre {
+            margin: 0
+        }
+
+        fieldset {
+            margin: 0;
+            padding: 0
+        }
+
+        legend {
+            padding: 0
+        }
+
+        menu,
+        ol,
+        ul {
+            list-style: none;
+            margin: 0;
+            padding: 0
+        }
+
+        dialog {
+            padding: 0
+        }
+
+        textarea {
+            resize: vertical
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            opacity: 1;
+            color: #9ca3af
+        }
+
+        [role=button],
+        button {
+            cursor: pointer
+        }
+
+        :disabled {
+            cursor: default
+        }
+
+        audio,
+        canvas,
+        embed,
+        iframe,
+        img,
+        object,
+        svg,
+        video {
+            display: block;
+            vertical-align: middle
+        }
+
+        img,
+        video {
+            max-width: 100%;
+            height: auto
+        }
+
+        [hidden]:where(:not([hidden=until-found])) {
+            display: none
+        }
+
+        .pointer-events-none {
+            pointer-events: none
+        }
+
+        .invisible {
+            visibility: hidden
+        }
+
+        .fixed {
+            position: fixed
+        }
+
+        .absolute {
+            position: absolute
+        }
+
+        .relative {
+            position: relative
+        }
+
+        .inset-0 {
+            inset: 0px
+        }
+
+        .inset-y-0 {
+            top: 0px;
+            bottom: 0px
+        }
+
+        .left-0 {
+            left: 0px
+        }
+
+        .right-0 {
+            right: 0px
+        }
+
+        .top-0 {
+            top: 0px
+        }
+
+        .-right-2 {
+            right: -0.5rem
+        }
+
+        .-top-2 {
+            top: -0.5rem
+        }
+
+        .z-40 {
+            z-index: 40
+        }
+
+        .z-50 {
+            z-index: 50
+        }
+
+        .mx-auto {
+            margin-left: auto;
+            margin-right: auto
+        }
+
+        .mb-12 {
+            margin-bottom: 3rem
+        }
+
+        .mb-2 {
+            margin-bottom: 0.5rem
+        }
+
+        .mb-3 {
+            margin-bottom: 0.75rem
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem
+        }
+
+        .mt-1 {
+            margin-top: 0.25rem
+        }
+
+        .mt-2 {
+            margin-top: 0.5rem
+        }
+
+        .line-clamp-2 {
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2
+        }
+
+        .block {
+            display: block
+        }
+
+        .flex {
+            display: flex
+        }
+
+        .grid {
+            display: grid
+        }
+
+        .hidden {
+            display: none
+        }
+
+        .aspect-square {
+            aspect-ratio: 1 / 1
+        }
+
+        .h-16 {
+            height: 4rem
+        }
+
+        .h-5 {
+            height: 1.25rem
+        }
+
+        .h-4 {
+            height: 1rem
+        }
+
+        .h-full {
+            height: 100%
+        }
+
+        .min-h-screen {
+            min-height: 100vh
+        }
+
+        .w-5 {
+            width: 1.25rem
+        }
+
+        .w-16 {
+            width: 4rem
+        }
+
+        .w-4 {
+            width: 1rem
+        }
+
+        .w-full {
+            width: 100%
+        }
+
+        .min-w-0 {
+            min-width: 0px
+        }
+
+        .max-w-7xl {
+            max-width: 80rem
+        }
+
+        .flex-1 {
+            flex: 1 1 0%
+        }
+
+        .translate-x-full {
+            --tw-translate-x: 100%;
+            transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))
+        }
+
+        .transform {
+            transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))
+        }
+
+        .select-none {
+            -webkit-user-select: none;
+            user-select: none
+        }
+
+        .grid-cols-2 {
+            grid-template-columns: repeat(2, minmax(0, 1fr))
+        }
+
+        .grid-cols-1 {
+            grid-template-columns: repeat(1, minmax(0, 1fr))
+        }
+
+        .flex-col {
+            flex-direction: column
+        }
+
+        .items-center {
+            align-items: center
+        }
+
+        .justify-center {
+            justify-content: center
+        }
+
+        .justify-between {
+            justify-content: space-between
+        }
+
+        .gap-6 {
+            gap: 1.5rem
+        }
+
+        .gap-8 {
+            gap: 2rem
+        }
+
+        .gap-2 {
+            gap: 0.5rem
+        }
+
+        .gap-3 {
+            gap: 0.75rem
+        }
+
+        .gap-4 {
+            gap: 1rem
+        }
+
+        .gap-12 {
+            gap: 3rem
+        }
+
+        .space-y-4> :not([hidden])~ :not([hidden]) {
+            --tw-space-y-reverse: 0;
+            margin-top: calc(1rem * calc(1 - var(--tw-space-y-reverse)));
+            margin-bottom: calc(1rem * var(--tw-space-y-reverse))
+        }
+
+        .space-y-2> :not([hidden])~ :not([hidden]) {
+            --tw-space-y-reverse: 0;
+            margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));
+            margin-bottom: calc(0.5rem * var(--tw-space-y-reverse))
+        }
+
+        .overflow-hidden {
+            overflow: hidden
+        }
+
+        .overflow-x-auto {
+            overflow-x: auto
+        }
+
+        .overflow-y-auto {
+            overflow-y: auto
+        }
+
+        .truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap
+        }
+
+        .whitespace-nowrap {
+            white-space: nowrap
+        }
+
+        .rounded-full {
+            border-radius: 9999px
+        }
+
+        .border {
+            border-width: 1px
+        }
+
+        .border-b {
+            border-bottom-width: 1px
+        }
+
+        .border-b-2 {
+            border-bottom-width: 2px
+        }
+
+        .border-t {
+            border-top-width: 1px
+        }
+
+        .border-gray-100 {
+            --tw-border-opacity: 1;
+            border-color: rgb(245 245 245 / var(--tw-border-opacity, 1))
+        }
+
+        .border-black {
+            --tw-border-opacity: 1;
+            border-color: rgb(0 0 0 / var(--tw-border-opacity, 1))
+        }
+
+        .border-gray-200 {
+            --tw-border-opacity: 1;
+            border-color: rgb(238 238 238 / var(--tw-border-opacity, 1))
+        }
+
+        .border-gray-300 {
+            --tw-border-opacity: 1;
+            border-color: rgb(224 224 224 / var(--tw-border-opacity, 1))
+        }
+
+        .border-transparent {
+            border-color: transparent
+        }
+
+        .bg-white {
+            --tw-bg-opacity: 1;
+            background-color: rgb(255 255 255 / var(--tw-bg-opacity, 1))
+        }
+
+        .bg-[#252526] {
+            --tw-bg-opacity: 1;
+            background-color: rgb(0 0 0 / var(--tw-bg-opacity, 1))
+        }
+
+        .bg-gray-100 {
+            --tw-bg-opacity: 1;
+            background-color: rgb(245 245 245 / var(--tw-bg-opacity, 1))
+        }
+
+        .bg-gray-50 {
+            --tw-bg-opacity: 1;
+            background-color: rgb(250 250 250 / var(--tw-bg-opacity, 1))
+        }
+
+        .object-cover {
+            object-fit: cover
+        }
+
+        .p-6 {
+            padding: 1.5rem
+        }
+
+        .px-4 {
+            padding-left: 1rem;
+            padding-right: 1rem
+        }
+
+        .px-3 {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem
+        }
+
+        .py-2 {
+            padding-top: 0.5rem;
+            padding-bottom: 0.5rem
+        }
+
+        .py-4 {
+            padding-top: 1rem;
+            padding-bottom: 1rem
+        }
+
+        .py-16 {
+            padding-top: 4rem;
+            padding-bottom: 4rem
+        }
+
+        .py-3 {
+            padding-top: 0.75rem;
+            padding-bottom: 0.75rem
+        }
+
+        .pb-12 {
+            padding-bottom: 3rem
+        }
+
+        .pb-2 {
+            padding-bottom: 0.5rem
+        }
+
+        .pb-3 {
+            padding-bottom: 0.75rem
+        }
+
+        .pb-4 {
+            padding-bottom: 1rem
+        }
+
+        .pt-16 {
+            padding-top: 4rem
+        }
+
+        .pt-8 {
+            padding-top: 2rem
+        }
+
+        .text-center {
+            text-align: center
+        }
+
+        .font-body {
+            font-family: "Outfit", sans-serif
+        }
+
+        .font-display {
+            font-family: "Playfair Display", serif
+        }
+
+        .text-sm {
+            font-size: 0.875rem;
+            line-height: 1.25rem
+        }
+
+        .text-xl {
+            font-size: 1.25rem;
+            line-height: 1.75rem
+        }
+
+        .text-4xl {
+            font-size: 2.25rem;
+            line-height: 2.5rem
+        }
+
+        .text-lg {
+            font-size: 1.125rem;
+            line-height: 1.75rem
+        }
+
+        .text-xs {
+            font-size: 0.75rem;
+            line-height: 1rem
+        }
+
+        .font-bold {
+            font-weight: 700
+        }
+
+        .font-medium {
+            font-weight: 500
+        }
+
+        .font-semibold {
+            font-weight: 600
+        }
+
+        .uppercase {
+            text-transform: uppercase
+        }
+
+        .leading-relaxed {
+            line-height: 1.625
+        }
+
+        .tracking-wider {
+            letter-spacing: 0.05em
+        }
+
+        .text-gray-900 {
+            --tw-text-opacity: 1;
+            color: rgb(33 33 33 / var(--tw-text-opacity, 1))
+        }
+
+        .text-black {
+            --tw-text-opacity: 1;
+            color: rgb(0 0 0 / var(--tw-text-opacity, 1))
+        }
+
+        .text-gray-700 {
+            --tw-text-opacity: 1;
+            color: rgb(97 97 97 / var(--tw-text-opacity, 1))
+        }
+
+        .text-gray-600 {
+            --tw-text-opacity: 1;
+            color: rgb(117 117 117 / var(--tw-text-opacity, 1))
+        }
+
+        .text-white {
+            --tw-text-opacity: 1;
+            color: rgb(255 255 255 / var(--tw-text-opacity, 1))
+        }
+
+        .underline {
+            -webkit-text-decoration-line: underline;
+            text-decoration-line: underline
+        }
+
+        .underline-offset-4 {
+            text-underline-offset: 4px
+        }
+
+        .opacity-0 {
+            opacity: 0
+        }
+
+        .shadow-2xl {
+            --tw-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+            --tw-shadow-colored: 0 25px 50px -12px var(--tw-shadow-color);
+            box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)
+        }
+
+        .outline-none {
+            outline: 2px solid transparent;
+            outline-offset: 2px
+        }
+
+        .transition-colors {
+            transition-property: color, background-color, border-color, fill, stroke, -webkit-text-decoration-color;
+            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, -webkit-text-decoration-color;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms
+        }
+
+        .transition-transform {
+            transition-property: transform;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms
+        }
+
+        .transition-all {
+            transition-property: all;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms
+        }
+
+        .duration-300 {
+            transition-duration: 300ms
+        }
+
+        .duration-500 {
+            transition-duration: 500ms
+        }
+
+        .hover\:border-black:hover {
+            --tw-border-opacity: 1;
+            border-color: rgb(0 0 0 / var(--tw-border-opacity, 1))
+        }
+
+        .hover\:border-gray-300:hover {
+            --tw-border-opacity: 1;
+            border-color: rgb(224 224 224 / var(--tw-border-opacity, 1))
+        }
+
+        .hover\:bg-gray-800:hover {
+            --tw-bg-opacity: 1;
+            background-color: rgb(66 66 66 / var(--tw-bg-opacity, 1))
+        }
+
+        .hover\:text-black:hover {
+            --tw-text-opacity: 1;
+            color: rgb(0 0 0 / var(--tw-text-opacity, 1))
+        }
+
+        .hover\:text-red-600:hover {
+            --tw-text-opacity: 1;
+            color: rgb(220 38 38 / var(--tw-text-opacity, 1))
+        }
+
+        .group:hover .group-hover\:scale-110 {
+            --tw-scale-x: 1.1;
+            --tw-scale-y: 1.1;
+            transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))
+        }
+
+        .group:hover .group-hover\:text-black {
+            --tw-text-opacity: 1;
+            color: rgb(0 0 0 / var(--tw-text-opacity, 1))
+        }
+
+        .group:hover .group-hover\:underline {
+            -webkit-text-decoration-line: underline;
+            text-decoration-line: underline
+        }
+
+        @media (min-width: 640px) {
+            .sm\:w-96 {
+                width: 24rem
+            }
+
+            .sm\:grid-cols-2 {
+                grid-template-columns: repeat(2, minmax(0, 1fr))
+            }
+
+            .sm\:flex-row {
+                flex-direction: row
+            }
+
+            .sm\:items-end {
+                align-items: flex-end
+            }
+
+            .sm\:justify-between {
+                justify-content: space-between
+            }
+
+            .sm\:gap-6 {
+                gap: 1.5rem
+            }
+
+            .sm\:px-6 {
+                padding-left: 1.5rem;
+                padding-right: 1.5rem
+            }
+
+            .sm\:text-5xl {
+                font-size: 3rem;
+                line-height: 1
+            }
+        }
+
+        @media (min-width: 768px) {
+            .md\:flex {
+                display: flex
+            }
+
+            .md\:hidden {
+                display: none
+            }
+
+            .md\:grid-cols-4 {
+                grid-template-columns: repeat(4, minmax(0, 1fr))
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .lg\:grid-cols-4 {
+                grid-template-columns: repeat(4, minmax(0, 1fr))
+            }
+
+            .lg\:px-8 {
+                padding-left: 2rem;
+                padding-right: 2rem
+            }
+        }
+    </style>
+</head>
+<!-- #/engine/head/encode/:END; -->
+
+<body class="bg-white text-gray-900 font-body">
+
+    <!-- Navbar -->
+    <!-- #/engine/navbar/encode/:BEGIN -->
+    <nav class="fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-100 font-body">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+
+            <!-- Logo -->
+            <a href="#/home" class="font-display text-xl font-bold text-black select-none" data-testid="logo">
+                <img style="width: 4.1rem;" src="./theme/images">
+            </a>
+
+            <!-- Center navigation (hidden on mobile) -->
+            <ul class="hidden md:flex items-center gap-8 text-sm font-medium text-gray-700">
+                <li><a href="#/home" class="nav-link hover:text-black transition-colors">Home</a></li>
+                <li><a href="#/shop" class="nav-link hover:text-black transition-colors text-black font-bold">Shop</a>
+                </li>
+                <li><a href="#/collection" class="nav-link hover:text-black transition-colors">Collection</a></li>
+                <li><a href="#/about" class="nav-link hover:text-black transition-colors">About</a></li>
+            </ul>
+
+            <!-- Right: Search + Cart -->
+            <div class="flex items-center gap-6">
+                <!-- Search -->
+                <a href="#/search" class="text-gray-700 hover:text-black transition-colors" aria-label="Search">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        data-lucide="search" aria-hidden="true" class="lucide lucide-search w-5 h-5">
+                        <path d="m21 21-4.34-4.34"></path>
+                        <circle cx="11" cy="11" r="8"></circle>
+                    </svg>
+                </a>
+
+                <!-- Account -->
+                <a href="#/account" class="text-gray-700 hover:text-black transition-colors" aria-label="Account">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        data-lucide="user" aria-hidden="true" class="lucide lucide-user w-5 h-5">
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </a>
+
+                <!-- Cart (opens drawer) -->
+                <button id="cart-trigger" class="relative text-gray-700 hover:text-black transition-colors"
+                    aria-label="Cart" aria-expanded="false">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        data-lucide="shopping-bag" aria-hidden="true" class="lucide lucide-shopping-bag w-5 h-5">
+                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                        <path d="M3.103 6.034h17.794"></path>
+                        <path
+                            d="M3.4 5.467a2 2 0 0 0-.4 1.2V20a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6.667a2 2 0 0 0-.4-1.2l-2-2.667A2 2 0 0 0 17 2H7a2 2 0 0 0-1.6.8z">
+                        </path>
+                    </svg>
+                    <span
+                        class="absolute -top-2 -right-2 bg-[#252526]  text-white text-xs w-4 h-4 flex items-center justify-center rounded-full font-semibold">
+                        1 </span>
+                </button>
+
+                <!-- Mobile menu toggle -->
+                <button id="mobile-menu-btn" class="md:hidden text-gray-700 hover:text-black" aria-label="Menu">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        data-lucide="menu" aria-hidden="true" class="lucide lucide-menu w-5 h-5">
+                        <path d="M4 5h16"></path>
+                        <path d="M4 12h16"></path>
+                        <path d="M4 19h16"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile menu -->
+        <div id="mobile-menu" class="hidden md:hidden border-t border-gray-100 bg-white">
+            <ul class="flex flex-col px-4 py-4 gap-3 text-sm font-medium text-gray-700">
+                <li><a href="#/home" class="block py-2 hover:text-black transition-colors">Home</a></li>
+                <li><a href="#/shop" class="block py-2 hover:text-black transition-colors">Shop</a></li>
+                <li><a href="#/collection" class="block py-2 hover:text-black transition-colors">Collection</a></li>
+                <li><a href="#/about" class="block py-2 hover:text-black transition-colors">About</a></li>
+                <li><a href="#/contact" class="block py-2 hover:text-black transition-colors">Contact</a></li>
+            </ul>
+        </div>
+    </nav>
+    <!-- #/engine/navbar/encode/:END; -->
+
+
+    <!-- Page content -->
+    <main id="main-content" class="pt-16 min-h-screen">
+        <!-- #/engine/body/encode/:BEGIN -->
+        <!-- ════════════════════════════════ SHOP PAGE ════════════════════════════════ -->
+
+        <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-12">
+            <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-6 mb-12">
+                <div>
+                    <h1 class="font-display text-4xl sm:text-5xl font-bold text-black">Shop</h1>
+                    <p class="text-gray-600 text-sm mt-2">All products</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <label class="text-xs uppercase text-gray-600 font-semibold">Sort by</label>
+                    <select
+                        class="bg-white border border-gray-300 text-sm px-3 py-2 hover:border-black transition-colors outline-none">
+                        <option>Latest</option>
+                        <option>Price: Low to High</option>
+                        <option>Price: High to Low</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Filter tabs -->
+            <div class="flex gap-2 mb-12 overflow-x-auto pb-2 border-b border-gray-200">
+                <a href="#/shop"
+                    class="text-sm font-medium text-black whitespace-nowrap pb-3 border-b-2 border-black">All</a>
+                <a href="#/shop?cat=essentials"
+                    class="text-sm font-medium text-gray-600 hover:text-black whitespace-nowrap pb-3 border-b-2 border-transparent hover:border-gray-300 transition-colors">Essentials</a>
+                <a href="#/shop?cat=new"
+                    class="text-sm font-medium text-gray-600 hover:text-black whitespace-nowrap pb-3 border-b-2 border-transparent hover:border-gray-300 transition-colors">New</a>
+                <a href="#/shop?cat=sale"
+                    class="text-sm font-medium text-gray-600 hover:text-black whitespace-nowrap pb-3 border-b-2 border-transparent hover:border-gray-300 transition-colors">Sale</a>
+            </div>
+
+            <!-- Product grid -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+
+
+                <div class="group">
+                    <div class="relative overflow-hidden bg-gray-100 aspect-square mb-4">
+                        <img src="./theme/Underdog-114-1000x1259.webp" alt="Underdog Hoodie"
+                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    </div>
+
+                    <a href="#/product/6/" class="block">
+                        <p
+                            class="text-xs uppercase text-gray-600 font-semibold mb-2 group-hover:text-black transition-colors">
+
+                        </p>
+                        <p
+                            class="font-medium text-black text-sm mb-3 group-hover:underline underline-offset-4 transition-colors line-clamp-2">
+                            Underdog Hoodie
+                        </p>
+                        <p class="font-semibold text-black">699.99</p>
+                    </a>
+                </div>
+                <div class="group">
+                    <div class="relative overflow-hidden bg-gray-100 aspect-square mb-4">
+                        <img src="./theme/Mocks-_B-Tee-Back-1000x1259.png" alt="HEATSKRS OVRSZD TEE"
+                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    </div>
+
+                    <a href="#/product/5/" class="block">
+                        <p
+                            class="text-xs uppercase text-gray-600 font-semibold mb-2 group-hover:text-black transition-colors">
+
+                        </p>
+                        <p
+                            class="font-medium text-black text-sm mb-3 group-hover:underline underline-offset-4 transition-colors line-clamp-2">
+                            HEATSKRS OVRSZD TEE
+                        </p>
+                        <p class="font-semibold text-black">499</p>
+                    </a>
+                </div>
+                <div class="group">
+                    <div class="relative overflow-hidden bg-gray-100 aspect-square mb-4">
+                        <img src="./theme/Shine-Black-Hoodie_back_1721644978-1000x1260.webp" alt="SHINE O’ CLOCK Hoodie"
+                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    </div>
+
+                    <a href="#/product/4/" class="block">
+                        <p
+                            class="text-xs uppercase text-gray-600 font-semibold mb-2 group-hover:text-black transition-colors">
+
+                        </p>
+                        <p
+                            class="font-medium text-black text-sm mb-3 group-hover:underline underline-offset-4 transition-colors line-clamp-2">
+                            SHINE O’ CLOCK Hoodie
+                        </p>
+                        <p class="font-semibold text-black">699.99</p>
+                    </a>
+                </div>
+                <div class="group">
+                    <div class="relative overflow-hidden bg-gray-100 aspect-square mb-4">
+                        <img src="./theme/Mocks-_Hoodie-Back-1000x1259.png" alt="HEATSKRS HOODIE"
+                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    </div>
+
+                    <a href="#/product/3/" class="block">
+                        <p
+                            class="text-xs uppercase text-gray-600 font-semibold mb-2 group-hover:text-black transition-colors">
+
+                        </p>
+                        <p
+                            class="font-medium text-black text-sm mb-3 group-hover:underline underline-offset-4 transition-colors line-clamp-2">
+                            HEATSKRS HOODIE
+                        </p>
+                        <p class="font-semibold text-black">799</p>
+                    </a>
+                </div>
+                <div class="group">
+                    <div class="relative overflow-hidden bg-gray-100 aspect-square mb-4">
+                        <img src="./theme/Mocks-94-1000x1259.webp" alt="Deadlines SLVLSS Tee"
+                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    </div>
+
+                    <a href="#/product/2/" class="block">
+                        <p
+                            class="text-xs uppercase text-gray-600 font-semibold mb-2 group-hover:text-black transition-colors">
+
+                        </p>
+                        <p
+                            class="font-medium text-black text-sm mb-3 group-hover:underline underline-offset-4 transition-colors line-clamp-2">
+                            Deadlines SLVLSS Tee
+                        </p>
+                        <p class="font-semibold text-black">399.99</p>
+                    </a>
+                </div>
+                <div class="group">
+                    <div class="relative overflow-hidden bg-gray-100 aspect-square mb-4">
+                        <img src="./theme/Mocks-134-1000x1259.png" alt="TBHBG 220GSM OVRSZD TEE"
+                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                    </div>
+
+                    <a href="#/product/1/" class="block">
+                        <p
+                            class="text-xs uppercase text-gray-600 font-semibold mb-2 group-hover:text-black transition-colors">
+
+                        </p>
+                        <p
+                            class="font-medium text-black text-sm mb-3 group-hover:underline underline-offset-4 transition-colors line-clamp-2">
+                            TBHBG 220GSM OVRSZD TEE
+                        </p>
+                        <p class="font-semibold text-black">499.99</p>
+                    </a>
+                </div>
+            </div>
+        </section>
+        <!-- #/engine/body/encode/:END; -->
+
+    </main>
+
+    <!-- Cart Drawer -->
+    <div id="cart-drawer"
+        class="fixed inset-y-0 right-0 z-50 w-full sm:w-96 bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between p-6 border-b border-gray-100">
+            <h2 class="font-display text-lg font-bold">Your Cart</h2>
+            <button id="cart-close" class="text-gray-700 hover:text-black transition-colors" aria-label="Close cart">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    data-lucide="x" aria-hidden="true" class="lucide lucide-x w-5 h-5">
+                    <path d="M18 6 6 18"></path>
+                    <path d="m6 6 12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Items container -->
+        <div id="cart-items" class="flex-1 overflow-y-auto p-6 space-y-4">
+            <div class="flex gap-4 pb-4 border-b border-gray-100">
+                <img src="./theme/Mocks-94-1000x1259.webp" alt="Deadlines SLVLSS Tee"
+                    class="w-16 h-16 object-cover bg-gray-100">
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-black truncate">Deadlines SLVLSS Tee</p>
+                    <p class="text-xs text-gray-600 mt-1">399.99 × 1</p>
+                    <form method="POST" action="#/cart" class="mt-2">
+                        <input type="hidden" name="action" value="remove">
+                        <input type="hidden" name="product_id" value="2">
+                        <button type="submit"
+                            class="text-xs text-gray-600 hover:text-red-600 transition-colors underline">
+                            Remove
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="border-t border-gray-100 p-6 space-y-4">
+            <div class="flex justify-between text-sm font-medium">
+                <span>Subtotal</span>
+                <span>R399.99</span>
+            </div>
+            <p class="text-xs text-gray-600 text-center">Shipping calculated at checkout</p>
+            <a href="#/checkout"
+                class="block w-full bg-[#252526]  text-white py-3 text-sm font-medium hover:bg-gray-800 transition-colors text-center">
+                Checkout
+            </a>
+            <button id="drawer-continue" type="button"
+                class="w-full border border-gray-300 text-black py-3 text-sm font-medium hover:border-black transition-colors">
+                Continue Shopping
+            </button>
+        </div>
+    </div>
+
+    <!-- Drawer backdrop -->
+    <div id="cart-backdrop"
+        class="fixed inset-0 z-40 bg-[#252526]  opacity-0 invisible transition-all duration-300 pointer-events-none">
+    </div>
+
+    <!-- Footer -->
+    <footer class="border-t border-gray-100 bg-gray-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+
+                <!-- Brand -->
+                <div>
+                    <p class="font-display text-lg font-bold mb-3">BLACK SHEEP.</p>
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        Thoughtfully curated essentials. Designed for simplicity, built for purpose.
+                    </p>
+                </div>
+
+                <!-- Shop -->
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-gray-900 mb-4">Shop</p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li><a href="#/shop" class="hover:text-black transition-colors">All Products</a></li>
+                        <li><a href="#/collection" class="hover:text-black transition-colors">Collection</a></li>
+                        <li><a href="#/search" class="hover:text-black transition-colors">Search</a></li>
+                    </ul>
+                </div>
+
+                <!-- Customer Care -->
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-gray-900 mb-4">Care</p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li><a href="#/contact" class="hover:text-black transition-colors">Contact</a></li>
+                        <li><a href="#/policy" class="hover:text-black transition-colors">Returns</a></li>
+                        <li><a href="#/about" class="hover:text-black transition-colors">About</a></li>
+                    </ul>
+                </div>
+
+                <!-- Connect -->
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-gray-900 mb-4">Connect</p>
+                    <ul class="space-y-2 text-sm text-gray-600">
+                        <li><a href="#/shop#" class="hover:text-black transition-colors">Instagram</a></li>
+                        <li><a href="#/shop#" class="hover:text-black transition-colors">Twitter</a></li>
+                        <li><a href="#/shop#" class="hover:text-black transition-colors">Email</a></li>
+                    </ul>
+                </div>
+
+            </div>
+
+            <div
+                class="border-t border-gray-200 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-gray-600">
+                <p>© 2026 Black Sheep. All rights reserved.</p>
+                <p>Powered By Varsity Market Technologies</p>
+
+                <div class="flex gap-6">
+                    <a href="#/policy" class="hover:text-black transition-colors">Privacy</a>
+                    <a href="#/policy" class="hover:text-black transition-colors">Cookie</a>
+                    <a href="#/policy" class="hover:text-black transition-colors">Return</a>
+                    <a href="#/policy" class="hover:text-black transition-colors">Terms</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Lucide icons init -->
+    <script>lucide.createIcons();</script>
+
+    <!-- Cart drawer logic -->
+    <script>
+        const cartTrigger = document.getElementById('cart-trigger');
+        const cartDrawer = document.getElementById('cart-drawer');
+        const cartClose = document.getElementById('cart-close');
+        const cartBackdrop = document.getElementById('cart-backdrop');
+        const drawerContinue = document.getElementById('drawer-continue');
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        // Open drawer
+        cartTrigger?.addEventListener('click', () => {
+            cartDrawer.classList.remove('translate-x-full');
+            cartBackdrop.classList.add('opacity-50', 'pointer-events-auto');
+            cartTrigger.setAttribute('aria-expanded', 'true');
+        });
+
+        // Close drawer
+        function closeCart() {
+            cartDrawer.classList.add('translate-x-full');
+            cartBackdrop.classList.remove('opacity-50', 'pointer-events-auto');
+            cartTrigger.setAttribute('aria-expanded', 'false');
+        }
+
+        cartClose?.addEventListener('click', closeCart);
+        cartBackdrop?.addEventListener('click', closeCart);
+        drawerContinue?.addEventListener('click', closeCart);
+
+        // Mobile menu toggle
+        mobileMenuBtn?.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Close drawer on checkout link click
+        document.querySelectorAll('#cart-drawer a[href="/checkout"]').forEach(link => {
+            link.addEventListener('click', closeCart);
+        });
+    </script>
+
+    <!-- Highlight active nav link -->
+    <script>
+        const path = window.location.pathname.replace(/\/$/, '') || '/home';
+        document.querySelectorAll('.nav-link').forEach(a => {
+            if (a.getAttribute('href') === path) {
+                a.classList.add('text-black', 'font-bold');
+                a.classList.remove('text-gray-700');
+            }
+        });
+    </script>
+    e(__SYSTEM_ANALYTICS__)
+
+
+</body>
+
+</html>
