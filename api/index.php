@@ -16,7 +16,9 @@ $store_id = ex(2);
 
 if (empty($store_id)) {
     header("Access-Control-Allow-Origin: *");
-    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit; }
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        exit;
+    }
     http_response_code(400);
     echo json_encode(["error" => "Missing store ID", "usage" => "/store-access/{store-id}/?state={endpoint}"]);
     exit;
@@ -28,7 +30,9 @@ $site = $db_engine->query("SELECT * FROM sys_websites WHERE id = ? LIMIT 1", [$s
 
 if (empty($site)) {
     header("Access-Control-Allow-Origin: *");
-    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { exit; }
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        exit;
+    }
     http_response_code(404);
     echo json_encode(["error" => "Store not found"]);
     exit;
@@ -137,7 +141,8 @@ if (empty($api_key)) {
 }
 
 // --- Customer token (optional, additive — never replaces store API key) ---
-function extract_customer_token(): ?string {
+function extract_customer_token(): ?string
+{
     $tok = $_SERVER['HTTP_X_CUSTOMER_TOKEN'] ?? '';
     $tok = is_string($tok) ? trim($tok) : '';
     return $tok === '' ? null : $tok;
@@ -178,7 +183,8 @@ $db = new database_manager($public_db_path);
 @include_once dirname(__FILE__) . "/../module/customer_account.php";
 
 // --- Helper: enrich cart items with product details ---
-function enrich_cart($items_json, $public_db) {
+function enrich_cart($items_json, $public_db)
+{
     $items = is_array($items_json) ? $items_json : json_decode($items_json, true);
     if (!is_array($items) || empty($items)) {
         return ["items" => [], "item_count" => 0, "subtotal" => 0];
@@ -222,7 +228,8 @@ function enrich_cart($items_json, $public_db) {
 }
 
 // --- Helper: return full cart state ---
-function get_cart_response($cart_id, $private_db, $public_db) {
+function get_cart_response($cart_id, $private_db, $public_db)
+{
     $cart = $private_db->query("SELECT * FROM cart_sessions WHERE cart_id = ? LIMIT 1", [$cart_id]);
     if (empty($cart)) {
         return null;
@@ -301,9 +308,7 @@ if ($method === 'GET') {
                 "total" => $total
             ]
         ]);
-    }
-
-    elseif ($request == "product") {
+    } elseif ($request == "product") {
         $id = $_GET['id'] ?? 0;
         // Attempt JOIN with categories for category name, fallback to plain query
         $data = [];
@@ -326,17 +331,13 @@ if ($method === 'GET') {
             http_response_code(404);
             echo json_encode(["error" => "Product not found"]);
         }
-    }
-
-    elseif ($request == "categories") {
+    } elseif ($request == "categories") {
         $data = $db->query("SELECT * FROM categories ORDER BY name ASC");
         foreach ($data as $key => $value) {
             $data[$key]['id'] = (int) $value['id'];
         }
         echo json_encode(["success" => true, "data" => $data]);
-    }
-
-    elseif ($request == "products_by_category") {
+    } elseif ($request == "products_by_category") {
         $cat_id = $_GET['category_id'] ?? 0;
         $page = max(1, (int) ($_GET['page'] ?? 1));
         $limit = max(1, min(100, (int) ($_GET['limit'] ?? 50)));
@@ -360,9 +361,7 @@ if ($method === 'GET') {
                 "total" => $total
             ]
         ]);
-    }
-
-    elseif ($request == "search") {
+    } elseif ($request == "search") {
         $query = $_GET['q'] ?? '';
         if (empty($query)) {
             echo json_encode(["success" => true, "data" => [], "pagination" => ["page" => 1, "limit" => 50, "total" => 0]]);
@@ -391,19 +390,16 @@ if ($method === 'GET') {
                 ]
             ]);
         }
-    }
-
-    elseif ($request == "discounts") {
+    } elseif ($request == "discounts") {
         $data = $db->query("SELECT * FROM discounts WHERE active = 1 ORDER BY id DESC");
-        if (!$data) $data = [];
+        if (!$data)
+            $data = [];
         foreach ($data as $key => $value) {
             $data[$key]['id'] = (int) $value['id'];
             $data[$key]['percentage'] = (float) ($value['percentage'] ?? 0);
         }
         echo json_encode(["success" => true, "data" => $data]);
-    }
-
-    elseif ($request == "site") {
+    } elseif ($request == "site") {
         echo json_encode([
             "success" => true,
             "data" => [
@@ -412,9 +408,7 @@ if ($method === 'GET') {
                 "currency" => "R"
             ]
         ]);
-    }
-
-    elseif ($request == "orders") {
+    } elseif ($request == "orders") {
         $email = $_GET['email'] ?? '';
         if (!empty($email)) {
             $data = $db->query("SELECT id, customer_name, total_amount, items, status, created_at FROM orders WHERE customer_email = ? ORDER BY created_at DESC", [$email]);
@@ -427,9 +421,7 @@ if ($method === 'GET') {
             $data[$key]['items'] = json_decode($value['items'] ?? '[]', true);
         }
         echo json_encode(["success" => true, "data" => $data]);
-    }
-
-    elseif ($request == "cart") {
+    } elseif ($request == "cart") {
         $cart_id = $_GET['cart_id'] ?? '';
         if (empty($cart_id)) {
             http_response_code(400);
@@ -467,7 +459,7 @@ if ($method === 'GET') {
             echo json_encode(["ok" => false, "error" => "Invalid or expired token"]);
             exit;
         }
-        echo json_encode(customer_my_orders($db, (int)$customer['id']));
+        echo json_encode(customer_my_orders($db, (int) $customer['id']));
         exit;
     }
 
@@ -480,28 +472,35 @@ if ($method === 'GET') {
             echo json_encode(["ok" => false, "error" => "Invalid or expired token"]);
             exit;
         }
-        echo json_encode(customer_addresses_list($db, (int)$customer['id']));
+        echo json_encode(customer_addresses_list($db, (int) $customer['id']));
         exit;
-    }
-
-    else {
+    } else {
         echo json_encode([
             "success" => true,
             "store" => $store_name,
             "store_id" => $store_id,
             "endpoints" => [
                 "GET" => [
-                    "products", "products?page=1&limit=20",
-                    "product?id={id}", "categories",
+                    "products",
+                    "products?page=1&limit=20",
+                    "product?id={id}",
+                    "categories",
                     "products_by_category?category_id={id}",
-                    "search?q={query}", "discounts", "site",
-                    "orders?email={email}", "cart?cart_id={id}",
+                    "search?q={query}",
+                    "discounts",
+                    "site",
+                    "orders?email={email}",
+                    "cart?cart_id={id}",
                     "checkout&session_id={id}"
                 ],
                 "POST" => [
-                    "order", "cart_create", "cart_add",
-                    "cart_update", "cart_remove",
-                    "checkout_create", "checkout_complete"
+                    "order",
+                    "cart_create",
+                    "cart_add",
+                    "cart_update",
+                    "cart_remove",
+                    "checkout_create",
+                    "checkout_complete"
                 ]
             ]
         ]);
@@ -513,7 +512,9 @@ if ($method === 'GET') {
 // =====================
 elseif ($method === 'POST') {
     $input = json_decode(file_get_contents('php://input'), true);
-    if (!is_array($input)) { $input = []; }   // guard against null / non-array body
+    if (!is_array($input)) {
+        $input = [];
+    }   // guard against null / non-array body
 
     if ($request == "order") {
         $customer_name = $input['name'] ?? '';
@@ -542,15 +543,11 @@ elseif ($method === 'POST') {
         $result = $db->query($sql, [$customer_name, $customer_email, $total_amount, $items]);
 
         echo json_encode(["success" => true, "message" => "Order placed successfully"]);
-    }
-
-    elseif ($request == "cart_create") {
+    } elseif ($request == "cart_create") {
         $cart_id = bin2hex(random_bytes(16));
         $private_db->query("INSERT INTO cart_sessions (cart_id, items) VALUES (?, '[]')", [$cart_id]);
         echo json_encode(["success" => true, "data" => ["cart_id" => $cart_id]]);
-    }
-
-    elseif ($request == "cart_add") {
+    } elseif ($request == "cart_add") {
         $cart_id = $input['cart_id'] ?? '';
         $product_id = (int) ($input['product_id'] ?? 0);
         $quantity = (int) ($input['quantity'] ?? 1);
@@ -578,7 +575,8 @@ elseif ($method === 'POST') {
         }
 
         $items = json_decode($cart[0]['items'], true);
-        if (!is_array($items)) $items = [];
+        if (!is_array($items))
+            $items = [];
 
         // Add or increment
         $found = false;
@@ -599,9 +597,7 @@ elseif ($method === 'POST') {
 
         $cart_data = get_cart_response($cart_id, $private_db, $db);
         echo json_encode(["success" => true, "data" => $cart_data]);
-    }
-
-    elseif ($request == "cart_update") {
+    } elseif ($request == "cart_update") {
         $cart_id = $input['cart_id'] ?? '';
         $product_id = (int) ($input['product_id'] ?? 0);
         $quantity = (int) ($input['quantity'] ?? 0);
@@ -620,7 +616,8 @@ elseif ($method === 'POST') {
         }
 
         $items = json_decode($cart[0]['items'], true);
-        if (!is_array($items)) $items = [];
+        if (!is_array($items))
+            $items = [];
 
         // Update or remove
         $new_items = [];
@@ -640,9 +637,7 @@ elseif ($method === 'POST') {
 
         $cart_data = get_cart_response($cart_id, $private_db, $db);
         echo json_encode(["success" => true, "data" => $cart_data]);
-    }
-
-    elseif ($request == "cart_remove") {
+    } elseif ($request == "cart_remove") {
         $cart_id = $input['cart_id'] ?? '';
         $product_id = (int) ($input['product_id'] ?? 0);
 
@@ -660,7 +655,8 @@ elseif ($method === 'POST') {
         }
 
         $items = json_decode($cart[0]['items'], true);
-        if (!is_array($items)) $items = [];
+        if (!is_array($items))
+            $items = [];
 
         $new_items = [];
         foreach ($items as $item) {
@@ -673,9 +669,7 @@ elseif ($method === 'POST') {
 
         $cart_data = get_cart_response($cart_id, $private_db, $db);
         echo json_encode(["success" => true, "data" => $cart_data]);
-    }
-
-    elseif ($request == "checkout_create") {
+    } elseif ($request == "checkout_create") {
         $cart_id = $input['cart_id'] ?? '';
         $return_url = $input['return_url'] ?? '';
 
@@ -723,9 +717,7 @@ elseif ($method === 'POST') {
                 "session_id" => $session_id
             ]
         ]);
-    }
-
-    elseif ($request == "checkout_complete") {
+    } elseif ($request == "checkout_complete") {
         $session_id = $input['session_id'] ?? '';
         $customer_name = trim($input['customer_name'] ?? '');
         $customer_email = trim($input['customer_email'] ?? '');
@@ -851,7 +843,7 @@ elseif ($method === 'POST') {
         }
         $name = $input['name'] ?? null;
         $phone = $input['phone'] ?? null;
-        $result = customer_update_profile($db, (int)$customer['id'], $name, $phone);
+        $result = customer_update_profile($db, (int) $customer['id'], $name, $phone);
         if (!$result['ok']) {
             http_response_code(400);
         }
@@ -871,7 +863,7 @@ elseif ($method === 'POST') {
         $currentPw = $input['current_password'] ?? '';
         $newPw = $input['new_password'] ?? '';
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
-        $result = customer_change_password($db, (int)$customer['id'], $currentPw, $newPw, $userAgent);
+        $result = customer_change_password($db, (int) $customer['id'], $currentPw, $newPw, $userAgent);
         if (!$result['ok']) {
             // Both wrong-current-password and short-new-password are 400:
             // the X-Customer-Token IS valid (the user IS authenticated);
@@ -892,7 +884,7 @@ elseif ($method === 'POST') {
             echo json_encode(["ok" => false, "error" => "Invalid or expired token"]);
             exit;
         }
-        $result = customer_address_create($db, (int)$customer['id'], is_array($input) ? $input : []);
+        $result = customer_address_create($db, (int) $customer['id'], is_array($input) ? $input : []);
         if (!$result['ok']) {
             http_response_code(400);
         }
@@ -909,13 +901,13 @@ elseif ($method === 'POST') {
             echo json_encode(["ok" => false, "error" => "Invalid or expired token"]);
             exit;
         }
-        $addressId = (int)($input['id'] ?? 0);
+        $addressId = (int) ($input['id'] ?? 0);
         if ($addressId <= 0) {
             http_response_code(400);
             echo json_encode(["ok" => false, "error" => "id is required"]);
             exit;
         }
-        $result = customer_address_update($db, (int)$customer['id'], $addressId, $input);
+        $result = customer_address_update($db, (int) $customer['id'], $addressId, $input);
         if (!$result['ok']) {
             http_response_code(stripos($result['error'] ?? '', 'not found') !== false ? 404 : 400);
         }
@@ -932,13 +924,13 @@ elseif ($method === 'POST') {
             echo json_encode(["ok" => false, "error" => "Invalid or expired token"]);
             exit;
         }
-        $addressId = (int)($input['id'] ?? 0);
+        $addressId = (int) ($input['id'] ?? 0);
         if ($addressId <= 0) {
             http_response_code(400);
             echo json_encode(["ok" => false, "error" => "id is required"]);
             exit;
         }
-        $result = customer_address_delete($db, (int)$customer['id'], $addressId);
+        $result = customer_address_delete($db, (int) $customer['id'], $addressId);
         if (!$result['ok']) {
             http_response_code(stripos($result['error'] ?? '', 'not found') !== false ? 404 : 400);
         }
@@ -955,27 +947,23 @@ elseif ($method === 'POST') {
             echo json_encode(["ok" => false, "error" => "Invalid or expired token"]);
             exit;
         }
-        $addressId = (int)($input['id'] ?? 0);
+        $addressId = (int) ($input['id'] ?? 0);
         if ($addressId <= 0) {
             http_response_code(400);
             echo json_encode(["ok" => false, "error" => "id is required"]);
             exit;
         }
-        $result = customer_address_set_default($db, (int)$customer['id'], $addressId);
+        $result = customer_address_set_default($db, (int) $customer['id'], $addressId);
         if (!$result['ok']) {
             http_response_code(stripos($result['error'] ?? '', 'not found') !== false ? 404 : 400);
         }
         echo json_encode($result);
         exit;
-    }
-
-    else {
+    } else {
         http_response_code(404);
         echo json_encode(["error" => "Endpoint not found"]);
     }
-}
-
-else {
+} else {
     http_response_code(405);
     echo json_encode(["error" => "Method not allowed"]);
 }
@@ -983,7 +971,8 @@ else {
 // =====================
 // Checkout page renderer
 // =====================
-function render_checkout_error($message) {
+function render_checkout_error($message)
+{
     return '<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -992,7 +981,7 @@ function render_checkout_error($message) {
     <title>Checkout Error</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center">
+<body class="bg-[#1b1b1c] text-white min-h-screen flex items-center justify-center">
     <div class="text-center p-8">
         <div class="text-6xl mb-4">&#10060;</div>
         <h1 class="text-2xl font-bold mb-2">Checkout Error</h1>
@@ -1002,7 +991,8 @@ function render_checkout_error($message) {
 </html>';
 }
 
-function render_checkout_page($store_name, $store_id, $session_id, $enriched, $total_amount) {
+function render_checkout_page($store_name, $store_id, $session_id, $enriched, $total_amount)
+{
     $items_html = '';
     foreach ($enriched['items'] as $item) {
         $img_html = '';
@@ -1044,7 +1034,7 @@ function render_checkout_page($store_name, $store_id, $session_id, $enriched, $t
         input:focus { outline: none; border-color: #7a1aab; box-shadow: 0 0 0 2px rgba(122, 26, 171, 0.3); }
     </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen">
+<body class="bg-[#1b1b1c] text-white min-h-screen">
     <header class="bg-gray-800 border-b border-gray-700 px-6 py-4">
         <div class="max-w-2xl mx-auto flex items-center justify-between">
             <h1 class="text-xl font-bold brand-purple">' . $store_name_escaped . '</h1>
