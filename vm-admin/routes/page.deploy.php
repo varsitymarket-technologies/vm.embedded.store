@@ -25,7 +25,8 @@ if (isset($_POST['save_code'])) {
         try {
             if ($repo_action === 'new') {
                 $target_repo = $_POST['new_repo_name_text'] ?? '';
-                if (empty($target_repo)) throw new Exception("New repository name cannot be empty.");
+                if (empty($target_repo))
+                    throw new Exception("New repository name cannot be empty.");
 
                 $new_repo_name = $github_session->slugify($target_repo);
                 $env_data = [
@@ -103,6 +104,7 @@ $site_url = "https://" . __DOMAIN__;
 $preview_url = $site_url . "?preview=true&theme=" . $active_theme_name;
 $domain = __WEBSITE_DOMAIN__;
 $target = __DOMAIN__;
+$repo_state = $github_connected ? 'connected' : 'disconnected';
 
 @include dirname(dirname(dirname(__FILE__))) . "/services/export.store.source.php";
 if (empty($current_code)) {
@@ -110,135 +112,125 @@ if (empty($current_code)) {
 }
 ?>
 <!-- Main Content -->
-<div class="flex flex-1 flex-col overflow-hidden">
+<div class="flex flex-1 flex-col overflow-hidden bg-[#1b1b1c] text-zinc-100">
     <?php @include_once "header.php"; ?>
 
-    <main class="flex-1 overflow-y-auto overflow-x-hidden bg-[#09090b] p-6">
+    <main class="flex-1 overflow-y-auto overflow-x-hidden p-6 lg:p-8 space-y-6">
 
-        <!-- Page Header -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div>
-                <h2 class="text-2xl font-bold text-white">Publish</h2>
-                <p class="text-zinc-400 text-sm mt-1">Review, edit and deploy your webstore</p>
-            </div>
-            <div class="flex items-center gap-2">
-                <button onclick="downloadCode()" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-                    <i class="bi bi-download"></i> Download
-                </button>
-                <form method="POST" class="m-0" id="publish_form">
-                    <textarea name="code_content" id="hidden_code" class="hidden"></textarea>
-                    <button type="submit" name="save_code" onclick="syncCode()" class="bg-violet-600 hover:bg-violet-500 text-white px-5 py-2 rounded-lg text-sm font-bold transition-colors flex items-center gap-2 shadow-lg shadow-violet-500/20">
-                        <i class="bi bi-rocket-takeoff"></i> Publish
-                    </button>
-                </form>
-            </div>
-        </div>
+        <section class="relative overflow-hidden rounded-3xl border border-white/10 bg-[#242424] text-white">
+            <div class="relative grid gap-6 p-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.8fr)] lg:p-8">
+                <div>
+                    <h1 class="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Publish your storefront source to GitHub.</h1>
+                    <p class="mt-3 max-w-2xl text-sm leading-6 text-white sm:text-base">
+                        Review the current HTML, choose or create a repository, and push a clean deploy from one polished workspace.
+                    </p>
 
-        <!-- Info Cards -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
-            <!-- Domain Card -->
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-zinc-400 text-xs font-medium">Live Domain</span>
-                    <span class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
-                        <i class="bi bi-globe2 text-violet-400"></i>
-                    </span>
-                </div>
-                <p class="text-white text-sm font-medium truncate"><?php echo $site_url; ?></p>
-                <a href="<?php echo $site_url; ?>" target="_blank" class="text-violet-400 hover:text-violet-300 text-xs mt-1 inline-flex items-center gap-1">
-                    Visit <i class="bi bi-box-arrow-up-right text-[10px]"></i>
-                </a>
-            </div>
-
-            <!-- GitHub Card -->
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-zinc-400 text-xs font-medium">GitHub</span>
-                    <span class="w-8 h-8 rounded-lg bg-zinc-800 flex items-center justify-center">
-                        <i class="bi bi-github text-zinc-400"></i>
-                    </span>
-                </div>
-                <?php if ($github_connected): ?>
-                    <div class="flex items-center gap-2">
-                        <span class="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Connected
-                        </span>
+                    <div class="mt-6 flex flex-wrap items-center gap-3">
+                        <button onclick="downloadCode()" class="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50">
+                            <i class="bi bi-download"></i>
+                            <span>Download HTML</span>
+                        </button>
+                        <form method="POST" class="m-0" id="publish_form">
+                            <textarea name="code_content" id="hidden_code" class="hidden"></textarea>
+                            <button type="submit" name="save_code" onclick="syncCode()" class="inline-flex items-center gap-2 rounded-full bg-[#008060] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-[#006e52]">
+                                <i class="bi bi-rocket-takeoff"></i>
+                                <span>Deploy to GitHub</span>
+                            </button>
+                        </form>
                     </div>
-                    <div class="mt-2">
-                        <select id="repo_selector" name="github_repo" form="publish_form" onchange="handleRepoChange(this)"
-                            class="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-violet-500 transition-colors">
-                            <option value="" disabled <?php echo empty($selected_repo) ? 'selected' : ''; ?>>Select repository</option>
-                            <?php foreach ($repositories as $repo): ?>
-                                <option value="<?php echo htmlspecialchars($repo['name']); ?>" <?php echo $selected_repo == $repo['name'] ? 'selected' : ''; ?>>
-                                    <?php echo htmlspecialchars($repo['name']); ?>
-                                </option>
-                            <?php endforeach; ?>
-                            <option value="__NEW__">+ New Repository</option>
-                        </select>
-                        <div id="new_repo_container" class="hidden mt-2 flex items-center gap-1">
-                            <input type="text" id="new_repo_name" name="new_repo_name_text" form="publish_form" placeholder="Repository name..."
-                                class="flex-1 bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-1.5 text-white text-xs focus:outline-none focus:border-violet-500 transition-colors">
-                            <button type="button" onclick="cancelNewRepo()" class="text-zinc-500 hover:text-white p-1"><i class="bi bi-x-circle"></i></button>
+
+                </div>
+
+            </div>
+        </section>
+
+        <section class="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(300px,0.8fr)]">
+            <div class="rounded-3xl border border-white/10 bg-[#202123] shadow-[0_18px_45px_rgba(0,0,0,0.24)] overflow-hidden">
+                <div class="flex items-center justify-between border-b border-white/10 bg-white/5 px-5 py-4">
+                    <div>
+                        <h2 class="text-sm font-semibold text-white">Source preview</h2>
+                        <p class="text-xs text-zinc-500">Review the code that will be deployed to the GitHub repository.</p>
+                    </div>
+                    <span id="save_status" class="text-xs text-zinc-400">Ready</span>
+                </div>
+                <div class="flex h-[72vh] min-h-[500px]" id="editorContainer">
+                    <div id="editor_panel" style="display:none;" class="w-1/2 flex flex-col border-r border-white/10 bg-[#1b1b1c]">
+                        <textarea id="editor" class="flex-1 bg-[#1b1b1c] text-emerald-300 p-5 font-mono text-sm outline-none resize-none leading-relaxed" spellcheck="false"><?php echo htmlspecialchars($current_code); ?></textarea>
+                    </div>
+                    <div id="preview_panel" class="w-full flex flex-col bg-white">
+                        <iframe id="preview" class="w-full h-full border-none"></iframe>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="space-y-6">
+                <section class="rounded-3xl border border-white/10 bg-[#202123] p-5 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Repository</p>
+                    <?php if ($github_connected): ?>
+                        <div class="mt-4 space-y-3">
+                            <div class="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300">
+                                <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
+                                Connected
+                            </div>
+                            <label class="block">
+                                <span class="mb-2 block text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Select repository</span>
+                                <select id="repo_selector" name="github_repo" form="publish_form" onchange="handleRepoChange(this)" class="w-full rounded-2xl border border-white/10 bg-[#1b1b1c] px-4 py-3 text-sm text-white outline-none transition focus:border-[#008060]">
+                                    <option value="" disabled <?php echo empty($selected_repo) ? 'selected' : ''; ?>>Select repository</option>
+                                    <?php foreach ($repositories as $repo): ?>
+                                        <option value="<?php echo htmlspecialchars($repo['name']); ?>" <?php echo $selected_repo == $repo['name'] ? 'selected' : ''; ?>>
+                                            <?php echo htmlspecialchars($repo['name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
+                                    <option value="__NEW__">+ New repository</option>
+                                </select>
+                            </label>
+                            <div id="new_repo_container" class="hidden flex items-center gap-2 rounded-2xl border border-white/10 bg-[#1b1b1c] p-2">
+                                <input type="text" id="new_repo_name" name="new_repo_name_text" form="publish_form" placeholder="Repository name..." class="flex-1 bg-transparent px-2 py-1.5 text-sm text-white outline-none">
+                                <button type="button" onclick="cancelNewRepo()" class="rounded-full p-2 text-zinc-500 transition hover:bg-white/5 hover:text-white">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </div>
+                            <input type="hidden" id="repo_action" name="repo_action" value="existing" form="publish_form">
                         </div>
-                        <input type="hidden" id="repo_action" name="repo_action" value="existing" form="publish_form">
+                    <?php else: ?>
+                        <div class="mt-4 rounded-2xl border border-amber-500/20 bg-amber-500/10 p-4 text-sm text-amber-50">
+                            <p class="font-semibold text-white">GitHub not connected</p>
+                            <p class="mt-1 text-xs text-amber-100/80">Connect GitHub in deployment settings before publishing here.</p>
+                            <a href="?tab=deployment" class="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-white underline decoration-white/30 underline-offset-4 hover:decoration-white">
+                                Open deployment settings
+                            </a>
+                        </div>
+                    <?php endif; ?>
+                </section>
+
+                <section class="rounded-3xl border border-white/10 bg-[#202123] p-5 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Workspace notes</p>
+                    <div class="mt-4 space-y-3">
+                        <div class="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                            <i class="bi bi-1-circle text-lg text-sky-300"></i>
+                            <div>
+                                <p class="text-sm font-semibold text-white">Edit before deploy</p>
+                                <p class="mt-1 text-xs text-zinc-400">The source preview reflects the HTML that will be committed to GitHub.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                            <i class="bi bi-2-circle text-lg text-emerald-300"></i>
+                            <div>
+                                <p class="text-sm font-semibold text-white">Save repository choice</p>
+                                <p class="mt-1 text-xs text-zinc-400">The selected repository is stored automatically when you publish.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/5 p-4">
+                            <i class="bi bi-3-circle text-lg text-amber-300"></i>
+                            <div>
+                                <p class="text-sm font-semibold text-white">Generate a new repo</p>
+                                <p class="mt-1 text-xs text-zinc-400">Choose New repository to create a fresh GitHub target for this store.</p>
+                            </div>
+                        </div>
                     </div>
-                <?php else: ?>
-                    <p class="text-zinc-500 text-sm">Not connected</p>
-                    <a href="?tab=deployment" class="text-violet-400 hover:text-violet-300 text-xs mt-1 inline-flex items-center gap-1">
-                        <i class="bi bi-plug"></i> Connect GitHub
-                    </a>
-                <?php endif; ?>
-            </div>
-
-            <!-- Theme Card -->
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-zinc-400 text-xs font-medium">Active Theme</span>
-                    <span class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center">
-                        <i class="bi bi-palette text-sky-400"></i>
-                    </span>
-                </div>
-                <p class="text-white text-sm font-medium"><?php echo $active_theme_name ?: 'Default'; ?></p>
-                <a href="/vm-admin/<?php echo __DOMAIN__; ?>/theme" class="text-violet-400 hover:text-violet-300 text-xs mt-1 inline-flex items-center gap-1">
-                    Change theme <i class="bi bi-arrow-right text-[10px]"></i>
-                </a>
-            </div>
-        </div>
-
-        <!-- Editor + Preview -->
-        <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden" style="height: calc(100vh - 340px); min-height: 400px;">
-            <!-- Editor Toolbar -->
-            <div class="flex items-center border-b border-zinc-800 bg-zinc-950/50">
-                <!--
-                <button onclick="toggleView('split')" id="btn-split" class="px-4 py-2.5 text-xs font-medium text-violet-400 border-b-2 border-violet-500 transition-colors">
-                    <i class="bi bi-layout-split mr-1"></i>Split
-                </button>
-                <button onclick="toggleView('code')" id="btn-code" class="px-4 py-2.5 text-xs font-medium text-zinc-500 hover:text-zinc-300 border-b-2 border-transparent transition-colors">
-                    <i class="bi bi-code-slash mr-1"></i>Code
-                </button>
-                -->
-                <button onclick="toggleView('preview')" id="btn-preview" class="px-4 py-2.5 text-xs font-medium text-zinc-500 hover:text-zinc-300 border-b-2 border-transparent transition-colors">
-                    <i class="bi bi-eye mr-1"></i>Preview
-                </button>
-                <div class="ml-auto pr-4">
-                    <span id="save_status" class="text-zinc-600 text-xs">Ready</span>
-                </div>
-            </div>
-
-            <div class="flex h-full" id="editorContainer" style="height: calc(100% - 40px);">
-                <div id="editor_panel" style="display:none;" class="w-1/2 flex flex-col border-r border-zinc-800">
-                    <textarea id="editor"
-                        class="flex-1 bg-zinc-950 text-emerald-400 p-5 font-mono text-sm outline-none resize-none leading-relaxed"
-                        spellcheck="false"><?php echo htmlspecialchars($current_code); ?></textarea>
-                </div>
-                
-
-                <!-- Preview Panel -->
-                <div id="preview_panel" class="w-full flex flex-col bg-white">
-                    <iframe id="preview" class="w-full h-full border-none"></iframe>
-                </div>
-            </div>
-        </div>
+                </section>
+            </aside>
+        </section>
 
     </main>
 </div>
