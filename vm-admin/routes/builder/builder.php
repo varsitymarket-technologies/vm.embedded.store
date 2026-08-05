@@ -1,4 +1,5 @@
 <?php
+
 /**
  * SPA Website Builder - Figma-style UI
  * Loads the target site in an iframe and provides visual editing.
@@ -10,16 +11,47 @@ $site_dir = $root_dir . "/sites/" . $domain;
 $pages_dir = $site_dir . "/pages";
 $builder_cache = $site_dir . "/builder.cache.html";
 $admin_base = '/vm-admin/' . $domain . '/';
+$requested_page_slug = pm_sanitize_slug($_GET['page'] ?? 'index');
 
 // ── Page management helpers ──────────────────────────────────
-function pm_sanitize_slug($name) {
+function pm_sanitize_slug($name)
+{
     $name = strtolower(trim($name));
     $name = preg_replace('/[^a-z0-9\-_]/', '-', $name);
     $name = preg_replace('/-+/', '-', $name);
     return trim($name, '-') ?: 'page';
 }
 
-function pm_list_pages($pages_dir, $site_dir) {
+function pm_read_html_compiled($html)
+{
+    $domain = defined('__DOMAIN__') ? __DOMAIN__ : '';
+    $site_dir =  dirname(dirname(dirname(dirname(__FILE__))))  . "/sites/" . $domain;;
+    @include_once $site_dir . "/style.kit"; #GUI of the Website Not including The HTML
+    @include_once $site_dir . "/script.kit"; #The Script That The Website Will execute 
+    @include_once $site_dir . "/api.kit";    # How The System communicates with the API
+    @include_once $site_dir . "/structure.kit"; #The processing Structure For The Base Applications
+    @include_once $site_dir . "/template.kit";
+    @include_once $site_dir . "/scripts.php";
+
+
+    $pattern = '/<!--\s*#!\/engine\/node\/\s*(.*?)\s*-->/s';
+    $result = preg_replace_callback($pattern, function ($matches) {
+        $code = trim(preg_replace('/\s+/', ' ', $matches[1]));
+        return "<?php {$code} ?>";
+    }, $html);
+
+    $tmp_file = dirname(__FILE__) . "/exec." . hash("sha256", uniqid()) . ".tmp.php";
+    file_put_contents($tmp_file, $result);
+    ob_start();
+    @include $tmp_file;
+    $output = ob_get_clean();
+    @unlink($tmp_file);
+    return $output;
+}
+
+
+function pm_list_pages($pages_dir, $site_dir)
+{
     $pages = [];
     // Always include the legacy builder.cache (index)
     $cache = $site_dir . '/builder.cache.html';
@@ -47,37 +79,21 @@ function pm_list_pages($pages_dir, $site_dir) {
     return $pages;
 }
 
-function pm_starter_html($title = 'New Page') {
-    return '<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>' . htmlspecialchars($title) . '</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: Inter, system-ui, sans-serif; background: #fafafa; color: #1a1a1a; }
-.hero { padding: 80px 24px; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
-.hero h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 12px; }
-.hero p { font-size: 1.1rem; opacity: 0.9; max-width: 500px; margin: 0 auto 24px; }
-.hero a { display: inline-block; background: #fff; color: #764ba2; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-size: 1rem; font-weight: 600; }
-.section { padding: 60px 24px; max-width: 900px; margin: 0 auto; }
-.section h2 { font-size: 1.6rem; font-weight: 700; margin-bottom: 16px; }
-.section p { color: #555; line-height: 1.7; }
-</style>
-</head>
-<body>
-<div class="hero">
-    <h1>' . htmlspecialchars($title) . '</h1>
-    <p>Edit this page using the builder.</p>
-    <a href="#">Get Started</a>
-</div>
-<div class="section">
-    <h2>Section</h2>
-    <p>Add content to this section using the builder panel.</p>
-</div>
-</body>
-</html>';
+function pm_starter_html($title = 'New Page')
+{
+    $domain = defined('__DOMAIN__') ? __DOMAIN__ : '';
+    $site_dir =  dirname(dirname(dirname(dirname(__FILE__))))  . "/sites/" . $domain;;
+    @include_once $site_dir . "/style.kit"; #GUI of the Website Not including The HTML
+    @include_once $site_dir . "/script.kit"; #The Script That The Website Will execute 
+    @include_once $site_dir . "/api.kit";    # How The System communicates with the API
+    @include_once $site_dir . "/structure.kit"; #The processing Structure For The Base Applications
+    @include_once $site_dir . "/template.kit";
+
+    @include_once $site_dir . "/scripts.php";
+    $page = "index";
+    $web = construct_structure($page);
+    $site_html_content = $web;
+    return $web;
 }
 
 // ── POST action handler ──────────────────────────────────────
@@ -119,8 +135,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if (!file_exists($file) && $slug === 'index' && file_exists($builder_cache)) {
             $file = $builder_cache;
         }
+
         if (file_exists($file)) {
-            echo json_encode(['success' => true, 'html' => file_get_contents($file), 'slug' => $slug]);
+            $raw_html = file_get_contents($file);
+            echo json_encode(['success' => true, 'html' => pm_read_html_compiled($raw_html), 'slug' => $slug]);
         } else {
             echo json_encode(['error' => 'Page not found', 'slug' => $slug]);
         }
@@ -167,12 +185,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $old_slug = pm_sanitize_slug($_POST['old_slug'] ?? '');
         $new_slug = pm_sanitize_slug($_POST['new_slug'] ?? '');
         $new_label = trim($_POST['new_label'] ?? ucfirst(str_replace('-', ' ', $new_slug)));
-        if (!$old_slug || !$new_slug) { echo json_encode(['error' => 'Missing slugs']); exit; }
-        if ($old_slug === 'index') { echo json_encode(['error' => 'Cannot rename the home page']); exit; }
+        if (!$old_slug || !$new_slug) {
+            echo json_encode(['error' => 'Missing slugs']);
+            exit;
+        }
+        if ($old_slug === 'index') {
+            echo json_encode(['error' => 'Cannot rename the home page']);
+            exit;
+        }
         $old_file = $pages_dir . '/' . $old_slug . '.html';
         $new_file = $pages_dir . '/' . $new_slug . '.html';
-        if (!file_exists($old_file)) { echo json_encode(['error' => 'Page not found']); exit; }
-        if (file_exists($new_file)) { echo json_encode(['error' => 'Slug already in use']); exit; }
+        if (!file_exists($old_file)) {
+            echo json_encode(['error' => 'Page not found']);
+            exit;
+        }
+        if (file_exists($new_file)) {
+            echo json_encode(['error' => 'Slug already in use']);
+            exit;
+        }
         rename($old_file, $new_file);
         echo json_encode(['success' => true, 'old_slug' => $old_slug, 'slug' => $new_slug, 'label' => $new_label]);
         exit;
@@ -181,10 +211,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     // ── delete_page ──
     if ($action === 'delete_page') {
         $slug = pm_sanitize_slug($_POST['slug'] ?? '');
-        if ($slug === 'index') { echo json_encode(['error' => 'Cannot delete the home page']); exit; }
+        if ($slug === 'index') {
+            echo json_encode(['error' => 'Cannot delete the home page']);
+            exit;
+        }
         $file = $pages_dir . '/' . $slug . '.html';
-        if (file_exists($file)) { unlink($file); echo json_encode(['success' => true]); }
-        else { echo json_encode(['error' => 'Page not found']); }
+        if (file_exists($file)) {
+            unlink($file);
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['error' => 'Page not found']);
+        }
         exit;
     }
 
@@ -193,28 +230,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 }
 
 // ── Load initial page content ────────────────────────────────
-// Load index page (pages/index.html -> fallback builder.cache -> fallback theme)
-$index_page_file = $pages_dir . '/index.html';
+// Load the selected page (pages/<slug>.html -> fallback builder.cache -> fallback theme)
+$index_page_file = $pages_dir . '/' . $requested_page_slug . '.html';
 $site_html_content = '';
 if (file_exists($index_page_file)) {
-    $site_html_content = file_get_contents($index_page_file);
+    $site_html_content = pm_read_html_compiled(file_get_contents($index_page_file));
 } elseif (file_exists($builder_cache)) {
-    $site_html_content = file_get_contents($builder_cache);
+    $site_html_content = pm_read_html_compiled(file_get_contents($builder_cache));
 } else {
-    $active_theme_file = $site_dir . "/theme";
-    $active_theme_name = file_exists($active_theme_file) ? trim(file_get_contents($active_theme_file)) : '';
-    $theme_index = $root_dir . '/themes/' . $active_theme_name . '/index.php';
-    if (file_exists($theme_index)) {
-        ob_start();
-        @include $theme_index;
-        $site_html_content = ob_get_clean();
-    } elseif (!empty($domain)) {
-        @include_once $root_dir . "/services/export.store.source.php";
-        if (function_exists('export_application')) {
-            $website_domain = defined('__WEBSITE_DOMAIN__') ? __WEBSITE_DOMAIN__ : '';
-            try { $site_html_content = export_application($domain, $website_domain); } catch (\Throwable $e) {}
-        }
-    }
+
+    @include_once $site_dir . "/style.kit"; #GUI of the Website Not including The HTML
+    @include_once $site_dir . "/script.kit"; #The Script That The Website Will execute 
+    @include_once $site_dir . "/api.kit";    # How The System communicates with the API
+    @include_once $site_dir . "/structure.kit"; #The processing Structure For The Base Applications
+    @include_once $site_dir . "/template.kit";
+
+    @include_once $site_dir . "/scripts.php";
+
+    $page = $requested_page_slug;
+    $web = construct_structure($page);
+    $site_html_content = $web;
+
+    #$active_theme_file = $site_dir . "/theme";
+    #$active_theme_name = file_exists($active_theme_file) ? trim(file_get_contents($active_theme_file)) : '';
+    #$theme_index = $root_dir . '/themes/' . $active_theme_name . '/index.php';
+    #if (file_exists($theme_index)) {
+    #    ob_start();
+    #    @include $theme_index;
+    #    $site_html_content = ob_get_clean();
+    #} elseif (!empty($domain)) {
+    #    @include_once $root_dir . "/services/export.store.source.php";
+    #    if (function_exists('export_application')) {
+    #        $website_domain = defined('__WEBSITE_DOMAIN__') ? __WEBSITE_DOMAIN__ : '';
+    #        try { $site_html_content = export_application($domain, $website_domain); } catch (\Throwable $e) {}
+    #    }
+    #}
 }
 
 // Fallback starter template
@@ -222,7 +272,7 @@ if (empty(trim($site_html_content ?? ''))) {
     $site_html_content = pm_starter_html('My Store');
 }
 
-// Seed the pages/index.html if it doesn't exist yet
+// Seed the selected page if it doesn't exist yet
 if (!empty($domain) && !empty(trim($site_html_content))) {
     if (!is_dir($pages_dir)) @mkdir($pages_dir, 0755, true);
     if (!file_exists($index_page_file)) {
@@ -234,9 +284,24 @@ if (!empty($domain) && !empty(trim($site_html_content))) {
 <!-- Builder: full viewport overlay -->
 <style>
     /* Override admin layout */
-    .grid-layout, .flex, body > div { display: contents !important; }
-    #sidebar, .sidebar, header, .admin-header { display: none !important; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    .grid-layout,
+    .flex,
+    body>div {
+        display: contents !important;
+    }
+
+    #sidebar,
+    .sidebar,
+    header,
+    .admin-header {
+        display: none !important;
+    }
+
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+    }
 
     :root {
         --fig-bg: #1e1e1e;
@@ -256,557 +321,1388 @@ if (!empty($domain) && !empty(trim($site_html_content))) {
     }
 
     .fb-root {
-        display: flex; flex-direction: column;
-        width: 100vw; height: 100vh;
-        background: var(--fig-bg); color: var(--fig-text);
+        display: flex;
+        flex-direction: column;
+        width: 100vw;
+        height: 100vh;
+        background: var(--fig-bg);
+        color: var(--fig-text);
         font-family: 'Inter', -apple-system, system-ui, sans-serif;
-        font-size: 11px; -webkit-font-smoothing: antialiased;
-        position: fixed; top: 0; left: 0; z-index: 9999;
+        font-size: 11px;
+        -webkit-font-smoothing: antialiased;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 9999;
     }
 
     /* ── Top Bar ── */
     .fb-topbar {
-        height: 48px; min-height: 48px;
-        display: flex; align-items: center;
+        height: 48px;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
         padding: 0 12px;
         background: var(--fig-surface);
         border-bottom: 1px solid var(--fig-border-subtle);
         z-index: 100;
     }
+
     .fb-topbar-left {
-        display: flex; align-items: center; gap: 4px; width: 241px; min-width: 241px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        width: 241px;
+        min-width: 241px;
         border-right: 1px solid var(--fig-border-subtle);
-        padding-right: 12px; margin-right: 12px;
+        padding-right: 12px;
+        margin-right: 12px;
     }
-    .fb-topbar-center { flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; }
-    .fb-topbar-right { display: flex; align-items: center; gap: 4px; width: 248px; min-width: 248px; justify-content: flex-end; }
+
+    .fb-topbar-center {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+    }
+
+    .fb-topbar-right {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        width: 248px;
+        min-width: 248px;
+        justify-content: flex-end;
+    }
 
     .fb-logo {
-        display: flex; align-items: center; gap: 8px;
-        font-weight: 700; font-size: 13px; color: var(--fig-text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 700;
+        font-size: 13px;
+        color: var(--fig-text);
         padding: 0 8px;
     }
-    .fb-logo svg { width: 20px; height: 20px; }
+
+    .fb-logo svg {
+        width: 20px;
+        height: 20px;
+    }
 
     .fb-tbtn {
-        display: flex; align-items: center; justify-content: center; gap: 5px;
-        height: 32px; padding: 0 10px; border: none; border-radius: 6px;
-        background: transparent; color: var(--fig-text2); font-size: 11px;
-        cursor: pointer; transition: all 0.12s; white-space: nowrap;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        height: 32px;
+        padding: 0 10px;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--fig-text2);
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.12s;
+        white-space: nowrap;
         font-family: inherit;
     }
-    .fb-tbtn:hover { background: var(--fig-surface2); color: var(--fig-text); }
-    .fb-tbtn.active { background: var(--fig-accent); color: #fff; }
-    .fb-tbtn i { font-size: 15px; }
+
+    .fb-tbtn:hover {
+        background: var(--fig-surface2);
+        color: var(--fig-text);
+    }
+
+    .fb-tbtn.active {
+        background: var(--fig-accent);
+        color: #fff;
+    }
+
+    .fb-tbtn i {
+        font-size: 15px;
+    }
 
     .fb-tbtn-accent {
-        background: var(--fig-accent); color: #fff; font-weight: 600;
+        background: var(--fig-accent);
+        color: #fff;
+        font-weight: 600;
     }
-    .fb-tbtn-accent:hover { background: var(--fig-accent-hover); color: #fff; }
 
-    .fb-sep { width: 1px; height: 20px; background: var(--fig-border-subtle); margin: 0 4px; }
+    .fb-tbtn-accent:hover {
+        background: var(--fig-accent-hover);
+        color: #fff;
+    }
 
-    .fb-vp-group { display: flex; background: var(--fig-bg); border-radius: 6px; overflow: hidden; border: 1px solid var(--fig-border-subtle); }
+    .fb-sep {
+        width: 1px;
+        height: 20px;
+        background: var(--fig-border-subtle);
+        margin: 0 4px;
+    }
+
+    .fb-vp-group {
+        display: flex;
+        background: var(--fig-bg);
+        border-radius: 6px;
+        overflow: hidden;
+        border: 1px solid var(--fig-border-subtle);
+    }
+
     .fb-vp-btn {
-        width: 32px; height: 28px; border: none; background: transparent;
-        color: var(--fig-text3); cursor: pointer; font-size: 14px;
-        display: flex; align-items: center; justify-content: center;
+        width: 32px;
+        height: 28px;
+        border: none;
+        background: transparent;
+        color: var(--fig-text3);
+        cursor: pointer;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         transition: all 0.12s;
     }
-    .fb-vp-btn:hover { color: var(--fig-text2); }
-    .fb-vp-btn.on { background: var(--fig-accent); color: #fff; }
+
+    .fb-vp-btn:hover {
+        color: var(--fig-text2);
+    }
+
+    .fb-vp-btn.on {
+        background: var(--fig-accent);
+        color: #fff;
+    }
 
     /* ── Main body ── */
-    .fb-main { display: flex; flex: 1; overflow: hidden; }
+    .fb-main {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
 
     /* ── Left Panel ── */
     .fb-left {
-        width: 241px; min-width: 241px; background: var(--fig-surface);
+        width: 241px;
+        min-width: 241px;
+        background: var(--fig-surface);
         border-right: 1px solid var(--fig-border-subtle);
-        display: flex; flex-direction: column; overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
     }
-    .fb-left.collapsed { width: 0; min-width: 0; border: none; overflow: hidden; }
+
+    .fb-left.collapsed {
+        width: 0;
+        min-width: 0;
+        border: none;
+        overflow: hidden;
+    }
 
     .fb-panel-tabs {
-        display: flex; border-bottom: 1px solid var(--fig-border-subtle);
+        display: flex;
+        border-bottom: 1px solid var(--fig-border-subtle);
         background: var(--fig-surface);
     }
+
     .fb-ptab {
-        flex: 1; height: 36px; border: none; background: transparent;
-        color: var(--fig-text3); font-size: 11px; font-weight: 500;
-        cursor: pointer; transition: all 0.12s; font-family: inherit;
+        flex: 1;
+        height: 36px;
+        border: none;
+        background: transparent;
+        color: var(--fig-text3);
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.12s;
+        font-family: inherit;
         border-bottom: 2px solid transparent;
     }
-    .fb-ptab:hover { color: var(--fig-text2); }
-    .fb-ptab.on { color: var(--fig-text); border-bottom-color: var(--fig-accent); }
 
-    .fb-panel-content { flex: 1; overflow-y: auto; }
-    .fb-panel-content::-webkit-scrollbar { width: 4px; }
-    .fb-panel-content::-webkit-scrollbar-track { background: transparent; }
-    .fb-panel-content::-webkit-scrollbar-thumb { background: var(--fig-border); border-radius: 4px; }
+    .fb-ptab:hover {
+        color: var(--fig-text2);
+    }
+
+    .fb-ptab.on {
+        color: var(--fig-text);
+        border-bottom-color: var(--fig-accent);
+    }
+
+    .fb-panel-content {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .fb-panel-content::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .fb-panel-content::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .fb-panel-content::-webkit-scrollbar-thumb {
+        background: var(--fig-border);
+        border-radius: 4px;
+    }
 
     /* Layers */
-    .fb-layers { padding: 4px 0; }
-    .fb-layer {
-        display: flex; align-items: center; gap: 6px;
-        height: 28px; padding: 0 12px; cursor: pointer;
-        color: var(--fig-text2); font-size: 11px;
-        transition: background 0.1s; white-space: nowrap; overflow: hidden;
+    .fb-layers {
+        padding: 4px 0;
     }
-    .fb-layer:hover { background: var(--fig-surface2); }
-    .fb-layer.sel { background: rgba(13, 153, 255, 0.15); color: var(--fig-accent); }
-    .fb-layer i { font-size: 12px; color: var(--fig-text4); flex-shrink: 0; }
-    .fb-layer.sel i { color: var(--fig-accent); }
-    .fb-layer-label { overflow: hidden; text-overflow: ellipsis; }
-    .fb-layer-text { color: var(--fig-text4); font-size: 10px; margin-left: auto; overflow: hidden; text-overflow: ellipsis; max-width: 80px; flex-shrink: 0; }
+
+    .fb-layer {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        height: 28px;
+        padding: 0 12px;
+        cursor: pointer;
+        color: var(--fig-text2);
+        font-size: 11px;
+        transition: background 0.1s;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .fb-layer:hover {
+        background: var(--fig-surface2);
+    }
+
+    .fb-layer.sel {
+        background: rgba(13, 153, 255, 0.15);
+        color: var(--fig-accent);
+    }
+
+    .fb-layer i {
+        font-size: 12px;
+        color: var(--fig-text4);
+        flex-shrink: 0;
+    }
+
+    .fb-layer.sel i {
+        color: var(--fig-accent);
+    }
+
+    .fb-layer-label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .fb-layer-text {
+        color: var(--fig-text4);
+        font-size: 10px;
+        margin-left: auto;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 80px;
+        flex-shrink: 0;
+    }
 
     /* Add Elements */
-    .fb-add-grid { padding: 8px; }
+    .fb-add-grid {
+        padding: 8px;
+    }
+
     .fb-add-category {
         margin-bottom: 4px;
     }
+
     .fb-add-cat-header {
-        display: flex; align-items: center; gap: 6px;
-        padding: 6px 8px; color: var(--fig-text3); font-size: 10px;
-        font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 8px;
+        color: var(--fig-text3);
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
-    .fb-add-items { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 0 4px 8px; }
+
+    .fb-add-items {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+        padding: 0 4px 8px;
+    }
+
     .fb-add-item {
-        display: flex; flex-direction: column; align-items: center; justify-content: center;
-        gap: 4px; padding: 10px 4px; border: 1px solid var(--fig-border-subtle);
-        border-radius: 6px; background: transparent; color: var(--fig-text2);
-        cursor: pointer; transition: all 0.12s; font-family: inherit; font-size: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 10px 4px;
+        border: 1px solid var(--fig-border-subtle);
+        border-radius: 6px;
+        background: transparent;
+        color: var(--fig-text2);
+        cursor: pointer;
+        transition: all 0.12s;
+        font-family: inherit;
+        font-size: 10px;
     }
-    .fb-add-item:hover { background: var(--fig-surface2); border-color: var(--fig-accent); color: var(--fig-text); }
-    .fb-add-item i { font-size: 16px; }
+
+    .fb-add-item:hover {
+        background: var(--fig-surface2);
+        border-color: var(--fig-accent);
+        color: var(--fig-text);
+    }
+
+    .fb-add-item i {
+        font-size: 16px;
+    }
 
     /* ── Canvas ── */
     .fb-canvas {
-        flex: 1; display: flex; align-items: center; justify-content: center;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         background: var(--fig-bg);
         background-image: radial-gradient(circle, #333 1px, transparent 1px);
         background-size: 20px 20px;
-        overflow: hidden; position: relative;
+        overflow: hidden;
+        position: relative;
     }
+
     .fb-frame {
-        background: #fff; transition: width 0.3s ease, height 0.3s ease;
-        box-shadow: 0 0 0 1px rgba(255,255,255,0.04), 0 16px 48px rgba(0,0,0,0.4);
-        border-radius: 2px; overflow: hidden; position: relative;
+        background: #fff;
+        transition: width 0.3s ease, height 0.3s ease;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04), 0 16px 48px rgba(0, 0, 0, 0.4);
+        border-radius: 2px;
+        overflow: hidden;
+        position: relative;
     }
-    .fb-frame.desktop { width: 100%; height: 100%; border-radius: 0; }
-    .fb-frame.tablet { width: 768px; height: 100%; }
-    .fb-frame.mobile { width: 375px; height: 100%; }
-    .fb-frame iframe { width: 100%; height: 100%; border: none; display: block; }
+
+    .fb-frame.desktop {
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+    }
+
+    .fb-frame.tablet {
+        width: 768px;
+        height: 100%;
+    }
+
+    .fb-frame.mobile {
+        width: 375px;
+        height: 100%;
+    }
+
+    .fb-frame iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+    }
 
     /* ── Right Panel ── */
     .fb-right {
-        width: 248px; min-width: 248px; background: var(--fig-surface);
+        width: 248px;
+        min-width: 248px;
+        background: var(--fig-surface);
         border-left: 1px solid var(--fig-border-subtle);
-        display: flex; flex-direction: column; overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
     }
-    .fb-right.collapsed { width: 0; min-width: 0; border: none; overflow: hidden; }
+
+    .fb-right.collapsed {
+        width: 0;
+        min-width: 0;
+        border: none;
+        overflow: hidden;
+    }
 
     .fb-right-tabs {
-        display: flex; border-bottom: 1px solid var(--fig-border-subtle);
+        display: flex;
+        border-bottom: 1px solid var(--fig-border-subtle);
     }
+
     .fb-rtab {
-        flex: 1; height: 36px; border: none; background: transparent;
-        color: var(--fig-text3); font-size: 11px; font-weight: 500;
-        cursor: pointer; transition: all 0.12s; font-family: inherit;
+        flex: 1;
+        height: 36px;
+        border: none;
+        background: transparent;
+        color: var(--fig-text3);
+        font-size: 11px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.12s;
+        font-family: inherit;
         border-bottom: 2px solid transparent;
     }
-    .fb-rtab:hover { color: var(--fig-text2); }
-    .fb-rtab.on { color: var(--fig-text); border-bottom-color: var(--fig-accent); }
 
-    .fb-right-body { flex: 1; overflow-y: auto; }
-    .fb-right-body::-webkit-scrollbar { width: 4px; }
-    .fb-right-body::-webkit-scrollbar-track { background: transparent; }
-    .fb-right-body::-webkit-scrollbar-thumb { background: var(--fig-border); border-radius: 4px; }
+    .fb-rtab:hover {
+        color: var(--fig-text2);
+    }
+
+    .fb-rtab.on {
+        color: var(--fig-text);
+        border-bottom-color: var(--fig-accent);
+    }
+
+    .fb-right-body {
+        flex: 1;
+        overflow-y: auto;
+    }
+
+    .fb-right-body::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .fb-right-body::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .fb-right-body::-webkit-scrollbar-thumb {
+        background: var(--fig-border);
+        border-radius: 4px;
+    }
 
     /* Empty state */
     .fb-empty {
-        display: flex; flex-direction: column; align-items: center;
-        justify-content: center; height: 100%; text-align: center;
-        padding: 24px; color: var(--fig-text4);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        text-align: center;
+        padding: 24px;
+        color: var(--fig-text4);
     }
-    .fb-empty i { font-size: 28px; margin-bottom: 10px; color: var(--fig-border); }
-    .fb-empty p { font-size: 11px; line-height: 1.5; }
+
+    .fb-empty i {
+        font-size: 28px;
+        margin-bottom: 10px;
+        color: var(--fig-border);
+    }
+
+    .fb-empty p {
+        font-size: 11px;
+        line-height: 1.5;
+    }
 
     /* Property sections */
-    .fb-section { border-bottom: 1px solid var(--fig-border-subtle); }
-    .fb-sec-header {
-        display: flex; align-items: center; justify-content: space-between;
-        padding: 8px 12px; cursor: pointer; user-select: none;
-        font-size: 11px; font-weight: 600; color: var(--fig-text2);
+    .fb-section {
+        border-bottom: 1px solid var(--fig-border-subtle);
     }
-    .fb-sec-header:hover { color: var(--fig-text); }
-    .fb-sec-header .chev { font-size: 8px; transition: transform 0.15s; color: var(--fig-text4); }
-    .fb-sec-header.open .chev { transform: rotate(90deg); }
-    .fb-sec-body { padding: 0 12px 10px; display: none; }
-    .fb-sec-header.open + .fb-sec-body { display: block; }
+
+    .fb-sec-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        cursor: pointer;
+        user-select: none;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--fig-text2);
+    }
+
+    .fb-sec-header:hover {
+        color: var(--fig-text);
+    }
+
+    .fb-sec-header .chev {
+        font-size: 8px;
+        transition: transform 0.15s;
+        color: var(--fig-text4);
+    }
+
+    .fb-sec-header.open .chev {
+        transform: rotate(90deg);
+    }
+
+    .fb-sec-body {
+        padding: 0 12px 10px;
+        display: none;
+    }
+
+    .fb-sec-header.open+.fb-sec-body {
+        display: block;
+    }
 
     /* Property rows */
-    .fb-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-    .fb-lbl { font-size: 11px; color: var(--fig-text3); width: 48px; flex-shrink: 0; }
+    .fb-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 6px;
+    }
+
+    .fb-lbl {
+        font-size: 11px;
+        color: var(--fig-text3);
+        width: 48px;
+        flex-shrink: 0;
+    }
+
     .fb-input {
-        flex: 1; height: 28px; background: var(--fig-bg); border: 1px solid transparent;
-        border-radius: 4px; padding: 0 8px; color: var(--fig-text); font-size: 11px;
-        font-family: inherit; outline: none; transition: border-color 0.12s;
+        flex: 1;
+        height: 28px;
+        background: var(--fig-bg);
+        border: 1px solid transparent;
+        border-radius: 4px;
+        padding: 0 8px;
+        color: var(--fig-text);
+        font-size: 11px;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.12s;
         min-width: 0;
     }
-    .fb-input:hover { border-color: var(--fig-border); }
-    .fb-input:focus { border-color: var(--fig-accent); }
-    .fb-input::placeholder { color: var(--fig-text4); }
 
-    textarea.fb-input { height: auto; padding: 6px 8px; resize: vertical; }
+    .fb-input:hover {
+        border-color: var(--fig-border);
+    }
+
+    .fb-input:focus {
+        border-color: var(--fig-accent);
+    }
+
+    .fb-input::placeholder {
+        color: var(--fig-text4);
+    }
+
+    textarea.fb-input {
+        height: auto;
+        padding: 6px 8px;
+        resize: vertical;
+    }
 
     select.fb-input {
-        appearance: none; cursor: pointer;
+        appearance: none;
+        cursor: pointer;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
-        background-repeat: no-repeat; background-position: right 6px center;
+        background-repeat: no-repeat;
+        background-position: right 6px center;
         padding-right: 20px;
     }
 
-    .fb-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; }
-    .fb-4col { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px; }
+    .fb-2col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4px;
+    }
+
+    .fb-4col {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr 1fr;
+        gap: 4px;
+    }
 
     .fb-input-sm {
-        height: 28px; background: var(--fig-bg); border: 1px solid transparent;
-        border-radius: 4px; padding: 0 6px; color: var(--fig-text); font-size: 10px;
-        font-family: inherit; outline: none; text-align: center; width: 100%;
+        height: 28px;
+        background: var(--fig-bg);
+        border: 1px solid transparent;
+        border-radius: 4px;
+        padding: 0 6px;
+        color: var(--fig-text);
+        font-size: 10px;
+        font-family: inherit;
+        outline: none;
+        text-align: center;
+        width: 100%;
         transition: border-color 0.12s;
     }
-    .fb-input-sm:hover { border-color: var(--fig-border); }
-    .fb-input-sm:focus { border-color: var(--fig-accent); }
 
-    .fb-color-row { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
-    .fb-swatch {
-        width: 24px; height: 24px; border: 1px solid var(--fig-border);
-        border-radius: 4px; cursor: pointer; padding: 0;
-        background: none; appearance: none; flex-shrink: 0;
+    .fb-input-sm:hover {
+        border-color: var(--fig-border);
     }
-    .fb-swatch::-webkit-color-swatch-wrapper { padding: 0; }
-    .fb-swatch::-webkit-color-swatch { border: none; border-radius: 3px; }
+
+    .fb-input-sm:focus {
+        border-color: var(--fig-accent);
+    }
+
+    .fb-color-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 6px;
+    }
+
+    .fb-swatch {
+        width: 24px;
+        height: 24px;
+        border: 1px solid var(--fig-border);
+        border-radius: 4px;
+        cursor: pointer;
+        padding: 0;
+        background: none;
+        appearance: none;
+        flex-shrink: 0;
+    }
+
+    .fb-swatch::-webkit-color-swatch-wrapper {
+        padding: 0;
+    }
+
+    .fb-swatch::-webkit-color-swatch {
+        border: none;
+        border-radius: 3px;
+    }
 
     /* Align / format buttons */
-    .fb-icon-row { display: flex; gap: 2px; }
-    .fb-icon-btn {
-        width: 28px; height: 28px; border: 1px solid transparent; border-radius: 4px;
-        background: transparent; color: var(--fig-text3); cursor: pointer;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 13px; transition: all 0.12s;
+    .fb-icon-row {
+        display: flex;
+        gap: 2px;
     }
-    .fb-icon-btn:hover { background: var(--fig-surface2); color: var(--fig-text); border-color: var(--fig-border-subtle); }
-    .fb-icon-btn.on { background: var(--fig-bg); color: var(--fig-accent); border-color: var(--fig-accent); }
+
+    .fb-icon-btn {
+        width: 28px;
+        height: 28px;
+        border: 1px solid transparent;
+        border-radius: 4px;
+        background: transparent;
+        color: var(--fig-text3);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        transition: all 0.12s;
+    }
+
+    .fb-icon-btn:hover {
+        background: var(--fig-surface2);
+        color: var(--fig-text);
+        border-color: var(--fig-border-subtle);
+    }
+
+    .fb-icon-btn.on {
+        background: var(--fig-bg);
+        color: var(--fig-accent);
+        border-color: var(--fig-accent);
+    }
 
     /* Action buttons */
     .fb-action {
-        display: flex; align-items: center; justify-content: center; gap: 6px;
-        width: 100%; height: 30px; border: 1px solid var(--fig-border-subtle); border-radius: 6px;
-        background: transparent; color: var(--fig-text2); font-size: 11px;
-        cursor: pointer; transition: all 0.12s; margin-bottom: 4px; font-family: inherit;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+        height: 30px;
+        border: 1px solid var(--fig-border-subtle);
+        border-radius: 6px;
+        background: transparent;
+        color: var(--fig-text2);
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.12s;
+        margin-bottom: 4px;
+        font-family: inherit;
     }
-    .fb-action:hover { background: var(--fig-surface2); border-color: var(--fig-border); }
-    .fb-action.danger { color: var(--fig-danger); border-color: rgba(242,72,34,0.25); }
-    .fb-action.danger:hover { background: rgba(242,72,34,0.08); }
+
+    .fb-action:hover {
+        background: var(--fig-surface2);
+        border-color: var(--fig-border);
+    }
+
+    .fb-action.danger {
+        color: var(--fig-danger);
+        border-color: rgba(242, 72, 34, 0.25);
+    }
+
+    .fb-action.danger:hover {
+        background: rgba(242, 72, 34, 0.08);
+    }
 
     /* Floating Actions Toolbar */
     .fb-float-actions {
-        position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
-        display: none; align-items: center; gap: 2px;
-        background: var(--fig-surface); border: 1px solid var(--fig-border);
-        border-radius: 10px; padding: 4px 6px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+        position: absolute;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: none;
+        align-items: center;
+        gap: 2px;
+        background: var(--fig-surface);
+        border: 1px solid var(--fig-border);
+        border-radius: 10px;
+        padding: 4px 6px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
         z-index: 1000;
     }
-    .fb-float-actions.show { display: flex; }
-    .fb-float-btn {
-        width: 32px; height: 32px; border: none; border-radius: 6px;
-        background: transparent; color: var(--fig-text2); cursor: pointer;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 14px; transition: all 0.12s; position: relative;
+
+    .fb-float-actions.show {
+        display: flex;
     }
-    .fb-float-btn:hover { background: var(--fig-surface2); color: var(--fig-text); }
-    .fb-float-btn.danger:hover { background: rgba(242,72,34,0.12); color: var(--fig-danger); }
-    .fb-float-sep { width: 1px; height: 20px; background: var(--fig-border); margin: 0 2px; }
+
+    .fb-float-btn {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--fig-text2);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        transition: all 0.12s;
+        position: relative;
+    }
+
+    .fb-float-btn:hover {
+        background: var(--fig-surface2);
+        color: var(--fig-text);
+    }
+
+    .fb-float-btn.danger:hover {
+        background: rgba(242, 72, 34, 0.12);
+        color: var(--fig-danger);
+    }
+
+    .fb-float-sep {
+        width: 1px;
+        height: 20px;
+        background: var(--fig-border);
+        margin: 0 2px;
+    }
+
     .fb-float-btn[title]:hover::after {
-        content: attr(title); position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%);
-        background: var(--fig-bg); color: var(--fig-text); font-size: 10px; padding: 3px 8px;
-        border-radius: 4px; white-space: nowrap; pointer-events: none;
+        content: attr(title);
+        position: absolute;
+        bottom: 110%;
+        left: 50%;
+        transform: translateX(-50%);
+        background: var(--fig-bg);
+        color: var(--fig-text);
+        font-size: 10px;
+        padding: 3px 8px;
+        border-radius: 4px;
+        white-space: nowrap;
+        pointer-events: none;
         border: 1px solid var(--fig-border-subtle);
     }
 
     /* Inspect HTML snippet */
-    .inspect-section { padding: 12px; border-bottom: 1px solid var(--fig-border-subtle); }
+    .inspect-section {
+        padding: 12px;
+        border-bottom: 1px solid var(--fig-border-subtle);
+    }
+
     .inspect-label {
-        font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
-        color: var(--fig-text3); margin-bottom: 8px;
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--fig-text3);
+        margin-bottom: 8px;
     }
+
     .inspect-code {
-        background: var(--fig-bg); border: 1px solid var(--fig-border-subtle); border-radius: 6px;
-        padding: 10px 12px; max-height: 220px; overflow: auto; position: relative;
+        background: var(--fig-bg);
+        border: 1px solid var(--fig-border-subtle);
+        border-radius: 6px;
+        padding: 10px 12px;
+        max-height: 220px;
+        overflow: auto;
+        position: relative;
     }
+
     .inspect-code pre {
-        font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace; font-size: 11px;
-        color: var(--fig-text2); white-space: pre-wrap; word-break: break-all;
-        line-height: 1.6; margin: 0; tab-size: 2; outline: none;
+        font-family: 'SF Mono', 'Cascadia Code', 'Consolas', monospace;
+        font-size: 11px;
+        color: var(--fig-text2);
+        white-space: pre-wrap;
+        word-break: break-all;
+        line-height: 1.6;
+        margin: 0;
+        tab-size: 2;
+        outline: none;
     }
+
     .inspect-code pre[contenteditable]:focus {
         background: rgba(13, 153, 255, 0.04);
         box-shadow: inset 0 0 0 1px rgba(13, 153, 255, 0.2);
         border-radius: 4px;
     }
-    .inspect-code .hl-tag { color: #f07178; }
-    .inspect-code .hl-attr { color: #ffcb6b; }
-    .inspect-code .hl-val { color: #c3e88d; }
-    .inspect-code .hl-text { color: #b3b3b3; }
-    .inspect-copy {
-        position: absolute; top: 6px; right: 6px;
-        width: 26px; height: 26px; border: 1px solid var(--fig-border-subtle); border-radius: 4px;
-        background: var(--fig-surface); color: var(--fig-text3); cursor: pointer;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 11px; transition: all 0.15s;
+
+    .inspect-code .hl-tag {
+        color: #f07178;
     }
-    .inspect-copy:hover { background: var(--fig-surface2); color: var(--fig-text); }
+
+    .inspect-code .hl-attr {
+        color: #ffcb6b;
+    }
+
+    .inspect-code .hl-val {
+        color: #c3e88d;
+    }
+
+    .inspect-code .hl-text {
+        color: #b3b3b3;
+    }
+
+    .inspect-copy {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 26px;
+        height: 26px;
+        border: 1px solid var(--fig-border-subtle);
+        border-radius: 4px;
+        background: var(--fig-surface);
+        color: var(--fig-text3);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        transition: all 0.15s;
+    }
+
+    .inspect-copy:hover {
+        background: var(--fig-surface2);
+        color: var(--fig-text);
+    }
 
     /* Toast */
     .fb-toast {
-        position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(40px);
-        background: var(--fig-surface); color: var(--fig-text);
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        transform: translateX(-50%) translateY(40px);
+        background: var(--fig-surface);
+        color: var(--fig-text);
         border: 1px solid var(--fig-border-subtle);
-        padding: 10px 20px; border-radius: 8px; font-size: 12px; font-weight: 500;
-        z-index: 100001; opacity: 0; pointer-events: none;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 500;
+        z-index: 100001;
+        opacity: 0;
+        pointer-events: none;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
         transition: all 0.25s ease;
     }
-    .fb-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+
+    .fb-toast.show {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+        pointer-events: auto;
+    }
 
     /* ── Pages Manager Modal ── */
     .fb-pages-modal-overlay {
-        position: fixed; inset: 0; background: rgba(0,0,0,0.72);
-        display: flex; align-items: center; justify-content: center;
-        z-index: 200000; opacity: 0; pointer-events: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.72);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 200000;
+        opacity: 0;
+        pointer-events: none;
         transition: opacity 0.22s;
         backdrop-filter: blur(4px);
     }
-    .fb-pages-modal-overlay.show { opacity: 1; pointer-events: auto; }
+
+    .fb-pages-modal-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
     .fb-pages-modal {
-        background: var(--fig-surface); border: 1px solid var(--fig-border);
-        border-radius: 16px; width: 720px; max-width: calc(100vw - 40px);
-        max-height: calc(100vh - 60px); display: flex; flex-direction: column;
-        box-shadow: 0 32px 80px rgba(0,0,0,0.7);
-        transform: scale(0.96) translateY(16px); transition: transform 0.22s;
+        background: var(--fig-surface);
+        border: 1px solid var(--fig-border);
+        border-radius: 16px;
+        width: 720px;
+        max-width: calc(100vw - 40px);
+        max-height: calc(100vh - 60px);
+        display: flex;
+        flex-direction: column;
+        box-shadow: 0 32px 80px rgba(0, 0, 0, 0.7);
+        transform: scale(0.96) translateY(16px);
+        transition: transform 0.22s;
         overflow: hidden;
     }
-    .fb-pages-modal-overlay.show .fb-pages-modal { transform: scale(1) translateY(0); }
+
+    .fb-pages-modal-overlay.show .fb-pages-modal {
+        transform: scale(1) translateY(0);
+    }
 
     .fb-pm-header {
-        display: flex; align-items: center; justify-content: space-between;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
         padding: 20px 24px 0;
         flex-shrink: 0;
     }
-    .fb-pm-header-left { display: flex; align-items: center; gap: 12px; }
+
+    .fb-pm-header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
     .fb-pm-title {
-        font-size: 16px; font-weight: 700; color: var(--fig-text);
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--fig-text);
     }
+
     .fb-pm-count {
-        font-size: 11px; color: var(--fig-text4);
-        background: var(--fig-surface2); border: 1px solid var(--fig-border-subtle);
-        padding: 2px 8px; border-radius: 20px;
+        font-size: 11px;
+        color: var(--fig-text4);
+        background: var(--fig-surface2);
+        border: 1px solid var(--fig-border-subtle);
+        padding: 2px 8px;
+        border-radius: 20px;
     }
+
     .fb-pm-close {
-        width: 32px; height: 32px; border: 1px solid var(--fig-border-subtle);
-        border-radius: 8px; background: transparent; color: var(--fig-text3);
-        cursor: pointer; display: flex; align-items: center; justify-content: center;
-        font-size: 16px; transition: all 0.12s; flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--fig-border-subtle);
+        border-radius: 8px;
+        background: transparent;
+        color: var(--fig-text3);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        transition: all 0.12s;
+        flex-shrink: 0;
     }
-    .fb-pm-close:hover { background: var(--fig-surface2); color: var(--fig-text); }
+
+    .fb-pm-close:hover {
+        background: var(--fig-surface2);
+        color: var(--fig-text);
+    }
 
     .fb-pm-toolbar {
-        display: flex; align-items: center; gap: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
         padding: 16px 24px 16px;
         border-bottom: 1px solid var(--fig-border-subtle);
         flex-shrink: 0;
     }
+
     .fb-pm-search {
-        flex: 1; height: 34px; background: var(--fig-bg);
-        border: 1px solid var(--fig-border); border-radius: 8px;
-        padding: 0 12px 0 34px; color: var(--fig-text); font-size: 12px;
-        font-family: inherit; outline: none; transition: border-color 0.12s;
+        flex: 1;
+        height: 34px;
+        background: var(--fig-bg);
+        border: 1px solid var(--fig-border);
+        border-radius: 8px;
+        padding: 0 12px 0 34px;
+        color: var(--fig-text);
+        font-size: 12px;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.12s;
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
-        background-repeat: no-repeat; background-position: 10px center;
+        background-repeat: no-repeat;
+        background-position: 10px center;
     }
-    .fb-pm-search:focus { border-color: var(--fig-accent); }
-    .fb-pm-search::placeholder { color: var(--fig-text4); }
+
+    .fb-pm-search:focus {
+        border-color: var(--fig-accent);
+    }
+
+    .fb-pm-search::placeholder {
+        color: var(--fig-text4);
+    }
+
     .fb-pm-new-btn {
-        height: 34px; padding: 0 14px; border-radius: 8px;
-        background: var(--fig-accent); color: #fff; border: none;
-        font-size: 12px; font-weight: 600; cursor: pointer;
-        display: flex; align-items: center; gap: 6px;
-        font-family: inherit; transition: background 0.12s; white-space: nowrap;
+        height: 34px;
+        padding: 0 14px;
+        border-radius: 8px;
+        background: var(--fig-accent);
+        color: #fff;
+        border: none;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-family: inherit;
+        transition: background 0.12s;
+        white-space: nowrap;
         flex-shrink: 0;
     }
-    .fb-pm-new-btn:hover { background: var(--fig-accent-hover); }
-    .fb-pm-new-btn i { font-size: 14px; }
+
+    .fb-pm-new-btn:hover {
+        background: var(--fig-accent-hover);
+    }
+
+    .fb-pm-new-btn i {
+        font-size: 14px;
+    }
 
     .fb-pm-body {
-        flex: 1; overflow-y: auto; padding: 20px 24px 24px;
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px 24px 24px;
     }
-    .fb-pm-body::-webkit-scrollbar { width: 5px; }
-    .fb-pm-body::-webkit-scrollbar-track { background: transparent; }
-    .fb-pm-body::-webkit-scrollbar-thumb { background: var(--fig-border); border-radius: 4px; }
+
+    .fb-pm-body::-webkit-scrollbar {
+        width: 5px;
+    }
+
+    .fb-pm-body::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .fb-pm-body::-webkit-scrollbar-thumb {
+        background: var(--fig-border);
+        border-radius: 4px;
+    }
 
     .fb-pm-grid {
-        display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
         gap: 12px;
     }
 
     .fb-pm-card {
-        background: var(--fig-bg); border: 1px solid var(--fig-border-subtle);
-        border-radius: 10px; overflow: hidden; cursor: pointer;
-        transition: all 0.15s; position: relative; flex-direction: column;
+        background: var(--fig-bg);
+        border: 1px solid var(--fig-border-subtle);
+        border-radius: 10px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.15s;
+        position: relative;
+        flex-direction: column;
         display: flex;
     }
-    .fb-pm-card:hover { border-color: var(--fig-accent); transform: translateY(-1px);
-        box-shadow: 0 6px 24px rgba(0,0,0,0.3); }
-    .fb-pm-card.active { border-color: var(--fig-accent);
-        box-shadow: 0 0 0 2px rgba(13,153,255,0.25); }
+
+    .fb-pm-card:hover {
+        border-color: var(--fig-accent);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .fb-pm-card.active {
+        border-color: var(--fig-accent);
+        box-shadow: 0 0 0 2px rgba(13, 153, 255, 0.25);
+    }
 
     .fb-pm-card-thumb {
-        height: 100px; background: linear-gradient(135deg, #2a2a2a 0%, #1a1a2e 100%);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 28px; color: var(--fig-border); position: relative;
+        height: 100px;
+        background: linear-gradient(135deg, #2a2a2a 0%, #1a1a2e 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        color: var(--fig-border);
+        position: relative;
         overflow: hidden;
     }
+
     .fb-pm-card.active .fb-pm-card-thumb {
         background: linear-gradient(135deg, #0d2444 0%, #0a1a35 100%);
-        color: rgba(13,153,255,0.4);
-    }
-    .fb-pm-card-active-badge {
-        position: absolute; top: 8px; right: 8px;
-        background: var(--fig-accent); color: #fff; font-size: 9px;
-        font-weight: 700; padding: 2px 7px; border-radius: 10px;
-        text-transform: uppercase; letter-spacing: 0.04em;
-    }
-    .fb-pm-card-home-badge {
-        position: absolute; top: 8px; left: 8px;
-        background: rgba(255,255,255,0.1); color: var(--fig-text3); font-size: 9px;
-        font-weight: 600; padding: 2px 7px; border-radius: 10px;
-        text-transform: uppercase; letter-spacing: 0.04em; border: 1px solid var(--fig-border);
+        color: rgba(13, 153, 255, 0.4);
     }
 
-    .fb-pm-card-body { padding: 12px; }
-    .fb-pm-card-label {
-        font-size: 12px; font-weight: 600; color: var(--fig-text);
-        margin-bottom: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    .fb-pm-card-active-badge {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: var(--fig-accent);
+        color: #fff;
+        font-size: 9px;
+        font-weight: 700;
+        padding: 2px 7px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
     }
+
+    .fb-pm-card-home-badge {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--fig-text3);
+        font-size: 9px;
+        font-weight: 600;
+        padding: 2px 7px;
+        border-radius: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        border: 1px solid var(--fig-border);
+    }
+
+    .fb-pm-card-body {
+        padding: 12px;
+    }
+
+    .fb-pm-card-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--fig-text);
+        margin-bottom: 3px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
     .fb-pm-card-slug {
-        font-size: 10px; color: var(--fig-text4); font-family: monospace;
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        font-size: 10px;
+        color: var(--fig-text4);
+        font-family: monospace;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .fb-pm-card-footer {
-        display: flex; align-items: center; gap: 2px;
-        padding: 0 8px 8px; justify-content: flex-end;
+        display: flex;
+        align-items: center;
+        gap: 2px;
+        padding: 0 8px 8px;
+        justify-content: flex-end;
     }
+
     .fb-pm-card-btn {
-        width: 26px; height: 26px; border: none; border-radius: 6px;
-        background: transparent; color: var(--fig-text4); cursor: pointer;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 12px; transition: all 0.1s;
+        width: 26px;
+        height: 26px;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--fig-text4);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        transition: all 0.1s;
     }
-    .fb-pm-card-btn:hover { background: var(--fig-surface2); color: var(--fig-text); }
-    .fb-pm-card-btn.danger:hover { background: rgba(242,72,34,0.12); color: var(--fig-danger); }
+
+    .fb-pm-card-btn:hover {
+        background: var(--fig-surface2);
+        color: var(--fig-text);
+    }
+
+    .fb-pm-card-btn.danger:hover {
+        background: rgba(242, 72, 34, 0.12);
+        color: var(--fig-danger);
+    }
 
     .fb-pm-empty {
-        grid-column: 1/-1; display: flex; flex-direction: column;
-        align-items: center; justify-content: center;
-        padding: 60px 24px; color: var(--fig-text4); text-align: center;
+        grid-column: 1/-1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 24px;
+        color: var(--fig-text4);
+        text-align: center;
     }
-    .fb-pm-empty i { font-size: 36px; margin-bottom: 12px; color: var(--fig-border); }
-    .fb-pm-empty p { font-size: 12px; line-height: 1.6; }
+
+    .fb-pm-empty i {
+        font-size: 36px;
+        margin-bottom: 12px;
+        color: var(--fig-border);
+    }
+
+    .fb-pm-empty p {
+        font-size: 12px;
+        line-height: 1.6;
+    }
 
     /* Page crumb as clickable button */
     .fb-page-crumb-btn {
-        display: flex; align-items: center; gap: 6px;
-        height: 32px; padding: 0 10px; border: 1px solid var(--fig-border-subtle);
-        border-radius: 6px; background: transparent; color: var(--fig-text2);
-        cursor: pointer; font-size: 11px; font-family: inherit;
-        transition: all 0.12s; white-space: nowrap; max-width: 160px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        height: 32px;
+        padding: 0 10px;
+        border: 1px solid var(--fig-border-subtle);
+        border-radius: 6px;
+        background: transparent;
+        color: var(--fig-text2);
+        cursor: pointer;
+        font-size: 11px;
+        font-family: inherit;
+        transition: all 0.12s;
+        white-space: nowrap;
+        max-width: 160px;
     }
-    .fb-page-crumb-btn:hover { background: var(--fig-surface2); border-color: var(--fig-border); color: var(--fig-text); }
-    .fb-page-crumb-btn i { font-size: 13px; color: var(--fig-text4); flex-shrink: 0; }
+
+    .fb-page-crumb-btn:hover {
+        background: var(--fig-surface2);
+        border-color: var(--fig-border);
+        color: var(--fig-text);
+    }
+
+    .fb-page-crumb-btn i {
+        font-size: 13px;
+        color: var(--fig-text4);
+        flex-shrink: 0;
+    }
+
     .fb-page-crumb-btn .crumb-label {
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        font-weight: 600; flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 600;
+        flex: 1;
     }
-    .fb-page-crumb-btn .crumb-chevron { font-size: 9px; color: var(--fig-text4); flex-shrink: 0; }
+
+    .fb-page-crumb-btn .crumb-chevron {
+        font-size: 9px;
+        color: var(--fig-text4);
+        flex-shrink: 0;
+    }
 
     /* ── Sub-modal (create/rename/duplicate/delete) ── */
     .fb-modal-overlay {
-        position: fixed; inset: 0; background: rgba(0,0,0,0.65);
-        display: flex; align-items: center; justify-content: center;
-        z-index: 210000; opacity: 0; pointer-events: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.65);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 210000;
+        opacity: 0;
+        pointer-events: none;
         transition: opacity 0.2s;
     }
-    .fb-modal-overlay.show { opacity: 1; pointer-events: auto; }
+
+    .fb-modal-overlay.show {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
     .fb-modal {
-        background: var(--fig-surface); border: 1px solid var(--fig-border);
-        border-radius: 12px; padding: 24px; width: 340px;
-        box-shadow: 0 24px 64px rgba(0,0,0,0.6);
-        transform: translateY(12px); transition: transform 0.2s;
+        background: var(--fig-surface);
+        border: 1px solid var(--fig-border);
+        border-radius: 12px;
+        padding: 24px;
+        width: 340px;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6);
+        transform: translateY(12px);
+        transition: transform 0.2s;
     }
-    .fb-modal-overlay.show .fb-modal { transform: translateY(0); }
-    .fb-modal-title { font-size: 14px; font-weight: 700; color: var(--fig-text); margin-bottom: 20px; }
-    .fb-modal-field { margin-bottom: 14px; }
+
+    .fb-modal-overlay.show .fb-modal {
+        transform: translateY(0);
+    }
+
+    .fb-modal-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--fig-text);
+        margin-bottom: 20px;
+    }
+
+    .fb-modal-field {
+        margin-bottom: 14px;
+    }
+
     .fb-modal-label {
-        font-size: 10px; font-weight: 600; color: var(--fig-text3);
-        text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; display: block;
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--fig-text3);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 6px;
+        display: block;
     }
+
     .fb-modal-input {
-        width: 100%; height: 34px; background: var(--fig-bg);
-        border: 1px solid var(--fig-border); border-radius: 6px;
-        padding: 0 10px; color: var(--fig-text); font-size: 12px;
-        font-family: inherit; outline: none; transition: border-color 0.12s; box-sizing: border-box;
+        width: 100%;
+        height: 34px;
+        background: var(--fig-bg);
+        border: 1px solid var(--fig-border);
+        border-radius: 6px;
+        padding: 0 10px;
+        color: var(--fig-text);
+        font-size: 12px;
+        font-family: inherit;
+        outline: none;
+        transition: border-color 0.12s;
+        box-sizing: border-box;
     }
-    .fb-modal-input:focus { border-color: var(--fig-accent); }
-    .fb-modal-hint { font-size: 9px; color: var(--fig-text4); margin-top: 4px; }
-    .fb-modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+    .fb-modal-input:focus {
+        border-color: var(--fig-accent);
+    }
+
+    .fb-modal-hint {
+        font-size: 9px;
+        color: var(--fig-text4);
+        margin-top: 4px;
+    }
+
+    .fb-modal-footer {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+
     .fb-modal-btn {
-        height: 32px; padding: 0 16px; border-radius: 6px; border: none;
-        font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.12s;
+        height: 32px;
+        padding: 0 16px;
+        border-radius: 6px;
+        border: none;
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        transition: all 0.12s;
     }
-    .fb-modal-btn.cancel { background: var(--fig-surface2); color: var(--fig-text2); border: 1px solid var(--fig-border); }
-    .fb-modal-btn.cancel:hover { background: var(--fig-bg); }
-    .fb-modal-btn.primary { background: var(--fig-accent); color: #fff; }
-    .fb-modal-btn.primary:hover { background: var(--fig-accent-hover); }
-    .fb-modal-btn.danger-btn { background: var(--fig-danger); color: #fff; }
-    .fb-modal-btn.danger-btn:hover { background: #d93a1a; }
+
+    .fb-modal-btn.cancel {
+        background: var(--fig-surface2);
+        color: var(--fig-text2);
+        border: 1px solid var(--fig-border);
+    }
+
+    .fb-modal-btn.cancel:hover {
+        background: var(--fig-bg);
+    }
+
+    .fb-modal-btn.primary {
+        background: var(--fig-accent);
+        color: #fff;
+    }
+
+    .fb-modal-btn.primary:hover {
+        background: var(--fig-accent-hover);
+    }
+
+    .fb-modal-btn.danger-btn {
+        background: var(--fig-danger);
+        color: #fff;
+    }
+
+    .fb-modal-btn.danger-btn:hover {
+        background: #d93a1a;
+    }
 </style>
 
 <div class="fb-root">
     <!-- Top Bar -->
     <div class="fb-topbar">
         <div class="fb-topbar-left">
-        <a href="<?php echo $admin_base; ?>home" class="fb-tbtn" title="Back">
+            <a href="<?php echo $admin_base; ?>home" class="fb-tbtn" title="Back">
                 <i class="bi bi-arrow-left"></i>
             </a>
             <div class="fb-logo">
                 <img src="/assets/favicon.png" alt="Logo" class="w-6 h-6">
                 Page Builder
             </div>
-            
+
         </div>
 
         <div class="fb-topbar-center">
             <div class="fb-vp-group" id="mode-group">
-                <button class="fb-vp-btn on" data-mode="select"      onclick="setMode('select')"      title="Select (V)"><i class="bi bi-cursor-fill"></i></button>
-                <button class="fb-vp-btn"    data-mode="interaction" onclick="setMode('interaction')" title="Interaction (H)"><i class="bi bi-hand-index"></i></button>
-                <button class="fb-vp-btn"    data-mode="drag"        onclick="setMode('drag')"        title="Drag (M)"><i class="bi bi-arrows-move"></i></button>
+                <button class="fb-vp-btn on" data-mode="select" onclick="setMode('select')" title="Select (V)"><i class="bi bi-cursor-fill"></i></button>
+                <button class="fb-vp-btn" data-mode="interaction" onclick="setMode('interaction')" title="Interaction (H)"><i class="bi bi-hand-index"></i></button>
+                <button class="fb-vp-btn" data-mode="drag" onclick="setMode('drag')" title="Drag (M)"><i class="bi bi-arrows-move"></i></button>
             </div>
-            <div class="fb-sep"></div>
-            <button class="fb-tbtn" onclick="undo()" title="Undo"><i class="bi bi-arrow-counterclockwise"></i></button>
-            <button class="fb-tbtn" onclick="redo()" title="Redo"><i class="bi bi-arrow-clockwise"></i></button>
             <div class="fb-sep"></div>
             <div class="fb-vp-group">
                 <button class="fb-vp-btn on" data-vp="desktop" onclick="setViewport('desktop')" title="Desktop"><i class="bi bi-display"></i></button>
@@ -818,11 +1714,7 @@ if (!empty($domain) && !empty(trim($site_html_content))) {
         </div>
 
         <div class="fb-topbar-right">
-            <button class="fb-page-crumb-btn" id="page-crumb" onclick="openPagesModal()" title="Manage Pages">
-                <i class="bi bi-file-earmark-text"></i>
-                <span class="crumb-label" id="page-crumb-label">Home</span>
-                <i class="bi bi-chevron-down crumb-chevron"></i>
-            </button>
+
             <div class="fb-sep"></div>
             <button class="fb-tbtn" onclick="previewSite()" title="Preview"><i class="bi bi-play-fill"></i></button>
             <div class="fb-sep"></div>
@@ -1434,7 +2326,7 @@ if (!empty($domain) && !empty(trim($site_html_content))) {
                         <div class="inspect-label">HTML</div>
                         <div class="inspect-code">
                             <button class="inspect-copy" onclick="copyInspectHtml()" title="Copy"><i class="bi bi-clipboard"></i></button>
-                            <pre id="inspect-html" contenteditable="true" ></pre>
+                            <pre id="inspect-html" contenteditable="true"></pre>
                         </div>
                     </div>
                     <!-- Computed CSS -->
@@ -1471,6 +2363,10 @@ if (!empty($domain) && !empty(trim($site_html_content))) {
             </div>
             <div class="fb-pm-body">
                 <div class="fb-pm-grid" id="pm-grid"></div>
+                <div class="fb-pm-empty" id="pm-grid-empty" style="display:none;">
+                    <i class="bi bi-file-earmark"></i>
+                    <p>No pages match your search.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -1500,603 +2396,789 @@ if (!empty($domain) && !empty(trim($site_html_content))) {
 </div>
 
 <script>
-(function() {
-    'use strict';
+    (function() {
+        'use strict';
 
-    const iframe = document.getElementById('builder-iframe');
-    const panelEmpty = document.getElementById('panel-empty');
-    const panelDesign = document.getElementById('panel-design');
-    const panelInspect = document.getElementById('panel-inspect');
-    const floatActions = document.getElementById('float-actions');
-    let currentElement = null;
-    let engineReady = false;
-    let currentRightTab = 'design';
-    let currentMode = 'select';
-    let headData = {};
-    let suppressHeadEcho = false;
-    const headDebounce = {};
-    let currentPageSlug = 'index';
-    let currentPageLabel = 'Home';
-    let pageList = []; // [{slug, label}]
-    let pmModalMode = null; // 'new' | 'duplicate' | 'rename' | 'delete'
-    let pmModalTargetSlug = null;
+        const iframe = document.getElementById('builder-iframe');
+        const panelEmpty = document.getElementById('panel-empty');
+        const panelDesign = document.getElementById('panel-design');
+        const panelInspect = document.getElementById('panel-inspect');
+        const floatActions = document.getElementById('float-actions');
+        let currentElement = null;
+        let engineReady = false;
+        let currentRightTab = 'design';
+        let currentMode = 'select';
+        let headData = {};
+        let suppressHeadEcho = false;
+        const headDebounce = {};
+        let currentPageSlug = <?php echo json_encode($requested_page_slug); ?>;
+        let currentPageLabel = <?php echo json_encode(ucfirst(str_replace('-', ' ', $requested_page_slug))); ?>;
+        let pageList = []; // [{slug, label}]
+        let pmModalMode = null; // 'new' | 'duplicate' | 'rename' | 'delete'
+        let pmModalTargetSlug = null;
 
-    // ── Load site into iframe ──
-    const siteHtmlContent = <?php echo json_encode($site_html_content); ?>;
-    const engineJsContent = <?php
-        $engine_path = dirname(__FILE__) . '/engine.js';
-        echo json_encode(file_exists($engine_path) ? file_get_contents($engine_path) : '');
-    ?>;
+        // ── Load site into iframe ──
+        const siteHtmlContent = <?php echo json_encode($site_html_content); ?>;
+        const engineJsContent = <?php
+                                $engine_path = dirname(__FILE__) . '/engine.js';
+                                echo json_encode(file_exists($engine_path) ? file_get_contents($engine_path) : '');
+                                ?>;
 
-    function loadSite() {
-        const doc = iframe.contentDocument || iframe.contentWindow.document;
-        doc.open();
-        doc.write(siteHtmlContent);
-        doc.close();
-        setTimeout(injectEngine, 100);
-    }
-
-    function injectEngine() {
-        try {
+        function loadSite() {
             const doc = iframe.contentDocument || iframe.contentWindow.document;
-            if (!doc.body) return;
-            const existing = doc.getElementById('vb-engine-script');
-            if (existing) existing.remove();
-            const script = doc.createElement('script');
-            script.id = 'vb-engine-script';
-            script.setAttribute('data-vb-engine', 'true');
-            script.textContent = engineJsContent;
-            doc.body.appendChild(script);
-        } catch (e) {
-            console.warn('Could not inject engine:', e);
+            doc.open();
+            doc.write(siteHtmlContent);
+            doc.close();
+            setTimeout(injectEngine, 100);
         }
-    }
 
-    // ── Messaging ──
-    function sendToIframe(msg) {
-        if (iframe.contentWindow) iframe.contentWindow.postMessage(msg, '*');
-    }
-
-    window.addEventListener('message', function(e) {
-        const msg = e.data;
-        if (!msg || !msg.type) return;
-
-        if (msg.type === 'ENGINE_READY') { engineReady = true; sendToIframe({ type: 'SET_MODE', mode: currentMode }); }
-        if (msg.type === 'ELEMENT_SELECTED') { currentElement = msg; showProperties(msg); }
-        if (msg.type === 'ELEMENT_DESELECTED') { currentElement = null; hideProperties(); }
-        if (msg.type === 'EDIT_MODE') { /* visual indicator could go here */ }
-        if (msg.type === 'CONTENT_CHANGED') { /* live content sync */ }
-        if (msg.type === 'HTML_CONTENT') { doSaveHtml(msg.html); }
-        if (msg.type === 'ELEMENT_DELETED') { currentElement = null; hideProperties(); }
-        if (msg.type === 'REQUEST_DELETE') { if (confirm('Delete this element?')) sendToIframe({ type: 'DELETE_ELEMENT' }); }
-        if (msg.type === 'LAYERS_UPDATE') { renderLayers(msg.layers); }
-        if (msg.type === 'HTML_SYNC_ERROR') { showToast('HTML error: ' + msg.error); }
-        if (msg.type === 'HEAD_DATA') { applyHeadData(msg.data); }
-    });
-
-    // ── Show/Hide Properties ──
-    function showProperties(info) {
-        panelEmpty.style.display = 'none';
-        // Respect current tab: show whichever tab is active
-        panelDesign.style.display = currentRightTab === 'design' ? 'block' : 'none';
-        panelInspect.style.display = currentRightTab === 'inspect' ? 'block' : 'none';
-        floatActions.classList.add('show');
-
-        // Element
-        document.getElementById('prop-tag').textContent = info.tag.toLowerCase();
-        document.getElementById('prop-size').textContent = Math.round(info.width) + ' × ' + Math.round(info.height);
-        document.getElementById('prop-id').value = info.id || '';
-        document.getElementById('prop-classes').value = info.classes || '';
-
-        // Content / Image / Link
-        const secContent = document.getElementById('sec-content');
-        const secImage = document.getElementById('sec-image');
-        const secLink = document.getElementById('sec-link');
-
-        if (info.tag === 'IMG') {
-            secContent.style.display = 'none'; secImage.style.display = 'block';
-            document.getElementById('prop-src').value = info.src || '';
-            document.getElementById('prop-alt').value = info.alt || '';
-        } else {
-            secContent.style.display = 'block'; secImage.style.display = 'none';
-            document.getElementById('prop-text').value = info.text || '';
-        }
-        secLink.style.display = info.tag === 'A' ? 'block' : 'none';
-        if (info.tag === 'A') document.getElementById('prop-href').value = info.href || '';
-
-        // Layout
-        setVal('prop-display', info.display);
-        setVal('prop-flexDirection', info.flexDirection);
-        setVal('prop-justifyContent', info.justifyContent);
-        setVal('prop-alignItems', info.alignItems);
-        document.getElementById('prop-gap').value = info.gap || '';
-        setVal('prop-flexWrap', info.flexWrap);
-        setVal('prop-overflow', info.overflow);
-
-        // Size
-        document.getElementById('prop-cssWidth').value = info.cssWidth || '';
-        document.getElementById('prop-cssHeight').value = info.cssHeight || '';
-        document.getElementById('prop-minWidth').value = info.minWidth || '';
-        document.getElementById('prop-maxWidth').value = info.maxWidth || '';
-
-        // Spacing
-        document.getElementById('prop-paddingTop').value = info.paddingTop || '';
-        document.getElementById('prop-paddingRight').value = info.paddingRight || '';
-        document.getElementById('prop-paddingBottom').value = info.paddingBottom || '';
-        document.getElementById('prop-paddingLeft').value = info.paddingLeft || '';
-        document.getElementById('prop-marginTop').value = info.marginTop || '';
-        document.getElementById('prop-marginRight').value = info.marginRight || '';
-        document.getElementById('prop-marginBottom').value = info.marginBottom || '';
-        document.getElementById('prop-marginLeft').value = info.marginLeft || '';
-
-        // Typography
-        document.getElementById('prop-fontSize').value = info.fontSize || '';
-        setVal('prop-fontWeight', info.fontWeight);
-        document.getElementById('prop-lineHeight').value = info.lineHeight || '';
-        document.getElementById('prop-letterSpacing').value = info.letterSpacing || '';
-        setVal('prop-textTransform', info.textTransform);
-
-        // Font family - try to match
-        const familySel = document.getElementById('prop-fontFamily');
-        familySel.value = '';
-        for (let i = 0; i < familySel.options.length; i++) {
-            if (info.fontFamily && info.fontFamily.includes(familySel.options[i].value.split(',')[0].replace(/'/g, ''))) {
-                familySel.value = familySel.options[i].value;
-                break;
+        function injectEngine() {
+            try {
+                const doc = iframe.contentDocument || iframe.contentWindow.document;
+                if (!doc.body) return;
+                const existing = doc.getElementById('vb-engine-script');
+                if (existing) existing.remove();
+                const script = doc.createElement('script');
+                script.id = 'vb-engine-script';
+                script.setAttribute('data-vb-engine', 'true');
+                script.textContent = engineJsContent;
+                doc.body.appendChild(script);
+            } catch (e) {
+                console.warn('Could not inject engine:', e);
             }
         }
 
-        // Text align buttons
-        document.querySelectorAll('[data-align]').forEach(b => {
-            b.classList.toggle('on', info.textAlign === b.dataset.align);
-        });
-
-        // Font style buttons
-        document.getElementById('btn-italic').classList.toggle('on', info.fontStyle === 'italic');
-        document.getElementById('btn-underline').classList.toggle('on', (info.textDecoration || '').includes('underline'));
-        document.getElementById('btn-strike').classList.toggle('on', (info.textDecoration || '').includes('line-through'));
-
-        // Fill
-        document.getElementById('prop-bg').value = info.backgroundColor || '';
-        setSwatchColor('cp-bg', info.backgroundColor);
-
-        // Stroke
-        document.getElementById('prop-color').value = info.color || '';
-        setSwatchColor('cp-color', info.color);
-        document.getElementById('prop-borderWidth').value = info.borderWidth || '';
-        setVal('prop-borderStyle', info.borderStyle);
-        document.getElementById('prop-borderColor').value = info.borderColor || '';
-        setSwatchColor('cp-border', info.borderColor);
-        document.getElementById('prop-borderTopLeftRadius').value = info.borderTopLeftRadius || '';
-        document.getElementById('prop-borderTopRightRadius').value = info.borderTopRightRadius || '';
-        document.getElementById('prop-borderBottomRightRadius').value = info.borderBottomRightRadius || '';
-        document.getElementById('prop-borderBottomLeftRadius').value = info.borderBottomLeftRadius || '';
-
-        // Effects
-        document.getElementById('prop-opacity').value = info.opacity || '';
-        document.getElementById('prop-boxShadow').value = info.boxShadow === 'none' ? '' : (info.boxShadow || '');
-        setVal('prop-cursor', info.cursor);
-
-        // Inspect tab
-        updateInspect(info);
-    }
-
-    function hideProperties() {
-        panelEmpty.style.display = 'flex';
-        panelDesign.style.display = 'none';
-        panelInspect.style.display = 'none';
-        floatActions.classList.remove('show');
-        document.getElementById('inspect-output').textContent = '';
-        document.getElementById('inspect-html').innerHTML = '';
-    }
-
-    function setVal(id, val) {
-        const el = document.getElementById(id);
-        if (!el) return;
-        // For selects, try to match option
-        for (let i = 0; i < el.options.length; i++) {
-            if (el.options[i].value === val) { el.selectedIndex = i; return; }
+        // ── Messaging ──
+        function sendToIframe(msg) {
+            if (iframe.contentWindow) iframe.contentWindow.postMessage(msg, '*');
         }
-        el.value = val || '';
-    }
 
-    function setSwatchColor(id, val) {
-        const el = document.getElementById(id);
-        try {
-            const d = document.createElement('div');
-            d.style.color = val;
-            document.body.appendChild(d);
-            const computed = getComputedStyle(d).color;
-            document.body.removeChild(d);
-            const m = computed.match(/\d+/g);
-            if (m && m.length >= 3) {
-                el.value = '#' + m.slice(0, 3).map(n => parseInt(n).toString(16).padStart(2, '0')).join('');
+        window.addEventListener('message', function(e) {
+            const msg = e.data;
+            if (!msg || !msg.type) return;
+
+            if (msg.type === 'ENGINE_READY') {
+                engineReady = true;
+                sendToIframe({
+                    type: 'SET_MODE',
+                    mode: currentMode
+                });
             }
-        } catch (e) {}
-    }
-
-    function updateInspect(info) {
-        if (!info) return;
-
-        // HTML snippet with syntax highlighting
-        if (info.htmlSnippet) {
-            const formatted = formatHtml(info.htmlSnippet);
-            document.getElementById('inspect-html').innerHTML = highlightHtml(formatted);
-        } else {
-            document.getElementById('inspect-html').innerHTML = '<span class="hl-text">No HTML available</span>';
-        }
-
-        // Computed CSS
-        const lines = [];
-        lines.push(`/* ${info.tag.toLowerCase()}${info.id ? '#'+info.id : ''}${info.classes ? '.'+info.classes.split(' ').join('.') : ''} */`);
-        lines.push('');
-        const props = [
-            ['display', info.display], ['position', info.position],
-            ['width', info.cssWidth], ['height', info.cssHeight],
-            ['padding', `${info.paddingTop} ${info.paddingRight} ${info.paddingBottom} ${info.paddingLeft}`],
-            ['margin', `${info.marginTop} ${info.marginRight} ${info.marginBottom} ${info.marginLeft}`],
-            ['font-family', info.fontFamily], ['font-size', info.fontSize],
-            ['font-weight', info.fontWeight], ['line-height', info.lineHeight],
-            ['color', info.color], ['background-color', info.backgroundColor],
-            ['border', `${info.borderWidth} ${info.borderStyle} ${info.borderColor}`],
-            ['border-radius', info.borderRadius],
-            ['opacity', info.opacity], ['box-shadow', info.boxShadow],
-        ];
-        props.forEach(([k, v]) => { if (v && v !== 'none' && v !== 'normal') lines.push(`${k}: ${v};`); });
-        document.getElementById('inspect-output').textContent = lines.join('\n');
-    }
-
-    function formatHtml(html) {
-        // Basic pretty-print: indent nested tags
-        let result = '';
-        let indent = 0;
-        const pad = () => '  '.repeat(indent);
-        // Split by tags
-        const tokens = html.replace(/>\s*</g, '>\n<').split('\n');
-        tokens.forEach(token => {
-            const t = token.trim();
-            if (!t) return;
-            if (t.startsWith('</')) {
-                indent = Math.max(0, indent - 1);
-                result += pad() + t + '\n';
-            } else if (t.startsWith('<') && !t.startsWith('<!') && !t.endsWith('/>') && !t.match(/^<(img|br|hr|input|meta|link|area|base|col|embed|source|track|wbr)\b/i)) {
-                result += pad() + t + '\n';
-                // Only indent if not self-closing and has a closing counterpart
-                if (!t.includes('</')) indent++;
-            } else {
-                result += pad() + t + '\n';
+            if (msg.type === 'ELEMENT_SELECTED') {
+                currentElement = msg;
+                showProperties(msg);
+            }
+            if (msg.type === 'ELEMENT_DESELECTED') {
+                currentElement = null;
+                hideProperties();
+            }
+            if (msg.type === 'EDIT_MODE') {
+                /* visual indicator could go here */ }
+            if (msg.type === 'CONTENT_CHANGED') {
+                /* live content sync */ }
+            if (msg.type === 'HTML_CONTENT') {
+                doSaveHtml(msg.html);
+            }
+            if (msg.type === 'ELEMENT_DELETED') {
+                currentElement = null;
+                hideProperties();
+            }
+            if (msg.type === 'REQUEST_DELETE') {
+                if (confirm('Delete this element?')) sendToIframe({
+                    type: 'DELETE_ELEMENT'
+                });
+            }
+            if (msg.type === 'LAYERS_UPDATE') {
+                renderLayers(msg.layers);
+            }
+            if (msg.type === 'HTML_SYNC_ERROR') {
+                showToast('HTML error: ' + msg.error);
+            }
+            if (msg.type === 'HEAD_DATA') {
+                applyHeadData(msg.data);
             }
         });
-        return result.trimEnd();
-    }
 
-    function highlightHtml(html) {
-        // Process character by character to build highlighted output
-        let out = '';
-        let i = 0;
-        const len = html.length;
-        while (i < len) {
-            if (html[i] === '<') {
-                // Find end of tag
-                const end = html.indexOf('>', i);
-                if (end === -1) { out += esc(html.slice(i)); break; }
-                const tag = html.slice(i, end + 1);
-                out += highlightTag(tag);
-                i = end + 1;
+        // ── Show/Hide Properties ──
+        function showProperties(info) {
+            panelEmpty.style.display = 'none';
+            // Respect current tab: show whichever tab is active
+            panelDesign.style.display = currentRightTab === 'design' ? 'block' : 'none';
+            panelInspect.style.display = currentRightTab === 'inspect' ? 'block' : 'none';
+            floatActions.classList.add('show');
+
+            // Element
+            document.getElementById('prop-tag').textContent = info.tag.toLowerCase();
+            document.getElementById('prop-size').textContent = Math.round(info.width) + ' × ' + Math.round(info.height);
+            document.getElementById('prop-id').value = info.id || '';
+            document.getElementById('prop-classes').value = info.classes || '';
+
+            // Content / Image / Link
+            const secContent = document.getElementById('sec-content');
+            const secImage = document.getElementById('sec-image');
+            const secLink = document.getElementById('sec-link');
+
+            if (info.tag === 'IMG') {
+                secContent.style.display = 'none';
+                secImage.style.display = 'block';
+                document.getElementById('prop-src').value = info.src || '';
+                document.getElementById('prop-alt').value = info.alt || '';
             } else {
-                // Text content
-                const next = html.indexOf('<', i);
-                const text = next === -1 ? html.slice(i) : html.slice(i, next);
-                out += '<span class="hl-text">' + esc(text) + '</span>';
-                i = next === -1 ? len : next;
+                secContent.style.display = 'block';
+                secImage.style.display = 'none';
+                document.getElementById('prop-text').value = info.text || '';
             }
+            secLink.style.display = info.tag === 'A' ? 'block' : 'none';
+            if (info.tag === 'A') document.getElementById('prop-href').value = info.href || '';
+
+            // Layout
+            setVal('prop-display', info.display);
+            setVal('prop-flexDirection', info.flexDirection);
+            setVal('prop-justifyContent', info.justifyContent);
+            setVal('prop-alignItems', info.alignItems);
+            document.getElementById('prop-gap').value = info.gap || '';
+            setVal('prop-flexWrap', info.flexWrap);
+            setVal('prop-overflow', info.overflow);
+
+            // Size
+            document.getElementById('prop-cssWidth').value = info.cssWidth || '';
+            document.getElementById('prop-cssHeight').value = info.cssHeight || '';
+            document.getElementById('prop-minWidth').value = info.minWidth || '';
+            document.getElementById('prop-maxWidth').value = info.maxWidth || '';
+
+            // Spacing
+            document.getElementById('prop-paddingTop').value = info.paddingTop || '';
+            document.getElementById('prop-paddingRight').value = info.paddingRight || '';
+            document.getElementById('prop-paddingBottom').value = info.paddingBottom || '';
+            document.getElementById('prop-paddingLeft').value = info.paddingLeft || '';
+            document.getElementById('prop-marginTop').value = info.marginTop || '';
+            document.getElementById('prop-marginRight').value = info.marginRight || '';
+            document.getElementById('prop-marginBottom').value = info.marginBottom || '';
+            document.getElementById('prop-marginLeft').value = info.marginLeft || '';
+
+            // Typography
+            document.getElementById('prop-fontSize').value = info.fontSize || '';
+            setVal('prop-fontWeight', info.fontWeight);
+            document.getElementById('prop-lineHeight').value = info.lineHeight || '';
+            document.getElementById('prop-letterSpacing').value = info.letterSpacing || '';
+            setVal('prop-textTransform', info.textTransform);
+
+            // Font family - try to match
+            const familySel = document.getElementById('prop-fontFamily');
+            familySel.value = '';
+            for (let i = 0; i < familySel.options.length; i++) {
+                if (info.fontFamily && info.fontFamily.includes(familySel.options[i].value.split(',')[0].replace(/'/g, ''))) {
+                    familySel.value = familySel.options[i].value;
+                    break;
+                }
+            }
+
+            // Text align buttons
+            document.querySelectorAll('[data-align]').forEach(b => {
+                b.classList.toggle('on', info.textAlign === b.dataset.align);
+            });
+
+            // Font style buttons
+            document.getElementById('btn-italic').classList.toggle('on', info.fontStyle === 'italic');
+            document.getElementById('btn-underline').classList.toggle('on', (info.textDecoration || '').includes('underline'));
+            document.getElementById('btn-strike').classList.toggle('on', (info.textDecoration || '').includes('line-through'));
+
+            // Fill
+            document.getElementById('prop-bg').value = info.backgroundColor || '';
+            setSwatchColor('cp-bg', info.backgroundColor);
+
+            // Stroke
+            document.getElementById('prop-color').value = info.color || '';
+            setSwatchColor('cp-color', info.color);
+            document.getElementById('prop-borderWidth').value = info.borderWidth || '';
+            setVal('prop-borderStyle', info.borderStyle);
+            document.getElementById('prop-borderColor').value = info.borderColor || '';
+            setSwatchColor('cp-border', info.borderColor);
+            document.getElementById('prop-borderTopLeftRadius').value = info.borderTopLeftRadius || '';
+            document.getElementById('prop-borderTopRightRadius').value = info.borderTopRightRadius || '';
+            document.getElementById('prop-borderBottomRightRadius').value = info.borderBottomRightRadius || '';
+            document.getElementById('prop-borderBottomLeftRadius').value = info.borderBottomLeftRadius || '';
+
+            // Effects
+            document.getElementById('prop-opacity').value = info.opacity || '';
+            document.getElementById('prop-boxShadow').value = info.boxShadow === 'none' ? '' : (info.boxShadow || '');
+            setVal('prop-cursor', info.cursor);
+
+            // Inspect tab
+            updateInspect(info);
         }
-        return out;
-    }
 
-    function highlightTag(tag) {
-        // Match: < or </, tag name, attributes, > or />
-        const m = tag.match(/^(<\/?)(\w[\w-]*)([\s\S]*?)(\/?>)$/);
-        if (!m) return esc(tag);
-        let result = esc(m[1]) + '<span class="hl-tag">' + esc(m[2]) + '</span>';
-        // Parse attributes
-        const attrs = m[3];
-        if (attrs.trim()) {
-            result += attrs.replace(/([\w-]+)\s*=\s*"([^"]*)"/g, (_, name, val) =>
-                ' <span class="hl-attr">' + esc(name) + '</span>=<span class="hl-val">"' + esc(val) + '"</span>'
-            ).replace(/([\w-]+)\s*=\s*'([^']*)'/g, (_, name, val) =>
-                ' <span class="hl-attr">' + esc(name) + '</span>=<span class="hl-val">\'' + esc(val) + '\'</span>'
-            );
+        function hideProperties() {
+            panelEmpty.style.display = 'flex';
+            panelDesign.style.display = 'none';
+            panelInspect.style.display = 'none';
+            floatActions.classList.remove('show');
+            document.getElementById('inspect-output').textContent = '';
+            document.getElementById('inspect-html').innerHTML = '';
         }
-        result += esc(m[4]);
-        return result;
-    }
 
-    function esc(s) {
-        return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    }
-
-    window.copyInspectHtml = function() {
-        const el = document.getElementById('inspect-html');
-        const text = el.textContent || el.innerText;
-        navigator.clipboard.writeText(text).then(() => showToast('HTML copied'));
-    };
-
-    window.copyInspectCss = function() {
-        const el = document.getElementById('inspect-output');
-        navigator.clipboard.writeText(el.textContent).then(() => showToast('CSS copied'));
-    };
-
-    // ── HTML contenteditable sync ──
-    const inspectHtmlEl = document.getElementById('inspect-html');
-    let htmlSyncTimeout = null;
-
-    inspectHtmlEl.addEventListener('input', function() {
-        // Debounce — sync after user stops typing for 600ms
-        clearTimeout(htmlSyncTimeout);
-        htmlSyncTimeout = setTimeout(syncHtmlToElement, 600);
-    });
-
-    inspectHtmlEl.addEventListener('blur', function() {
-        clearTimeout(htmlSyncTimeout);
-        syncHtmlToElement();
-    });
-
-    function syncHtmlToElement() {
-        if (!currentElement) return;
-        const rawHtml = inspectHtmlEl.textContent || inspectHtmlEl.innerText;
-        if (!rawHtml.trim()) return;
-        sendToIframe({ type: 'SET_OUTER_HTML', html: rawHtml.trim() });
-    }
-
-    // ── Layers ──
-    function renderLayers(layers) {
-        const container = document.getElementById('tab-layers');
-        if (!layers || !layers.length) {
-            container.innerHTML = '<div class="fb-empty" style="height:200px"><i class="bi bi-layers"></i><p>No elements</p></div>';
-            return;
+        function setVal(id, val) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            // For selects, try to match option
+            for (let i = 0; i < el.options.length; i++) {
+                if (el.options[i].value === val) {
+                    el.selectedIndex = i;
+                    return;
+                }
+            }
+            el.value = val || '';
         }
-        container.innerHTML = layers.map(l => {
-            const pad = 12 + l.depth * 16;
-            const icons = { section: 'bi-layout-text-window', div: 'bi-square', nav: 'bi-list', header: 'bi-window', footer: 'bi-layout-text-window-reverse', img: 'bi-image', a: 'bi-link-45deg', button: 'bi-square-fill', input: 'bi-input-cursor-text', h1: 'bi-type-h1', h2: 'bi-type-h2', h3: 'bi-type-h3', p: 'bi-text-paragraph', span: 'bi-fonts', ul: 'bi-list-ul', ol: 'bi-list-ol', form: 'bi-ui-radios', article: 'bi-file-text', main: 'bi-window', aside: 'bi-layout-sidebar', figure: 'bi-image', blockquote: 'bi-blockquote-left', table: 'bi-table', hr: 'bi-dash-lg', video: 'bi-play-btn' };
-            const icon = icons[l.tag] || 'bi-code';
-            return `<div class="fb-layer${l.selected ? ' sel' : ''}" style="padding-left:${pad}px" onclick="selectLayer(${l.index})">
+
+        function setSwatchColor(id, val) {
+            const el = document.getElementById(id);
+            try {
+                const d = document.createElement('div');
+                d.style.color = val;
+                document.body.appendChild(d);
+                const computed = getComputedStyle(d).color;
+                document.body.removeChild(d);
+                const m = computed.match(/\d+/g);
+                if (m && m.length >= 3) {
+                    el.value = '#' + m.slice(0, 3).map(n => parseInt(n).toString(16).padStart(2, '0')).join('');
+                }
+            } catch (e) {}
+        }
+
+        function updateInspect(info) {
+            if (!info) return;
+
+            // HTML snippet with syntax highlighting
+            if (info.htmlSnippet) {
+                const formatted = formatHtml(info.htmlSnippet);
+                document.getElementById('inspect-html').innerHTML = highlightHtml(formatted);
+            } else {
+                document.getElementById('inspect-html').innerHTML = '<span class="hl-text">No HTML available</span>';
+            }
+
+            // Computed CSS
+            const lines = [];
+            lines.push(`/* ${info.tag.toLowerCase()}${info.id ? '#'+info.id : ''}${info.classes ? '.'+info.classes.split(' ').join('.') : ''} */`);
+            lines.push('');
+            const props = [
+                ['display', info.display],
+                ['position', info.position],
+                ['width', info.cssWidth],
+                ['height', info.cssHeight],
+                ['padding', `${info.paddingTop} ${info.paddingRight} ${info.paddingBottom} ${info.paddingLeft}`],
+                ['margin', `${info.marginTop} ${info.marginRight} ${info.marginBottom} ${info.marginLeft}`],
+                ['font-family', info.fontFamily],
+                ['font-size', info.fontSize],
+                ['font-weight', info.fontWeight],
+                ['line-height', info.lineHeight],
+                ['color', info.color],
+                ['background-color', info.backgroundColor],
+                ['border', `${info.borderWidth} ${info.borderStyle} ${info.borderColor}`],
+                ['border-radius', info.borderRadius],
+                ['opacity', info.opacity],
+                ['box-shadow', info.boxShadow],
+            ];
+            props.forEach(([k, v]) => {
+                if (v && v !== 'none' && v !== 'normal') lines.push(`${k}: ${v};`);
+            });
+            document.getElementById('inspect-output').textContent = lines.join('\n');
+        }
+
+        function formatHtml(html) {
+            // Basic pretty-print: indent nested tags
+            let result = '';
+            let indent = 0;
+            const pad = () => '  '.repeat(indent);
+            // Split by tags
+            const tokens = html.replace(/>\s*</g, '>\n<').split('\n');
+            tokens.forEach(token => {
+                const t = token.trim();
+                if (!t) return;
+                if (t.startsWith('</')) {
+                    indent = Math.max(0, indent - 1);
+                    result += pad() + t + '\n';
+                } else if (t.startsWith('<') && !t.startsWith('<!') && !t.endsWith('/>') && !t.match(/^<(img|br|hr|input|meta|link|area|base|col|embed|source|track|wbr)\b/i)) {
+                    result += pad() + t + '\n';
+                    // Only indent if not self-closing and has a closing counterpart
+                    if (!t.includes('</')) indent++;
+                } else {
+                    result += pad() + t + '\n';
+                }
+            });
+            return result.trimEnd();
+        }
+
+        function highlightHtml(html) {
+            // Process character by character to build highlighted output
+            let out = '';
+            let i = 0;
+            const len = html.length;
+            while (i < len) {
+                if (html[i] === '<') {
+                    // Find end of tag
+                    const end = html.indexOf('>', i);
+                    if (end === -1) {
+                        out += esc(html.slice(i));
+                        break;
+                    }
+                    const tag = html.slice(i, end + 1);
+                    out += highlightTag(tag);
+                    i = end + 1;
+                } else {
+                    // Text content
+                    const next = html.indexOf('<', i);
+                    const text = next === -1 ? html.slice(i) : html.slice(i, next);
+                    out += '<span class="hl-text">' + esc(text) + '</span>';
+                    i = next === -1 ? len : next;
+                }
+            }
+            return out;
+        }
+
+        function highlightTag(tag) {
+            // Match: < or </, tag name, attributes, > or />
+            const m = tag.match(/^(<\/?)(\w[\w-]*)([\s\S]*?)(\/?>)$/);
+            if (!m) return esc(tag);
+            let result = esc(m[1]) + '<span class="hl-tag">' + esc(m[2]) + '</span>';
+            // Parse attributes
+            const attrs = m[3];
+            if (attrs.trim()) {
+                result += attrs.replace(/([\w-]+)\s*=\s*"([^"]*)"/g, (_, name, val) =>
+                    ' <span class="hl-attr">' + esc(name) + '</span>=<span class="hl-val">"' + esc(val) + '"</span>'
+                ).replace(/([\w-]+)\s*=\s*'([^']*)'/g, (_, name, val) =>
+                    ' <span class="hl-attr">' + esc(name) + '</span>=<span class="hl-val">\'' + esc(val) + '\'</span>'
+                );
+            }
+            result += esc(m[4]);
+            return result;
+        }
+
+        function esc(s) {
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        window.copyInspectHtml = function() {
+            const el = document.getElementById('inspect-html');
+            const text = el.textContent || el.innerText;
+            navigator.clipboard.writeText(text).then(() => showToast('HTML copied'));
+        };
+
+        window.copyInspectCss = function() {
+            const el = document.getElementById('inspect-output');
+            navigator.clipboard.writeText(el.textContent).then(() => showToast('CSS copied'));
+        };
+
+        // ── HTML contenteditable sync ──
+        const inspectHtmlEl = document.getElementById('inspect-html');
+        let htmlSyncTimeout = null;
+
+        inspectHtmlEl.addEventListener('input', function() {
+            // Debounce — sync after user stops typing for 600ms
+            clearTimeout(htmlSyncTimeout);
+            htmlSyncTimeout = setTimeout(syncHtmlToElement, 600);
+        });
+
+        inspectHtmlEl.addEventListener('blur', function() {
+            clearTimeout(htmlSyncTimeout);
+            syncHtmlToElement();
+        });
+
+        function syncHtmlToElement() {
+            if (!currentElement) return;
+            const rawHtml = inspectHtmlEl.textContent || inspectHtmlEl.innerText;
+            if (!rawHtml.trim()) return;
+            sendToIframe({
+                type: 'SET_OUTER_HTML',
+                html: rawHtml.trim()
+            });
+        }
+
+        // ── Layers ──
+        function renderLayers(layers) {
+            const container = document.getElementById('tab-layers');
+            if (!layers || !layers.length) {
+                container.innerHTML = '<div class="fb-empty" style="height:200px"><i class="bi bi-layers"></i><p>No elements</p></div>';
+                return;
+            }
+            container.innerHTML = layers.map(l => {
+                const pad = 12 + l.depth * 16;
+                const icons = {
+                    section: 'bi-layout-text-window',
+                    div: 'bi-square',
+                    nav: 'bi-list',
+                    header: 'bi-window',
+                    footer: 'bi-layout-text-window-reverse',
+                    img: 'bi-image',
+                    a: 'bi-link-45deg',
+                    button: 'bi-square-fill',
+                    input: 'bi-input-cursor-text',
+                    h1: 'bi-type-h1',
+                    h2: 'bi-type-h2',
+                    h3: 'bi-type-h3',
+                    p: 'bi-text-paragraph',
+                    span: 'bi-fonts',
+                    ul: 'bi-list-ul',
+                    ol: 'bi-list-ol',
+                    form: 'bi-ui-radios',
+                    article: 'bi-file-text',
+                    main: 'bi-window',
+                    aside: 'bi-layout-sidebar',
+                    figure: 'bi-image',
+                    blockquote: 'bi-blockquote-left',
+                    table: 'bi-table',
+                    hr: 'bi-dash-lg',
+                    video: 'bi-play-btn'
+                };
+                const icon = icons[l.tag] || 'bi-code';
+                return `<div class="fb-layer${l.selected ? ' sel' : ''}" style="padding-left:${pad}px" onclick="selectLayer(${l.index})">
                 <i class="bi ${icon}"></i>
                 <span class="fb-layer-label">${l.label}</span>
                 ${l.text ? `<span class="fb-layer-text">${l.text}</span>` : ''}
             </div>`;
-        }).join('');
-    }
+            }).join('');
+        }
 
-    // ── Property handlers ──
-    window.onStyleChange = function(prop) {
-        const el = document.getElementById('prop-' + prop) || document.getElementById('prop-css' + prop.charAt(0).toUpperCase() + prop.slice(1));
-        if (!el) return;
-        const styles = {};
-        styles[prop] = el.value;
-        sendToIframe({ type: 'APPLY_STYLE', styles });
-    };
+        // ── Property handlers ──
+        window.onStyleChange = function(prop) {
+            const el = document.getElementById('prop-' + prop) || document.getElementById('prop-css' + prop.charAt(0).toUpperCase() + prop.slice(1));
+            if (!el) return;
+            const styles = {};
+            styles[prop] = el.value;
+            sendToIframe({
+                type: 'APPLY_STYLE',
+                styles
+            });
+        };
 
-    window.onStyleSet = function(prop, val) {
-        sendToIframe({ type: 'APPLY_STYLE', styles: { [prop]: val } });
-    };
-
-    window.toggleStyle = function(prop, onVal, offVal) {
-        if (!currentElement) return;
-        const current = currentElement[prop] || currentElement[prop.replace(/([A-Z])/g, '-$1').toLowerCase()] || '';
-        const val = current === onVal ? offVal : onVal;
-        sendToIframe({ type: 'APPLY_STYLE', styles: { [prop]: val } });
-    };
-
-    // ── Page tab (head tags) ──
-    function requestHead() {
-        sendToIframe({ type: 'GET_HEAD' });
-    }
-
-    function applyHeadData(data) {
-        headData = data || {};
-        suppressHeadEcho = true;
-        try {
-            const fields = [
-                'title','description','keywords','canonical','robots',
-                'ogTitle','ogDescription','ogImage','ogUrl','ogType',
-                'twitterCard','twitterTitle','twitterDescription','twitterImage',
-                'favicon','appleTouchIcon','themeColor','customHead'
-            ];
-            fields.forEach(kind => {
-                const el = document.getElementById('prop-head-' + kind);
-                if (!el) return;
-                const v = data && data[kind] != null ? data[kind] : '';
-                if (el.tagName === 'SELECT') {
-                    let matched = false;
-                    for (let i = 0; i < el.options.length; i++) {
-                        if (el.options[i].value === v) { el.selectedIndex = i; matched = true; break; }
-                    }
-                    if (!matched) el.selectedIndex = 0;
-                } else {
-                    el.value = v;
+        window.onStyleSet = function(prop, val) {
+            sendToIframe({
+                type: 'APPLY_STYLE',
+                styles: {
+                    [prop]: val
                 }
             });
-            // Sync theme-color swatch
-            const themeVal = (data && data.themeColor) || '';
-            const swatch = document.getElementById('cp-head-themeColor');
-            if (swatch && /^#[0-9a-fA-F]{6}$/.test(themeVal)) swatch.value = themeVal;
-        } finally {
-            suppressHeadEcho = false;
+        };
+
+        window.toggleStyle = function(prop, onVal, offVal) {
+            if (!currentElement) return;
+            const current = currentElement[prop] || currentElement[prop.replace(/([A-Z])/g, '-$1').toLowerCase()] || '';
+            const val = current === onVal ? offVal : onVal;
+            sendToIframe({
+                type: 'APPLY_STYLE',
+                styles: {
+                    [prop]: val
+                }
+            });
+        };
+
+        // ── Page tab (head tags) ──
+        function requestHead() {
+            sendToIframe({
+                type: 'GET_HEAD'
+            });
         }
-    }
 
-    window.onHeadFieldChange = function(kind, value) {
-        if (suppressHeadEcho) return;
-        clearTimeout(headDebounce[kind]);
-        headDebounce[kind] = setTimeout(() => {
-            sendToIframe({ type: 'UPDATE_HEAD', kind, value });
-        }, 200);
-    };
-
-    window.onHeadColorChange = function(kind, swatchId, inputId) {
-        const val = document.getElementById(swatchId).value;
-        document.getElementById(inputId).value = val;
-        window.onHeadFieldChange(kind, val);
-    };
-
-    window.onColorChange = function(prop, swatchId, inputId) {
-        const val = document.getElementById(swatchId).value;
-        document.getElementById(inputId).value = val;
-        sendToIframe({ type: 'APPLY_STYLE', styles: { [prop]: val } });
-    };
-
-    window.onPropChange = function(prop) {
-        const map = { text: 'innerText', src: 'src', alt: 'alt', href: 'href' };
-        const attr = map[prop];
-        if (attr) sendToIframe({ type: 'SET_ATTRIBUTE', attr, value: document.getElementById('prop-' + prop).value });
-    };
-
-    window.onAttrChange = function(attr) {
-        const map = { id: 'prop-id', className: 'prop-classes' };
-        sendToIframe({ type: 'SET_ATTRIBUTE', attr, value: document.getElementById(map[attr]).value });
-    };
-
-    // ── Viewport ──
-    window.setViewport = function(mode) {
-        document.getElementById('canvas-frame').className = 'fb-frame ' + mode;
-        document.querySelectorAll('.fb-vp-btn').forEach(b => b.classList.remove('on'));
-        document.querySelector('.fb-vp-btn[data-vp="' + mode + '"]').classList.add('on');
-    };
-
-    // ── Panel tabs ──
-    window.setLeftTab = function(tab) {
-        document.querySelectorAll('.fb-ptab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
-        document.getElementById('tab-layers').style.display = tab === 'layers' ? 'block' : 'none';
-        document.getElementById('tab-add').style.display    = tab === 'add'    ? 'block' : 'none';
-        document.getElementById('tab-pages').style.display  = tab === 'pages'  ? 'block' : 'none';
-        document.getElementById('tab-page').style.display   = tab === 'page'   ? 'block' : 'none';
-        if (tab === 'pages') loadPageList();
-        if (tab === 'page') requestHead();
-    };
-
-    window.setRightTab = function(tab) {
-        currentRightTab = tab;
-        document.querySelectorAll('.fb-rtab').forEach(b => b.classList.toggle('on', b.dataset.rtab === tab));
-        if (currentElement) {
-            panelDesign.style.display = tab === 'design' ? 'block' : 'none';
-            panelInspect.style.display = tab === 'inspect' ? 'block' : 'none';
+        function applyHeadData(data) {
+            headData = data || {};
+            suppressHeadEcho = true;
+            try {
+                const fields = [
+                    'title', 'description', 'keywords', 'canonical', 'robots',
+                    'ogTitle', 'ogDescription', 'ogImage', 'ogUrl', 'ogType',
+                    'twitterCard', 'twitterTitle', 'twitterDescription', 'twitterImage',
+                    'favicon', 'appleTouchIcon', 'themeColor', 'customHead'
+                ];
+                fields.forEach(kind => {
+                    const el = document.getElementById('prop-head-' + kind);
+                    if (!el) return;
+                    const v = data && data[kind] != null ? data[kind] : '';
+                    if (el.tagName === 'SELECT') {
+                        let matched = false;
+                        for (let i = 0; i < el.options.length; i++) {
+                            if (el.options[i].value === v) {
+                                el.selectedIndex = i;
+                                matched = true;
+                                break;
+                            }
+                        }
+                        if (!matched) el.selectedIndex = 0;
+                    } else {
+                        el.value = v;
+                    }
+                });
+                // Sync theme-color swatch
+                const themeVal = (data && data.themeColor) || '';
+                const swatch = document.getElementById('cp-head-themeColor');
+                if (swatch && /^#[0-9a-fA-F]{6}$/.test(themeVal)) swatch.value = themeVal;
+            } finally {
+                suppressHeadEcho = false;
+            }
         }
-    };
 
-    // ── Section collapse ──
-    window.toggleSec = function(header) { header.classList.toggle('open'); };
+        window.onHeadFieldChange = function(kind, value) {
+            if (suppressHeadEcho) return;
+            clearTimeout(headDebounce[kind]);
+            headDebounce[kind] = setTimeout(() => {
+                sendToIframe({
+                    type: 'UPDATE_HEAD',
+                    kind,
+                    value
+                });
+            }, 200);
+        };
 
-    // ── Layers ──
-    window.selectLayer = function(index) { sendToIframe({ type: 'SELECT_BY_INDEX', index }); };
+        window.onHeadColorChange = function(kind, swatchId, inputId) {
+            const val = document.getElementById(swatchId).value;
+            document.getElementById(inputId).value = val;
+            window.onHeadFieldChange(kind, val);
+        };
 
-    // ── Actions ──
-    window.insertElement = function(template) { sendToIframe({ type: 'INSERT_ELEMENT', template }); };
-    window.duplicateElement = function() { sendToIframe({ type: 'DUPLICATE_ELEMENT' }); };
-    window.moveElement = function(dir) { sendToIframe({ type: 'MOVE_ELEMENT', direction: dir }); };
-    window.deleteElement = function() { if (confirm('Delete this element?')) sendToIframe({ type: 'DELETE_ELEMENT' }); };
+        window.onColorChange = function(prop, swatchId, inputId) {
+            const val = document.getElementById(swatchId).value;
+            document.getElementById(inputId).value = val;
+            sendToIframe({
+                type: 'APPLY_STYLE',
+                styles: {
+                    [prop]: val
+                }
+            });
+        };
 
-    // ── Undo/Redo placeholders ──
-    window.undo = function() { /* TODO: history stack */ };
-    window.redo = function() { /* TODO: history stack */ };
+        window.onPropChange = function(prop) {
+            const map = {
+                text: 'innerText',
+                src: 'src',
+                alt: 'alt',
+                href: 'href'
+            };
+            const attr = map[prop];
+            if (attr) sendToIframe({
+                type: 'SET_ATTRIBUTE',
+                attr,
+                value: document.getElementById('prop-' + prop).value
+            });
+        };
 
-    // ── Save ──
-    let saveForPreview = false;
-    window.saveSite = function() { saveForPreview = false; sendToIframe({ type: 'GET_HTML' }); };
+        window.onAttrChange = function(attr) {
+            const map = {
+                id: 'prop-id',
+                className: 'prop-classes'
+            };
+            sendToIframe({
+                type: 'SET_ATTRIBUTE',
+                attr,
+                value: document.getElementById(map[attr]).value
+            });
+        };
 
-    function doSaveHtml(html) {
-        if (saveForPreview) {
+        // ── Viewport ──
+        window.setViewport = function(mode) {
+            document.getElementById('canvas-frame').className = 'fb-frame ' + mode;
+            document.querySelectorAll('.fb-vp-btn').forEach(b => b.classList.remove('on'));
+            document.querySelector('.fb-vp-btn[data-vp="' + mode + '"]').classList.add('on');
+        };
+
+        // ── Panel tabs ──
+        window.setLeftTab = function(tab) {
+            document.querySelectorAll('.fb-ptab').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
+            document.getElementById('tab-layers').style.display = tab === 'layers' ? 'block' : 'none';
+            document.getElementById('tab-add').style.display = tab === 'add' ? 'block' : 'none';
+            const pagesTab = document.getElementById('tab-pages');
+            if (pagesTab) pagesTab.style.display = tab === 'pages' ? 'block' : 'none';
+            document.getElementById('tab-page').style.display = tab === 'page' ? 'block' : 'none';
+            if (tab === 'pages') loadPageList();
+            if (tab === 'page') requestHead();
+        };
+
+        window.setRightTab = function(tab) {
+            currentRightTab = tab;
+            document.querySelectorAll('.fb-rtab').forEach(b => b.classList.toggle('on', b.dataset.rtab === tab));
+            if (currentElement) {
+                panelDesign.style.display = tab === 'design' ? 'block' : 'none';
+                panelInspect.style.display = tab === 'inspect' ? 'block' : 'none';
+            }
+        };
+
+        // ── Section collapse ──
+        window.toggleSec = function(header) {
+            header.classList.toggle('open');
+        };
+
+        // ── Layers ──
+        window.selectLayer = function(index) {
+            sendToIframe({
+                type: 'SELECT_BY_INDEX',
+                index
+            });
+        };
+
+        // ── Actions ──
+        window.insertElement = function(template) {
+            sendToIframe({
+                type: 'INSERT_ELEMENT',
+                template
+            });
+        };
+        window.duplicateElement = function() {
+            sendToIframe({
+                type: 'DUPLICATE_ELEMENT'
+            });
+        };
+        window.moveElement = function(dir) {
+            sendToIframe({
+                type: 'MOVE_ELEMENT',
+                direction: dir
+            });
+        };
+        window.deleteElement = function() {
+            if (confirm('Delete this element?')) sendToIframe({
+                type: 'DELETE_ELEMENT'
+            });
+        };
+
+        // ── Undo/Redo placeholders ──
+        window.undo = function() {
+            /* TODO: history stack */ };
+        window.redo = function() {
+            /* TODO: history stack */ };
+
+        // ── Save ──
+        let saveForPreview = false;
+        window.saveSite = function() {
             saveForPreview = false;
-            const win = window.open('', '_blank');
-            if (win) { win.document.open(); win.document.write(html); win.document.close(); }
-            return;
-        }
-        const form = new FormData();
-        form.append('action', 'save_html');
-        form.append('html', html);
-        form.append('page_slug', currentPageSlug);
-        fetch(window.location.href, { method: 'POST', body: form })
-            .then(r => r.json())
-            .then(data => {
-                showToast(data.success ? '✓ Saved — ' + currentPageSlug : 'Save failed: ' + (data.error || 'Unknown'));
-            })
-            .catch(() => showToast('Save failed'));
-    }
+            sendToIframe({
+                type: 'GET_HTML'
+            });
+        };
 
-    function showToast(msg) {
-        const toast = document.getElementById('toast');
-        toast.textContent = msg;
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 2500);
-    }
-
-    // ── Preview ──
-    window.previewSite = function() {
-        saveForPreview = true;
-        sendToIframe({ type: 'GET_HTML' });
-    };
-
-    // ── Mode switching ──
-    function setMode(mode) {
-        if (!['select','interaction','drag'].includes(mode)) return;
-        currentMode = mode;
-        document.querySelectorAll('#mode-group [data-mode]').forEach(b => {
-            b.classList.toggle('on', b.dataset.mode === mode);
-        });
-        if (mode === 'interaction') {
-            floatActions.classList.remove('show');
-            panelEmpty.style.display = 'flex';
-            panelDesign.style.display = 'none';
-            panelInspect.style.display = 'none';
-            const p = panelEmpty.querySelector('p');
-            if (p) p.innerHTML = 'Switch to Select mode<br>to edit elements';
-        } else {
-            const p = panelEmpty.querySelector('p');
-            if (p && p.textContent.startsWith('Switch to Select')) {
-                p.innerHTML = 'Select an element to<br>inspect its properties';
+        function doSaveHtml(html) {
+            if (saveForPreview) {
+                saveForPreview = false;
+                const win = window.open('', '_blank');
+                if (win) {
+                    win.document.open();
+                    win.document.write(html);
+                    win.document.close();
+                }
+                return;
             }
+            const form = new FormData();
+            form.append('action', 'save_html');
+            form.append('html', html);
+            form.append('page_slug', currentPageSlug);
+            fetch(window.location.href, {
+                    method: 'POST',
+                    body: form
+                })
+                .then(r => r.json())
+                .then(data => {
+                    showToast(data.success ? '✓ Saved — ' + currentPageSlug : 'Save failed: ' + (data.error || 'Unknown'));
+                })
+                .catch(() => showToast('Save failed'));
         }
-        sendToIframe({ type: 'SET_MODE', mode });
-    }
-    window.setMode = setMode;
 
-    // ── Keyboard shortcuts ──
-    document.addEventListener('keydown', function (e) {
-        const t = e.target;
-        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
-        if (e.ctrlKey || e.metaKey || e.altKey) return;
-        const k = e.key.toLowerCase();
-        if (k === 'v') { setMode('select');      e.preventDefault(); }
-        if (k === 'h') { setMode('interaction'); e.preventDefault(); }
-        if (k === 'm') { setMode('drag');        e.preventDefault(); }
-    });
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            toast.textContent = msg;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
 
-    // ── Page Manager ──────────────────────────────────────────────
-    function apiPost(data) {
-        const form = new FormData();
-        Object.entries(data).forEach(([k, v]) => form.append(k, v));
-        return fetch(window.location.href, { method: 'POST', body: form }).then(r => r.json());
-    }
+        // ── Preview ──
+        window.previewSite = function() {
+            saveForPreview = true;
+            sendToIframe({
+                type: 'GET_HTML'
+            });
+        };
 
-    function loadPageList(selectSlug) {
-        apiPost({ action: 'list_pages' }).then(data => {
-            if (data.success) {
-                pageList = data.pages;
-                renderPageList(selectSlug || currentPageSlug);
+        // ── Mode switching ──
+        function setMode(mode) {
+            if (!['select', 'interaction', 'drag'].includes(mode)) return;
+            currentMode = mode;
+            document.querySelectorAll('#mode-group [data-mode]').forEach(b => {
+                b.classList.toggle('on', b.dataset.mode === mode);
+            });
+            if (mode === 'interaction') {
+                floatActions.classList.remove('show');
+                panelEmpty.style.display = 'flex';
+                panelDesign.style.display = 'none';
+                panelInspect.style.display = 'none';
+                const p = panelEmpty.querySelector('p');
+                if (p) p.innerHTML = 'Switch to Select mode<br>to edit elements';
+            } else {
+                const p = panelEmpty.querySelector('p');
+                if (p && p.textContent.startsWith('Switch to Select')) {
+                    p.innerHTML = 'Select an element to<br>inspect its properties';
+                }
+            }
+            sendToIframe({
+                type: 'SET_MODE',
+                mode
+            });
+        }
+        window.setMode = setMode;
+
+        // ── Keyboard shortcuts ──
+        document.addEventListener('keydown', function(e) {
+            const t = e.target;
+            if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.isContentEditable)) return;
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            const k = e.key.toLowerCase();
+            if (k === 'v') {
+                setMode('select');
+                e.preventDefault();
+            }
+            if (k === 'h') {
+                setMode('interaction');
+                e.preventDefault();
+            }
+            if (k === 'm') {
+                setMode('drag');
+                e.preventDefault();
             }
         });
-    }
 
-    function renderPageList(activeSlug) {
-        const container = document.getElementById('pages-list');
-        if (!pageList.length) {
-            container.innerHTML = '<div class="fb-empty" style="height:140px"><i class="bi bi-file-earmark"></i><p>No pages yet</p></div>';
-            return;
+        // ── Page Manager ──────────────────────────────────────────────
+        function apiPost(data) {
+            const form = new FormData();
+            Object.entries(data).forEach(([k, v]) => form.append(k, v));
+            return fetch(window.location.href, {
+                method: 'POST',
+                body: form
+            }).then(r => r.json());
         }
-        container.innerHTML = pageList.map(p => {
-            const isHome = p.slug === 'index';
-            const isActive = p.slug === activeSlug;
-            return `<div class="fb-page-item${isActive ? ' active' : ''}" onclick="switchPage('${p.slug}','${escHtml(p.label)}')">
+
+        function loadPageList(selectSlug) {
+            apiPost({
+                action: 'list_pages'
+            }).then(data => {
+                if (data.success) {
+                    pageList = data.pages;
+                    renderPageList(selectSlug || currentPageSlug);
+                }
+            });
+        }
+
+        function renderPageList(activeSlug) {
+            const container = document.getElementById('pages-list');
+            const switcher = document.getElementById('page-switcher');
+            const emptyState = document.getElementById('pm-grid-empty');
+            if (!container) return;
+            if (!pageList.length) {
+                container.innerHTML = '<div class="fb-empty" style="height:140px"><i class="bi bi-file-earmark"></i><p>No pages yet</p></div>';
+                if (switcher) switcher.innerHTML = '<option value="">No pages</option>';
+                if (emptyState) emptyState.style.display = 'none';
+                return;
+            }
+            if (switcher) {
+                switcher.innerHTML = pageList.map(p => `<option value="${escHtml(p.slug)}"${p.slug === activeSlug ? ' selected' : ''}>${escHtml(p.label)}</option>`).join('');
+            }
+            if (emptyState) emptyState.style.display = 'none';
+            container.innerHTML = pageList.map(p => {
+                const isHome = p.slug === 'index';
+                const isActive = p.slug === activeSlug;
+                return `<div class="fb-page-item${isActive ? ' active' : ''}" onclick="switchPage('${p.slug}','${escHtml(p.label)}')">
                 <i class="bi bi-file-earmark-text fb-page-icon"></i>
                 <span class="fb-page-label">${escHtml(p.label)}</span>
                 ${isHome ? '<span class="fb-page-home-badge">Home</span>' : `<span class="fb-page-slug">/${p.slug}</span>`}
@@ -2106,185 +3188,272 @@ if (!empty($domain) && !empty(trim($site_html_content))) {
                     ${!isHome ? `<button class="fb-page-act-btn danger" onclick="openDeleteModal('${p.slug}','${escHtml(p.label)}')" title="Delete"><i class="bi bi-trash3"></i></button>` : ''}
                 </span>
             </div>`;
-        }).join('');
-    }
+            }).join('');
+        }
 
-    function escHtml(s) {
-        return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/'/g,'&#39;');
-    }
+        window.openPagesModal = function() {
+            const overlay = document.getElementById('pages-manager-modal');
+            if (!overlay) return;
+            overlay.classList.add('show');
+            loadPageList(currentPageSlug);
+        };
 
-    // Switch to a different page — auto-saves the current one first
-    window.switchPage = function(slug, label) {
-        if (slug === currentPageSlug) return;
-        // Save current page first, then switch
-        new Promise(resolve => {
-            sendToIframe({ type: 'GET_HTML' });
-            const handler = e => {
-                if (e.data && e.data.type === 'HTML_CONTENT') {
-                    window.removeEventListener('message', handler);
-                    const form = new FormData();
-                    form.append('action', 'save_html');
-                    form.append('html', e.data.html);
-                    form.append('page_slug', currentPageSlug);
-                    fetch(window.location.href, { method: 'POST', body: form })
-                        .then(() => resolve())
-                        .catch(() => resolve());
+        window.closePagesModal = function() {
+            const overlay = document.getElementById('pages-manager-modal');
+            if (!overlay) return;
+            overlay.classList.remove('show');
+        };
+
+        window.filterPagesGrid = function(query) {
+            const q = String(query || '').toLowerCase().trim();
+            const cards = document.querySelectorAll('#pm-grid .fb-pm-card');
+            const empty = document.getElementById('pm-grid-empty');
+            let visible = 0;
+            cards.forEach(card => {
+                const hit = !q || (card.dataset.slug || '').includes(q) || (card.dataset.label || '').includes(q);
+                card.style.display = hit ? '' : 'none';
+                if (hit) visible++;
+            });
+            if (empty) empty.style.display = visible === 0 ? 'flex' : 'none';
+        };
+
+        function escHtml(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/'/g, '&#39;');
+        }
+
+        // Switch to a different page — auto-saves the current one first
+        window.switchPage = function(slug, label) {
+            if (slug === currentPageSlug) return;
+            // Save current page first, then switch
+            new Promise(resolve => {
+                sendToIframe({
+                    type: 'GET_HTML'
+                });
+                const handler = e => {
+                    if (e.data && e.data.type === 'HTML_CONTENT') {
+                        window.removeEventListener('message', handler);
+                        const form = new FormData();
+                        form.append('action', 'save_html');
+                        form.append('html', e.data.html);
+                        form.append('page_slug', currentPageSlug);
+                        fetch(window.location.href, {
+                                method: 'POST',
+                                body: form
+                            })
+                            .then(() => resolve())
+                            .catch(() => resolve());
+                    }
+                };
+                window.addEventListener('message', handler);
+                setTimeout(resolve, 2000); // safety timeout
+            }).then(() => {
+                // Load new page
+                return apiPost({
+                    action: 'load_page',
+                    slug
+                });
+            }).then(data => {
+                if (data.success) {
+                    currentPageSlug = slug;
+                    currentPageLabel = label || ucFirst(slug.replace(/-/g, ' '));
+                    document.getElementById('page-crumb-label').textContent = currentPageLabel;
+                    const switcher = document.getElementById('page-switcher');
+                    if (switcher) switcher.value = currentPageSlug;
+                    // Reload iframe with new content
+                    const doc = iframe.contentDocument || iframe.contentWindow.document;
+                    doc.open();
+                    doc.write(data.html);
+                    doc.close();
+                    setTimeout(injectEngine, 100);
+                    currentElement = null;
+                    hideProperties();
+                    renderPageList(slug);
+                    showToast('Switched to “' + currentPageLabel + '”');
+                } else {
+                    showToast('Could not load page: ' + (data.error || ''));
                 }
-            };
-            window.addEventListener('message', handler);
-            setTimeout(resolve, 2000); // safety timeout
-        }).then(() => {
-            // Load new page
-            return apiPost({ action: 'load_page', slug });
-        }).then(data => {
-            if (data.success) {
-                currentPageSlug = slug;
-                currentPageLabel = label || ucFirst(slug.replace(/-/g,' '));
-                document.getElementById('page-crumb-label').textContent = currentPageLabel;
-                // Reload iframe with new content
-                const doc = iframe.contentDocument || iframe.contentWindow.document;
-                doc.open(); doc.write(data.html); doc.close();
-                setTimeout(injectEngine, 100);
-                currentElement = null; hideProperties();
-                renderPageList(slug);
-                showToast('Switched to “' + currentPageLabel + '”');
-            } else {
-                showToast('Could not load page: ' + (data.error || ''));
+            });
+        };
+
+        function ucFirst(s) {
+            return s.charAt(0).toUpperCase() + s.slice(1);
+        }
+
+        // ── Modal helpers ──
+        const pmModal = document.getElementById('pm-modal');
+        const pmModalTitle = document.getElementById('pm-modal-title');
+        const pmInputName = document.getElementById('pm-input-name');
+        const pmInputSlug = document.getElementById('pm-input-slug');
+        const pmFieldName = document.getElementById('pm-field-name');
+        const pmFieldSlug = document.getElementById('pm-field-slug');
+        const pmConfirmBtn = document.getElementById('pm-modal-confirm');
+
+        // Auto-generate slug from name
+        pmInputName.addEventListener('input', function() {
+            if (pmModalMode === 'new' || pmModalMode === 'duplicate') {
+                pmInputSlug.value = this.value
+                    .toLowerCase().trim()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-|-$/g, '');
             }
         });
-    };
 
-    function ucFirst(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
-
-    // ── Modal helpers ──
-    const pmModal = document.getElementById('pm-modal');
-    const pmModalTitle = document.getElementById('pm-modal-title');
-    const pmInputName = document.getElementById('pm-input-name');
-    const pmInputSlug = document.getElementById('pm-input-slug');
-    const pmFieldName = document.getElementById('pm-field-name');
-    const pmFieldSlug = document.getElementById('pm-field-slug');
-    const pmConfirmBtn = document.getElementById('pm-modal-confirm');
-
-    // Auto-generate slug from name
-    pmInputName.addEventListener('input', function() {
-        if (pmModalMode === 'new' || pmModalMode === 'duplicate') {
-            pmInputSlug.value = this.value
-                .toLowerCase().trim()
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '');
+        function openModal(title, mode, confirmLabel, {
+            name = '',
+            slug = ''
+        } = {}) {
+            pmModalMode = mode;
+            pmModalTitle.textContent = title;
+            pmInputName.value = name;
+            pmInputSlug.value = slug;
+            pmConfirmBtn.textContent = confirmLabel;
+            pmConfirmBtn.className = 'fb-modal-btn ' + (mode === 'delete' ? 'danger-btn' : 'primary');
+            // Show/hide fields
+            const showName = mode !== 'delete';
+            const showSlug = mode === 'new' || mode === 'duplicate';
+            pmFieldName.style.display = showName ? 'block' : 'none';
+            pmFieldSlug.style.display = showSlug ? 'block' : 'none';
+            pmModal.classList.add('show');
+            if (showName) setTimeout(() => pmInputName.focus(), 50);
         }
-    });
 
-    function openModal(title, mode, confirmLabel, { name = '', slug = '' } = {}) {
-        pmModalMode = mode;
-        pmModalTitle.textContent = title;
-        pmInputName.value = name;
-        pmInputSlug.value = slug;
-        pmConfirmBtn.textContent = confirmLabel;
-        pmConfirmBtn.className = 'fb-modal-btn ' + (mode === 'delete' ? 'danger-btn' : 'primary');
-        // Show/hide fields
-        const showName = mode !== 'delete';
-        const showSlug = mode === 'new' || mode === 'duplicate';
-        pmFieldName.style.display = showName ? 'block' : 'none';
-        pmFieldSlug.style.display = showSlug ? 'block' : 'none';
-        pmModal.classList.add('show');
-        if (showName) setTimeout(() => pmInputName.focus(), 50);
-    }
-
-    window.closePageModal = function() {
-        pmModal.classList.remove('show');
-        pmModalMode = null; pmModalTargetSlug = null;
-    };
-    pmModal.addEventListener('click', e => { if (e.target === pmModal) window.closePageModal(); });
-
-    window.openNewPageModal = function() {
-        pmModalTargetSlug = null;
-        openModal('Create New Page', 'new', 'Create', { name: '', slug: '' });
-    };
-
-    window.openDuplicateModal = function(slug, label) {
-        pmModalTargetSlug = slug;
-        openModal('Duplicate Page', 'duplicate', 'Duplicate', {
-            name: label + ' Copy',
-            slug: slug + '-copy'
+        window.closePageModal = function() {
+            pmModal.classList.remove('show');
+            pmModalMode = null;
+            pmModalTargetSlug = null;
+        };
+        pmModal.addEventListener('click', e => {
+            if (e.target === pmModal) window.closePageModal();
         });
-    };
 
-    window.openRenameModal = function(slug, label) {
-        pmModalTargetSlug = slug;
-        openModal('Rename Page', 'rename', 'Rename', { name: label, slug });
-        pmFieldSlug.style.display = 'block';
-        pmInputSlug.value = slug;
-    };
-
-    window.openDeleteModal = function(slug, label) {
-        pmModalTargetSlug = slug;
-        openModal(`Delete “${label}”?`, 'delete', 'Delete Page');
-        pmFieldName.innerHTML = `<p style="font-size:12px;color:var(--fig-text2);line-height:1.6">This will permanently remove <strong style="color:var(--fig-text)">${escHtml(label)}</strong> (/${slug}). This action cannot be undone.</p>`;
-        pmFieldName.style.display = 'block';
-    };
-
-    window.submitPageModal = function() {
-        const mode = pmModalMode;
-        if (!mode) return;
-
-        if (mode === 'new') {
-            const name = pmInputName.value.trim();
-            const slug = pmInputSlug.value.trim();
-            if (!name || !slug) { showToast('Please fill in all fields'); return; }
-            apiPost({ action: 'create_page', name, slug }).then(data => {
-                if (data.success) {
-                    closePageModal();
-                    loadPageList();
-                    showToast('Page “' + name + '” created');
-                    // Switch to new page
-                    window.switchPage(data.slug, data.label);
-                } else { showToast(data.error || 'Error'); }
+        window.openNewPageModal = function() {
+            pmModalTargetSlug = null;
+            openModal('Create New Page', 'new', 'Create', {
+                name: '',
+                slug: ''
             });
-        } else if (mode === 'duplicate') {
-            const new_label = pmInputName.value.trim();
-            const new_slug  = pmInputSlug.value.trim();
-            if (!new_label || !new_slug) { showToast('Please fill in all fields'); return; }
-            apiPost({ action: 'duplicate_page', slug: pmModalTargetSlug, new_slug, new_label }).then(data => {
-                if (data.success) {
-                    closePageModal();
-                    loadPageList();
-                    showToast('Page duplicated as “' + new_label + '”');
-                    window.switchPage(data.slug, data.label);
-                } else { showToast(data.error || 'Error'); }
+        };
+
+        window.openDuplicateModal = function(slug, label) {
+            pmModalTargetSlug = slug;
+            openModal('Duplicate Page', 'duplicate', 'Duplicate', {
+                name: label + ' Copy',
+                slug: slug + '-copy'
             });
-        } else if (mode === 'rename') {
-            const new_label = pmInputName.value.trim();
-            const new_slug  = pmInputSlug.value.trim();
-            if (!new_label || !new_slug) { showToast('Please fill in all fields'); return; }
-            apiPost({ action: 'rename_page', old_slug: pmModalTargetSlug, new_slug, new_label }).then(data => {
-                if (data.success) {
-                    closePageModal();
-                    // If we renamed the current page, update label/slug
-                    if (pmModalTargetSlug === currentPageSlug) {
-                        currentPageSlug = data.slug;
-                        currentPageLabel = data.label;
-                        document.getElementById('page-crumb-label').textContent = data.label;
+        };
+
+        window.openRenameModal = function(slug, label) {
+            pmModalTargetSlug = slug;
+            openModal('Rename Page', 'rename', 'Rename', {
+                name: label,
+                slug
+            });
+            pmFieldSlug.style.display = 'block';
+            pmInputSlug.value = slug;
+        };
+
+        window.openDeleteModal = function(slug, label) {
+            pmModalTargetSlug = slug;
+            openModal(`Delete “${label}”?`, 'delete', 'Delete Page');
+            pmFieldName.innerHTML = `<p style="font-size:12px;color:var(--fig-text2);line-height:1.6">This will permanently remove <strong style="color:var(--fig-text)">${escHtml(label)}</strong> (/${slug}). This action cannot be undone.</p>`;
+            pmFieldName.style.display = 'block';
+        };
+
+        window.submitPageModal = function() {
+            const mode = pmModalMode;
+            if (!mode) return;
+
+            if (mode === 'new') {
+                const name = pmInputName.value.trim();
+                const slug = pmInputSlug.value.trim();
+                if (!name || !slug) {
+                    showToast('Please fill in all fields');
+                    return;
+                }
+                apiPost({
+                    action: 'create_page',
+                    name,
+                    slug
+                }).then(data => {
+                    if (data.success) {
+                        closePageModal();
+                        loadPageList();
+                        showToast('Page “' + name + '” created');
+                        // Switch to new page
+                        window.switchPage(data.slug, data.label);
+                    } else {
+                        showToast(data.error || 'Error');
                     }
-                    loadPageList(currentPageSlug);
-                    showToast('Page renamed');
-                } else { showToast(data.error || 'Error'); }
-            });
-        } else if (mode === 'delete') {
-            apiPost({ action: 'delete_page', slug: pmModalTargetSlug }).then(data => {
-                if (data.success) {
-                    closePageModal();
-                    const wasActive = pmModalTargetSlug === currentPageSlug;
-                    loadPageList();
-                    if (wasActive) window.switchPage('index', 'Home');
-                    showToast('Page deleted');
-                } else { showToast(data.error || 'Error'); }
-            });
-        }
-    };
+                });
+            } else if (mode === 'duplicate') {
+                const new_label = pmInputName.value.trim();
+                const new_slug = pmInputSlug.value.trim();
+                if (!new_label || !new_slug) {
+                    showToast('Please fill in all fields');
+                    return;
+                }
+                apiPost({
+                    action: 'duplicate_page',
+                    slug: pmModalTargetSlug,
+                    new_slug,
+                    new_label
+                }).then(data => {
+                    if (data.success) {
+                        closePageModal();
+                        loadPageList();
+                        showToast('Page duplicated as “' + new_label + '”');
+                        window.switchPage(data.slug, data.label);
+                    } else {
+                        showToast(data.error || 'Error');
+                    }
+                });
+            } else if (mode === 'rename') {
+                const new_label = pmInputName.value.trim();
+                const new_slug = pmInputSlug.value.trim();
+                if (!new_label || !new_slug) {
+                    showToast('Please fill in all fields');
+                    return;
+                }
+                apiPost({
+                    action: 'rename_page',
+                    old_slug: pmModalTargetSlug,
+                    new_slug,
+                    new_label
+                }).then(data => {
+                    if (data.success) {
+                        closePageModal();
+                        // If we renamed the current page, update label/slug
+                        if (pmModalTargetSlug === currentPageSlug) {
+                            currentPageSlug = data.slug;
+                            currentPageLabel = data.label;
+                            document.getElementById('page-crumb-label').textContent = data.label;
+                        }
+                        loadPageList(currentPageSlug);
+                        showToast('Page renamed');
+                    } else {
+                        showToast(data.error || 'Error');
+                    }
+                });
+            } else if (mode === 'delete') {
+                apiPost({
+                    action: 'delete_page',
+                    slug: pmModalTargetSlug
+                }).then(data => {
+                    if (data.success) {
+                        closePageModal();
+                        const wasActive = pmModalTargetSlug === currentPageSlug;
+                        loadPageList();
+                        if (wasActive) window.switchPage('index', 'Home');
+                        showToast('Page deleted');
+                    } else {
+                        showToast(data.error || 'Error');
+                    }
+                });
+            }
+        };
 
-    // ── Init ──
-    loadSite();
-    loadPageList('index');
-})();
+        // ── Init ──
+        loadSite();
+        loadPageList(currentPageSlug);
+    })();
 </script>
