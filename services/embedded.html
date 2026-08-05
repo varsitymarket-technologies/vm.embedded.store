@@ -1,0 +1,206 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>($WEBSITE_TITLE)</title>
+    <style>
+        :root {
+            --p-surface: #272424;
+            --p-background: #1b1b1c;
+            --p-text: #b7b7b7;
+            --p-text-subdued: #ffffff;
+            --p-action-primary: #008060;
+            --p-action-critical: #d82c0d;
+        }
+
+        /* Reset and seamless base */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden; /* Prevents double scrollbars from the iframe */
+            font-family: -apple-system, BlinkMacSystemFont, "San Francisco", "Segoe UI", Roboto, sans-serif;
+            background-color: var(--p-background);
+        }
+
+        /* Fullscreen Iframe */
+        #store-frame {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in;
+            z-index: 10;
+        }
+
+        /* Loading & Offline States Container */
+        .status-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            text-align: center;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        /* Offline UI */
+        #offline-state {
+            display: none;
+            background: var(--p-surface);
+            padding: 2.5rem 2rem;
+            border-radius: 8px;
+            box-shadow: 0 0 0 1px rgba(63, 63, 68, 0.05), 0 1px 3px 0 rgba(63, 63, 68, 0.15);
+            max-width: 400px;
+            width: 100%;
+            margin: 2rem; 
+        }
+
+        .offline-icon {
+            background: #fed3d1;
+            color: var(--p-action-critical);
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem auto;
+        }
+
+        .offline-icon svg {
+            width: 28px;
+            height: 28px;
+        }
+
+        h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--p-text);
+            margin: 0 0 0.5rem 0;
+        }
+
+        p {
+            color: var(--p-text-subdued);
+            font-size: 0.875rem;
+            line-height: 1.4;
+            margin: 0 0 1.5rem 0;
+        }
+
+        button {
+            background-color: #1b1b1c;
+            color: white;
+            border: none;
+            padding: 0.625rem 1rem;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            width: 100%;
+            transition: opacity 0.2s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        /* Simple CSS Spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(0, 128, 96, 0.2);
+            border-top-color: var(--p-action-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Seamless Iframe -->
+    <!-- Added permissions for payments, geolocation, etc., so the store functions normally -->
+    <iframe 
+        id="store-frame" 
+        sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-downloads"
+        allow="payment; camera; microphone; geolocation"
+    ></iframe>
+
+    <div class="status-container">
+        <!-- Initial Loading State -->
+        <div id="loading-state">
+            <div class="spinner"></div>
+        </div>
+
+        <!-- Offline Fallback UI -->
+        <div id="offline-state" style="margin:3rem; padding:1rem;">
+
+            <div>
+                <img src="/assets/favicon.png">
+            </div>
+            <h1>Store Offlinee</h1>
+            <p>It seems this store is offline. Please try again later.</p>
+            <button onclick="checkStoreStatus()">Refresh Page</button>
+        </div>
+    </div>
+
+    <script>
+        // Set the actual store URL here
+        const TARGET_STORE_URL = "($WEBSITE_LINK)";
+        
+        const iframe = document.getElementById('store-frame');
+        const loadingState = document.getElementById('loading-state');
+        const offlineState = document.getElementById('offline-state');
+
+        async function checkStoreStatus() {
+            // Reset UI to loading
+            offlineState.style.display = 'none';
+            loadingState.style.display = 'block';
+
+            try {
+                // Pre-flight network check
+                // 'no-cors' mode allows the fetch to execute without being blocked by CORS,
+                // but it will throw a TypeError if the DNS fails or the server is completely unreachable.
+                await fetch(TARGET_STORE_URL, { 
+                    method: 'HEAD', 
+                    mode: 'no-cors', 
+                    cache: 'no-store' 
+                });
+
+                // If the fetch doesn't throw an error, the server is reachable.
+                loadingState.style.display = 'none';
+                iframe.src = TARGET_STORE_URL;
+                
+                // Fade in the iframe once it's loaded to prevent white flashes
+                iframe.onload = () => {
+                    iframe.style.opacity = '1';
+                };
+
+            } catch (error) {
+                // Network request failed (Store is down, container stopped, DNS issue)
+                console.error("Store is unreachable:", error);
+                loadingState.style.display = 'none';
+                offlineState.style.display = 'block';
+            }
+        }
+
+        // Initialize connection check immediately on page load
+        window.addEventListener('DOMContentLoaded', checkStoreStatus);
+    </script>
+</body>
+</html>

@@ -1,33 +1,42 @@
 <?php 
 @include_once dirname(dirname(__FILE__))."/config.php"; 
 function export_application($website,$domain){
+    $target = $website;
+    $site_root = dirname(dirname(__FILE__))."/sites/".$target;
+    $candidate_files = [
+        $site_root . "/builder.cache.html",
+        $site_root . "/pages/index.html",
+        $site_root . "/index.html",
+    ];
 
-    $target = $website; 
+    foreach ($candidate_files as $file) {
+        if (file_exists($file) && is_file($file)) {
+            return file_get_contents($file);
+        }
+    }
+    /* 
 
-    #Cache Rescources 
-    $cache_file = dirname(dirname(__FILE__))."/sites/".$target."/builder.cache.html";
-    if(file_exists($cache_file)){
-        $cache_content = file_get_contents($cache_file); 
-        return "\n".$cache_content; 
+    $theme_file = $site_root . "/theme";
+    if (file_exists($theme_file)) {
+        $theme = trim((string) file_get_contents($theme_file));
+        if ($theme !== '') {
+            $theme_dir = dirname(dirname(__FILE__))."/themes/".$theme;
+            foreach ([$theme_dir . "/index.html", $theme_dir . "/index.php", $theme_dir . "/interface"] as $theme_source) {
+                if (file_exists($theme_source) && is_file($theme_source)) {
+                    return file_get_contents($theme_source);
+                }
+            }
+        }
     }
 
-    $theme_file = dirname(dirname(__FILE__))."/sites/".$target."/theme"; 
-    $theme = file_get_contents($theme_file); 
-    $theme_dir = dirname(dirname(__FILE__))."/themes/".$theme;
+    */
 
-    # Configuration 
-    $encode_node = extract_theme_nodes($theme_dir."/interface"); 
-    //debug($theme_dir."/interface"); 
-    $encode_node = array_unique($encode_node); 
-
-    @include_once dirname($theme_file)."/config.php";
-
-    #source_code 
-    $source_code = file_get_contents($theme_dir."/interface"); 
-    foreach ($encode_node as $key => $value) {
-        $source_code = str_ireplace("e(".$value.")",constant($value),$source_code); 
-    }
-
-    return "\n".$source_code; 
+    $website_hash = hash("sha256",$website);
+    $link =  $domain."/app/".$website_hash."/";
+    $template = file_get_contents(dirname(__FILE__)."/embedded.html");
+    return str_ireplace(
+        ['($WEBSITE_TITLE)','($WEBSITE_LINK)'],
+        [$website,$link],$template
+    );
 }
 ?>

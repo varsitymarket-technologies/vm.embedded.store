@@ -21,94 +21,58 @@ $anchor_theme = __ANCHOR_THEME__;
 
 
 $website_folder = dirname(dirname(__FILE__))."/sites/";
+$skel_folder = dirname($website_folder)."/skel";
+$site_folder = $website_folder.$anchor_site;
 
-if (!is_dir($website_folder.$anchor_site)){
-    #Make The Website Directory 
-    mkdir($website_folder.$anchor_site,0777,true); 
+if (!is_dir($site_folder)){
+    # Make The Website Directory
+    mkdir($site_folder,0777,true);
 }
 
-# Copy Elements From The Skeleton Structure 
+/**
+ * Copy the shared skeleton into a site folder without clobbering
+ * existing site-specific files.
+ */
+$copy_skel_tree = function (string $source, string $target) use (&$copy_skel_tree): void {
+    if (is_dir($source)) {
+        if (!is_dir($target)) {
+            mkdir($target, 0777, true);
+        }
 
-    $file = dirname($website_folder)."/skel/.htaccess"; 
-    $target_file = $website_folder.$anchor_site."/.htaccess"; 
-    # Start with .htaccess 
-    if (!file_exists($target_file)){
-        file_put_contents($target_file,file_get_contents($file));
-    } 
+        $entries = scandir($source);
+        if ($entries === false) {
+            return;
+        }
 
-    $file = dirname($website_folder)."/skel/autofill.php"; 
-    $target_file = $website_folder.$anchor_site."/autofill.php"; 
-    # Start with autofill.php 
-    if (!file_exists($target_file)){
-        file_put_contents($target_file,file_get_contents($file));
+        foreach ($entries as $entry) {
+            if ($entry === "." || $entry === "..") {
+                continue;
+            }
+
+            $child_source = $source . DIRECTORY_SEPARATOR . $entry;
+            $child_target = $target . DIRECTORY_SEPARATOR . $entry;
+
+            if ($entry === "theme" && is_dir($child_source)) {
+                # The site already uses /theme as a marker file.
+                continue;
+            }
+
+            $copy_skel_tree($child_source, $child_target);
+        }
+
+        return;
     }
 
-    $file = dirname($website_folder)."/skel/compiler.php"; 
-    $target_file = $website_folder.$anchor_site."/compiler.php"; 
-    # Start with autofill.php 
-    if (!file_exists($target_file)){
-        file_put_contents($target_file,file_get_contents($file));
+    if (!file_exists($target)) {
+        file_put_contents($target, file_get_contents($source));
     }
+};
 
-    $file = dirname($website_folder)."/skel/api.kit"; 
-    $target_file = $website_folder.$anchor_site."/api.kit"; 
-    # Start with autofill.php 
-    if (!file_exists($target_file)){
-        file_put_contents($target_file,file_get_contents($file));
-    }
+$copy_skel_tree($skel_folder, $site_folder);
 
-    $file = dirname($website_folder)."/skel/style.kit"; 
-    $target_file = $website_folder.$anchor_site."/style.kit"; 
-    # Start with autofill.php 
-    if (!file_exists($target_file)){
-        file_put_contents($target_file,file_get_contents($file));
-    }
-
-    $file = dirname($website_folder)."/skel/structure.kit"; 
-    $target_file = $website_folder.$anchor_site."/structure.kit"; 
-    # Start with autofill.php 
-    if (!file_exists($target_file)){
-        file_put_contents($target_file,file_get_contents($file));
-    }
-
-
-    $element = "routes.php"; 
-     $file = dirname($website_folder)."/skel/".$element;  
-    $target_file = $website_folder.$anchor_site."/".$element; 
-    # Start with Routes File
-    if (!file_exists($target_file)){
-        file_put_contents($target_file,file_get_contents($file));
-    }
-
-    $element = "index.php"; 
-     $file = dirname($website_folder)."/skel/".$element;  
-    $target_file = $website_folder.$anchor_site."/".$element; 
-    # Start with Index File
-    if (!file_exists($target_file)){
-        file_put_contents($target_file,file_get_contents($file));
-    }
-
-    $element = "interface.php"; 
-     $file = dirname($website_folder)."/skel/".$element;  
-    $target_file = $website_folder.$anchor_site."/".$element; 
-    # Start with Routes File
-    if (!file_exists($target_file)){
-        file_put_contents($target_file,file_get_contents($file));
-    }
-
-    $element = "api.php"; 
-     $file = dirname($website_folder)."/skel/".$element;  
-    $target_file = $website_folder.$anchor_site."/".$element; 
-    # Start with Routes File
-    if (!file_exists($target_file)){
-        file_put_contents($target_file,file_get_contents($file));
-    }
-
-    $element = "theme"; 
-    $target_file = $website_folder.$anchor_site."/".$element; 
-    # Start with Routes File
-    if (!file_exists($target_file)){
-        file_put_contents($target_file,$anchor_theme);
-    }
+$theme_marker = $site_folder . "/theme";
+if (!file_exists($theme_marker)) {
+    file_put_contents($theme_marker, $anchor_theme);
+}
 
 ?>
