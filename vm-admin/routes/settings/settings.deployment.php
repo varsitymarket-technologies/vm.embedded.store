@@ -1,8 +1,9 @@
-<a href="?tab=general" class="inline-flex items-center gap-2 text-zinc-400 hover:text-white text-sm font-medium transition-colors mb-6">
+<a href="?tab=general"
+    class="inline-flex items-center gap-2 text-zinc-400 hover:text-white text-sm font-medium transition-colors mb-6">
     <i class="bi bi-arrow-left"></i> Back to Settings
 </a>
 
-<div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+<div class="bg-[#252526] border border-zinc-800 rounded-xl overflow-hidden">
     <div class="px-5 py-4 border-b border-zinc-800">
         <h2 class="text-lg font-bold text-white">Advanced Deployment</h2>
         <p class="text-zinc-400 text-sm mt-1">Connect your source code for automated delivery cycles</p>
@@ -22,7 +23,8 @@
             </div>
             <h3 class="text-xl font-bold text-white mb-2">Connect GitHub Repository</h3>
             <p class="text-zinc-400 text-sm max-w-sm text-center mb-8 leading-relaxed">
-                Authorize Varsity Market to automate your builds and push production updates directly to your hosting provider.
+                Authorize Varsity Market to automate your builds and push production updates directly to your hosting
+                provider.
             </p>
             <div class="flex flex-col sm:flex-row items-center gap-4">
                 <a onclick="window.location.href=`https://github.com/login/oauth/authorize?client_id=<?php echo $_SERVER['__GITHUB_APK_CLIENT__']; ?>`"

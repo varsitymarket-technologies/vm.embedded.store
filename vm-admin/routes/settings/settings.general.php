@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 #   TITLE   : Admin Settings General Page
 #   DESC    : The Admin settings page for the control panel
@@ -24,7 +24,7 @@
             <h2 class="text-xs font-semibold uppercase tracking-widest text-zinc-500">Store</h2>
         </div>
 
-        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
+        <div class="bg-[#252526] border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
 
             <a href="?tab=branding" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
                 <div class="flex items-center gap-4">
@@ -86,7 +86,7 @@
             <h2 class="text-xs font-semibold uppercase tracking-widest text-zinc-500">Checkout</h2>
         </div>
 
-        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
+        <div class="bg-[#252526] border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
 
             <a href="?tab=payment" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
                 <div class="flex items-center gap-4">
@@ -131,7 +131,7 @@
             <h2 class="text-xs font-semibold uppercase tracking-widest text-zinc-500">Apps & Integrations</h2>
         </div>
 
-        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
+        <div class="bg-[#252526] border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
 
             <a href="?tab=app" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
                 <div class="flex items-center gap-4">
@@ -171,35 +171,35 @@
     </section>
 
     <?php if (isset($_SERVER['__AI_EXTENSION__'])): ?>
-    <?php if ($_SERVER['__AI_EXTENSION__']): ?>
-    <!-- AI -->
-    <section>
-        <div class="mb-4">
-            <h2 class="text-xs font-semibold uppercase tracking-widest text-zinc-500">Automation</h2>
-        </div>
-
-        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
-
-            <a href="?tab=agent" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
-                <div class="flex items-center gap-4">
-                    <div class="w-11 h-11 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-                        <i class="bi bi-stars text-cyan-400 text-lg"></i>
-                    </div>
-
-                    <div>
-                        <h3 class="text-white font-medium">AI Assistant</h3>
-                        <p class="text-sm text-zinc-500">
-                            Configure prompts, tools and permissions.
-                        </p>
-                    </div>
+        <?php if ($_SERVER['__AI_EXTENSION__']): ?>
+            <!-- AI -->
+            <section>
+                <div class="mb-4">
+                    <h2 class="text-xs font-semibold uppercase tracking-widest text-zinc-500">Automation</h2>
                 </div>
 
-                <i class="bi bi-chevron-right text-zinc-600"></i>
-            </a>
+                <div class="bg-[#252526] border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
 
-        </div>
-    </section>
-    <?php endif; ?>
+                    <a href="?tab=agent" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
+                        <div class="flex items-center gap-4">
+                            <div class="w-11 h-11 rounded-xl bg-cyan-500/10 flex items-center justify-center">
+                                <i class="bi bi-stars text-cyan-400 text-lg"></i>
+                            </div>
+
+                            <div>
+                                <h3 class="text-white font-medium">AI Assistant</h3>
+                                <p class="text-sm text-zinc-500">
+                                    Configure prompts, tools and permissions.
+                                </p>
+                            </div>
+                        </div>
+
+                        <i class="bi bi-chevron-right text-zinc-600"></i>
+                    </a>
+
+                </div>
+            </section>
+        <?php endif; ?>
     <?php endif; ?>
 
     <!-- Advanced -->
@@ -208,7 +208,7 @@
             <h2 class="text-xs font-semibold uppercase tracking-widest text-zinc-500">Advanced</h2>
         </div>
 
-        <div class="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
+        <div class="bg-[#252526] border border-zinc-800 rounded-2xl overflow-hidden divide-y divide-zinc-800">
 
             <a href="?tab=dev" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
                 <div class="flex items-center gap-4">
@@ -237,6 +237,23 @@
                         <h3 class="text-white font-medium">Deployment</h3>
                         <p class="text-sm text-zinc-500">
                             GitHub repository and deployment pipeline.
+                        </p>
+                    </div>
+                </div>
+
+                <i class="bi bi-chevron-right text-zinc-600"></i>
+            </a>
+
+            <a href="?tab=reboot" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
+                <div class="flex items-center gap-4">
+                    <div class="w-11 h-11 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                        <i class="bi bi-arrow-repeat text-amber-400 text-lg"></i>
+                    </div>
+
+                    <div>
+                        <h3 class="text-white font-medium">Reboot Site Files</h3>
+                        <p class="text-sm text-zinc-500">
+                            Recopy the site skeleton without touching the database.
                         </p>
                     </div>
                 </div>
