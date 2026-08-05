@@ -8,6 +8,43 @@
             $saved_path = dirname(dirname(__FILE__))."/sites/".__DOMAIN__."/theme"; 
             file_put_contents($saved_path,$name); 
 
+            $theme_root = dirname(dirname(__FILE__))."/themes/".$name;
+            $site_dir = dirname($saved_path);
+            $copy_theme_directory = function ($source, $target) use (&$copy_theme_directory) {
+                if (!is_dir($source)) {
+                    return;
+                }
+
+                if (!is_dir($target) && !@mkdir($target, 0755, true)) {
+                    return;
+                }
+
+                $items = scandir($source);
+                if ($items === false) {
+                    return;
+                }
+
+                foreach ($items as $item) {
+                    if ($item === '.' || $item === '..') {
+                        continue;
+                    }
+
+                    $source_path = $source . DIRECTORY_SEPARATOR . $item;
+                    $target_path = $target . DIRECTORY_SEPARATOR . $item;
+
+                    if (is_dir($source_path)) {
+                        $copy_theme_directory($source_path, $target_path);
+                        continue;
+                    }
+
+                    @copy($source_path, $target_path);
+                }
+            };
+
+            foreach (['data', 'assets'] as $folder) {
+                $copy_theme_directory($theme_root . '/' . $folder, $site_dir . '/' . $folder);
+            }
+
 
             #Remove The Encoded File 
             unlink(dirname($saved_path)."/config.php"); 

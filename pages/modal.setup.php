@@ -1,12 +1,13 @@
 <style>
     :root {
-        --primary-accent: #6366f1;
-        --primary-accent-hover: #4f46e5;
-        --sidebar-bg: #f9fafb;
-        --border-color: #e5e7eb;
-        --text-main: #111827;
-        --text-muted: #6b7280;
-        --card-bg: #555555ff;
+        --primary-accent: #4ade80;
+        --primary-accent-hover: #22c55e;
+        --primary-soft: rgba(74, 222, 128, 0.12);
+        --sidebar-bg: #111318;
+        --border-color: #2a2f3a;
+        --text-main: #f3f4f6;
+        --text-muted: #9ca3af;
+        --card-bg: #151922;
     }
 
     .modal-overlay {
@@ -15,7 +16,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.7);
+        background: rgba(3, 6, 12, 0.84);
         backdrop-filter: blur(4px);
         display: flex;
         justify-content: center;
@@ -34,20 +35,22 @@
     .setup-container {
         background: var(--card-bg);
         width: 95%;
-        max-width: 900px;
-        height: 600px;
-        border-radius: 16px;
+        max-width: 1040px;
+        min-height: 680px;
+        max-height: 90vh;
+        border-radius: 20px;
         display: flex;
         overflow: hidden;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+        border: 1px solid rgba(255, 255, 255, 0.04);
     }
 
     /* Sidebar */
     .setup-sidebar {
-        width: 280px;
-        background: var(--sidebar-bg);
+        width: 300px;
+        background: linear-gradient(180deg, #181c24 0%, var(--sidebar-bg) 100%);
         border-right: 1px solid var(--border-color);
-        padding: 2.5rem 1.5rem;
+        padding: 2rem 1.5rem;
         display: flex;
         flex-direction: column;
     }
@@ -57,8 +60,8 @@
     }
 
     .sidebar-header h2 {
-        font-size: 1.25rem;
-        font-weight: 800;
+        font-size: 1.35rem;
+        font-weight: 750;
         color: var(--text-main);
         margin: 0;
     }
@@ -79,8 +82,8 @@
         display: flex;
         align-items: center;
         gap: 1rem;
-        padding: 0.875rem 1rem;
-        border-radius: 8px;
+        padding: 0.95rem 1rem;
+        border-radius: 14px;
         margin-bottom: 0.5rem;
         color: var(--text-muted);
         transition: all 0.2s ease;
@@ -88,18 +91,19 @@
     }
 
     .nav-step.active {
-        background: white;
+        background: rgba(255, 255, 255, 0.04);
         color: var(--primary-accent);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+        border: 1px solid var(--border-color);
     }
 
     .nav-step.completed {
-        color: #10b981;
+        color: var(--primary-accent);
     }
 
     .step-num {
-        width: 24px;
-        height: 24px;
+        width: 26px;
+        height: 26px;
         border-radius: 50%;
         border: 2px solid currentColor;
         display: flex;
@@ -110,8 +114,8 @@
     }
 
     .nav-step.completed .step-num {
-        background: #10b981;
-        border-color: #10b981;
+        background: var(--primary-accent);
+        border-color: var(--primary-accent);
         color: white;
     }
 
@@ -120,25 +124,27 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        background: white;
+        background: linear-gradient(180deg, #151922 0%, #11151c 100%);
     }
 
     .form-header {
-        padding: 2.5rem 3rem 1.5rem 3rem;
+        padding: 2rem 2.5rem 1.25rem 2.5rem;
         border-bottom: 1px solid var(--border-color);
+        background: linear-gradient(180deg, #171b23 0%, #141820 100%);
     }
 
     .form-header h3 {
-        font-size: 1.5rem;
-        font-weight: 700;
+        font-size: 1.75rem;
+        font-weight: 750;
         margin: 0;
         color: var(--text-main);
     }
 
     .form-body {
         flex: 1;
-        padding: 2rem 3rem;
+        padding: 2rem 2.5rem;
         overflow-y: auto;
+        background: transparent;
     }
 
     .form-step-content {
@@ -170,7 +176,7 @@
     label {
         display: block;
         font-size: 0.875rem;
-        font-weight: 600;
+        font-weight: 700;
         color: var(--text-main);
         margin-bottom: 0.5rem;
     }
@@ -179,18 +185,21 @@
     select,
     textarea {
         width: 100%;
-        padding: 0.75rem;
+        padding: 0.85rem 0.95rem;
         border: 1px solid var(--border-color);
-        border-radius: 8px;
+        border-radius: 12px;
         font-size: 1rem;
         transition: border-color 0.2s;
         box-sizing: border-box;
+        background: #10141b;
+        color: var(--text-main);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
     }
 
     input:focus {
         outline: none;
         border-color: var(--primary-accent);
-        ring: 2px solid rgba(99, 102, 241, 0.2);
+        box-shadow: 0 0 0 4px rgba(74, 222, 128, 0.12);
     }
 
     /* Domain Selector */
@@ -203,21 +212,23 @@
 
     .choice-card {
         border: 2px solid var(--border-color);
-        border-radius: 12px;
+        border-radius: 16px;
         padding: 1rem;
         cursor: pointer;
         transition: all 0.2s;
         text-align: center;
-        background: #555555ff;
+        background: #10141b;
     }
 
     .choice-card:hover {
         border-color: var(--primary-accent);
+        transform: translateY(-1px);
     }
 
     .choice-card.selected {
         border-color: var(--primary-accent);
-        background: rgba(99, 102, 241, 0.05);
+        background: var(--primary-soft);
+        box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.14);
     }
 
     .choice-card i {
@@ -238,17 +249,17 @@
 
     /* Footer */
     .form-footer {
-        padding: 1.5rem 3rem;
+        padding: 1.25rem 2.5rem;
         border-top: 1px solid var(--border-color);
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: var(--sidebar-bg);
+        background: #12161d;
     }
 
     button {
         padding: 0.75rem 1.5rem;
-        border-radius: 8px;
+        border-radius: 12px;
         font-weight: 600;
         cursor: pointer;
         transition: all 0.2s;
@@ -258,21 +269,23 @@
 
     .btn-next {
         background: var(--primary-accent);
-        color: white;
+        color: #08110b;
+        box-shadow: 0 10px 22px rgba(74, 222, 128, 0.18);
     }
 
     .btn-next:hover {
         background: var(--primary-accent-hover);
+        transform: translateY(-1px);
     }
 
     .btn-prev {
-        background: white;
+        background: #10141b;
         color: var(--text-main);
         border: 1px solid var(--border-color);
     }
 
     .btn-prev:hover {
-        background: var(--sidebar-bg);
+        background: #171c26;
     }
 
     .btn-prev.hidden {
@@ -313,29 +326,24 @@
         .form-header,
         .form-body,
         .form-footer {
-            padding: 1.5rem;
+            padding: 1.25rem;
         }
     }
 
-    h3,
-    h2,
-    p {
-        color: #fff !important;
+    .form-body p,
+    .sidebar-header p {
+        color: var(--text-muted) !important;
     }
 
     textarea {
-        background-color: black;
-        color: white;
+        min-height: 108px;
+        resize: vertical;
     }
 
-    .setup-content,
-    .form-header,
-    .form-body,
-    .setup-sidebar,
-    .form-footer {
-        background: #1a1a1a;
-        border: 1px solid #1a1a1a;
+    .form-step-content h4 {
+        color: var(--text-main) !important;
     }
+
     /* Error banner */
     .setup-error-banner {
         display: none;
@@ -350,12 +358,37 @@
         font-size: 0.9rem;
         font-weight: 600;
         z-index: 10000;
-        box-shadow: 0 4px 20px rgba(239,68,68,0.4);
+        box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
         max-width: 90vw;
         text-align: center;
         animation: fadeIn 0.3s ease;
     }
     .setup-error-banner.visible { display: block; }
+
+    .form-step-content.active p,
+    .form-step-content.active small,
+    .form-step-content.active span {
+        color: inherit;
+    }
+
+    .form-footer,
+    .form-header,
+    .setup-sidebar {
+        backdrop-filter: blur(10px);
+    }
+
+    .setup-sidebar::-webkit-scrollbar,
+    .form-body::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    .setup-sidebar::-webkit-scrollbar-thumb,
+    .form-body::-webkit-scrollbar-thumb {
+        background: #2a2f3a;
+        border-radius: 999px;
+        border: 2px solid transparent;
+        background-clip: padding-box;
+    }
 </style>
 
 <div id="setupErrorBanner" class="setup-error-banner"></div>
@@ -370,15 +403,15 @@
             <ul class="nav-steps">
                 <li class="nav-step active" data-step-nav="0">
                     <div class="step-num">1</div>
-                    <span>Store Identity</span>
+                    <span>Store identity</span>
                 </li>
                 <li class="nav-step" data-step-nav="1">
                     <div class="step-num">2</div>
-                    <span>Domain Setup</span>
+                    <span>Domain setup</span>
                 </li>
                 <li class="nav-step" data-step-nav="2">
                     <div class="step-num">3</div>
-                    <span>Business Profile</span>
+                    <span>Business profile</span>
                 </li>
                 <li class="nav-step" data-step-nav="3">
                     <div class="step-num">4</div>
@@ -397,6 +430,7 @@
                 <div class="form-body">
                     <!-- Step 1: Identity -->
                     <div class="form-step-content active" id="step0">
+                        <p style="margin-bottom: 1.5rem; color: var(--text-muted);">Give your store a name and the contact details customers will see.</p>
                         <div class="input-group">
                             <label>Website Name</label>
                             <input name="wb_name" type="text" placeholder="e.g. My Awesome Boutique" required>
@@ -414,15 +448,14 @@
 
                     <!-- Step 2: Domain -->
                     <div class="form-step-content" id="step1">
-                        <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.5rem;">How would you
-                            like customers to find your store?</p>
+                        <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.5rem;">Choose how customers will reach your storefront.</p>
 
                         <input type="hidden" name="domain_type" id="domainType" value="subdomain">
                         <div class="domain-choice">
                             <?php if (isset($_SERVER['PARENT_DOMAIN'])): ?>
                                 <div class="choice-card selected" id="choiceSubdomain" onclick="setDomainType('subdomain')">
                                     <i class="fas fa-magic"></i>
-                                    <span style="color: #fff;">Free Subdomain</span>
+                                    <span>Free subdomain</span>
                                     <small
                                         style="font-size: 0.75rem; color: var(--text-muted)">*.<?php echo $_SERVER['PARENT_DOMAIN']; ?></small>
                                 </div>
@@ -430,10 +463,10 @@
                             <div class="choice-card <?php echo !isset($_SERVER['PARENT_DOMAIN']) ? 'selected' : ''; ?>"
                                 id="choiceCustom" onclick="setDomainType('custom')">
                                 <i class="fas fa-globe"></i>
-                                <span style="color: #fff;">Own Domain</span>
-                                <small style="font-size: 0.75rem; color: var(--text-muted)">e.g. yourstore.com</small>
+                                    <span>Own domain</span>
+                                    <small style="font-size: 0.75rem; color: var(--text-muted)">e.g. yourstore.com</small>
+                                </div>
                             </div>
-                        </div>
 
                         <div class="input-group" id="subdomainWrap" <?php echo !isset($_SERVER['PARENT_DOMAIN']) ? 'style="display:none"' : ''; ?>>
                             <label>Choose your subdomain</label>
@@ -481,7 +514,7 @@
                                 <i class="fas fa-rocket"></i>
                             </div>
                             <h4
-                                style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: #fff !important;">
+                                style="font-size: 1.25rem; font-weight: 750; margin-bottom: 0.5rem; color: var(--text-main) !important;">
                                 Almost There!</h4>
                             <p style="color: var(--text-muted)">Your store is ready to be deployed. Click finish to
                                 launch your online presence.</p>
@@ -489,16 +522,16 @@
 
                         <!-- Demo Data Toggle -->
                         <div
-                            style="margin-top: 1rem; border: 1px solid #333; border-radius: 12px; padding: 1.25rem; background: #111;">
+                            style="margin-top: 1rem; border: 1px solid var(--border-color); border-radius: 16px; padding: 1.25rem; background: #10141b;">
                             <label
                                 style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; margin: 0;">
                                 <input type="checkbox" name="load_demo_data" value="1"
                                     style="width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary-accent); flex-shrink: 0; cursor: pointer;">
                                 <div>
-                                    <span style="font-weight: 700; font-size: 0.9rem; color: #fff;">Load sample
+                                    <span style="font-weight: 700; font-size: 0.9rem; color: var(--text-main);">Load sample
                                         data</span>
                                     <p
-                                        style="font-size: 0.8rem; color: #888 !important; margin-top: 4px; line-height: 1.5;">
+                                        style="font-size: 0.8rem; color: var(--text-muted) !important; margin-top: 4px; line-height: 1.5;">
                                         Populate your store with demo categories, products, and orders so you can
                                         explore all features right away. You can remove them later.
                                     </p>
@@ -507,15 +540,14 @@
                         </div>
 
                         <div
-                            style="margin-top: 1rem; border: 1px solid #33333300; border-radius: 12px; padding: 0 1.25rem; background: #fff0;">
+                            style="margin-top: 1rem; border: 1px solid var(--border-color); border-radius: 16px; padding: 0 1.25rem; background: #10141b;">
                             <label
                                 style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; margin: 0;">
                                 <input type="checkbox" name="promotion_data" value="1"
                                     style="width: 18px; height: 18px; margin-top: 2px; accent-color: var(--primary-accent); flex-shrink: 0; cursor: pointer;">
                                 <div>
-                                    <span style="font-weight: 700; font-size: 0.9rem; color: #fff;">Enhance User
-                                        Experience</span>
-                                    <p style="font-size: 0.8rem; color: #888 !important; line-height: 1.5;">
+                                    <span style="font-weight: 700; font-size: 0.9rem; color: var(--text-main);">Enhance user experience</span>
+                                    <p style="font-size: 0.8rem; color: var(--text-muted) !important; line-height: 1.5;">
                                         We may also send you occasional tips and updates to help you get the most out of
                                         your store. You can opt out at any time.
                                     </p>

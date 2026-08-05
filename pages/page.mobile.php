@@ -8,7 +8,7 @@
     }
 
     body {
-        background-color: #09090b;
+        background-color: #7c3aed00;
         /* Zinc 950 */
         color: #ffffff;
         overscroll-behavior: none;
@@ -59,13 +59,13 @@
             <div class="form-group">
                 <label class="text-xs uppercase tracking-widest text-zinc-500 mb-1.5 ml-1">Store Environment URL</label>
                 <input type="text" placeholder="https://yourstore.com"
-                    class="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all">
+                    class="w-full bg-[#252526] border border-zinc-800 rounded-xl p-4 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all">
             </div>
 
             <div class="form-group">
                 <label class="text-xs uppercase tracking-widest text-zinc-500 mb-1.5 ml-1">Access Token</label>
                 <input type="password" placeholder="vm_live_xxxxxxxxxxxx"
-                    class="w-full bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all">
+                    class="w-full bg-[#252526] border border-zinc-800 rounded-xl p-4 text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all">
             </div>
         </div>
 
@@ -76,7 +76,7 @@
             </button>
 
             <button onclick="openExternal('https://varsitymarket.tech/')"
-                class="w-full bg-zinc-900 text-zinc-300 border border-zinc-800 font-medium py-4 rounded-xl active:scale-[0.98] transition-transform">
+                class="w-full bg-[#252526] text-zinc-300 border border-zinc-800 font-medium py-4 rounded-xl active:scale-[0.98] transition-transform">
                 Register Your Store
             </button>
 
