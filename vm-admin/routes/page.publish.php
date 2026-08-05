@@ -62,9 +62,10 @@ try {
 
 $verification_domain = engine_validate_domain_ownership(__DOMAIN__);
 $domain_connected = engine_validate_domain(__DOMAIN__);
+$publish_state = $domain_connected === true ? 'connected' : (($verification_domain === true) ? 'verified' : 'unverified');
 
 if ($domain_connected == true) {
-    $domain_source =  "http://" . __DOMAIN__;
+    $domain_source = "http://" . __DOMAIN__;
 } else if ($verification_domain == true) {
     $domain_source = "http://" . get_domain() . "/pages/error.500.deployment.php";
 } else {
@@ -73,488 +74,320 @@ if ($domain_connected == true) {
 
 ?>
 <!-- Main Content -->
-<div class="flex flex-1 flex-col overflow-hidden">
+<div class="flex flex-1 flex-col overflow-hidden bg-[#1b1b1c] text-zinc-100">
     <?php @include_once "header.php"; ?>
 
     <?php if (!isset($_SERVER['__ENGINE_SOURCE__'])): ?>
-        <div style="max-width: 25rem; margin:10rem auto; padding: 2rem 1rem;">
-
-        <div class="bg-[#1e2a27] border border-[#2b5c4b] rounded-xl p-4 flex items-center justify-between transition-all">
-            <div class="flex items-center gap-3">
-                <div class="text-sm">
-                    <span class="font-semibold text-white">Embedded Engine not connected</span>
-                    <br>
-                    <span class="text-shopifySecondary ml-1">This embededd engine is not connected to the remote server. Your website cannot be published with this engine.</span>
+        <div class="flex items-center justify-center flex-1 px-6" style="min-height: 60vh;">
+            <div class="w-full max-w-xl rounded-3xl border border-amber-500/20 bg-amber-500/10 p-6 text-amber-50 shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+                <div class="flex items-start gap-4">
+                    <span class="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center shrink-0">
+                        <i class="bi bi-exclamation-triangle text-amber-400 text-lg"></i>
+                    </span>
+                    <div>
+                        <h3 class="text-white font-semibold text-sm">Embedded Engine not connected</h3>
+                        <p class="text-zinc-300 text-xs mt-1 leading-relaxed">This embedded engine is not connected to the
+                            remote server. Your website cannot be published with this engine.</p>
+                    </div>
                 </div>
             </div>
-        </div>
-
         </div>
     <?php else: ?>
+        <main class="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6">
 
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+            <section class="relative overflow-hidden rounded-3xl border border-white/10 bg-[#242424] text-white">
+                <div class="relative grid gap-6 p-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.8fr)] lg:p-8">
+                    <div>
+                        <h1 class="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Publish your store with a clean, controlled release flow.</h1>
+                        <p class="mt-3 max-w-2xl text-sm leading-6 text-white sm:text-base">
+                            Review your live connection, verify DNS status, push a fresh deployment, and keep every version available for rollback.
+                        </p>
 
-    <div class="flex-1 px-6 py-8 space-y-6" style="overflow-y: scroll;">
-
-        <!-- Breadcrumb and Title Section -->
-        <div
-            class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-shopifyBorder">
-            <div>
-                <div class="text-xs text-shopifySecondary flex items-center gap-1 mb-1">
-                    <span>Online Store</span> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                        stroke-linejoin="round" data-lucide="chevron-right" aria-hidden="true"
-                        class="lucide lucide-chevron-right w-3 h-3">
-                        <path d="m9 18 6-6-6-6"></path>
-                    </svg> <span>Embedded Engine</span>
-                </div>
-                <h1 class="text-2xl font-bold text-white tracking-tight">Publish</h1>
-            </div>
-            <div class="flex gap-2">
-                <button onclick="window.location.href='<?php echo $admin_base; ?>deploy'"
-                    class="bg-[#2c2d30] hover:bg-[#36373a] border border-shopifyBorder text-white px-3 py-1.5 rounded-lg font-medium text-sm transition flex items-center gap-1.5">
-                    <span>Deploy With Github</span>
-                </button>
-                <button onclick="document.getElementById('publishForm').submit();"
-                    class="bg-[#7a1aab] hover:bg-shopifyGreenHover text-white px-4 py-1.5 rounded-lg font-medium text-sm transition flex items-center gap-1.5 shadow-sm">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                        data-lucide="upload-cloud" aria-hidden="true" class="lucide lucide-upload-cloud w-4 h-4">
-                        <path d="M12 13v8"></path>
-                        <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
-                        <path d="m8 17 4-4 4 4"></path>
-                    </svg>
-                    <span>Publish Changes</span>
-                </button>
-                <form id="publishForm" method="POST" style="display: none;">
-                    <input type="hidden" name="action" value="publish">
-                </form>
-            </div>
-        </div>
-
-        <!-- Simulation Banner -->
-        <div id="publishProgress"
-            class="hidden bg-[#1e2a27] border border-[#2b5c4b] rounded-xl p-4 flex items-center justify-between transition-all">
-            <div class="flex items-center gap-3">
-                <div class="w-4 h-4 border-2 border-shopifyGreen border-t-transparent rounded-full animate-spin"></div>
-                <div class="text-sm">
-                    <span class="font-semibold text-white">Publishing live modifications...</span>
-                    <span class="text-shopifySecondary ml-1">CDN nodes are syncing cache files.</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Shopify Standard Layout Layout Grid -->
-        <div class="grid grid-cols-1 gap-6">
-            <?php if (($verification_domain !== true) && ($domain_connected !== true)): ?>
-                <!-- Primary Active Theme Card -->
-                <div class="bg-shopifyCard border border-shopifyBorder rounded-xl shadow-sm p-5 space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
-                        <div class="flex gap-4">
-                            <!-- Theme Thumbnail Placeholder -->
-                            <div
-                                class="w-20 h-24 bg-[#2c2d30] border border-shopifyBorder rounded-lg flex flex-col justify-between p-2 text-[10px] text-shopifySecondary font-mono relative overflow-hidden">
-                                <div class="w-full h-1 bg-[#7a1aab] absolute top-0 left-0"></div>
-                                <span class="bg-shopifyBg/80 px-1 py-0.5 rounded text-[8px] text-center">Verify Domain</span>
-                                <div class="space-y-1">
-                                    <div class="h-1.5 bg-[#3a3b3e] rounded w-full"></div>
-                                    <div class="h-1.5 bg-[#3a3b3e] rounded w-5/6"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <h3 class="font-semibold text-base text-white">Verify Domain</h3>
-                                </div>
-                                <p class="text-xs text-shopifySecondary mt-0.5">Insert the following text record to your domain register for confirmation.</p>
-                                <p>Type: TXT</p>
-                                <div
-                                    class="text-xs text-shopifySecondary mt-3 font-mono bg-shopifyBg px-2 py-1 rounded inline-block border border-shopifyBorder">
-                                    <?php echo hash("sha256", __DOMAIN__); ?>
-                                </div>
-                            </div>
-
-                        </div>
-                        <div class="w-full sm:w-auto flex sm:flex-col gap-2 justify-end">
-                            <button id="openModal"
-                                class="flex-1 sm:flex-none text-center bg-[#2c2d30] hover:bg-[#36373a] border border-shopifyBorder text-white px-3 py-1.5 rounded-lg font-medium text-xs transition">
-                                Verify Domain
+                        <div class="mt-6 flex flex-wrap items-center gap-3">
+                            <button onclick="document.getElementById('publishForm').submit();" class="inline-flex items-center gap-2 rounded-full bg-[#008060] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-[#006e52]">
+                                <i class="bi bi-cloud-arrow-up"></i>
+                                <span>Publish Changes</span>
                             </button>
+                            <button onclick="window.location.href='<?php echo $admin_base; ?>deploy'" class="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50">
+                                <i class="bi bi-github"></i>
+                                <span>Deploy with GitHub</span>
+                            </button>
+                            <form id="publishForm" method="POST" class="hidden">
+                                <input type="hidden" name="action" value="publish">
+                            </form>
                         </div>
-
 
                     </div>
+
                 </div>
+            </section>
 
-            <?php endif; ?>
+            <div id="publishProgress" class="hidden rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4">
+                <div class="flex items-center gap-3">
+                    <div class="h-4 w-4 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent"></div>
+                    <div class="text-sm">
+                        <span class="font-semibold text-emerald-300">Publishing live modifications...</span>
+                        <span class="ml-1 text-emerald-100/80">CDN nodes are syncing cache files.</span>
+                    </div>
+                </div>
+            </div>
 
-            <?php if (($domain_connected == false) && ($verification_domain == true)): ?>
-                <!-- Primary Active Theme Card -->
-                <div class="bg-shopifyCard border border-shopifyBorder rounded-xl shadow-sm p-5 space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
-                        <div class="flex gap-4">
-                            <!-- Theme Thumbnail Placeholder -->
-                            <div
-                                class="w-20 h-24 bg-[#2c2d30] border border-shopifyBorder rounded-lg flex flex-col justify-between p-2 text-[10px] text-shopifySecondary font-mono relative overflow-hidden">
-                                <div class="w-full h-1 bg-[#7a1aab] absolute top-0 left-0"></div>
-                                <span class="bg-shopifyBg/80 px-1 py-0.5 rounded text-[8px] text-center">Connect Domain</span>
-                                <div class="space-y-1">
-                                    <div class="h-1.5 bg-[#3a3b3e] rounded w-full"></div>
-                                    <div class="h-1.5 bg-[#3a3b3e] rounded w-5/6"></div>
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <h3 class="font-semibold text-base text-white">Connect Domain</h3>
-                                </div>
-                                <p class="text-xs text-shopifySecondary mt-0.5">Configure your domain to the embedded servers</p>
-                                <div style="display: flex;">
-                                    <p>A Records</p>
-                                    <div
-                                        class="text-xs text-shopifySecondary font-mono bg-shopifyBg px-2 py-1 rounded inline-block border border-shopifyBorder">
-                                        <?php echo "84.12.34.23"; ?>
+            <section style="display:block;" class="grid gap-6 xl:grid-cols-[minmax(0,1.7fr)_minmax(280px,0.8fr)]">
+                <div class="space-y-6">
+                    <?php if (($verification_domain !== true) && ($domain_connected !== true)): ?>
+                        <div class="rounded-3xl border border-amber-500/20 bg-[#202123] p-5 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
+                            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                <div class="block gap-4">
+                                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-amber-500/10">
+                                        <i class="bi bi-shield-exclamation text-lg text-amber-400"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-sm font-semibold text-white">Verify domain ownership</h3>
+                                        <p class="mt-1 text-xs leading-relaxed text-zinc-400">Add the TXT record below to confirm this domain belongs to your store.</p>
+                                        <div class="mt-4 rounded-2xl border border-white/10 bg-[#1b1b1c] p-4 font-mono text-[11px] text-zinc-200">
+                                            <div class="flex justify-between gap-4"><span class="text-zinc-500">Type</span><span>TXT</span></div>
+                                            <div class="mt-2 flex justify-between gap-4"><span class="text-zinc-500">Name</span><span>@</span></div>
+                                            <div class="mt-2 flex justify-between gap-4"><span class="text-zinc-500">Value</span><span class="truncate select-all text-right" title="Click to select value"><?php echo hash("sha256", __DOMAIN__); ?></span></div>
+                                        </div>
                                     </div>
                                 </div>
+                                <button onclick="document.getElementById('dnsModal').showModal()" class="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
+                                    Verify domain
+                                </button>
                             </div>
-
                         </div>
-                        <div class="w-full sm:w-auto flex sm:flex-col gap-2 justify-end">
-                            <button id="openModal"
-                                class="flex-1 sm:flex-none text-center bg-[#2c2d30] hover:bg-[#36373a] border border-shopifyBorder text-white px-3 py-1.5 rounded-lg font-medium text-xs transition">
-                                Connect Domain
-                            </button>
+                    <?php endif; ?>
+
+                    <?php if (($domain_connected == false) && ($verification_domain == true)): ?>
+                        <div class="rounded-3xl border border-sky-500/20 bg-[#202123] p-5 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
+                            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                                <div class="block gap-4">
+                                    <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-sky-500/10">
+                                        <i class="bi bi-link-45deg text-lg text-sky-400"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-sm font-semibold text-white">Connect your domain</h3>
+                                        <p class="mt-1 text-xs leading-relaxed text-zinc-400">Point your domain at the embedded engine so the live store can go public.</p>
+                                        <div class="mt-4 rounded-2xl border border-white/10 bg-[#1b1b1c] p-4 font-mono text-[11px] text-zinc-200">
+                                            <div class="flex justify-between gap-4"><span class="text-zinc-500">Type</span><span>A Record</span></div>
+                                            <div class="mt-2 flex justify-between gap-4"><span class="text-zinc-500">Name</span><span>@</span></div>
+                                            <div class="mt-2 flex justify-between gap-4"><span class="text-zinc-500">Value</span><span>84.12.34.23</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onclick="document.getElementById('dnsModal').showModal()" class="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
+                                    Connect domain
+                                </button>
+                            </div>
                         </div>
-
-
-                    </div>
-                </div>
-            <?php elseif ($domain_connected == true): ?>
-                <!-- Primary Active Theme Card -->
-                <div class="bg-shopifyCard border border-shopifyBorder rounded-xl shadow-sm p-5 space-y-4">
-                    <div class="flex flex-col sm:flex-row justify-between items-start gap-4">
-                        <div class="flex gap-4">
-                            <!-- Theme Thumbnail Placeholder -->
-                            <div
-                                class="w-20 h-24 bg-[#2c2d30] border border-shopifyBorder rounded-lg flex flex-col justify-between p-2 text-[10px] text-shopifySecondary font-mono relative overflow-hidden">
-                                <div class="w-full h-1 bg-[#0fb70f] absolute top-0 left-0"></div>
-                                <span class="bg-shopifyBg/80 px-1 py-0.5 rounded text-[8px] text-center">Engine Connected</span>
-                                <div class="space-y-1">
-                                    <div class="h-1.5 bg-[#3a3b3e] rounded w-full"></div>
-                                    <div class="h-1.5 bg-[#3a3b3e] rounded w-5/6"></div>
+                    <?php elseif ($domain_connected == true): ?>
+                        <div class="rounded-3xl border border-emerald-500/20 bg-[#202123] p-5 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
+                            <div class="flex items-center gap-4">
+                                <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10">
+                                    <i class="bi bi-check-circle text-lg text-emerald-400"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-sm font-semibold text-white">Engine connected and ready</h3>
+                                    <p class="mt-1 text-xs text-zinc-400">Your custom domain is verified and pointed correctly. Publishing is ready.</p>
                                 </div>
                             </div>
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <h3 class="font-semibold text-base text-white">All Set</h3>
+                        </div>
+                    <?php endif; ?>
+
+                    <div class="overflow-hidden rounded-3xl border border-white/10 bg-[#202123] shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
+                        <div class="flex items-center justify-between border-b border-white/10 bg-white/5 px-5 py-3">
+                            <div class="flex items-center gap-3">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="h-2.5 w-2.5 rounded-full bg-red-500/60"></span>
+                                    <span class="h-2.5 w-2.5 rounded-full bg-amber-500/60"></span>
+                                    <span class="h-2.5 w-2.5 rounded-full bg-emerald-500/60"></span>
                                 </div>
-                                <p class="text-xs text-shopifySecondary mt-0.5">You can now proceed to publish your website.</p>
+                                <span class="select-all font-mono text-xs text-zinc-400"><?php echo $site_url; ?></span>
                             </div>
-
+                            <a href="<?php echo $domain_source ?>" target="_blank" class="inline-flex items-center gap-1 text-xs font-medium text-zinc-300 transition hover:text-white">
+                                <span>Open live site</span>
+                                <i class="bi bi-box-arrow-up-right text-[10px]"></i>
+                            </a>
                         </div>
-
-
+                        <iframe src="<?php echo $domain_source ?>" class="w-full border-none bg-zinc-950" style="height: 60vh;" frameborder="0"></iframe>
                     </div>
                 </div>
-            <?php endif; ?>
 
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-                <div class="px-5 py-3 border-b border-zinc-800 flex items-center justify-between">
-                    <div class="flex items-center gap-3">
-                        <div class="flex items-center gap-1.5">
-                            <span class="w-3 h-3 rounded-full bg-red-500/60"></span>
-                            <span class="w-3 h-3 rounded-full bg-amber-500/60"></span>
-                            <span class="w-3 h-3 rounded-full bg-emerald-500/60"></span>
+                <aside class="space-y-6 pt-6">
+
+                    <section class="rounded-3xl border border-white/10 bg-[#202123] p-5 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Version history</p>
+                        <div class="mt-4 overflow-hidden rounded-2xl border border-white/10">
+                            <div class="max-h-[520px] overflow-y-auto">
+                                <table class="w-full text-left text-sm">
+                                    <thead class="sticky top-0 bg-[#202123]">
+                                        <tr class="border-b border-white/10 text-[11px] uppercase tracking-[0.18em] text-zinc-500">
+                                            <th class="px-4 py-3 font-semibold">Version</th>
+                                            <th class="px-4 py-3 font-semibold">Status</th>
+                                            <th class="px-4 py-3 pr-5 text-right font-semibold">Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-white/10 text-zinc-300">
+                                        <?php if (empty($deployments)): ?>
+                                            <tr>
+                                                <td colspan="3" class="px-4 py-10 text-center">
+                                                    <div class="flex flex-col items-center gap-2">
+                                                        <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/5">
+                                                            <i class="bi bi-cloud-arrow-up text-zinc-500 text-lg"></i>
+                                                        </span>
+                                                        <p class="text-sm font-medium text-zinc-300">No deployments yet</p>
+                                                        <p class="text-xs text-zinc-500">Publish your store to create the first version.</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        <?php else: ?>
+                                            <?php foreach ($deployments as $index => $dep): ?>
+                                                <tr class="transition hover:bg-white/[0.03]">
+                                                    <td class="px-4 py-4 font-mono text-xs <?php echo $index === 0 ? 'text-white' : 'text-zinc-400'; ?>">
+                                                        v_<?php echo htmlspecialchars($dep['version_hash']); ?>
+                                                        <div class="mt-1 text-[10px] text-zinc-600">UID <?php echo $dep['id']; ?></div>
+                                                    </td>
+                                                    <td class="px-4 py-4">
+                                                        <?php if ($index === 0): ?>
+                                                            <span class="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-300 ring-1 ring-emerald-500/20">Current</span>
+                                                        <?php elseif ($dep['status'] === 'rollback'): ?>
+                                                            <span class="inline-flex items-center rounded-full bg-rose-500/10 px-2 py-1 text-[11px] font-semibold text-rose-300 ring-1 ring-rose-500/20">Rolled back</span>
+                                                        <?php else: ?>
+                                                            <span class="inline-flex items-center rounded-full bg-white/5 px-2 py-1 text-[11px] font-semibold text-zinc-400 ring-1 ring-white/10">Archived</span>
+                                                        <?php endif; ?>
+                                                    </td>
+                                                    <td class="px-4 py-4 pr-5 text-right text-xs text-zinc-400">
+                                                        <?php echo date('M j, Y g:i A', strtotime($dep['created_at'])); ?>
+                                                        <div class="mt-2">
+                                                            <?php if ($index !== 0): ?>
+                                                                <form method="POST" onsubmit="return confirm('Are you sure you want to rollback to this version?');" class="inline">
+                                                                    <input type="hidden" name="action" value="rollback">
+                                                                    <input type="hidden" name="deployment_id" value="<?php echo $dep['id']; ?>">
+                                                                    <button type="submit" class="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-white/10">
+                                                                        Restore
+                                                                    </button>
+                                                                </form>
+                                                            <?php else: ?>
+                                                                <span class="text-zinc-500">Live</span>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            <?php endforeach; ?>
+                                        <?php endif; ?>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                        <span class="text-zinc-500 text-xs font-mono"><?php echo $site_url; ?></span>
-                    </div>
-
-                </div>
-                <iframe src="<?php echo $domain_source ?>" class="w-full border-none" style="height: 65vh;" frameborder="0"></iframe>
-            </div>
-
-
-            <!-- Shopify Version & Theme Library Section -->
-            <div class="bg-shopifyCard border border-shopifyBorder rounded-xl shadow-sm overflow-hidden">
-                <div class="p-4 border-b border-shopifyBorder bg-[#26272a]">
-                    <h3 class="font-semibold text-white">Website Version History</h3>
-                    <p class="text-xs text-shopifySecondary mt-0.5">View your previously published iterations. You can
-                        roll back or preview older architecture snapshots anytime.</p>
-                </div>
-
-                <!-- Shopify Style Table Container -->
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-xs">
-                        <thead>
-                            <tr class="bg-shopifyBg/40 border-b border-shopifyBorder text-shopifySecondary font-medium">
-                                <th class="p-3.5 pl-5">Version &amp; Build</th>
-                                <th class="p-3.5">Status</th>
-                                <th class="p-3.5">Actions Log</th>
-                                <th class="p-3.5">Author</th>
-                                <th class="p-3.5 pr-5 text-right">Date Modified</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-shopifyBorder text-shopifyText">
-                            <?php if (empty($deployments)): ?>
-                                <tr>
-                                    <td colspan="5" class="p-8 text-center text-shopifySecondary">No previous deployments found. Publish your store to create the first version!</td>
-                                </tr>
-                            <?php else: ?>
-                                <?php foreach ($deployments as $index => $dep): ?>
-                                    <tr class="hover:bg-[#26272b]/50 group transition">
-                                        <td class="p-4 pl-5 <?php echo $index === 0 ? 'font-bold text-white' : 'font-medium text-shopifySecondary'; ?> font-mono">v_<?php echo htmlspecialchars($dep['version_hash']); ?></td>
-                                        <td class="p-4">
-                                            <?php if ($index === 0): ?>
-                                                <span class="text-[#86efac] bg-[#1b2b24] px-2 py-0.5 rounded font-medium border border-[#224834]">Current</span>
-                                            <?php elseif ($dep['status'] === 'rollback'): ?>
-                                                <span class="text-rose-400 bg-rose-950/30 px-2 py-0.5 rounded border border-rose-900/40">Rolled back</span>
-                                            <?php else: ?>
-                                                <span class="text-shopifySecondary bg-shopifyBg px-2 py-0.5 rounded border border-shopifyBorder">Archived</span>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td class="p-4">
-                                            <?php if ($index !== 0): ?>
-                                                <form method="POST" onsubmit="return confirm('Are you sure you want to rollback to this version?');" class="inline">
-                                                    <input type="hidden" name="action" value="rollback">
-                                                    <input type="hidden" name="deployment_id" value="<?php echo $dep['id']; ?>">
-                                                    <button type="submit" class="text-xs text-shopifySecondary underline hover:text-white transition">Restore this version</button>
-                                                </form>
-                                            <?php else: ?>
-                                                <span class="text-white font-medium">Currently deployed active view</span>
-                                            <?php endif; ?>
-                                            <div class="text-shopifySecondary text-[11px] font-mono mt-0.5">Deployment UID: <?php echo $dep['id']; ?></div>
-                                        </td>
-                                        <td class="p-4 text-shopifySecondary"><?php echo htmlspecialchars(__USERNAME__); ?></td>
-                                        <td class="p-4 pr-5 text-right text-shopifySecondary"><?php echo date('M j, Y g:i A', strtotime($dep['created_at'])); ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-        </div>
-    </div>
+                    </section>
+                </aside>
+            </section>
+        </main>
 
     <?php endif; ?>
 </div>
 
-<style>
-    /* Trigger Button */
-    .open-btn {
-        background-color: #2563eb;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        font-size: 16px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-weight: 500;
-    }
+<!-- DNS Modal -->
+<dialog id="dnsModal" class="bg-[#202123] border border-white/10 rounded-3xl p-0 w-[90%] max-w-md shadow-2xl text-white overflow-hidden">
+    <div class="px-5 py-4 border-b border-white/10">
+        <h3 class="text-white font-semibold text-sm">DNS Authentication Required</h3>
+        <p class="text-xs text-zinc-500 mt-1">Verify domain ownership by adding the following DNS record.</p>
+    </div>
 
-    .open-btn:hover {
-        background-color: #1d4ed8;
-    }
+    <div class="p-5">
+        <?php if (($domain_connected == false) && ($verification_domain == true)): ?>
+            <p class="text-xs text-zinc-400 leading-relaxed mb-4">To complete domain connection, add the following A record
+                to your DNS provider configurations (Cloudflare, GoDaddy, Namecheap, etc.).</p>
+            <table class="w-full text-xs font-mono bg-[#1b1b1c] border border-white/10 rounded-2xl p-3 block space-y-2">
+                <tr class="flex">
+                    <td class="text-zinc-500 w-16">Type</td>
+                    <td class="text-zinc-300">A Record</td>
+                </tr>
+                <tr class="flex">
+                    <td class="text-zinc-500 w-16">Name</td>
+                    <td class="text-zinc-300">@</td>
+                </tr>
+                <tr class="flex">
+                    <td class="text-zinc-500 w-16">Value</td>
+                    <td class="text-zinc-300"><?php echo $_SERVER['__SERVER_IP__'] ?? 'Unconfigured' ?></td>
+                </tr>
+                <tr class="flex">
+                    <td class="text-zinc-500 w-16">TTL</td>
+                    <td class="text-zinc-300">3600 (or Automatic)</td>
+                </tr>
+            </table>
+        <?php else: ?>
+            <p class="text-xs text-zinc-400 leading-relaxed mb-4">To verify ownership of your domain, please add the
+                following TXT record to your DNS provider configurations (Cloudflare, GoDaddy, Namecheap, etc.).</p>
+            <table class="w-full text-xs font-mono bg-[#1b1b1c] border border-white/10 rounded-2xl p-3 block space-y-2">
+                <tr class="flex">
+                    <td class="text-zinc-500 w-16">Type</td>
+                    <td class="text-zinc-300">TXT</td>
+                </tr>
+                <tr class="flex">
+                    <td class="text-zinc-500 w-16">Name</td>
+                    <td class="text-zinc-300">@</td>
+                </tr>
+                <tr class="flex">
+                    <td class="text-zinc-500 w-16">Value</td>
+                    <td class="text-zinc-300 truncate select-all" title="Click to select value">
+                        vm_<?php echo hash("sha256", __DOMAIN__); ?></td>
+                </tr>
+                <tr class="flex">
+                    <td class="text-zinc-500 w-16">TTL</td>
+                    <td class="text-zinc-300">3600 (or Automatic)</td>
+                </tr>
+            </table>
+        <?php endif; ?>
+        <p class="text-[10px] text-zinc-600 mt-4 leading-normal">Note: DNS changes can take anywhere from a few minutes
+            up to 24 hours to propagate globally.</p>
+    </div>
 
-    /* Modal Styles */
-    dialog {
-        border: none;
-        border-radius: 8px;
-        padding: 24px;
-        width: 90%;
-        max-width: 500px;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-    }
-
-    dialog::backdrop {
-        background-color: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-    }
-
-    h2 {
-        margin-top: 0;
-        color: #111827;
-        font-size: 1.25rem;
-    }
-
-    p {
-        color: #4b5563;
-        font-size: 0.95rem;
-        line-height: 1.5;
-    }
-
-    /* DNS Record Data Box */
-    .dns-table {
-        width: 100%;
-        background: #f9fafb;
-        border: 1px solid #e5e7eb;
-        border-radius: 6px;
-        padding: 12px;
-        margin: 20px 0;
-        font-family: monospace;
-        font-size: 0.9rem;
-        border-collapse: collapse;
-    }
-
-    .dns-table td {
-        padding: 6px 8px;
-    }
-
-    .label {
-        color: #6b7280;
-        font-weight: bold;
-        width: 80px;
-    }
-
-    .value {
-        color: #111827;
-        word-break: break-all;
-    }
-
-    /* Action Buttons */
-    .modal-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 12px;
-        margin-top: 24px;
-    }
-
-    .btn {
-        padding: 8px 16px;
-        border-radius: 6px;
-        font-weight: 500;
-        cursor: pointer;
-        font-size: 0.95rem;
-    }
-
-    .btn-secondary {
-        background: transparent;
-        border: 1px solid #d1d5db;
-        color: #374151;
-    }
-
-    .btn-secondary:hover {
-        background: #f9fafb;
-    }
-
-    .btn-primary {
-        background: #2563eb;
-        border: none;
-        color: white;
-    }
-
-    .btn-primary:hover {
-        background: #1d4ed8;
-    }
-</style>
-
-
-<!-- The Modal -->
-<dialog id="dnsModal">
-    <?php
-    if (($domain_connected == false) && ($verification_domain == true)):
-    ?>
-        <h2>DNS Authentication Required</h2>
-        <p>To verify ownership of your domain, please add the following TXT record to your DNS provider configurations (Cloudflare, GoDaddy, Namecheap, etc.).</p>
-
-        <table class="dns-table">
-            <tr>
-                <td class="label">Type</td>
-                <td class="value">A record</td>
-            </tr>
-            <tr>
-                <td class="label">Name</td>
-                <td class="value">@</td>
-            </tr>
-            <tr>
-                <td class="label">Value</td>
-                <td class="value"><?php echo $_SERVER['__SERVER_IP__'] ?? 'Unconfigured' ?></td>
-            </tr>
-            <tr>
-                <td class="label">TTL</td>
-                <td class="value">3600 (or Automatic)</td>
-            </tr>
-        </table>
-
-        <p class="value" style="font-size: 0.85rem; color: #6b7280;">Note: DNS changes can take anywhere from a few minutes up to 24 hours to propagate globally.</p>
-
-        <div class="modal-actions">
-            <button class="btn btn-secondary" id="closeModal">Cancel</button>
-            <button class="btn btn-primary" id="verifyBtn">Check DNS Record</button>
-        </div>
-    <?php elseif (($verification_domain !== true)): ?>
-
-        <h2>DNS Authentication Required</h2>
-        <p>To verify ownership of your domain, please add the following TXT record to your DNS provider configurations (Cloudflare, GoDaddy, Namecheap, etc.).</p>
-
-        <table class="dns-table">
-            <tr>
-                <td class="label">Type</td>
-                <td class="value">TXT</td>
-            </tr>
-            <tr>
-                <td class="label">Name</td>
-                <td class="value">@</td>
-            </tr>
-            <tr>
-                <td class="label">Value</td>
-                <td class="value"><?php echo "vm_".hash("sha256",__DOMAIN__); ?></td>
-            </tr>
-            <tr>
-                <td class="label">TTL</td>
-                <td class="value">3600 (or Automatic)</td>
-            </tr>
-        </table>
-
-        <p class="value" style="font-size: 0.85rem; color: #6b7280;">Note: DNS changes can take anywhere from a few minutes up to 24 hours to propagate globally.</p>
-
-        <div class="modal-actions">
-            <button class="btn btn-secondary" id="closeModal">Cancel</button>
-            <button class="btn btn-primary" id="verifyBtn">Check DNS Record</button>
-        </div>
-
-    <?php endif; ?>
+    <div class="px-5 py-4 border-t border-zinc-800 flex justify-end gap-2 bg-[#252526]/50">
+        <button onclick="document.getElementById('dnsModal').close()"
+            class="px-3 py-1.5 text-xs font-medium text-zinc-400 hover:text-white transition-colors">Cancel</button>
+        <button id="verifyBtn"
+            class="bg-[#008060] hover:bg-[#006e52] text-white px-4 py-1.5 rounded-full text-xs font-medium transition-colors">Check
+            DNS Record</button>
+    </div>
 </dialog>
 
 <script>
     const modal = document.getElementById('dnsModal');
-    const openBtn = document.getElementById('openModal');
-    const closeBtn = document.getElementById('closeModal');
     const verifyBtn = document.getElementById('verifyBtn');
 
-    // Open modal using native showModal() for backdrop support
-    openBtn.addEventListener('click', () => {
-        modal.showModal();
-    });
+    if (verifyBtn) {
+        verifyBtn.addEventListener('click', () => {
+            verifyBtn.textContent = 'Verifying...';
+            verifyBtn.disabled = true;
 
-    // Close modal
-    closeBtn.addEventListener('click', () => {
-        modal.close();
-    });
+            setTimeout(() => {
+                alert('DNS record not found yet. Please wait a few minutes and try again.');
+                verifyBtn.textContent = 'Check DNS Record';
+                verifyBtn.disabled = false;
+            }, 1500);
+        });
+    }
 
-    // Handle verification action
-    verifyBtn.addEventListener('click', () => {
-        verifyBtn.textContent = 'Verifying...';
-        verifyBtn.disabled = true;
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            const dialogDimensions = modal.getBoundingClientRect();
+            if (
+                e.clientX < dialogDimensions.left ||
+                e.clientX > dialogDimensions.right ||
+                e.clientY < dialogDimensions.top ||
+                e.clientY > dialogDimensions.bottom
+            ) {
+                modal.close();
+            }
+        });
+    }
 
-        // Simulating a backend API check
-        setTimeout(() => {
-            alert('DNS record not found yet. Please wait a few minutes and try again.');
-            verifyBtn.textContent = 'Check DNS Record';
-            verifyBtn.disabled = false;
-        }, 1500);
-    });
-
-    // Close modal if user clicks outside of the dialog box
-    modal.addEventListener('click', (e) => {
-        const dialogDimensions = modal.getBoundingClientRect();
-        if (
-            e.clientX < dialogDimensions.left ||
-            e.clientX > dialogDimensions.right ||
-            e.clientY < dialogDimensions.top ||
-            e.clientY > dialogDimensions.bottom
-        ) {
-            modal.close();
-        }
-    });
+    const publishForm = document.getElementById('publishForm');
+    if (publishForm) {
+        publishForm.addEventListener('submit', () => {
+            const progress = document.getElementById('publishProgress');
+            if (progress) progress.classList.remove('hidden');
+        });
+    }
 </script>
