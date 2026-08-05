@@ -25,7 +25,8 @@ if (isset($_POST['save_code'])) {
         try {
             if ($repo_action === 'new') {
                 $target_repo = $_POST['new_repo_name_text'] ?? '';
-                if (empty($target_repo)) throw new Exception("New repository name cannot be empty.");
+                if (empty($target_repo))
+                    throw new Exception("New repository name cannot be empty.");
 
                 $new_repo_name = $github_session->slugify($target_repo);
                 $env_data = [
@@ -103,6 +104,7 @@ $site_url = "https://" . __DOMAIN__;
 $preview_url = $site_url . "?preview=true&theme=" . $active_theme_name;
 $domain = __WEBSITE_DOMAIN__;
 $target = __DOMAIN__;
+$github_state = $github_connected ? 'connected' : 'disconnected';
 
 @include dirname(dirname(dirname(__FILE__))) . "/services/export.store.source.php";
 if (empty($current_code)) {
@@ -110,99 +112,84 @@ if (empty($current_code)) {
 }
 ?>
 <!-- Main Content -->
-<div class="flex flex-1 flex-col overflow-hidden">
+<div class="flex flex-1 flex-col overflow-hidden bg-[#1b1b1c] text-zinc-100">
     <?php @include_once "header.php"; ?>
 
-    <main class="flex-1 overflow-y-auto overflow-x-hidden bg-[#09090b] p-6">
+    <main class="flex-1 overflow-y-auto overflow-x-hidden p-6 lg:p-8 space-y-6">
+        <section class="relative overflow-hidden rounded-3xl border border-white/10 bg-[#242424] text-white">
+            <div class="relative grid gap-6 p-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.8fr)] lg:p-8">
+                <div>
+                    <h1 class="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Export your storefront as code.</h1>
+                    <p class="mt-3 max-w-2xl text-sm leading-6 text-white sm:text-base">
+                        Package the current store source for GitHub, embed it on another site, or download a ready-to-host HTML file.
+                    </p>
 
-        <!-- Page Header -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div>
-                <h2 class="text-2xl font-bold text-white">Export </h2>
-                <p class="text-zinc-400 text-sm mt-1">Download your webstore code</p>
-            </div>
-            <div class="flex items-center gap-2">
-            </div>
-        </div>
-
-        <!-- Editor + Preview -->
-        <div style="display:none;" class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden" style="height: calc(100vh - 340px); min-height: 400px;">
-            <!-- Editor Toolbar -->
-            <div class="flex items-center border-b border-zinc-800 bg-zinc-950/50">
-                <button onclick="toggleView('split')" id="btn-split" class="px-4 py-2.5 text-xs font-medium text-violet-400 border-b-2 border-violet-500 transition-colors">
-                    <i class="bi bi-layout-split mr-1"></i>Split
-                </button>
-                <button onclick="toggleView('code')" id="btn-code" class="px-4 py-2.5 text-xs font-medium text-zinc-500 hover:text-zinc-300 border-b-2 border-transparent transition-colors">
-                    <i class="bi bi-code-slash mr-1"></i>Code
-                </button>
-                <button onclick="toggleView('preview')" id="btn-preview" class="px-4 py-2.5 text-xs font-medium text-zinc-500 hover:text-zinc-300 border-b-2 border-transparent transition-colors">
-                    <i class="bi bi-eye mr-1"></i>Preview
-                </button>
-                <div class="ml-auto pr-4">
-                    <span id="save_status" class="text-zinc-600 text-xs">Ready</span>
-                </div>
-            </div>
-
-            <div class="flex h-full" id="editorContainer" style="height: calc(100% - 40px);">
-                <!-- Code Panel -->
-                <div style="display:none;" id="editor_panel" class="w-1/2 flex flex-col border-r border-zinc-800">
-                    <textarea id="editor"
-                        class="flex-1 bg-zinc-950 text-emerald-400 p-5 font-mono text-sm outline-none resize-none leading-relaxed"
-                        spellcheck="false"><?php echo htmlspecialchars($current_code); ?></textarea>
+                    <div class="mt-6 flex flex-wrap items-center gap-3">
+                        <button onclick="downloadCode()" class="inline-flex items-center gap-2 rounded-full bg-[#008060] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-[#006e52]">
+                            <i class="bi bi-download"></i>
+                            <span>Download HTML</span>
+                        </button>
+                        <button onclick="copyEmbedCode()" class="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50">
+                            <i class="bi bi-clipboard"></i>
+                            <span>Copy embed code</span>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Preview Panel -->
-                <div id="preview_panel" class="w-full flex flex-col bg-white">
-                    <iframe id="preview" class="w-full h-full border-none"></iframe>
+            </div>
+        </section>
+
+        <section style="display:block" class="grid gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(300px,0.8fr)]">
+            <div class="space-y-6">
+                <div class="rounded-3xl border border-white/10 bg-[#202123] shadow-[0_18px_45px_rgba(0,0,0,0.24)] overflow-hidden">
+                    <div class="flex items-center justify-between border-b border-white/10 bg-white/5 px-5 py-4">
+                        <div>
+                            <h2 class="text-sm font-semibold text-white">Source preview</h2>
+                            <p class="text-xs text-zinc-500">Review the HTML that will be exported before you download it.</p>
+                        </div>
+                        <span id="save_status" class="text-xs text-zinc-400">Ready</span>
+                    </div>
+                    <div class="flex h-[66vh] min-h-[480px]" id="editorContainer" style="height: calc(100% - 40px);">
+                        <div style="display:none;" id="editor_panel" class="w-1/2 flex flex-col border-r border-white/10 bg-[#1b1b1c]">
+                            <textarea id="editor" class="flex-1 bg-[#1b1b1c] text-emerald-300 p-5 font-mono text-sm outline-none resize-none leading-relaxed" spellcheck="false"><?php echo htmlspecialchars($current_code); ?></textarea>
+                        </div>
+                        <div id="preview_panel" class="w-full flex flex-col bg-white">
+                            <iframe id="preview" class="w-full h-full border-none"></iframe>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-3xl border border-white/10 bg-[#202123] p-5 shadow-[0_18px_45px_rgba(0,0,0,0.24)] space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-sm font-semibold text-white">Embed link code</h3>
+                            <p class="text-xs text-zinc-500">Paste this to link back to the hosted store.</p>
+                        </div>
+                        <button onclick="copyEmbedCode()" class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
+                            <i class="bi bi-clipboard"></i>
+                            Copy
+                        </button>
+                    </div>
+                    <pre class="max-h-32 overflow-y-auto rounded-2xl border border-white/10 bg-[#1b1b1c] p-4 text-xs text-zinc-200" id="embedCodeBlock"><?php @include_once dirname(dirname(__DIR__)) . "/services/export.store.link.php";
+                                                                                                                                                        echo (embedd_link_application(__DOMAIN__, "https://" . get_domain())); ?></pre>
+                </div>
+
+                <div class="rounded-3xl border border-white/10 bg-[#202123] p-5 shadow-[0_18px_45px_rgba(0,0,0,0.24)] space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-sm font-semibold text-white">Embed code</h3>
+                            <p class="text-xs text-zinc-500">Use this when embedding the full storefront experience.</p>
+                        </div>
+                        <button onclick="copyEmbedCode()" class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
+                            <i class="bi bi-clipboard"></i>
+                            Copy
+                        </button>
+                    </div>
+                    <pre class="max-h-[40vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#1b1b1c] p-4 text-xs text-zinc-200" id="embedCodeBlock">&lt;!-- Embedded Webstore --&gt; <?php @include_once dirname(dirname(__DIR__)) . "/services/export.store.frame.php";
+                                                                                                                                                                                                echo (embedd_application(__DOMAIN__, "https://" . get_domain())); ?></pre>
                 </div>
             </div>
-        </div>
-
-        <!-- Embed Code -->
-        <div style="max-height: 8rem; height:100%; " class="my-4 bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
-            <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-gray-300">Embed Link Code</h3>
-                <button onclick="copyEmbedCode()" class="text-xs bg-accent hover:bg-accent-hover bg-[#333] hover:bg-zinc-700 text-black font-semibold px-3 py-1.5 rounded-lg transition-all duration-150 flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <rect x="9" y="9" width="13" height="13" rx="2" stroke-width="2"></rect>
-                        <path stroke-linecap="round" stroke-width="2" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
-                    </svg> Copy Code
-                </button>
-            </div>
-            <pre style="height: calc(100% - 2rem);" class="code-block p-4 text-xs overflow-y-auto" id="embedCodeBlock"><?php @include_once dirname(dirname(__DIR__))."/services/export.store.link.php"; echo (embedd_link_application(__DOMAIN__,"https://".get_domain())); ?></pre>
-        </div>
-
-        <!-- Embed Code -->
-        <div style="max-height: 40vh; height:100%; " class="bg-zinc-900 border border-zinc-800 rounded-xl p-5 space-y-4">
-            <div class="flex items-center justify-between">
-                <h3 class="text-sm font-semibold text-gray-300">Embed Code</h3>
-                <button onclick="copyEmbedCode()" class="text-xs bg-accent hover:bg-accent-hover bg-[#333] hover:bg-zinc-700 text-black font-semibold px-3 py-1.5 rounded-lg transition-all duration-150 flex items-center gap-1.5">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <rect x="9" y="9" width="13" height="13" rx="2" stroke-width="2"></rect>
-                        <path stroke-linecap="round" stroke-width="2" d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
-                    </svg> Copy Code
-                </button>
-            </div>
-            <pre style="height: calc(100% - 2rem);" class="code-block p-4 text-xs overflow-y-auto" id="embedCodeBlock">&lt;!-- Embedded Webstore --&gt; <?php @include_once dirname(dirname(__DIR__))."/services/export.store.frame.php"; echo (embedd_application(__DOMAIN__,"https://".get_domain())); ?></pre>
-        </div>
-
-
-        <!-- DOWNLOAD STORE WEBSITE (THE ACTUAL STORE CODE) -->
-        <div class="bg-zinc-900 border border-zinc-800 my-4 rounded-xl p-5 space-y-4 relative overflow-hidden">
-            <div class="absolute top-0 right-0 bg-accent text-black text-xs font-bold px-3 py-1 rounded-bl-lg">MAIN FEATURE</div>
-            <h3 class="text-sm font-semibold text-gray-300 flex items-center gap-2">
-                <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 12v8m0 0l-3-3m3 3l3-3M4 4h16v4H4z"></path>
-                </svg>
-                Download Store Website (HTML)
-            </h3>
-            <p class="text-xs text-gray-400">Get a complete, standalone HTML file of your store with all active products. Dark theme, ready to host or share.</p>
-        
-
-            <button onclick="downloadCode()" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-                <i class="bi bi-download"></i> Download
-            </button>
-        </div>
+        </section>
 
 
         <!-- Export Product Data
@@ -244,8 +231,8 @@ if (empty($current_code)) {
         doc.open();
         doc.write(content);
         doc.close();
-        status.innerText = "Unsaved changes";
-        status.className = "text-amber-400 text-xs";
+        status.innerText = "Export Ready";
+        status.className = "text-green-400 text-xs";
     }
 
     function syncCode() {
