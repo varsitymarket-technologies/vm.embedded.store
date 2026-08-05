@@ -69,7 +69,7 @@ session_destroy();
 
         <!-- Actions -->
         <div class="flex flex-col gap-3">
-            <a href="/"
+            <a href="/auth/"
                 class="w-full flex justify-center items-center py-3 px-4 rounded-md text-white bg-brand hover:bg-brandHover focus:ring-2 focus:ring-offset-2 focus:ring-brand font-semibold transition-colors duration-200">
                 Log back in
             </a>

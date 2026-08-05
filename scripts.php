@@ -547,7 +547,12 @@ function deploy_engine_website(string $domain, string $site_contents = "", strin
     @include_once dirname(__FILE__) . "/engine/gateway.php";
     @include_once dirname(__FILE__) . "/engine/encryption.php";
 
-    $e = vmpages_deploy($domain,dirname(__FILE__)."/sites/".$domain); 
+    $site_root = dirname(__FILE__) . "/sites/" . $domain;
+    if ($site_contents !== "") {
+        @file_put_contents($site_root . "/index.html", $site_contents);
+    }
+
+    $e = vmpages_deploy($domain, $site_root); 
     return $e; 
 
 
