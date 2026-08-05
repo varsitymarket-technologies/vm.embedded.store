@@ -18,6 +18,7 @@ $data = [
     "logistics" => "page.logistics.php",
     "orders" => "page.orders.php",
     "builder" => "page.builder.php",
+    "page" => "page.page.php",
     "settings" => "page.settings.php",
     "agent" => "page.agent.php",
     "account" => "page.account.php",
@@ -28,6 +29,7 @@ $data = [
     "payments" => "page.payments.php",
     "export" => "page.export.php",
     "forms" => "page.forms.php",
+    "ai-builder" => "page.ai-builder.php",
     "session" => "page.session-expired.php",
 ];
 

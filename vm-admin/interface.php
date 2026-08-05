@@ -66,7 +66,7 @@ ob_start();
         /* Modern browsers — Chrome 121+, Edge 121+, Firefox, Safari 18.2+ */
         * {
             scrollbar-width: 8px;
-            scrollbar-color: #64606b #09090b00;
+            scrollbar-color: #64606b #7c3aed0000;
         }
 
         /* Legacy WebKit — older Chrome/Edge/Safari, radius, borders & shadows */
@@ -76,21 +76,21 @@ ob_start();
         }
 
         *::-webkit-scrollbar-track {
-            background-color: #1e1b4b;
+            background-color: #2a2929ff;
             border-radius: 4px;
             padding: 1px;
         }
 
         *::-webkit-scrollbar-track:hover {
-            background-color: #312e81;
+            background-color: #1b1919ff;
         }
 
         *::-webkit-scrollbar-track:active {
-            background-color: #3730a3;
+            background-color: #000000ff;
         }
 
         *::-webkit-scrollbar-thumb {
-            background-color: #7c3aed;
+            background-color: #7c3aed00;
             border-radius: 4px;
             min-height: 30px;
             box-shadow: 0 0 6px rgba(129, 140, 248, 0.60);
@@ -112,8 +112,8 @@ ob_start();
     </style>
 </head>
 
-<body class="bg-gray-900 text-white font-sans antialiased">
-    <div class="flex h-screen overflow-hidden">
+<body class="bg-[#1b1b1c] text-white font-sans antialiased">
+    <div class="admin-shell flex h-screen overflow-hidden">
         <!-- Sidebar -->
         <?php
         $admin_base = '/vm-admin/' . (__DOMAIN__ ?? '') . '/';
@@ -121,6 +121,7 @@ ob_start();
         $store_name = website_data('name') ?: 'My Store';
         $store_domain = __DOMAIN__ ?? '';
         $store_url = __WEBSITE_FRAME__ ?? '';
+        $ai_enabled = filter_var($_SERVER['ai_enabled'] ?? false, FILTER_VALIDATE_BOOL);
 
         // Helper for nav link classes
         function nav_cls($page, $current)
@@ -143,7 +144,7 @@ ob_start();
         }
         ?>
         <aside id="sidebar" style="overflow:auto;"
-            class="absolute z-20 h-full w-64 -translate-x-full transform bg-gray-800 transition-transform duration-300 ease-in-out md:relative md:translate-x-0 border-r border-white/10">
+            class="admin-sidebar absolute z-20 h-full w-64 -translate-x-full transform bg-gray-800 transition-transform duration-300 ease-in-out md:relative md:translate-x-0 border-r border-white/10">
             <div class="flex flex-col h-full">
                 <nav class="mt-4 px-2 flex-1">
                     <div style="display: flex; align-items: center; justify-content: flex-end;">
@@ -194,6 +195,13 @@ ob_start();
                             </a>
                         <?php endif;
                     endif; ?>
+                    <?php if ($ai_enabled): ?>
+                        <a href="<?php echo $admin_base; ?>ai-builder"
+                            class="<?php echo nav_cls('ai-builder', $current_page); ?>">
+                            <i class="bi bi-stars mr-3"></i>
+                            <span>AI Website Builder</span>
+                        </a>
+                    <?php endif; ?>
 
                     <a href="<?php echo $admin_base; ?>analytics"
                         class="<?php echo nav_cls('analytics', $current_page); ?>">
@@ -204,7 +212,7 @@ ob_start();
                     <!-- Catalog -->
                     <div class="sidebar-section" data-section="catalog">
                         <button onclick="toggleSection('catalog')"
-                            class="w-full flex items-center justify-between mt-4 mb-1 px-3 cursor-pointer group">
+                            class="admin-nav-link w-full flex items-center justify-between mt-4 mb-1 px-3 cursor-pointer group">
                             <span style="font-size: 9px;"
                                 class="uppercase tracking-widest text-gray-500 group-hover:text-gray-300 transition-colors">Catalog</span>
                             <i class="bi bi-chevron-down text-gray-600 text-xs transition-transform"
@@ -237,7 +245,7 @@ ob_start();
                     <!-- Orders & Fulfillment -->
                     <div class="sidebar-section" data-section="orders">
                         <button onclick="toggleSection('orders')"
-                            class="w-full flex items-center justify-between mt-4 mb-1 px-3 cursor-pointer group">
+                            class="admin-nav-link w-full flex items-center justify-between mt-4 mb-1 px-3 cursor-pointer group">
                             <span style="font-size: 9px;"
                                 class="uppercase tracking-widest text-gray-500 group-hover:text-gray-300 transition-colors">Orders
                                 & Fulfillment</span>
@@ -277,7 +285,7 @@ ob_start();
                     <!-- Website -->
                     <div class="sidebar-section" data-section="website">
                         <button onclick="toggleSection('website')"
-                            class="w-full flex items-center justify-between mt-4 mb-1 px-3 cursor-pointer group">
+                            class="admin-nav-link w-full flex items-center justify-between mt-4 mb-1 px-3 cursor-pointer group">
                             <span style="font-size: 9px;"
                                 class="uppercase tracking-widest text-gray-500 group-hover:text-gray-300 transition-colors">Website</span>
                             <i class="bi bi-chevron-down text-gray-600 text-xs transition-transform"
@@ -289,10 +297,10 @@ ob_start();
                                 <i class="bi bi-palette-fill mr-3"></i>
                                 <span>Themes</span>
                             </a>
-                            <a href="<?php echo $admin_base; ?>builder"
-                                class="<?php echo nav_cls('builder', $current_page); ?>">
-                                <i class="bi bi-layout-wtf mr-3"></i>
-                                <span>Page Builder</span>
+                            <a href="<?php echo $admin_base; ?>page"
+                                class="<?php echo nav_cls('page', $current_page); ?>">
+                                <i class="bi bi-file-earmark-plus mr-3"></i>
+                                <span>Website Pages</span>
                             </a>
                             <a href="<?php echo $admin_base; ?>publish"
                                 class="<?php echo nav_cls('deploy', $current_page); ?>">
@@ -310,7 +318,7 @@ ob_start();
                     <!-- System -->
                     <div class="sidebar-section" data-section="system">
                         <button onclick="toggleSection('system')"
-                            class="w-full flex items-center justify-between mt-4 mb-1 px-3 cursor-pointer group">
+                            class="admin-nav-link w-full flex items-center justify-between mt-4 mb-1 px-3 cursor-pointer group">
                             <span style="font-size: 9px;"
                                 class="uppercase tracking-widest text-gray-500 group-hover:text-gray-300 transition-colors">System</span>
                             <i class="bi bi-chevron-down text-gray-600 text-xs transition-transform"
@@ -576,9 +584,9 @@ ob_start();
                     <i class="bi bi-palette-fill mr-3"></i>
                     <span>Themes</span>
                 </a>
-                <a href="<?php echo $admin_base; ?>builder" class="sesedesedwsedwdd">
-                    <i class="bi bi-layout-wtf mr-3"></i>
-                    <span>Page Builder</span>
+                <a href="<?php echo $admin_base; ?>page" class="sesedesedwsedwdd">
+                    <i class="bi bi-file-earmark-code mr-3"></i>
+                    <span>Website Pages</span>
                 </a>
                 <a href="<?php echo $admin_base; ?>publish" class="sesedesedwsedwdd">
                     <i class="bi bi-rocket-takeoff-fill mr-3"></i>

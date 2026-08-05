@@ -9,6 +9,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <?php @include_once (dirname(__FILE__)) . '/vm-admin/signature'; ?>
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,7 +23,7 @@
     <link rel="manifest" href="/manifest.json">
 
     <!-- Theme Color -->
-    <meta name="theme-color" content="#1a1a1a">
+    <meta name="theme-color" content="#7c3aed00">
 
     <!-- iOS PWA Support -->
     <meta name="apple-mobile-web-app-capable" content="yes">
