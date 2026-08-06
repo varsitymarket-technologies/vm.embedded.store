@@ -188,6 +188,53 @@ if (!function_exists('vm_settings_move_tree')) {
     }
 }
 
+if (!function_exists('vm_settings_reboot_site_tree')) {
+    function vm_settings_reboot_site_tree(string $source, string $destination): bool
+    {
+        if (!is_dir($source)) {
+            return false;
+        }
+
+        if (!is_dir($destination) && !@mkdir($destination, 0777, true)) {
+            return false;
+        }
+
+        $entries = scandir($source);
+        if ($entries === false) {
+            return false;
+        }
+
+        $preserve = ['storage.data', 'theme', 'builder.cache.html', 'pages'];
+
+        foreach ($entries as $entry) {
+            if ($entry === '.' || $entry === '..' || in_array($entry, $preserve, true)) {
+                continue;
+            }
+
+            $source_path = $source . '/' . $entry;
+            $destination_path = $destination . '/' . $entry;
+
+            if (is_dir($source_path)) {
+                if (file_exists($destination_path)) {
+                    if (!vm_settings_recursive_delete($destination_path)) {
+                        return false;
+                    }
+                }
+                if (!vm_settings_recursive_copy($source_path, $destination_path)) {
+                    return false;
+                }
+                continue;
+            }
+
+            if (!@copy($source_path, $destination_path)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+}
+
 if (!function_exists('vm_settings_store_dir')) {
     function vm_settings_store_dir(string $domain): string
     {
@@ -209,8 +256,10 @@ if (!function_exists('vm_settings_private_dir')) {
 }
 
 // --- Helper: load a setting from the site DB ---
-function get_setting($db, $key, $default = '') {
-    if ($db === null) return $default;
+function get_setting($db, $key, $default = '')
+{
+    if ($db === null)
+        return $default;
     try {
         $result = $db->query("SELECT value FROM settings WHERE `key` = ? LIMIT 1", [$key]);
         return $result[0]['value'] ?? $default;
@@ -220,8 +269,10 @@ function get_setting($db, $key, $default = '') {
 }
 
 // --- Helper: get private DB via raw PDO (avoids uncatchable fatal from database_manager) ---
-function get_private_pdo($domain) {
-    if (empty($domain)) return null;
+function get_private_pdo($domain)
+{
+    if (empty($domain))
+        return null;
     $store_hash = hash('sha256', $domain);
     $base_dir = dirname(dirname(dirname(__FILE__)));
     $private_dir = dirname($base_dir) . "/data/" . $store_hash;
@@ -269,9 +320,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     if ($_POST['action'] === 'save_branding') {
         $branding = $_POST['branding'] ?? [];
-        $current_domain = vm_settings_normalize_domain((string)$domain);
-        $requested_domain = vm_settings_normalize_domain((string)($branding['domain'] ?? $current_domain));
-        $requested_name = trim((string)($branding['wb_name'] ?? ''));
+        $current_domain = vm_settings_normalize_domain((string) $domain);
+        $requested_domain = vm_settings_normalize_domain((string) ($branding['domain'] ?? $current_domain));
+        $requested_name = trim((string) ($branding['wb_name'] ?? ''));
 
         if ($requested_domain === '') {
             $requested_domain = $current_domain;
@@ -470,6 +521,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         header("Location: ?tab=console&saved=1");
         exit;
     }
+
+    if ($_POST['action'] === 'reboot_site') {
+        $site_dir = vm_settings_store_dir($domain);
+        $skel_dir = dirname(dirname(dirname(__FILE__))) . '/skel';
+
+        if (!vm_settings_reboot_site_tree($skel_dir, $site_dir)) {
+            header("Location: ?tab=reboot&error=reboot_failed");
+            exit;
+        }
+
+        header("Location: ?tab=reboot&saved=1");
+        exit;
+    }
 }
 
 // --- Load Current Configs (shared across tabs) ---
@@ -485,7 +549,7 @@ $cur_decimals = get_setting($db_site, 'decimal_places', '2');
 $cur_thousands = get_setting($db_site, 'thousand_separator', ',');
 $cur_decimal_sep = get_setting($db_site, 'decimal_separator', '.');
 $cur_auto_convert = get_setting($db_site, 'auto_conversion', '1');
-$cur_accepted = json_decode(get_setting($db_site, 'accepted_currencies', '["ZAR","USD"]'), true) ?: ['ZAR','USD'];
+$cur_accepted = json_decode(get_setting($db_site, 'accepted_currencies', '["ZAR","USD"]'), true) ?: ['ZAR', 'USD'];
 
 // Payment settings
 $payment_path = dirname(dirname(dirname(__FILE__))) . "/sites/$domain/payment.config.enc";
@@ -536,17 +600,18 @@ $active_tab = $_GET['tab'] ?? 'general';
 $settings_dir = dirname(__FILE__) . '/settings/';
 
 $tab_files = [
-    'general'    => 'settings.general.php',
-    'branding'   => 'settings.branding.php',
-    'domain'     => 'settings.domain.php',
-    'email'      => 'settings.email.php',
+    'general' => 'settings.general.php',
+    'branding' => 'settings.branding.php',
+    'domain' => 'settings.domain.php',
+    'email' => 'settings.email.php',
     'deployment' => 'settings.deployment.php',
-    'currency'   => 'settings.currency.php',
-    'payment'    => 'settings.payment.php',
-    'dev'        => 'settings.dev.php',
-    'console'    => 'settings.console.php',
-    'app'        => 'settings.app.php',
-    'agent'      => 'settings.agent.php',
+    'currency' => 'settings.currency.php',
+    'payment' => 'settings.payment.php',
+    'dev' => 'settings.dev.php',
+    'console' => 'settings.console.php',
+    'app' => 'settings.app.php',
+    'agent' => 'settings.agent.php',
+    'reboot' => 'settings.reboot.php',
 ];
 
 $settings_error = $_GET['error'] ?? '';
@@ -556,27 +621,33 @@ $settings_error = $_GET['error'] ?? '';
 <div class="flex flex-1 flex-col overflow-hidden">
     <?php @include_once "header.php"; ?>
 
-    <main class="flex-1 overflow-y-auto overflow-x-hidden bg-[#09090b] p-6">
+    <main class="flex-1 overflow-y-auto overflow-x-hidden bg-[#1b1b1c] p-6">
 
         <?php if (isset($_GET['saved'])): ?>
-        <div id="saveToast" class="mb-4 flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-2.5 rounded-lg text-sm font-medium">
-            <i class="bi bi-check-circle"></i> Changes saved successfully
-        </div>
-        <script>setTimeout(() => document.getElementById('saveToast').remove(), 4000);</script>
+            <div id="saveToast"
+                class="mb-4 flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 px-4 py-2.5 rounded-lg text-sm font-medium">
+                <i class="bi bi-check-circle"></i> Changes saved successfully
+            </div>
+            <script>setTimeout(() => document.getElementById('saveToast').remove(), 4000);</script>
         <?php endif; ?>
 
         <?php if ($settings_error === 'domain_taken'): ?>
-        <div class="mb-4 flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-200 px-4 py-2.5 rounded-lg text-sm font-medium">
-            <i class="bi bi-exclamation-triangle"></i> That domain is already assigned to another store.
-        </div>
+            <div
+                class="mb-4 flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-200 px-4 py-2.5 rounded-lg text-sm font-medium">
+                <i class="bi bi-exclamation-triangle"></i> That domain is already assigned to another store.
+            </div>
         <?php elseif ($settings_error === 'domain_move_failed'): ?>
-        <div class="mb-4 flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-200 px-4 py-2.5 rounded-lg text-sm font-medium">
-            <i class="bi bi-exclamation-triangle"></i> The domain record was updated, but the store files could not be moved cleanly.
-        </div>
+            <div
+                class="mb-4 flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 text-amber-200 px-4 py-2.5 rounded-lg text-sm font-medium">
+                <i class="bi bi-exclamation-triangle"></i> The domain record was updated, but the store files could not be
+                moved cleanly.
+            </div>
         <?php elseif ($settings_error === 'invalid_domain'): ?>
-        <div class="mb-4 flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-200 px-4 py-2.5 rounded-lg text-sm font-medium">
-            <i class="bi bi-exclamation-triangle"></i> Please enter a valid domain name like <span class="font-mono">store.example.com</span>.
-        </div>
+            <div
+                class="mb-4 flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-200 px-4 py-2.5 rounded-lg text-sm font-medium">
+                <i class="bi bi-exclamation-triangle"></i> Please enter a valid domain name like <span
+                    class="font-mono">store.example.com</span>.
+            </div>
         <?php endif; ?>
 
         <?php if ($active_tab == 'general'): ?>
