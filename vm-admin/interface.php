@@ -122,6 +122,20 @@ ob_start();
         $store_domain = __DOMAIN__ ?? '';
         $store_url = __WEBSITE_FRAME__ ?? '';
         $ai_enabled = filter_var($_SERVER['ai_enabled'] ?? false, FILTER_VALIDATE_BOOL);
+        $account_name = __USERNAME__ ?? 'User';
+        $account_image = '';
+        $account_initial = strtoupper(substr($account_name ?: 'U', 0, 1));
+
+        try {
+            $account_row = __DB_MODULE__->query("SELECT image, name FROM sys_account WHERE auth = ? LIMIT 1", [__ACCOUNT_INDEX__])[0] ?? [];
+            $account_image = trim((string) ($account_row['image'] ?? ''));
+            if (!empty($account_row['name'])) {
+                $account_name = $account_row['name'];
+                $account_initial = strtoupper(substr($account_name ?: 'U', 0, 1));
+            }
+        } catch (\Throwable $e) {
+            $account_image = '';
+        }
 
         // Helper for nav link classes
         function nav_cls($page, $current)
@@ -350,13 +364,16 @@ ob_start();
                     <div class="flex items-center gap-3">
                         <a href="<?php echo $admin_base; ?>account"
                             class="flex min-w-0 flex-1 items-center gap-3 rounded-lg p-1 -m-1 transition-colors hover:bg-white/5">
-                            <div class="h-8 w-8 rounded-full bg-purple-600 flex items-center justify-center shrink-0">
-                                <span
-                                    class="text-white text-xs font-bold"><?php echo strtoupper(substr(__USERNAME__ ?? 'U', 0, 1)); ?></span>
+                            <div class="h-8 w-8 overflow-hidden rounded-full flex items-center justify-center shrink-0 ring-1 ring-white/10">
+                                <?php if (!empty($account_image)): ?>
+                                    <img src="<?php echo htmlspecialchars($account_image, ENT_QUOTES, 'UTF-8'); ?>" alt="Account avatar" class="h-full w-full object-cover">
+                                <?php else: ?>
+                                    <span class="text-white text-xs font-bold"><?php echo htmlspecialchars($account_initial, ENT_QUOTES, 'UTF-8'); ?></span>
+                                <?php endif; ?>
                             </div>
                             <div class="min-w-0 flex-1">
                                 <p class="text-white text-sm font-medium truncate">
-                                    <?php echo htmlspecialchars(__USERNAME__ ?? 'User', ENT_QUOTES, 'UTF-8'); ?>
+                                    <?php echo htmlspecialchars($account_name, ENT_QUOTES, 'UTF-8'); ?>
                                 </p>
                             </div>
                         </a>
@@ -617,12 +634,16 @@ ob_start();
                 <br>
                 <div style="padding: 1rem 2rem 8rem; display: flex; align-items: center; gap: 0.75rem;">
                     <div onclick="window.location.href='<?php echo $admin_base; ?>account'"
-                        style="width:28px;height:28px;border-radius:50%;background:#7a1aab;display:flex;align-items:center;justify-content:center;">
-                        <span
-                            style="font-size:0.65rem;font-weight:700;color:#fff;"><?php echo strtoupper(substr(__USERNAME__ ?? 'U', 0, 1)); ?></span>
+                        style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,0.1) inset;">
+                        <?php if (!empty($account_image)): ?>
+                            <img src="<?php echo htmlspecialchars($account_image, ENT_QUOTES, 'UTF-8'); ?>" alt="Account avatar" style="width:100%;height:100%;object-fit:cover;">
+                        <?php else: ?>
+                            <span
+                                style="font-size:0.65rem;font-weight:700;color:#fff;"><?php echo htmlspecialchars($account_initial, ENT_QUOTES, 'UTF-8'); ?></span>
+                        <?php endif; ?>
                     </div>
                     <span
-                        style="font-size:0.75rem;color:#999;"><?php echo htmlspecialchars(__USERNAME__ ?? 'User', ENT_QUOTES, 'UTF-8'); ?></span>
+                        style="font-size:0.75rem;color:#999;"><?php echo htmlspecialchars($account_name, ENT_QUOTES, 'UTF-8'); ?></span>
                     <a href="/logout.php" style="margin-left:auto;font-size:0.75rem;color:#666;">
                         <i class="bi bi-box-arrow-right"></i>
                     </a>
