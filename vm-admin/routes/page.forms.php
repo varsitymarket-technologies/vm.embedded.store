@@ -31,12 +31,12 @@ $db->query("CREATE TABLE IF NOT EXISTS subscribers (
 // Handle Dashboard & Form Builder Actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
-    
+
     if ($action === 'create_form') {
         $name = $_POST['form_name'] ?? 'Untitled Form';
         $form_key = strtolower(preg_replace('/[^a-zA-Z0-9]/', '_', $name)) . '_' . time();
         $fields = $_POST['fields_json'] ?? '[]';
-        
+
         $db->query("INSERT INTO forms (form_key, name, fields) VALUES (?, ?, ?)", [$form_key, $name, $fields]);
         header("Location: " . $_SERVER['PHP_SELF'] . "?tab=builder&success=1");
         exit;
@@ -66,7 +66,8 @@ $subs_data = $db->query("SELECT * FROM subscribers ORDER BY id DESC") ?: [];
 $submissions = [];
 $unread = 0;
 foreach ($submissions_data as $sub) {
-    if ($sub['unread']) $unread++;
+    if ($sub['unread'])
+        $unread++;
     $submissions[] = $sub;
 }
 
@@ -79,148 +80,189 @@ $total_submissions = count($submissions);
 $subs_count = count($subscribers);
 $replied = $total_submissions - $unread;
 $active_tab = $_GET['tab'] ?? 'submissions';
+$latest_form = $all_forms[0] ?? null;
 ?>
 <!-- Main Content Wrapper -->
-<div class="flex flex-1 flex-col overflow-hidden bg-[#09090b] min-h-screen text-zinc-100 font-sans">
+<div class="flex flex-1 flex-col overflow-hidden bg-[#1b1b1c]  min-h-screen text-zinc-100 font-sans">
     <?php @include_once "header.php"; ?>
 
-    <main class="flex-1 overflow-y-auto p-6">
-        
-        <!-- Top Title Panel -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-            <div>
-                <h2 class="text-3xl font-bold text-white tracking-tight">Form Engine</h2>
-                <p class="text-zinc-400 text-sm mt-1">Design customized forms, grab backend snippets, and view real-time responses.</p>
+    <main class="flex-1 overflow-y-auto p-6 lg:p-8 space-y-6">
+        <section class="relative overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(135deg,#f5f7fa_0%,#edf2f7_48%,#ffffff_100%)] text-slate-900 shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+            <div class="absolute inset-0 opacity-70">
+                <div class="absolute -right-20 top-[-5rem] h-64 w-64 rounded-full bg-emerald-200/70 blur-3xl"></div>
+                <div class="absolute left-1/3 top-10 h-40 w-40 rounded-full bg-sky-200/70 blur-3xl"></div>
             </div>
-        </div>
+            <div class="relative grid gap-6 p-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.8fr)] lg:p-8">
+                <div>
+                    <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-600">
+                        <span class="h-2 w-2 rounded-full bg-[#008060]"></span>
+                        Form engine
+                    </div>
+                    <h1 class="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Manage store forms, responses, and newsletter subscribers.</h1>
+                    <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+                        Build custom forms, inspect submissions, and copy integration snippets from a streamlined admin workspace.
+                    </p>
+                    <div class="mt-6 flex flex-wrap items-center gap-3">
+                        <button onclick="switchView('builder')" class="inline-flex items-center gap-2 rounded-full bg-[#008060] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-[#006e52]">
+                            <i class="bi bi-hammer"></i>
+                            <span>Open builder</span>
+                        </button>
+                        <button onclick="switchView('submissions')" class="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50">
+                            <i class="bi bi-chat-left-text"></i>
+                            <span>View responses</span>
+                        </button>
+                    </div>
+                </div>
 
-        <!-- Metrics Overview -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-zinc-400 text-xs font-semibold uppercase tracking-wider">Forms Tracked</span>
-                    <span class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center text-violet-400">
-                        <i class="bi bi-file-earmark-plus"></i>
-                    </span>
+                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                    <div class="rounded-2xl border border-slate-200 bg-white/85 p-4 backdrop-blur">
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Forms</p>
+                        <p class="mt-2 text-3xl font-semibold text-slate-950"><?= count($all_forms); ?></p>
+                        <p class="mt-1 text-sm text-slate-500">Tracked form templates</p>
+                    </div>
+                    <div class="rounded-2xl border border-slate-200 bg-white/85 p-4 backdrop-blur">
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Unread</p>
+                        <p class="mt-2 text-3xl font-semibold text-slate-950"><?= $unread; ?></p>
+                        <p class="mt-1 text-sm text-slate-500">New responses waiting</p>
+                    </div>
                 </div>
-                <p class="text-2xl font-bold text-white"><?= count($all_forms); ?></p>
             </div>
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-zinc-400 text-xs font-semibold uppercase tracking-wider">Submissions</span>
-                    <span class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-                        <i class="bi bi-inboxes"></i>
-                    </span>
-                </div>
-                <p class="text-2xl font-bold text-white"><?= $total_submissions; ?></p>
-            </div>
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-zinc-400 text-xs font-semibold uppercase tracking-wider">Unread</span>
-                    <span class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-400">
-                        <i class="bi bi-envelope-exclamation"></i>
-                    </span>
-                </div>
-                <p class="text-2xl font-bold text-white"><?= $unread; ?></p>
-            </div>
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-zinc-400 text-xs font-semibold uppercase tracking-wider">Newsletter Subs</span>
-                    <span class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center text-sky-400">
-                        <i class="bi bi-people"></i>
-                    </span>
-                </div>
-                <p class="text-2xl font-bold text-white"><?= $subs_count; ?></p>
-            </div>
-        </div>
+        </section>
 
-        <!-- Section Navigation Tabs -->
-        <div class="flex border-b border-zinc-800 mb-6 gap-2">
-            <button onclick="switchView('submissions')" id="btn-tab-submissions" class="px-5 py-3 text-sm font-medium transition-colors border-b-2 <?= $active_tab === 'submissions' ? 'border-violet-500 text-violet-400' : 'border-transparent text-zinc-400 hover:text-zinc-200' ?>">
-                <i class="bi bi-chat-left-text mr-2"></i>Form Responses
+        <section class="grid gap-4 grid-cols-2 lg:grid-cols-4">
+            <div class="rounded-2xl border border-white/10 bg-[#202123] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Forms tracked</span>
+                    <i class="bi bi-file-earmark-plus text-violet-300"></i>
+                </div>
+                <p class="mt-3 text-2xl font-semibold text-white"><?= count($all_forms); ?></p>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-[#202123] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Submissions</span>
+                    <i class="bi bi-inboxes text-emerald-300"></i>
+                </div>
+                <p class="mt-3 text-2xl font-semibold text-white"><?= $total_submissions; ?></p>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-[#202123] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Unread</span>
+                    <i class="bi bi-envelope-exclamation text-amber-300"></i>
+                </div>
+                <p class="mt-3 text-2xl font-semibold text-white"><?= $unread; ?></p>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-[#202123] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Subscribers</span>
+                    <i class="bi bi-people text-sky-300"></i>
+                </div>
+                <p class="mt-3 text-2xl font-semibold text-white"><?= $subs_count; ?></p>
+            </div>
+        </section>
+
+        <section class="flex flex-wrap gap-2">
+            <button onclick="switchView('submissions')" id="btn-tab-submissions"
+                class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors <?= $active_tab === 'submissions' ? 'border-[#008060] bg-[#008060] text-white' : 'border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10' ?>">
+                <i class="bi bi-chat-left-text"></i>
+                <span>Form responses</span>
             </button>
-            <button onclick="switchView('builder')" id="btn-tab-builder" class="px-5 py-3 text-sm font-medium transition-colors border-b-2 <?= $active_tab === 'builder' ? 'border-violet-500 text-violet-400' : 'border-transparent text-zinc-400 hover:text-zinc-200' ?>">
-                <i class="bi bi-hammer mr-2"></i>Visual Form Builder
+            <button onclick="switchView('builder')" id="btn-tab-builder"
+                class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors <?= $active_tab === 'builder' ? 'border-[#008060] bg-[#008060] text-white' : 'border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10' ?>">
+                <i class="bi bi-hammer"></i>
+                <span>Visual builder</span>
             </button>
-            <button onclick="switchView('newsletter')" id="btn-tab-newsletter" class="px-5 py-3 text-sm font-medium transition-colors border-b-2 border-transparent text-zinc-400 hover:text-zinc-200">
-                <i class="bi bi-envelope-check mr-2"></i>Newsletter Hub
+            <button onclick="switchView('newsletter')" id="btn-tab-newsletter"
+                class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors <?= $active_tab === 'newsletter' ? 'border-[#008060] bg-[#008060] text-white' : 'border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10' ?>">
+                <i class="bi bi-envelope-check"></i>
+                <span>Newsletter hub</span>
             </button>
-        </div>
+        </section>
 
         <!-- VIEW 1: Submissions Manager -->
         <div id="section-submissions" class="<?= $active_tab !== 'submissions' ? 'hidden' : '' ?>">
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+            <div class="rounded-3xl border border-white/10 bg-[#202123] overflow-hidden shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
                 <?php if (empty($submissions)): ?>
                     <div class="flex flex-col items-center justify-center py-20 text-zinc-500">
                         <i class="bi bi-mailbox2 text-5xl mb-4 text-zinc-700"></i>
-                        <p class="text-sm font-medium text-zinc-400">No submissions found</p>
-                        <p class="text-xs text-zinc-600 mt-1">Deploy form markup outputted from your builder to begin gathering leads.</p>
+                        <p class="text-sm font-medium text-zinc-300">No submissions found</p>
+                        <p class="text-xs text-zinc-500 mt-1">Deploy form markup outputted from your builder to begin
+                            gathering leads.</p>
                     </div>
                 <?php else: ?>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm border-collapse">
                             <thead>
-                                <tr class="border-b border-zinc-800 text-xs text-zinc-500 uppercase tracking-wider bg-zinc-900/50">
+                                <tr class="border-b border-white/10 text-xs text-zinc-400 uppercase tracking-[0.18em] bg-white/5">
                                     <th class="px-6 py-4 font-medium">Form Name / Key</th>
                                     <th class="px-6 py-4 font-medium">Parsed Submission Snapshot</th>
                                     <th class="px-6 py-4 font-medium">Captured Date</th>
                                     <th class="px-6 py-4 font-medium text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-zinc-800/40">
+                            <tbody class="divide-y divide-white/10">
                                 <?php foreach ($submissions as $sub):
                                     $data = json_decode($sub['data'] ?? '{}', true);
                                     // Locate the parent form settings
                                     $form_meta = array_values(array_filter($all_forms, fn($f) => $f['form_key'] === $sub['form_key']))[0] ?? null;
                                     $form_title = $form_meta ? $form_meta['name'] : 'Unknown Form';
-                                    
+
                                     // Extract simple previews dynamically (e.g. email, name keys if present, otherwise first 2 elements)
                                     $preview = [];
                                     foreach (array_slice($data, 0, 3) as $k => $v) {
-                                        $preview[] = "<strong>".htmlspecialchars($k)."</strong>: " . htmlspecialchars(substr($v, 0, 45));
+                                        $preview[] = "<strong>" . htmlspecialchars($k) . "</strong>: " . htmlspecialchars(substr($v, 0, 45));
                                     }
                                     $preview_str = implode(' | ', $preview);
-                                ?>
-                                <tr class="hover:bg-zinc-800/30 transition-colors group <?= $sub['unread'] ? 'bg-violet-500/[0.02]' : ''; ?>">
-                                    <td class="px-6 py-4">
-                                        <p class="text-white text-sm font-semibold flex items-center gap-1.5">
-                                            <?= htmlspecialchars($form_title); ?>
-                                            <?php if ($sub['unread']): ?>
-                                                <span class="inline-block w-2 h-2 bg-violet-500 rounded-full animate-pulse"></span>
-                                            <?php endif; ?>
-                                        </p>
-                                        <span class="text-zinc-500 text-xs font-mono select-all"><?= htmlspecialchars($sub['form_key']); ?></span>
-                                    </td>
-                                    <td class="px-6 py-4 max-w-md">
-                                        <p class="text-zinc-300 text-xs truncate leading-relaxed"><?= $preview_str; ?></p>
-                                    </td>
-                                    <td class="px-6 py-4 text-zinc-400 text-xs whitespace-nowrap">
-                                        <?= date('M j, Y • g:i A', strtotime($sub['created_at'])); ?>
-                                    </td>
-                                    <td class="px-6 py-4 text-right">
-                                        <div class="flex justify-end gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <?php if ($sub['unread']): ?>
-                                                <form method="POST" class="inline">
-                                                    <input type="hidden" name="action" value="mark_read">
+                                    ?>
+                                    <tr class="hover:bg-white/[0.03] transition-colors group <?= $sub['unread'] ? 'bg-emerald-500/[0.03]' : ''; ?>">
+                                        <td class="px-6 py-4">
+                                            <p class="text-white text-sm font-semibold flex items-center gap-1.5">
+                                                <?= htmlspecialchars($form_title); ?>
+                                                <?php if ($sub['unread']): ?>
+                                                    <span class="inline-block w-2 h-2 bg-[#008060] rounded-full animate-pulse"></span>
+                                                <?php endif; ?>
+                                            </p>
+                                            <span
+                                                class="text-zinc-500 text-xs font-mono select-all"><?= htmlspecialchars($sub['form_key']); ?></span>
+                                        </td>
+                                        <td class="px-6 py-4 max-w-md">
+                                            <p class="text-zinc-300 text-xs truncate leading-relaxed"><?= $preview_str; ?></p>
+                                        </td>
+                                        <td class="px-6 py-4 text-zinc-400 text-xs whitespace-nowrap">
+                                            <?= date('M j, Y • g:i A', strtotime($sub['created_at'])); ?>
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <div
+                                                class="flex justify-end gap-2 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <?php if ($sub['unread']): ?>
+                                                    <form method="POST" class="inline">
+                                                        <input type="hidden" name="action" value="mark_read">
+                                                        <input type="hidden" name="id" value="<?= $sub['id']; ?>">
+                                                        <button type="submit"
+                                                            class="p-2 rounded-lg hover:bg-zinc-800 text-violet-400 transition-colors"
+                                                            title="Mark Read">
+                                                            <i class="bi bi-check-circle"></i>
+                                                        </button>
+                                                    </form>
+                                                <?php endif; ?>
+                                                <button
+                                                    onclick='viewCustomPayload(<?= json_encode($data); ?>, "<?= htmlspecialchars($form_title); ?>")'
+                                                    class="p-2 rounded-lg hover:bg-white/5 text-zinc-300 transition-colors"
+                                                    title="View Submission Payload">
+                                                    <i class="bi bi-window-sidebar"></i>
+                                                </button>
+                                                <form method="POST" class="inline"
+                                                    onsubmit="return confirm('Permanently remove this submission?');">
+                                                    <input type="hidden" name="action" value="delete_submission">
                                                     <input type="hidden" name="id" value="<?= $sub['id']; ?>">
-                                                    <button type="submit" class="p-2 rounded-lg hover:bg-zinc-800 text-violet-400 transition-colors" title="Mark Read">
-                                                        <i class="bi bi-check-circle"></i>
+                                                    <button type="submit"
+                                                        class="p-2 rounded-lg hover:bg-red-950/40 text-red-400 transition-colors"
+                                                        title="Delete Entry">
+                                                        <i class="bi bi-trash"></i>
                                                     </button>
                                                 </form>
-                                            <?php endif; ?>
-                                            <button onclick='viewCustomPayload(<?= json_encode($data); ?>, "<?= htmlspecialchars($form_title); ?>")' class="p-2 rounded-lg hover:bg-zinc-800 text-zinc-300 transition-colors" title="View Submission Payload">
-                                                <i class="bi bi-window-sidebar"></i>
-                                            </button>
-                                            <form method="POST" class="inline" onsubmit="return confirm('Permanently remove this submission?');">
-                                                <input type="hidden" name="action" value="delete_submission">
-                                                <input type="hidden" name="id" value="<?= $sub['id']; ?>">
-                                                <button type="submit" class="p-2 rounded-lg hover:bg-red-950/40 text-red-400 transition-colors" title="Delete Entry">
-                                                    <i class="bi bi-trash"></i>
-                                                </button>
-                                            </form>
-                                        </div>
-                                    </td>
-                                </tr>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
@@ -232,46 +274,54 @@ $active_tab = $_GET['tab'] ?? 'submissions';
         <!-- VIEW 2: Form Builder Panel -->
         <div id="section-builder" class="<?= $active_tab !== 'builder' ? 'hidden' : '' ?> grid grid-cols-1 lg:grid-cols-12 gap-8">
             <!-- Left Configurator Workspace -->
-            <div class="lg:col-span-5 bg-zinc-900 border border-zinc-800 rounded-xl p-5 flex flex-col gap-6">
+            <div class="lg:col-span-5 rounded-3xl border border-white/10 bg-[#202123] p-5 flex flex-col gap-6 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
                 <div>
-                    <h3 class="text-lg font-bold text-white mb-1">Form Creator</h3>
+                    <h3 class="text-lg font-bold text-white mb-1">Form creator</h3>
                     <p class="text-zinc-400 text-xs">Define dynamic fields, properties, and constraints.</p>
                 </div>
 
                 <!-- Core Parameters -->
                 <div>
                     <label class="block text-xs font-semibold text-zinc-300 mb-2">Form Label / Title</label>
-                    <input id="new-form-name" type="text" placeholder="e.g. Quote Request Form" class="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-violet-500 transition-colors">
+                    <input id="new-form-name" type="text" placeholder="e.g. Quote Request Form"
+                        class="w-full bg-[#1b1b1c] border border-white/10 rounded-2xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-[#008060] transition-colors">
                 </div>
 
                 <!-- Available Elements Drawer -->
                 <div>
-                    <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">Click to Insert Field</label>
+                    <label class="block text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-3">Click to
+                        Insert Field</label>
                     <div class="grid grid-cols-2 gap-2">
-                        <button onclick="addField('text')" class="flex items-center gap-2 bg-zinc-950 border border-zinc-800 hover:border-violet-500 hover:bg-zinc-900 text-left px-3.5 py-2.5 rounded-lg text-xs font-medium text-zinc-300 transition-all">
-                            <i class="bi bi-input-cursor text-violet-400"></i> Text Field
+                        <button onclick="addField('text')"
+                            class="flex items-center gap-2 bg-[#1b1b1c] border border-white/10 hover:border-[#008060] hover:bg-white/5 text-left px-3.5 py-2.5 rounded-2xl text-xs font-medium text-zinc-300 transition-all">
+                            <i class="bi bi-input-cursor text-emerald-300"></i> Text Field
                         </button>
-                        <button onclick="addField('email')" class="flex items-center gap-2 bg-zinc-950 border border-zinc-800 hover:border-violet-500 hover:bg-zinc-900 text-left px-3.5 py-2.5 rounded-lg text-xs font-medium text-zinc-300 transition-all">
-                            <i class="bi bi-envelope text-violet-400"></i> Email Input
+                        <button onclick="addField('email')"
+                            class="flex items-center gap-2 bg-[#1b1b1c] border border-white/10 hover:border-[#008060] hover:bg-white/5 text-left px-3.5 py-2.5 rounded-2xl text-xs font-medium text-zinc-300 transition-all">
+                            <i class="bi bi-envelope text-emerald-300"></i> Email Input
                         </button>
-                        <button onclick="addField('tel')" class="flex items-center gap-2 bg-zinc-950 border border-zinc-800 hover:border-violet-500 hover:bg-zinc-900 text-left px-3.5 py-2.5 rounded-lg text-xs font-medium text-zinc-300 transition-all">
-                            <i class="bi bi-telephone text-violet-400"></i> Telephone Input
+                        <button onclick="addField('tel')"
+                            class="flex items-center gap-2 bg-[#1b1b1c] border border-white/10 hover:border-[#008060] hover:bg-white/5 text-left px-3.5 py-2.5 rounded-2xl text-xs font-medium text-zinc-300 transition-all">
+                            <i class="bi bi-telephone text-emerald-300"></i> Telephone Input
                         </button>
-                        <button onclick="addField('textarea')" class="flex items-center gap-2 bg-zinc-950 border border-zinc-800 hover:border-violet-500 hover:bg-zinc-900 text-left px-3.5 py-2.5 rounded-lg text-xs font-medium text-zinc-300 transition-all">
-                            <i class="bi bi-justify-left text-violet-400"></i> Text Area
+                        <button onclick="addField('textarea')"
+                            class="flex items-center gap-2 bg-[#1b1b1c] border border-white/10 hover:border-[#008060] hover:bg-white/5 text-left px-3.5 py-2.5 rounded-2xl text-xs font-medium text-zinc-300 transition-all">
+                            <i class="bi bi-justify-left text-emerald-300"></i> Text Area
                         </button>
-                        <button onclick="addField('select')" class="flex items-center gap-2 bg-zinc-950 border border-zinc-800 hover:border-violet-500 hover:bg-zinc-900 text-left px-3.5 py-2.5 rounded-lg text-xs font-medium text-zinc-300 transition-all">
-                            <i class="bi bi-menu-button-wide text-violet-400"></i> Dropdown Menu
+                        <button onclick="addField('select')"
+                            class="flex items-center gap-2 bg-[#1b1b1c] border border-white/10 hover:border-[#008060] hover:bg-white/5 text-left px-3.5 py-2.5 rounded-2xl text-xs font-medium text-zinc-300 transition-all">
+                            <i class="bi bi-menu-button-wide text-emerald-300"></i> Dropdown Menu
                         </button>
                     </div>
                 </div>
 
                 <!-- Output Generator Trigger -->
-                <form id="save-form-schema" method="POST" class="mt-auto pt-4 border-t border-zinc-800 flex gap-2">
+                <form id="save-form-schema" method="POST" class="mt-auto pt-4 border-t border-white/10 flex gap-2">
                     <input type="hidden" name="action" value="create_form">
                     <input type="hidden" name="form_name" id="form-name-post">
                     <input type="hidden" name="fields_json" id="fields-json-post">
-                    <button type="button" onclick="commitFormSchema()" class="flex-1 bg-violet-600 hover:bg-violet-700 text-white font-medium text-sm py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-lg shadow-violet-500/10">
+                    <button type="button" onclick="commitFormSchema()"
+                        class="flex-1 bg-[#008060] hover:bg-[#006e52] text-white font-medium text-sm py-3 px-4 rounded-full transition-colors flex items-center justify-center gap-2 shadow-lg shadow-emerald-700/20">
                         <i class="bi bi-save"></i> Build & Generate Integration Snippet
                     </button>
                 </form>
@@ -280,12 +330,15 @@ $active_tab = $_GET['tab'] ?? 'submissions';
             <!-- Right Canvas Preview & Live Re-ordering -->
             <div class="lg:col-span-7 flex flex-col gap-4">
                 <div class="flex items-center justify-between">
-                    <h3 class="text-sm font-semibold uppercase tracking-wider text-zinc-400">Interactive Design Preview</h3>
-                    <button onclick="clearCanvas()" class="text-xs text-zinc-500 hover:text-red-400 transition-colors">Clear All Fields</button>
+                    <h3 class="text-sm font-semibold uppercase tracking-[0.18em] text-zinc-400">Interactive design preview
+                    </h3>
+                    <button onclick="clearCanvas()"
+                        class="text-xs text-zinc-500 hover:text-red-400 transition-colors">Clear All Fields</button>
                 </div>
 
-                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-6 min-h-[420px] flex flex-col gap-4 shadow-sm relative">
-                    <div id="blank-slate-msg" class="absolute inset-0 flex flex-col items-center justify-center text-zinc-600 pointer-events-none">
+                <div class="bg-[#202123] border border-white/10 rounded-3xl p-6 min-h-[420px] flex flex-col gap-4 shadow-[0_18px_45px_rgba(0,0,0,0.24)] relative">
+                    <div id="blank-slate-msg"
+                        class="absolute inset-0 flex flex-col items-center justify-center text-zinc-600 pointer-events-none">
                         <i class="bi bi-palette text-4xl mb-2"></i>
                         <p class="text-xs">Drag/add elements on the left side menu to map out fields</p>
                     </div>
@@ -295,19 +348,23 @@ $active_tab = $_GET['tab'] ?? 'submissions';
                 </div>
 
                 <!-- Forms List & Integration Snippet Fetcher -->
-                <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-                    <h4 class="text-sm font-bold text-white mb-3">Your Deployable Forms</h4>
+                <div class="bg-[#202123] border border-white/10 rounded-3xl p-5 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
+                    <h4 class="text-sm font-bold text-white mb-3">Your deployable forms</h4>
                     <?php if (empty($all_forms)): ?>
                         <p class="text-xs text-zinc-500 italic">No custom templates built yet.</p>
                     <?php else: ?>
                         <div class="space-y-2.5 max-h-48 overflow-y-auto">
                             <?php foreach ($all_forms as $item): ?>
-                                <div class="flex items-center justify-between bg-zinc-950 p-3 rounded-lg border border-zinc-800/80">
+                                <div
+                                    class="flex items-center justify-between bg-[#1b1b1c] p-3 rounded-2xl border border-white/10">
                                     <div>
-                                        <p class="text-xs font-semibold text-zinc-200"><?= htmlspecialchars($item['name']); ?></p>
-                                        <span class="text-[10px] text-zinc-500 font-mono"><?= htmlspecialchars($item['form_key']); ?></span>
+                                        <p class="text-xs font-semibold text-zinc-200"><?= htmlspecialchars($item['name']); ?>
+                                        </p>
+                                        <span
+                                            class="text-[10px] text-zinc-500 font-mono"><?= htmlspecialchars($item['form_key']); ?></span>
                                     </div>
-                                    <button onclick='launchIntegrationInstructions("<?= $item['form_key']; ?>")' class="bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs px-2.5 py-1.5 rounded-md transition-colors flex items-center gap-1.5">
+                                    <button onclick='launchIntegrationInstructions("<?= $item['form_key']; ?>")'
+                                        class="bg-white/5 hover:bg-white/10 text-zinc-200 text-xs px-2.5 py-1.5 rounded-full transition-colors flex items-center gap-1.5">
                                         <i class="bi bi-code-slash"></i> Get Embed Code
                                     </button>
                                 </div>
@@ -320,7 +377,7 @@ $active_tab = $_GET['tab'] ?? 'submissions';
 
         <!-- VIEW 3: Newsletter Subscriptions -->
         <div id="section-newsletter" class="hidden">
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+            <div class="bg-[#202123] border border-white/10 rounded-3xl overflow-hidden shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
                 <?php if (empty($subscribers)): ?>
                     <div class="flex flex-col items-center justify-center py-20 text-zinc-500">
                         <i class="bi bi-mailbox text-5xl mb-4 text-zinc-700"></i>
@@ -331,7 +388,8 @@ $active_tab = $_GET['tab'] ?? 'submissions';
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-sm">
                             <thead>
-                                <tr class="border-b border-zinc-800 text-xs text-zinc-500 uppercase tracking-wider bg-zinc-900/50">
+                                <tr
+                                    class="border-b border-zinc-800 text-xs text-zinc-500 uppercase tracking-wider bg-[#252526]/50">
                                     <th class="px-6 py-4 font-medium">Email</th>
                                     <th class="px-6 py-4 font-medium">Status Flag</th>
                                     <th class="px-6 py-4 font-medium">Date Created</th>
@@ -340,32 +398,39 @@ $active_tab = $_GET['tab'] ?? 'submissions';
                             </thead>
                             <tbody class="divide-y divide-zinc-800/50">
                                 <?php foreach ($subscribers as $sub): ?>
-                                <tr class="hover:bg-zinc-800/20 transition-colors group">
-                                    <td class="px-6 py-4">
-                                        <div class="flex items-center gap-3">
-                                            <div class="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xs font-bold font-mono">
-                                                <?= strtoupper(substr($sub['email'] ?? 'A', 0, 1)); ?>
+                                    <tr class="hover:bg-zinc-800/20 transition-colors group">
+                                        <td class="px-6 py-4">
+                                            <div class="flex items-center gap-3">
+                                                <div
+                                                    class="w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 flex items-center justify-center text-xs font-bold font-mono">
+                                                    <?= strtoupper(substr($sub['email'] ?? 'A', 0, 1)); ?>
+                                                </div>
+                                                <span
+                                                    class="text-white text-sm font-medium"><?= htmlspecialchars($sub['email'] ?? ''); ?></span>
                                             </div>
-                                            <span class="text-white text-sm font-medium"><?= htmlspecialchars($sub['email'] ?? ''); ?></span>
-                                        </div>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <span class="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                                            <?= ucfirst($sub['status']); ?>
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 text-zinc-500 text-xs"><?= date('M j, Y • g:i A', strtotime($sub['created_at'])); ?></td>
-                                    <td class="px-6 py-4 text-right">
-                                        <form method="POST" class="inline" onsubmit="return confirm('Remove Subscriber?');">
-                                            <input type="hidden" name="action" value="delete_subscriber">
-                                            <input type="hidden" name="id" value="<?= $sub['id']; ?>">
-                                            <button type="submit" class="p-2 rounded-lg hover:bg-red-950/40 text-red-400 transition-colors" title="Remove Subscriber">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span
+                                                class="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                                <?= ucfirst($sub['status']); ?>
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 text-zinc-500 text-xs">
+                                            <?= date('M j, Y • g:i A', strtotime($sub['created_at'])); ?>
+                                        </td>
+                                        <td class="px-6 py-4 text-right">
+                                            <form method="POST" class="inline" onsubmit="return confirm('Remove Subscriber?');">
+                                                <input type="hidden" name="action" value="delete_subscriber">
+                                                <input type="hidden" name="id" value="<?= $sub['id']; ?>">
+                                                <button type="submit"
+                                                    class="p-2 rounded-lg hover:bg-red-950/40 text-red-400 transition-colors"
+                                                    title="Remove Subscriber">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
@@ -379,13 +444,15 @@ $active_tab = $_GET['tab'] ?? 'submissions';
 <!-- Modal: Dynamic Custom Submission Payload Inspector -->
 <div id="inspectorModal" class="fixed inset-0 z-50 hidden">
     <div class="flex items-center justify-center min-h-screen px-4">
-        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" onclick="closeInspector()"></div>
-        <div class="relative bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-lg shadow-2xl overflow-hidden z-10">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-800 bg-zinc-900/50">
+        <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" onclick="closeInspector()"></div>
+        <div class="relative bg-[#202123] border border-white/10 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden z-10">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-white/5">
                 <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                    <i class="bi bi-box-arrow-in-right text-violet-400"></i> Inquiry Meta Payload - <span id="inspectFormTitle" class="text-zinc-400 font-normal"></span>
+                    <i class="bi bi-box-arrow-in-right text-emerald-300"></i> Inquiry Meta Payload - <span
+                        id="inspectFormTitle" class="text-zinc-400 font-normal"></span>
                 </h3>
-                <button onclick="closeInspector()" class="text-zinc-500 hover:text-white transition-colors"><i class="bi bi-x-lg"></i></button>
+                <button onclick="closeInspector()" class="text-zinc-500 hover:text-white transition-colors"><i
+                        class="bi bi-x-lg"></i></button>
             </div>
             <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto" id="inspectDataGrid"></div>
         </div>
@@ -395,36 +462,47 @@ $active_tab = $_GET['tab'] ?? 'submissions';
 <!-- Modal: Embed & Integration Snippets Generator -->
 <div id="embedModal" class="fixed inset-0 z-50 hidden">
     <div class="flex items-center justify-center min-h-screen px-4">
-        <div class="fixed inset-0 bg-black/80 backdrop-blur-sm" onclick="closeEmbedModal()"></div>
-        <div class="relative bg-zinc-900 border border-zinc-800 rounded-xl w-full max-w-2xl shadow-2xl overflow-hidden z-10">
-            <div class="flex items-center justify-between px-5 py-4 border-b border-zinc-800 bg-zinc-900/50">
+        <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" onclick="closeEmbedModal()"></div>
+        <div class="relative bg-[#202123] border border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden z-10">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-white/5">
                 <h3 class="text-white font-semibold text-sm flex items-center gap-2">
-                    <i class="bi bi-code-square text-emerald-400"></i> Dynamic Integration Snippets
+                    <i class="bi bi-code-square text-emerald-300"></i> Dynamic Integration Snippets
                 </h3>
-                <button onclick="closeEmbedModal()" class="text-zinc-500 hover:text-white transition-colors"><i class="bi bi-x-lg"></i></button>
+                <button onclick="closeEmbedModal()" class="text-zinc-500 hover:text-white transition-colors"><i
+                        class="bi bi-x-lg"></i></button>
             </div>
             <div class="p-6 space-y-6">
                 <div>
                     <span class="text-[10px] text-zinc-500 font-mono block mb-1">Target Form Key ID</span>
-                    <p id="embedFormKey" class="text-white font-mono text-sm bg-zinc-950 p-2 border border-zinc-800/80 rounded select-all"></p>
+                    <p id="embedFormKey"
+                        class="text-white font-mono text-sm bg-zinc-950 p-2 border border-zinc-800/80 rounded select-all">
+                    </p>
                 </div>
 
                 <div class="space-y-4">
                     <div class="flex border-b border-zinc-800 gap-2">
-                        <button onclick="switchEmbedTab('embed-html')" id="tab-embed-html" class="px-4 py-2 text-xs font-semibold border-b-2 border-emerald-500 text-emerald-400">HTML Embed Code (Any Framework)</button>
-                        <button onclick="switchEmbedTab('embed-php')" id="tab-embed-php" class="px-4 py-2 text-xs font-semibold border-b-2 border-transparent text-zinc-400 hover:text-zinc-200">Vanilla PHP Form Action</button>
+                        <button onclick="switchEmbedTab('embed-html')" id="tab-embed-html"
+                            class="px-4 py-2 text-xs font-semibold border-b-2 border-emerald-500 text-emerald-400">HTML
+                            Embed Code (Any Framework)</button>
+                        <button onclick="switchEmbedTab('embed-php')" id="tab-embed-php"
+                            class="px-4 py-2 text-xs font-semibold border-b-2 border-transparent text-zinc-400 hover:text-zinc-200">Vanilla
+                            PHP Form Action</button>
                     </div>
 
                     <!-- HTML Snippet -->
                     <div id="panel-embed-html" class="space-y-2">
-                        <p class="text-zinc-400 text-xs leading-relaxed">Paste this markup into your client template. Includes AJAX submission handing seamlessly.</p>
-                        <pre class="bg-zinc-950 border border-zinc-800 p-3 rounded-lg overflow-x-auto text-[11px] text-emerald-400 font-mono" id="snippet-html-code"></pre>
+                        <p class="text-zinc-400 text-xs leading-relaxed">Paste this markup into your client template.
+                            Includes AJAX submission handing seamlessly.</p>
+                        <pre class="bg-[#1b1b1c] border border-white/10 p-3 rounded-2xl overflow-x-auto text-[11px] text-emerald-300 font-mono"
+                            id="snippet-html-code"></pre>
                     </div>
 
                     <!-- Dynamic Action Snippet -->
                     <div id="panel-embed-php" class="space-y-2 hidden">
-                        <p class="text-zinc-400 text-xs leading-relaxed">Standard PHP structure executing traditional POST requests routing straight through our dynamic engine.</p>
-                        <pre class="bg-zinc-950 border border-zinc-800 p-3 rounded-lg overflow-x-auto text-[11px] text-emerald-400 font-mono" id="snippet-php-code"></pre>
+                        <p class="text-zinc-400 text-xs leading-relaxed">Standard PHP structure executing traditional
+                            POST requests routing straight through our dynamic engine.</p>
+                        <pre class="bg-[#1b1b1c] border border-white/10 p-3 rounded-2xl overflow-x-auto text-[11px] text-emerald-300 font-mono"
+                            id="snippet-php-code"></pre>
                     </div>
                 </div>
             </div>
@@ -433,105 +511,105 @@ $active_tab = $_GET['tab'] ?? 'submissions';
 </div>
 
 <script>
-// Tab View Switching
-function switchView(tab) {
-    document.getElementById('section-submissions').classList.toggle('hidden', tab !== 'submissions');
-    document.getElementById('section-builder').classList.toggle('hidden', tab !== 'builder');
-    document.getElementById('section-newsletter').classList.toggle('hidden', tab !== 'newsletter');
+    // Tab View Switching
+    function switchView(tab) {
+        document.getElementById('section-submissions').classList.toggle('hidden', tab !== 'submissions');
+        document.getElementById('section-builder').classList.toggle('hidden', tab !== 'builder');
+        document.getElementById('section-newsletter').classList.toggle('hidden', tab !== 'newsletter');
 
-    const btnSub = document.getElementById('btn-tab-submissions');
-    const btnBld = document.getElementById('btn-tab-builder');
-    const btnNwl = document.getElementById('btn-tab-newsletter');
+        const btnSub = document.getElementById('btn-tab-submissions');
+        const btnBld = document.getElementById('btn-tab-builder');
+        const btnNwl = document.getElementById('btn-tab-newsletter');
 
-    [btnSub, btnBld, btnNwl].forEach(b => {
-        if(b) b.className = b.className.replace('border-violet-500 text-violet-400', 'border-transparent text-zinc-400 hover:text-zinc-200');
-    });
+        [btnSub, btnBld, btnNwl].forEach(b => {
+            if (b) b.className = b.className.replace('border-violet-500 text-violet-400', 'border-transparent text-zinc-400 hover:text-zinc-200');
+        });
 
-    const activeBtn = document.getElementById(`btn-tab-${tab}`);
-    if (activeBtn) {
-        activeBtn.className = activeBtn.className.replace('border-transparent text-zinc-400 hover:text-zinc-200', 'border-violet-500 text-violet-400');
+        const activeBtn = document.getElementById(`btn-tab-${tab}`);
+        if (activeBtn) {
+            activeBtn.className = activeBtn.className.replace('border-transparent text-zinc-400 hover:text-zinc-200', 'border-violet-500 text-violet-400');
+        }
     }
-}
 
-// Form Builder Application State Matrix
-let formFields = [];
+    // Form Builder Application State Matrix
+    let formFields = [];
 
-function checkBlankSlate() {
-    const slate = document.getElementById('blank-slate-msg');
-    if(slate) slate.style.display = formFields.length === 0 ? 'flex' : 'none';
-}
-
-function addField(type) {
-    const defaultLabel = type.charAt(0).toUpperCase() + type.slice(1) + " Label";
-    const nameAttr = type + '_' + Math.random().toString(36).substring(2, 7);
-    
-    let field = {
-        id: Date.now() + Math.random().toString(36).substring(2, 5),
-        type: type,
-        label: defaultLabel,
-        name: nameAttr,
-        placeholder: "Enter value here...",
-        required: true,
-        options: type === 'select' ? ['Choice A', 'Choice B', 'Choice C'] : []
-    };
-    
-    formFields.push(field);
-    renderCanvas();
-}
-
-function removeField(id) {
-    formFields = formFields.filter(f => f.id !== id);
-    renderCanvas();
-}
-
-function updateFieldLabel(id, val) {
-    const idx = formFields.findIndex(f => f.id === id);
-    if(idx !== -1) {
-        formFields[idx].label = val;
-        // Dynamically auto-generate clean name tag unless overridden
-        formFields[idx].name = val.toLowerCase().replace(/[^a-z0-9]/g, '_');
+    function checkBlankSlate() {
+        const slate = document.getElementById('blank-slate-msg');
+        if (slate) slate.style.display = formFields.length === 0 ? 'flex' : 'none';
     }
-}
 
-function updateFieldPlaceholder(id, val) {
-    const idx = formFields.findIndex(f => f.id === id);
-    if(idx !== -1) formFields[idx].placeholder = val;
-}
+    function addField(type) {
+        const defaultLabel = type.charAt(0).toUpperCase() + type.slice(1) + " Label";
+        const nameAttr = type + '_' + Math.random().toString(36).substring(2, 7);
 
-function toggleRequired(id) {
-    const idx = formFields.findIndex(f => f.id === id);
-    if(idx !== -1) formFields[idx].required = !formFields[idx].required;
-}
+        let field = {
+            id: Date.now() + Math.random().toString(36).substring(2, 5),
+            type: type,
+            label: defaultLabel,
+            name: nameAttr,
+            placeholder: "Enter value here...",
+            required: true,
+            options: type === 'select' ? ['Choice A', 'Choice B', 'Choice C'] : []
+        };
 
-function updateOptions(id, rawOptions) {
-    const idx = formFields.findIndex(f => f.id === id);
-    if(idx !== -1) {
-        formFields[idx].options = rawOptions.split(',').map(s => s.trim());
+        formFields.push(field);
+        renderCanvas();
     }
-}
 
-function clearCanvas() {
-    formFields = [];
-    renderCanvas();
-}
+    function removeField(id) {
+        formFields = formFields.filter(f => f.id !== id);
+        renderCanvas();
+    }
 
-function renderCanvas() {
-    const canvas = document.getElementById('builder-canvas');
-    canvas.innerHTML = '';
-    checkBlankSlate();
-    
-    formFields.forEach(f => {
-        let optionsControl = '';
-        if (f.type === 'select') {
-            optionsControl = `
+    function updateFieldLabel(id, val) {
+        const idx = formFields.findIndex(f => f.id === id);
+        if (idx !== -1) {
+            formFields[idx].label = val;
+            // Dynamically auto-generate clean name tag unless overridden
+            formFields[idx].name = val.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        }
+    }
+
+    function updateFieldPlaceholder(id, val) {
+        const idx = formFields.findIndex(f => f.id === id);
+        if (idx !== -1) formFields[idx].placeholder = val;
+    }
+
+    function toggleRequired(id) {
+        const idx = formFields.findIndex(f => f.id === id);
+        if (idx !== -1) formFields[idx].required = !formFields[idx].required;
+    }
+
+    function updateOptions(id, rawOptions) {
+        const idx = formFields.findIndex(f => f.id === id);
+        if (idx !== -1) {
+            formFields[idx].options = rawOptions.split(',').map(s => s.trim());
+        }
+    }
+
+    function clearCanvas() {
+        formFields = [];
+        renderCanvas();
+    }
+
+    function renderCanvas() {
+        const canvas = document.getElementById('builder-canvas');
+        canvas.innerHTML = '';
+        checkBlankSlate();
+
+        formFields.forEach(f => {
+            let optionsControl = '';
+            if (f.type === 'select') {
+                optionsControl = `
                 <div>
                     <label class="text-[10px] text-zinc-500 font-semibold uppercase">Comma-separated Options</label>
                     <input type="text" value="${f.options.join(', ')}" oninput="updateOptions('${f.id}', this.value)" class="w-full bg-zinc-950 border border-zinc-800 text-xs rounded p-1.5 text-white focus:outline-none">
                 </div>
             `;
-        }
+            }
 
-        let elementHtml = `
+            let elementHtml = `
             <div class="bg-zinc-950 border border-zinc-800/80 rounded-lg p-4 relative group/field">
                 <div class="flex items-center justify-between mb-3">
                     <span class="text-[10px] text-zinc-500 uppercase tracking-wider font-bold">Element: <span class="text-violet-400 font-mono">${f.type}</span></span>
@@ -554,57 +632,57 @@ function renderCanvas() {
                 </div>
             </div>
         `;
-        canvas.insertAdjacentHTML('beforeend', elementHtml);
-    });
-}
-
-function commitFormSchema() {
-    const nameInput = document.getElementById('new-form-name').value.trim();
-    if(!nameInput) {
-        alert('Please specify a Form Label/Title.');
-        return;
-    }
-    if (formFields.length === 0) {
-        alert('Form must contain at least one element.');
-        return;
+            canvas.insertAdjacentHTML('beforeend', elementHtml);
+        });
     }
 
-    document.getElementById('form-name-post').value = nameInput;
-    document.getElementById('fields-json-post').value = JSON.stringify(formFields);
-    document.getElementById('save-form-schema').submit();
-}
+    function commitFormSchema() {
+        const nameInput = document.getElementById('new-form-name').value.trim();
+        if (!nameInput) {
+            alert('Please specify a Form Label/Title.');
+            return;
+        }
+        if (formFields.length === 0) {
+            alert('Form must contain at least one element.');
+            return;
+        }
 
-// Modal View Mechanics
-function viewCustomPayload(data, title) {
-    document.getElementById('inspectFormTitle').textContent = title;
-    const grid = document.getElementById('inspectDataGrid');
-    grid.innerHTML = '';
+        document.getElementById('form-name-post').value = nameInput;
+        document.getElementById('fields-json-post').value = JSON.stringify(formFields);
+        document.getElementById('save-form-schema').submit();
+    }
 
-    for (const [key, value] of Object.entries(data)) {
-        let fieldHtml = `
+    // Modal View Mechanics
+    function viewCustomPayload(data, title) {
+        document.getElementById('inspectFormTitle').textContent = title;
+        const grid = document.getElementById('inspectDataGrid');
+        grid.innerHTML = '';
+
+        for (const [key, value] of Object.entries(data)) {
+            let fieldHtml = `
             <div class="bg-zinc-950 p-3.5 rounded-lg border border-zinc-800/80">
                 <label class="text-zinc-500 font-bold uppercase tracking-wider text-[10px] block mb-1">${key}</label>
                 <p class="text-zinc-100 text-sm whitespace-pre-line leading-relaxed">${value ? value : '<span class="text-zinc-600 italic">None</span>'}</p>
             </div>
         `;
-        grid.insertAdjacentHTML('beforeend', fieldHtml);
+            grid.insertAdjacentHTML('beforeend', fieldHtml);
+        }
+        document.getElementById('inspectorModal').classList.remove('hidden');
     }
-    document.getElementById('inspectorModal').classList.remove('hidden');
-}
 
-function closeInspector() {
-    document.getElementById('inspectorModal').classList.add('hidden');
-}
+    function closeInspector() {
+        document.getElementById('inspectorModal').classList.add('hidden');
+    }
 
-function launchIntegrationInstructions(key) {
-    document.getElementById('embedFormKey').textContent = key;
-    
-    // Resolve clean absolute address references for cross-origin targets
-    const currentOrigin = window.location.origin;
-    const backendUrl = currentOrigin + '/form_handler.php';
+    function launchIntegrationInstructions(key) {
+        document.getElementById('embedFormKey').textContent = key;
 
-    // Output templates
-    const htmlSnippet = `
+        // Resolve clean absolute address references for cross-origin targets
+        const currentOrigin = window.location.origin;
+        const backendUrl = currentOrigin + '/api/form_handler.php';
+
+        // Output templates
+        const htmlSnippet = `
 <!-- Dynamic Form Integration Markup -->
 <form id="dynamic-form-${key}" class="custom-form-container">
     <input type="hidden" name="form_key" value="${key}">
@@ -665,7 +743,7 @@ document.addEventListener("DOMContentLoaded", function() {
 <\/script>
     `.trim();
 
-    const phpSnippet = `
+        const phpSnippet = `
 <?php
 // Place inside your template action destination
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -693,29 +771,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </form>
     `.trim();
 
-    document.getElementById('snippet-html-code').textContent = htmlSnippet;
-    document.getElementById('snippet-php-code').textContent = phpSnippet;
+        document.getElementById('snippet-html-code').textContent = htmlSnippet;
+        document.getElementById('snippet-php-code').textContent = phpSnippet;
 
-    document.getElementById('embedModal').classList.remove('hidden');
-}
-
-function switchEmbedTab(target) {
-    document.getElementById('panel-embed-html').classList.toggle('hidden', target !== 'embed-html');
-    document.getElementById('panel-embed-php').classList.toggle('hidden', target !== 'embed-php');
-
-    const tabHtml = document.getElementById('tab-embed-html');
-    const tabPhp = document.getElementById('tab-embed-php');
-
-    if (target === 'embed-html') {
-        tabHtml.className = tabHtml.className.replace('border-transparent text-zinc-400 hover:text-zinc-200', 'border-emerald-500 text-emerald-400');
-        tabPhp.className = tabPhp.className.replace('border-emerald-500 text-emerald-400', 'border-transparent text-zinc-400 hover:text-zinc-200');
-    } else {
-        tabPhp.className = tabPhp.className.replace('border-transparent text-zinc-400 hover:text-zinc-200', 'border-emerald-500 text-emerald-400');
-        tabHtml.className = tabHtml.className.replace('border-emerald-500 text-emerald-400', 'border-transparent text-zinc-400 hover:text-zinc-200');
+        document.getElementById('embedModal').classList.remove('hidden');
     }
-}
 
-function closeEmbedModal() {
-    document.getElementById('embedModal').classList.add('hidden');
-}
+    function switchEmbedTab(target) {
+        document.getElementById('panel-embed-html').classList.toggle('hidden', target !== 'embed-html');
+        document.getElementById('panel-embed-php').classList.toggle('hidden', target !== 'embed-php');
+
+        const tabHtml = document.getElementById('tab-embed-html');
+        const tabPhp = document.getElementById('tab-embed-php');
+
+        if (target === 'embed-html') {
+            tabHtml.className = tabHtml.className.replace('border-transparent text-zinc-400 hover:text-zinc-200', 'border-emerald-500 text-emerald-400');
+            tabPhp.className = tabPhp.className.replace('border-emerald-500 text-emerald-400', 'border-transparent text-zinc-400 hover:text-zinc-200');
+        } else {
+            tabPhp.className = tabPhp.className.replace('border-transparent text-zinc-400 hover:text-zinc-200', 'border-emerald-500 text-emerald-400');
+            tabHtml.className = tabHtml.className.replace('border-emerald-500 text-emerald-400', 'border-transparent text-zinc-400 hover:text-zinc-200');
+        }
+    }
+
+    function closeEmbedModal() {
+        document.getElementById('embedModal').classList.add('hidden');
+    }
 </script>

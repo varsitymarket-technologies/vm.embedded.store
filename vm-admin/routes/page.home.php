@@ -1,13 +1,15 @@
 <?php
 $db = initiate_web_database();
 $currency_symbol = defined('__CURRENCY_SIGN__') ? __CURRENCY_SIGN__ : 'R';
+$site_root = dirname(dirname(dirname(__FILE__)));
+$site_dir = $site_root . '/sites/' . (__DOMAIN__ ?? '');
+$pages_dir = $site_dir . '/data/pages';
+$builder_cache = $site_dir . '/builder.cache.html';
+$admin_base = '/vm-admin/' . (__DOMAIN__ ?? '') . '/';
 
-// Fetch dashboard stats
+// Core store stats
 $revenue_result = $db->query("SELECT COALESCE(SUM(total_amount), 0) as total FROM orders WHERE status = 'completed'");
 $total_revenue = $revenue_result[0]['total'] ?? 0;
-
-$all_revenue_result = $db->query("SELECT COALESCE(SUM(total_amount), 0) as total FROM orders");
-$gross_revenue = $all_revenue_result[0]['total'] ?? 0;
 
 $orders_result = $db->query("SELECT COUNT(*) as total FROM orders");
 $total_orders = $orders_result[0]['total'] ?? 0;
@@ -27,287 +29,334 @@ $low_stock = $low_stock_result[0]['total'] ?? 0;
 $out_of_stock_result = $db->query("SELECT COUNT(*) as total FROM products WHERE stock = 0");
 $out_of_stock = $out_of_stock_result[0]['total'] ?? 0;
 
-// Store success checklist data
-$admin_base = '/vm-admin/' . (__DOMAIN__ ?? '') . '/';
-$has_products = $total_products > 0;
+$recent_orders = $db->query("SELECT * FROM orders ORDER BY created_at DESC LIMIT 5");
+$recent_pages = [];
+
+if (is_dir($pages_dir)) {
+    foreach (glob($pages_dir . '/*.page') ?: [] as $file) {
+        $slug = basename($file, '.page');
+        $recent_pages[] = [
+            'slug' => $slug,
+            'label' => ucfirst(str_replace(['-', '_'], ' ', $slug)),
+            'modified' => @filemtime($file) ?: time(),
+            'is_home' => in_array($slug, ['home', 'index'], true),
+        ];
+    }
+
+    usort($recent_pages, fn($a, $b) => $b['modified'] <=> $a['modified']);
+}
+
+$home_page = null;
+foreach ($recent_pages as $page) {
+    if ($page['is_home']) {
+        $home_page = $page;
+        break;
+    }
+}
+
+$page_count = count($recent_pages);
 $has_domain = !empty(__DOMAIN__);
 $has_theme = !empty(website_data('theme'));
-$has_payment = file_exists(dirname(dirname(dirname(__FILE__))) . "/sites/" . (__DOMAIN__ ?? '') . "/payment.config.enc");
-$has_analytics = file_exists(dirname(dirname(dirname(__FILE__))) . "/sites/" . (__DOMAIN__ ?? '') . "/analytics.data");
+$has_payment = file_exists($site_dir . "/payment.config.enc");
+$has_analytics = file_exists($site_dir . "/analytics.data");
+$has_products = $total_products > 0;
 $has_orders = $total_orders > 0;
 
 $checklist = [
     ['done' => $has_domain, 'label' => 'Set up your store domain', 'link' => $admin_base . 'settings?tab=domain', 'icon' => 'bi-globe'],
-    ['done' => $has_products, 'label' => 'Add your first product', 'link' => $admin_base . 'products', 'icon' => 'bi-box-seam'],
     ['done' => $has_theme, 'label' => 'Choose a theme', 'link' => $admin_base . 'theme', 'icon' => 'bi-palette'],
+    ['done' => $has_products, 'label' => 'Add your first product', 'link' => $admin_base . 'products', 'icon' => 'bi-box-seam'],
     ['done' => $has_payment, 'label' => 'Configure payment methods', 'link' => $admin_base . 'settings?tab=payment', 'icon' => 'bi-credit-card'],
     ['done' => $has_analytics, 'label' => 'Install analytics tracking', 'link' => $admin_base . 'analytics', 'icon' => 'bi-graph-up'],
     ['done' => $has_orders, 'label' => 'Get your first order', 'link' => $admin_base . 'orders', 'icon' => 'bi-bag-check'],
 ];
-$completed_steps = count(array_filter($checklist, fn($s) => $s['done']));
-$total_steps = count($checklist);
-$progress_pct = round(($completed_steps / $total_steps) * 100);
 
-// Recent orders
-$recent_orders = $db->query("SELECT * FROM orders ORDER BY created_at DESC LIMIT 5");
+$completed_steps = count(array_filter($checklist, fn($s) => $s['done']));
+$total_steps = max(1, count($checklist));
+$progress_pct = round(($completed_steps / $total_steps) * 100);
+$hero_metric = $page_count > 0 ? $page_count : 0;
 ?>
 <div class="flex flex-1 flex-col overflow-hidden">
     <?php @include_once "header.php"; ?>
 
-    <main class="flex-1 overflow-y-auto overflow-x-hidden bg-[#09090b] p-6">
+    <main class="flex-1 overflow-y-auto overflow-x-hidden bg-[#1b1b1c] p-4 sm:p-6 lg:p-8">
+        <section class="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(37,37,38,0.98),rgba(23,23,24,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+            <div class="absolute inset-y-0 right-0 w-1/3 bg-[radial-gradient(circle_at_top_right,_rgba(122,26,171,0.18),_transparent_55%)]"></div>
+            <div class="relative grid gap-6 p-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:p-8">
+                <div>
+                    <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-300">
+                        <span class="h-2 w-2 rounded-full bg-[#008060]"></span>
+                        Store Pages
+                    </div>
+                    <h1 class="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Manage your storefront pages from one calm workspace.</h1>
+                    <p class="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
+                        Create, edit, and organize homepage and content pages without leaving the admin. The layout is cleaner and more focused, while the interface stays dark and production-ready.
+                    </p>
 
-        <!-- Page Header -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div>
-                <h2 class="text-2xl font-bold text-white">Overview</h2>
-                <p class="text-zinc-400 text-sm mt-1">Your store at a glance</p>
-            </div>
-            <a href="<?php echo $admin_base; ?>orders" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2">
-                <i class="bi bi-receipt"></i> View Orders
-            </a>
-        </div>
-
-        <!-- Stat Cards -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-zinc-400 text-xs font-medium">Revenue</span>
-                    <span class="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                        <i class="bi bi-cash-stack text-emerald-400"></i>
-                    </span>
-                </div>
-                <p class="text-2xl font-bold text-white"><?php echo $currency_symbol . number_format($total_revenue, 2); ?></p>
-                <p class="text-zinc-500 text-xs mt-1">Completed orders</p>
-            </div>
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-zinc-400 text-xs font-medium">Orders</span>
-                    <span class="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
-                        <i class="bi bi-bag text-violet-400"></i>
-                    </span>
-                </div>
-                <p class="text-2xl font-bold text-white"><?php echo $total_orders; ?></p>
-                <?php if ($pending_orders > 0): ?>
-                <p class="text-amber-400 text-xs mt-1"><?php echo $pending_orders; ?> pending</p>
-                <?php endif; ?>
-            </div>
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-zinc-400 text-xs font-medium">Products</span>
-                    <span class="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center">
-                        <i class="bi bi-box-seam text-sky-400"></i>
-                    </span>
-                </div>
-                <p class="text-2xl font-bold text-white"><?php echo $total_products; ?></p>
-                <p class="text-zinc-500 text-xs mt-1"><?php echo $total_categories; ?> categories</p>
-            </div>
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-zinc-400 text-xs font-medium">Inventory</span>
-                    <span class="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                        <i class="bi bi-exclamation-triangle text-amber-400"></i>
-                    </span>
-                </div>
-                <p class="text-2xl font-bold text-white"><?php echo $low_stock; ?></p>
-                <p class="text-zinc-500 text-xs mt-1">Low stock<?php if ($out_of_stock > 0): ?> <span class="text-red-400">&middot; <?php echo $out_of_stock; ?> out</span><?php endif; ?></p>
-            </div>
-        </div>
-
-        <!-- Carousel -->
-        <div class="mb-6 relative overflow-hidden rounded-xl border border-zinc-800" id="carousel-wrapper">
-            <div class="flex transition-transform duration-500 ease-in-out" id="carousel-track">
-                <!-- Slide 1: Getting Started -->
-                <div class="w-full shrink-0 p-6 md:p-8" style="background: linear-gradient(135deg, #09090b 0%, #1a103d 100%);">
-                    <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
-                        <div class="p-3 rounded-xl bg-violet-500/10 border border-violet-500/20">
-                            <i class="bi bi-rocket-takeoff text-3xl text-violet-400"></i>
-                        </div>
-                        <div class="flex-1">
-                            <span class="text-violet-400 text-xs font-bold uppercase tracking-widest">Getting Started</span>
-                            <h3 class="text-lg font-bold text-white mt-1">Launch Your Store in 5 Minutes</h3>
-                            <p class="text-zinc-400 text-sm mt-1 max-w-lg">Add products, pick a theme, connect payments, and publish.</p>
-                        </div>
-                        <a href="<?php echo $admin_base; ?>products" class="shrink-0 bg-violet-600 hover:bg-violet-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors">
-                            Add Products <i class="bi bi-arrow-right ml-1"></i>
+                    <div class="mt-6 flex flex-wrap items-center gap-3">
+                        <a href="<?php echo $admin_base; ?>builder<?php echo $home_page ? '?page=' . urlencode($home_page['slug']) : ''; ?>"
+                           class="admin-btn inline-flex items-center gap-2 rounded-full bg-[#008060] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-[#006e52]">
+                            <i class="bi bi-brush"></i>
+                            <span>Open page builder</span>
                         </a>
+                        <a href="<?php echo $admin_base; ?>page"
+                           class="admin-btn inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                            <i class="bi bi-file-earmark-text"></i>
+                            <span>View all pages</span>
+                        </a>
+                        <a href="<?php echo $admin_base; ?>settings?tab=branding"
+                           class="admin-btn inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#111827] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1f2937]">
+                            <i class="bi bi-palette"></i>
+                            <span>Branding settings</span>
+                        </a>
+                    </div>
+
+                    <div class="mt-8 grid gap-3 sm:grid-cols-3">
+                        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Pages</p>
+                            <p class="mt-2 text-3xl font-semibold text-white"><?php echo $hero_metric; ?></p>
+                            <p class="mt-1 text-sm text-zinc-400">Active store pages</p>
+                        </div>
+                        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Completion</p>
+                            <p class="mt-2 text-3xl font-semibold text-white"><?php echo $progress_pct; ?>%</p>
+                            <p class="mt-1 text-sm text-zinc-400"><?php echo $completed_steps; ?>/<?php echo $total_steps; ?> setup tasks</p>
+                        </div>
+                        <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Orders</p>
+                            <p class="mt-2 text-3xl font-semibold text-white"><?php echo $total_orders; ?></p>
+                            <p class="mt-1 text-sm text-zinc-400"><?php echo $pending_orders; ?> pending</p>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Slide 2: Analytics -->
-                <div class="w-full shrink-0 p-6 md:p-8" style="background: linear-gradient(135deg, #09090b 0%, #0d2818 100%);">
-                    <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
-                        <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
-                            <i class="bi bi-graph-up-arrow text-3xl text-emerald-400"></i>
+                <div class="grid gap-4">
+                    <div class="rounded-3xl border border-white/10 bg-[#202123] p-5 text-white shadow-[0_18px_45px_rgba(0,0,0,0.22)]">
+                        <div class="flex items-center justify-between gap-3">
+                            <div>
+                                <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Store health</p>
+                                <h2 class="mt-1 text-xl font-semibold">Ready-to-publish checklist</h2>
+                            </div>
+                            <div class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/80">
+                                <?php echo $completed_steps; ?>/<?php echo $total_steps; ?>
+                            </div>
                         </div>
-                        <div class="flex-1">
-                            <span class="text-emerald-400 text-xs font-bold uppercase tracking-widest">New Feature</span>
-                            <h3 class="text-lg font-bold text-white mt-1">Real-Time Analytics Dashboard</h3>
-                            <p class="text-zinc-400 text-sm mt-1 max-w-lg">Track page views, visitors, referrers and device breakdowns.</p>
+                        <div class="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+                            <div class="h-full rounded-full bg-[#008060]" style="width: <?php echo $progress_pct; ?>%"></div>
                         </div>
-                        <a href="<?php echo $admin_base; ?>analytics" class="shrink-0 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors">
-                            View Analytics <i class="bi bi-arrow-right ml-1"></i>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Slide 3: API & SDK -->
-                <div class="w-full shrink-0 p-6 md:p-8" style="background: linear-gradient(135deg, #09090b 0%, #0d1528 100%);">
-                    <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
-                        <div class="p-3 rounded-xl bg-sky-500/10 border border-sky-500/20">
-                            <i class="bi bi-code-slash text-3xl text-sky-400"></i>
-                        </div>
-                        <div class="flex-1">
-                            <span class="text-sky-400 text-xs font-bold uppercase tracking-widest">Developer</span>
-                            <h3 class="text-lg font-bold text-white mt-1">Public Store API & JavaScript SDK</h3>
-                            <p class="text-zinc-400 text-sm mt-1 max-w-lg">Embed your products anywhere with our drop-in SDK or REST API.</p>
-                        </div>
-                        <a href="<?php echo $admin_base; ?>settings?tab=dev" class="shrink-0 bg-sky-600 hover:bg-sky-500 text-white px-5 py-2 rounded-lg text-sm font-medium transition-colors">
-                            Developer Settings <i class="bi bi-arrow-right ml-1"></i>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Carousel Controls -->
-            <button onclick="carouselPrev()" class="absolute left-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white w-8 h-8 rounded-full flex items-center justify-center transition-colors">
-                <i class="bi bi-chevron-left text-sm"></i>
-            </button>
-            <button onclick="carouselNext()" class="absolute right-3 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white w-8 h-8 rounded-full flex items-center justify-center transition-colors">
-                <i class="bi bi-chevron-right text-sm"></i>
-            </button>
-            <div class="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-2" id="carousel-dots">
-                <button onclick="carouselGo(0)" class="w-2 h-2 rounded-full bg-white transition-all"></button>
-                <button onclick="carouselGo(1)" class="w-2 h-2 rounded-full bg-white/30 transition-all"></button>
-                <button onclick="carouselGo(2)" class="w-2 h-2 rounded-full bg-white/30 transition-all"></button>
-            </div>
-        </div>
-
-        <script>
-        (function() {
-            var current = 0, total = 3;
-            var track = document.getElementById('carousel-track');
-            var dots = document.getElementById('carousel-dots').children;
-            var autoplay;
-            function update() {
-                track.style.transform = 'translateX(-' + (current * 100) + '%)';
-                for (var i = 0; i < dots.length; i++) {
-                    dots[i].className = i === current ? 'w-2 h-2 rounded-full bg-white transition-all scale-125' : 'w-2 h-2 rounded-full bg-white/30 transition-all';
-                }
-            }
-            window.carouselNext = function() { current = (current + 1) % total; update(); resetAutoplay(); };
-            window.carouselPrev = function() { current = (current - 1 + total) % total; update(); resetAutoplay(); };
-            window.carouselGo = function(i) { current = i; update(); resetAutoplay(); };
-            function resetAutoplay() { clearInterval(autoplay); autoplay = setInterval(function() { window.carouselNext(); }, 8000); }
-            resetAutoplay();
-        })();
-        </script>
-
-        <!-- Roadmap + Recent Orders -->
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-            <!-- Store Roadmap -->
-            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-                <div class="flex items-center justify-between mb-4">
-                    <h3 class="text-white font-semibold text-sm">Store Roadmap</h3>
-                    <span class="text-xs font-bold text-violet-400"><?php echo $completed_steps; ?>/<?php echo $total_steps; ?></span>
-                </div>
-                <div class="w-full h-1.5 bg-zinc-800 rounded-full mb-5 overflow-hidden">
-                    <div class="h-full rounded-full transition-all duration-700 <?php echo $progress_pct === 100 ? 'bg-emerald-500' : 'bg-violet-500'; ?>"
-                         style="width: <?php echo $progress_pct; ?>%"></div>
-                </div>
-
-                <?php if ($progress_pct === 100): ?>
-                <div class="flex items-center gap-2 mb-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
-                    <i class="bi bi-check-circle-fill text-emerald-400 text-sm"></i>
-                    <span class="text-emerald-400 text-xs font-medium">All set! Your store is fully configured.</span>
-                </div>
-                <?php endif; ?>
-
-                <div class="space-y-1">
-                    <?php foreach ($checklist as $step): ?>
-                    <a href="<?php echo $step['link']; ?>"
-                       class="flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors <?php echo $step['done'] ? 'opacity-50' : 'hover:bg-zinc-800'; ?>">
-                        <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 <?php echo $step['done'] ? 'bg-emerald-500/20' : 'bg-zinc-800'; ?>">
-                            <?php if ($step['done']): ?>
-                                <i class="bi bi-check-lg text-emerald-400 text-sm"></i>
-                            <?php else: ?>
-                                <i class="bi <?php echo $step['icon']; ?> text-zinc-500 text-xs"></i>
-                            <?php endif; ?>
-                        </div>
-                        <span class="text-sm <?php echo $step['done'] ? 'text-zinc-600 line-through' : 'text-zinc-300'; ?>"><?php echo $step['label']; ?></span>
-                        <?php if (!$step['done']): ?>
-                        <i class="bi bi-chevron-right text-zinc-700 text-xs ml-auto"></i>
-                        <?php endif; ?>
-                    </a>
-                    <?php endforeach; ?>
-                </div>
-
-                <?php if ($progress_pct < 100): ?>
-                <div class="mt-4 rounded-lg bg-violet-500/5 border border-violet-500/10 p-3">
-                    <p class="text-xs text-zinc-500"><i class="bi bi-lightbulb text-violet-400 mr-1"></i> Stores that complete all steps within the first week see 3x more traffic.</p>
-                </div>
-                <?php endif; ?>
-            </div>
-
-            <!-- Recent Orders -->
-            <div class="xl:col-span-2 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-                <div class="px-5 py-4 border-b border-zinc-800 flex items-center justify-between">
-                    <h3 class="text-white font-semibold text-sm"><i class="bi bi-receipt mr-2 text-zinc-500"></i>Recent Orders</h3>
-                    <a href="<?php echo $admin_base; ?>orders" class="text-xs text-violet-400 hover:text-violet-300 font-medium transition-colors">View All</a>
-                </div>
-                <?php if (empty($recent_orders)): ?>
-                <div class="flex flex-col items-center justify-center py-16 text-zinc-500">
-                    <i class="bi bi-bag text-4xl mb-3"></i>
-                    <p class="text-sm">No orders yet</p>
-                    <p class="text-xs text-zinc-600 mt-1">Orders from your store will appear here</p>
-                </div>
-                <?php else: ?>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead>
-                            <tr class="border-b border-zinc-800 text-xs text-zinc-500 uppercase">
-                                <th class="px-5 py-3 font-medium">Order</th>
-                                <th class="px-5 py-3 font-medium">Customer</th>
-                                <th class="px-5 py-3 font-medium">Amount</th>
-                                <th class="px-5 py-3 font-medium">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-zinc-800/50">
-                            <?php foreach ($recent_orders as $order):
-                                $sc = match($order['status'] ?? '') {
-                                    'completed' => ['bg-emerald-500/10 text-emerald-400', 'bg-emerald-400'],
-                                    'pending'   => ['bg-amber-500/10 text-amber-400', 'bg-amber-400'],
-                                    'processing'=> ['bg-sky-500/10 text-sky-400', 'bg-sky-400'],
-                                    'cancelled' => ['bg-red-500/10 text-red-400', 'bg-red-400'],
-                                    default     => ['bg-zinc-700 text-zinc-400', 'bg-zinc-500'],
-                                };
-                            ?>
-                            <tr class="hover:bg-zinc-800/30 transition-colors">
-                                <td class="px-5 py-4 text-zinc-400 font-mono text-xs">#<?php echo $order['id']; ?></td>
-                                <td class="px-5 py-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-violet-500/10 text-violet-400 flex items-center justify-center text-xs font-bold">
-                                            <?php echo strtoupper(substr($order['customer_name'] ?? 'U', 0, 1)); ?>
-                                        </div>
-                                        <span class="text-white text-sm"><?php echo htmlspecialchars($order['customer_name'] ?? 'Unknown'); ?></span>
-                                    </div>
-                                </td>
-                                <td class="px-5 py-4 text-white font-medium"><?php echo $currency_symbol . number_format($order['total_amount'], 2); ?></td>
-                                <td class="px-5 py-4">
-                                    <span class="inline-flex items-center gap-1.5 text-xs font-medium px-2 py-0.5 rounded-full <?php echo $sc[0]; ?>">
-                                        <span class="w-1.5 h-1.5 rounded-full <?php echo $sc[1]; ?>"></span>
-                                        <?php echo ucfirst($order['status']); ?>
+                        <div class="mt-4 space-y-3">
+                            <?php foreach (array_slice($checklist, 0, 4) as $step): ?>
+                                <a href="<?php echo $step['link']; ?>" class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 transition hover:bg-white/10">
+                                    <span class="flex h-9 w-9 items-center justify-center rounded-xl <?php echo $step['done'] ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/10 text-white/70'; ?>">
+                                        <i class="bi <?php echo $step['done'] ? 'bi-check-lg' : $step['icon']; ?>"></i>
                                     </span>
-                                </td>
-                            </tr>
+                                    <span class="text-sm font-medium <?php echo $step['done'] ? 'text-white/50 line-through' : 'text-white'; ?>">
+                                        <?php echo htmlspecialchars($step['label'], ENT_QUOTES, 'UTF-8'); ?>
+                                    </span>
+                                    <?php if (!$step['done']): ?>
+                                        <i class="bi bi-chevron-right ml-auto text-white/35"></i>
+                                    <?php endif; ?>
+                                </a>
                             <?php endforeach; ?>
-                        </tbody>
-                    </table>
+                        </div>
+                    </div>
+
+                    <div class="rounded-3xl border border-white/10 bg-[#202123] p-5">
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Revenue</p>
+                        <div class="mt-2 flex items-end justify-between gap-4">
+                            <div>
+                                <p class="text-3xl font-semibold text-white"><?php echo $currency_symbol . number_format($total_revenue, 2); ?></p>
+                                <p class="mt-1 text-sm text-zinc-400">Completed order revenue</p>
+                            </div>
+                            <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-400">
+                                Live store
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <?php endif; ?>
+            </div>
+        </section>
+
+        <section class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div class="rounded-3xl border border-white/10 bg-[#252526] p-5 shadow-[0_10px_28px_rgba(0,0,0,0.18)]">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-zinc-400">Products</p>
+                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/5 text-[#008060]"><i class="bi bi-box-seam"></i></span>
+                </div>
+                <p class="mt-4 text-3xl font-semibold text-white"><?php echo $total_products; ?></p>
+                <p class="mt-1 text-sm text-zinc-400"><?php echo $total_categories; ?> collections and categories</p>
+            </div>
+            <div class="rounded-3xl border border-white/10 bg-[#252526] p-5 shadow-[0_10px_28px_rgba(0,0,0,0.18)]">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-zinc-400">Orders</p>
+                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/5 text-white"><i class="bi bi-bag"></i></span>
+                </div>
+                <p class="mt-4 text-3xl font-semibold text-white"><?php echo $total_orders; ?></p>
+                <p class="mt-1 text-sm text-zinc-400"><?php echo $pending_orders; ?> waiting for action</p>
+            </div>
+            <div class="rounded-3xl border border-white/10 bg-[#252526] p-5 shadow-[0_10px_28px_rgba(0,0,0,0.18)]">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-zinc-400">Inventory</p>
+                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-400"><i class="bi bi-exclamation-triangle"></i></span>
+                </div>
+                <p class="mt-4 text-3xl font-semibold text-white"><?php echo $low_stock; ?></p>
+                <p class="mt-1 text-sm text-zinc-400"><?php echo $out_of_stock; ?> out of stock</p>
+            </div>
+            <div class="rounded-3xl border border-white/10 bg-[#252526] p-5 shadow-[0_10px_28px_rgba(0,0,0,0.18)]">
+                <div class="flex items-center justify-between">
+                    <p class="text-sm font-medium text-zinc-400">Pages</p>
+                    <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-emerald-500/10 text-[#008060]"><i class="bi bi-file-earmark-text"></i></span>
+                </div>
+                <p class="mt-4 text-3xl font-semibold text-white"><?php echo $page_count; ?></p>
+                <p class="mt-1 text-sm text-zinc-400">Homepage, landing pages, and content pages</p>
+            </div>
+        </section>
+
+        <section class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(330px,0.8fr)]">
+            <div class="rounded-[28px] border border-white/10 bg-[#202123] shadow-[0_18px_45px_rgba(0,0,0,0.22)]">
+                <div class="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Pages</p>
+                        <h2 class="mt-1 text-2xl font-semibold text-white">All store pages</h2>
+                    </div>
+                    <a href="<?php echo $admin_base; ?>page"
+                       class="admin-btn inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10">
+                        <i class="bi bi-arrow-right"></i>
+                        <span>Open page manager</span>
+                    </a>
+                </div>
+
+                <div class="overflow-hidden">
+                    <?php if (empty($recent_pages)): ?>
+                        <div class="px-5 py-14 text-center">
+                            <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-white/5 text-[#008060]">
+                                <i class="bi bi-file-earmark-plus text-2xl"></i>
+                            </div>
+                            <p class="mt-4 text-lg font-semibold text-white">No store pages yet</p>
+                            <p class="mt-1 text-sm text-zinc-400">Create your homepage or launch a content page to get started.</p>
+                            <div class="mt-5 flex justify-center gap-3">
+                                <a href="<?php echo $admin_base; ?>page"
+                                   class="admin-btn inline-flex items-center gap-2 rounded-full bg-[#008060] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#006e52]">
+                                    <i class="bi bi-plus-lg"></i>
+                                    <span>Create page</span>
+                                </a>
+                                <a href="<?php echo $admin_base; ?>builder"
+                                   class="admin-btn inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">
+                                    <i class="bi bi-brush"></i>
+                                    <span>Open builder</span>
+                                </a>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <div class="divide-y divide-white/10">
+                            <?php foreach (array_slice($recent_pages, 0, 6) as $page): ?>
+                                <div class="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                                    <div class="flex items-center gap-4">
+                                        <div class="flex h-12 w-12 items-center justify-center rounded-2xl <?php echo $page['is_home'] ? 'bg-emerald-500/10 text-[#008060]' : 'bg-white/5 text-white'; ?>">
+                                            <i class="bi <?php echo $page['is_home'] ? 'bi-house-heart' : 'bi-file-earmark-text'; ?>"></i>
+                                        </div>
+                                        <div>
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <h3 class="text-sm font-semibold text-white"><?php echo htmlspecialchars($page['label'], ENT_QUOTES, 'UTF-8'); ?></h3>
+                                                <?php if ($page['is_home']): ?>
+                                                    <span class="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-300">Home</span>
+                                                <?php endif; ?>
+                                            </div>
+                                            <p class="mt-1 text-sm text-zinc-400">/<?php echo htmlspecialchars($page['slug'], ENT_QUOTES, 'UTF-8'); ?></p>
+                                            <p class="mt-1 text-xs text-zinc-500">Updated <?php echo date('M j, Y', (int) $page['modified']); ?></p>
+                                        </div>
+                                    </div>
+                                    <div class="flex flex-wrap items-center gap-2">
+                                        <a href="<?php echo $admin_base; ?>builder?page=<?php echo urlencode($page['slug']); ?>"
+                                           class="admin-btn inline-flex items-center gap-2 rounded-full bg-[#008060] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#006e52]">
+                                            <i class="bi bi-pencil-square"></i>
+                                            <span>Edit</span>
+                                        </a>
+                                        <a href="<?php echo $admin_base; ?>page?page_slug=<?php echo urlencode($page['slug']); ?>"
+                                           class="admin-btn inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
+                                            <i class="bi bi-folder2-open"></i>
+                                            <span>Manage</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
 
-        </div>
+            <div class="space-y-6">
+                <div class="rounded-[28px] border border-white/10 bg-[#202123] p-5 text-white shadow-[0_18px_45px_rgba(0,0,0,0.22)]">
+                    <div class="flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Next steps</p>
+                            <h3 class="mt-1 text-xl font-semibold">Finish store setup</h3>
+                        </div>
+                        <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-white/75"><?php echo $progress_pct; ?>%</span>
+                    </div>
+                    <div class="mt-4 h-2 rounded-full bg-white/10">
+                        <div class="h-2 rounded-full bg-[#008060]" style="width: <?php echo $progress_pct; ?>%"></div>
+                    </div>
+                    <div class="mt-4 space-y-2">
+                        <?php foreach ($checklist as $step): ?>
+                            <a href="<?php echo $step['link']; ?>" class="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 transition hover:bg-white/10">
+                                <span class="flex h-8 w-8 items-center justify-center rounded-xl <?php echo $step['done'] ? 'bg-emerald-500/15 text-emerald-300' : 'bg-white/10 text-white/70'; ?>">
+                                    <i class="bi <?php echo $step['done'] ? 'bi-check-lg' : $step['icon']; ?>"></i>
+                                </span>
+                                <span class="text-sm <?php echo $step['done'] ? 'text-white/50 line-through' : 'text-white'; ?>">
+                                    <?php echo htmlspecialchars($step['label'], ENT_QUOTES, 'UTF-8'); ?>
+                                </span>
+                                <?php if (!$step['done']): ?>
+                                    <i class="bi bi-chevron-right ml-auto text-white/35"></i>
+                                <?php endif; ?>
+                            </a>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
 
+                <div class="rounded-[28px] border border-white/10 bg-[#202123] p-5 shadow-[0_18px_45px_rgba(0,0,0,0.22)]">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Recent orders</p>
+                            <h3 class="mt-1 text-xl font-semibold text-white">Latest sales</h3>
+                        </div>
+                        <a href="<?php echo $admin_base; ?>orders" class="text-sm font-semibold text-[#008060] hover:text-[#006e52]">View all</a>
+                    </div>
+                    <div class="mt-4 overflow-hidden rounded-2xl border border-white/10">
+                        <?php if (empty($recent_orders)): ?>
+                            <div class="px-4 py-10 text-center text-sm text-zinc-400">
+                                No orders yet. Your first sale will appear here.
+                            </div>
+                        <?php else: ?>
+                            <div class="divide-y divide-white/10">
+                                <?php foreach ($recent_orders as $order):
+                                    $status = strtolower((string) ($order['status'] ?? 'unknown'));
+                                    $badge = match ($status) {
+                                        'completed' => 'bg-emerald-50 text-emerald-700',
+                                        'pending' => 'bg-amber-50 text-amber-700',
+                                        'processing' => 'bg-sky-50 text-sky-700',
+                                        'cancelled' => 'bg-red-50 text-red-700',
+                                        default => 'bg-zinc-100 text-zinc-700',
+                                    };
+                                    ?>
+                                    <div class="flex items-center justify-between gap-4 px-4 py-3">
+                                        <div>
+                                            <p class="text-sm font-semibold text-white">Order #<?php echo $order['id']; ?></p>
+                                            <p class="text-xs text-zinc-400"><?php echo htmlspecialchars($order['customer_name'] ?? 'Unknown customer'); ?></p>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-sm font-semibold text-white"><?php echo $currency_symbol . number_format((float) ($order['total_amount'] ?? 0), 2); ?></p>
+                                            <span class="mt-1 inline-flex rounded-full px-2.5 py-0.5 text-[11px] font-semibold <?php echo $badge; ?>">
+                                                <?php echo ucfirst($status); ?>
+                                            </span>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 </div>
