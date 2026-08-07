@@ -81,13 +81,9 @@ $hero_metric = $page_count > 0 ? $page_count : 0;
 
     <main class="flex-1 overflow-y-auto overflow-x-hidden bg-[#1b1b1c] p-4 sm:p-6 lg:p-8">
         <section class="relative overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(37,37,38,0.98),rgba(23,23,24,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
-            <div class="absolute inset-y-0 right-0 w-1/3 bg-[radial-gradient(circle_at_top_right,_rgba(122,26,171,0.18),_transparent_55%)]"></div>
+            <div class="absolute inset-y-0 right-0 w-1/3 "></div>
             <div class="relative grid gap-6 p-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)] lg:p-8">
                 <div>
-                    <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-300">
-                        <span class="h-2 w-2 rounded-full bg-[#008060]"></span>
-                        Store Pages
-                    </div>
                     <h1 class="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Manage your storefront pages from one calm workspace.</h1>
                     <p class="mt-3 max-w-2xl text-sm leading-6 text-zinc-400 sm:text-base">
                         Create, edit, and organize homepage and content pages without leaving the admin. The layout is cleaner and more focused, while the interface stays dark and production-ready.
@@ -95,17 +91,17 @@ $hero_metric = $page_count > 0 ? $page_count : 0;
 
                     <div class="mt-6 flex flex-wrap items-center gap-3">
                         <a href="<?php echo $admin_base; ?>builder<?php echo $home_page ? '?page=' . urlencode($home_page['slug']) : ''; ?>"
-                           class="admin-btn inline-flex items-center gap-2 rounded-full bg-[#008060] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-[#006e52]">
+                            class="admin-btn inline-flex items-center gap-2 rounded-full bg-[#008060] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-[#006e52]">
                             <i class="bi bi-brush"></i>
                             <span>Open page builder</span>
                         </a>
                         <a href="<?php echo $admin_base; ?>page"
-                           class="admin-btn inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                            class="admin-btn inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
                             <i class="bi bi-file-earmark-text"></i>
                             <span>View all pages</span>
                         </a>
                         <a href="<?php echo $admin_base; ?>settings?tab=branding"
-                           class="admin-btn inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#111827] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1f2937]">
+                            class="admin-btn inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#111827] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1f2937]">
                             <i class="bi bi-palette"></i>
                             <span>Branding settings</span>
                         </a>
@@ -220,7 +216,7 @@ $hero_metric = $page_count > 0 ? $page_count : 0;
                         <h2 class="mt-1 text-2xl font-semibold text-white">All store pages</h2>
                     </div>
                     <a href="<?php echo $admin_base; ?>page"
-                       class="admin-btn inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10">
+                        class="admin-btn inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10">
                         <i class="bi bi-arrow-right"></i>
                         <span>Open page manager</span>
                     </a>
@@ -236,12 +232,12 @@ $hero_metric = $page_count > 0 ? $page_count : 0;
                             <p class="mt-1 text-sm text-zinc-400">Create your homepage or launch a content page to get started.</p>
                             <div class="mt-5 flex justify-center gap-3">
                                 <a href="<?php echo $admin_base; ?>page"
-                                   class="admin-btn inline-flex items-center gap-2 rounded-full bg-[#008060] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#006e52]">
+                                    class="admin-btn inline-flex items-center gap-2 rounded-full bg-[#008060] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#006e52]">
                                     <i class="bi bi-plus-lg"></i>
                                     <span>Create page</span>
                                 </a>
                                 <a href="<?php echo $admin_base; ?>builder"
-                                   class="admin-btn inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">
+                                    class="admin-btn inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10">
                                     <i class="bi bi-brush"></i>
                                     <span>Open builder</span>
                                 </a>
@@ -268,12 +264,12 @@ $hero_metric = $page_count > 0 ? $page_count : 0;
                                     </div>
                                     <div class="flex flex-wrap items-center gap-2">
                                         <a href="<?php echo $admin_base; ?>builder?page=<?php echo urlencode($page['slug']); ?>"
-                                           class="admin-btn inline-flex items-center gap-2 rounded-full bg-[#008060] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#006e52]">
+                                            class="admin-btn inline-flex items-center gap-2 rounded-full bg-[#008060] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#006e52]">
                                             <i class="bi bi-pencil-square"></i>
                                             <span>Edit</span>
                                         </a>
                                         <a href="<?php echo $admin_base; ?>page?page_slug=<?php echo urlencode($page['slug']); ?>"
-                                           class="admin-btn inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
+                                            class="admin-btn inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
                                             <i class="bi bi-folder2-open"></i>
                                             <span>Manage</span>
                                         </a>
@@ -338,7 +334,7 @@ $hero_metric = $page_count > 0 ? $page_count : 0;
                                         'cancelled' => 'bg-red-50 text-red-700',
                                         default => 'bg-zinc-100 text-zinc-700',
                                     };
-                                    ?>
+                                ?>
                                     <div class="flex items-center justify-between gap-4 px-4 py-3">
                                         <div>
                                             <p class="text-sm font-semibold text-white">Order #<?php echo $order['id']; ?></p>

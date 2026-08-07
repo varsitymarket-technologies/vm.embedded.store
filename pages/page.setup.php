@@ -72,6 +72,52 @@ HEATSKRS OVRSZD TEE',
     }
 }
 
+if (!function_exists('vm_setup_normalize_domain')) {
+    function vm_setup_normalize_domain(string $domain): string
+    {
+        $domain = trim(strtolower($domain));
+        $domain = preg_replace('#^https?://#', '', $domain);
+        $domain = preg_replace('#/.*$#', '', $domain);
+        return rtrim($domain, '.');
+    }
+}
+
+if (!function_exists('vm_setup_is_valid_domain')) {
+    function vm_setup_is_valid_domain(string $domain): bool
+    {
+        $domain = vm_setup_normalize_domain($domain);
+        if ($domain === '' || strpos($domain, '.') === false) {
+            return false;
+        }
+
+        if (strlen($domain) > 253) {
+            return false;
+        }
+
+        $labels = explode('.', $domain);
+        foreach ($labels as $label) {
+            if ($label === '' || strlen($label) > 63) {
+                return false;
+            }
+
+            if (!preg_match('/^(?!-)[a-z0-9-]+(?<!-)$/i', $label)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+}
+
+if (!function_exists('vm_setup_is_valid_subdomain_prefix')) {
+    function vm_setup_is_valid_subdomain_prefix(string $prefix): bool
+    {
+        return $prefix !== ''
+            && strlen($prefix) <= 63
+            && preg_match('/^(?!-)[a-z0-9]+(?:[a-z0-9-]*[a-z0-9])?$/', $prefix) === 1;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $file = dirname(dirname(__FILE__)) . "/build/vm.engine.sql";
     $dbm = new database_manager($file);
@@ -81,17 +127,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Domain Selection Logic
     $domain_type = $_POST['domain_type'] ?? 'custom';
+    $parent_domain = $_SERVER['PARENT_DOMAIN'] ?? '';
     if ($domain_type === 'subdomain' && isset($_SERVER['PARENT_DOMAIN'])) {
-        $prefix = preg_replace('/[^a-z0-9-]/', '', strtolower($_POST['subdomain_prefix']));
+        $prefix = trim(strtolower((string)($_POST['subdomain_prefix'] ?? '')));
+        $prefix = preg_replace('/[^a-z0-9-]/', '', $prefix);
         $website_domain = $prefix . "." . $_SERVER['PARENT_DOMAIN'];
     } else {
-        $website_domain = trim($_POST['wb_domain'] ?? '');
+        $website_domain = trim((string)($_POST['wb_domain'] ?? ''));
     }
+    $website_domain = vm_setup_normalize_domain($website_domain);
 
     $account_index = __ACCOUNT_INDEX__;
     $name = $website_name;
     $domain = $website_domain;
     $theme = "default";
+
+    if ($domain_type === 'subdomain' && isset($_SERVER['PARENT_DOMAIN'])) {
+        if (!vm_setup_is_valid_subdomain_prefix($prefix ?? '')) {
+            $error_msg = urlencode("Please choose a valid subdomain prefix using only letters, numbers, and hyphens.");
+            echo "<script>
+                sessionStorage.setItem('setup_error', decodeURIComponent('{$error_msg}'));
+                window.location.href = window.location.pathname + '?error=invalid_subdomain';
+            </script>";
+            exit;
+        }
+
+        if ($website_domain === $parent_domain || !vm_setup_is_valid_domain($website_domain)) {
+            $error_msg = urlencode("Please choose a valid subdomain under {$parent_domain}.");
+            echo "<script>
+                sessionStorage.setItem('setup_error', decodeURIComponent('{$error_msg}'));
+                window.location.href = window.location.pathname + '?error=invalid_subdomain';
+            </script>";
+            exit;
+        }
+    } else {
+        if (!vm_setup_is_valid_domain($website_domain)) {
+            $error_msg = urlencode("Please enter a valid domain name like example.com.");
+            echo "<script>
+                sessionStorage.setItem('setup_error', decodeURIComponent('{$error_msg}'));
+                window.location.href = window.location.pathname + '?error=invalid_domain';
+            </script>";
+            exit;
+        }
+    }
 
     // ── Duplicate domain guard ──────────────────────────────────────────────
     $existing = $dbm->query(
@@ -106,6 +184,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             window.location.href = window.location.pathname + '?error=domain_taken';
         </script>";
         exit;
+    }
+
+    if ($domain_type === 'subdomain' && isset($_SERVER['PARENT_DOMAIN']) && function_exists('dns_get_record')) {
+        $dns_records = @dns_get_record($domain, DNS_A);
+        if ($dns_records !== false && !empty($dns_records)) {
+            $error_msg = urlencode("That subdomain already exists. Please choose another name.");
+            echo "<script>
+                sessionStorage.setItem('setup_error', decodeURIComponent('{$error_msg}'));
+                window.location.href = window.location.pathname + '?error=domain_taken';
+            </script>";
+            exit;
+        }
     }
     // ───────────────────────────────────────────────────────────────────────
 

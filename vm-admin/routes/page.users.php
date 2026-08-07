@@ -112,42 +112,23 @@ $lockedCount = $lockedCustomers;
     <?php @include_once "header.php"; ?>
 
     <main class="flex-1 overflow-y-auto overflow-x-hidden p-6 lg:p-8 space-y-6">
-        <section class="relative overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(135deg,#f5f7fa_0%,#edf2f7_48%,#ffffff_100%)] text-slate-900 shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
-            <div class="absolute inset-0 opacity-70">
-                <div class="absolute -right-20 top-[-5rem] h-64 w-64 rounded-full bg-emerald-200/70 blur-3xl"></div>
-                <div class="absolute left-1/3 top-10 h-40 w-40 rounded-full bg-sky-200/70 blur-3xl"></div>
-            </div>
+        <section class="relative overflow-hidden rounded-3xl border border-white/10 bg-[#242424] text-white">
             <div class="relative grid gap-6 p-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.8fr)] lg:p-8">
                 <div>
-                    <div class="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-3 py-1 text-xs font-semibold text-slate-600">
-                        <span class="h-2 w-2 rounded-full bg-[#008060]"></span>
-                        Customer accounts
-                    </div>
-                    <h1 class="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Manage store customers, sessions, and verification.</h1>
-                    <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+                    <h1 class="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Manage website users, sessions, and verification.</h1>
+                    <p class="mt-3 max-w-2xl text-sm leading-6 text-white sm:text-base">
                         Keep track of verified accounts, lockouts, and active sessions from one tabular admin screen.
                     </p>
 
-                    <div class="mt-6 flex flex-wrap items-center gap-3">
+                                      <div class="mt-6 flex flex-wrap items-center gap-3">
                         <button onclick="openCreateModal()" class="inline-flex items-center gap-2 rounded-full bg-[#008060] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-[#006e52]">
                             <i class="bi bi-person-plus-fill"></i>
                             <span>Add client</span>
                         </button>
                     </div>
+
                 </div>
 
-                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                    <div class="rounded-2xl border border-slate-200 bg-white/85 p-4 backdrop-blur">
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Total clients</p>
-                        <p class="mt-2 text-3xl font-semibold text-slate-950"><?php echo $totalCustomers; ?></p>
-                        <p class="mt-1 text-sm text-slate-500">All customer accounts</p>
-                    </div>
-                    <div class="rounded-2xl border border-slate-200 bg-white/85 p-4 backdrop-blur">
-                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Active sessions</p>
-                        <p class="mt-2 text-3xl font-semibold text-slate-950"><?php echo $activeSessions; ?></p>
-                        <p class="mt-1 text-sm text-slate-500">Live login tokens</p>
-                    </div>
-                </div>
             </div>
         </section>
 
@@ -155,28 +136,28 @@ $lockedCount = $lockedCustomers;
             <div class="rounded-2xl border border-white/10 bg-[#202123] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Total clients</span>
-                    <i class="bi bi-people text-violet-300"></i>
+                    <i class="bi bi-people text-white"></i>
                 </div>
                 <p class="mt-3 text-2xl font-semibold text-white"><?php echo $totalCustomers; ?></p>
             </div>
             <div class="rounded-2xl border border-white/10 bg-[#202123] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Verified</span>
-                    <i class="bi bi-shield-check text-emerald-300"></i>
+                    <i class="bi bi-shield-check text-white"></i>
                 </div>
                 <p class="mt-3 text-2xl font-semibold text-white"><?php echo $verifiedCustomers; ?></p>
             </div>
             <div class="rounded-2xl border border-white/10 bg-[#202123] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Locked</span>
-                    <i class="bi bi-lock-fill text-amber-300"></i>
+                    <i class="bi bi-lock-fill text-white"></i>
                 </div>
                 <p class="mt-3 text-2xl font-semibold text-white"><?php echo $lockedCount; ?></p>
             </div>
             <div class="rounded-2xl border border-white/10 bg-[#202123] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
                 <div class="flex items-center justify-between">
                     <span class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Sessions</span>
-                    <i class="bi bi-window-stack text-sky-300"></i>
+                    <i class="bi bi-window-stack text-white"></i>
                 </div>
                 <p class="mt-3 text-2xl font-semibold text-white"><?php echo $activeSessions; ?></p>
             </div>
@@ -239,7 +220,7 @@ $lockedCount = $lockedCustomers;
                                 $avatarClass = $status === 'verified' ? 'bg-emerald-500/15 text-emerald-300' : ($status === 'locked' ? 'bg-rose-500/15 text-rose-300' : 'bg-white/5 text-zinc-200');
                                 $badgeClass = $status === 'verified' ? 'bg-emerald-500/10 text-emerald-300 ring-1 ring-emerald-500/20' : ($status === 'locked' ? 'bg-rose-500/10 text-rose-300 ring-1 ring-rose-500/20' : 'bg-white/5 text-zinc-300 ring-1 ring-white/10');
                                 $createdAt = !empty($customer['created_at']) ? date('M j, Y', strtotime($customer['created_at'])) : 'N/A';
-                                ?>
+                            ?>
                                 <tr class="customer-row hover:bg-white/[0.03] transition-colors"
                                     data-name="<?php echo htmlspecialchars(strtolower($customer['name'] ?? '')); ?>"
                                     data-email="<?php echo htmlspecialchars(strtolower($customer['email'] ?? '')); ?>"
@@ -477,7 +458,7 @@ $lockedCount = $lockedCustomers;
 
     function setStatusFilter(status) {
         currentStatusFilter = status;
-        document.querySelectorAll('.status-tab').forEach(function (tab) {
+        document.querySelectorAll('.status-tab').forEach(function(tab) {
             tab.classList.remove('active-tab');
             if (tab.getAttribute('data-filter') === status) {
                 tab.classList.add('active-tab');
@@ -491,7 +472,7 @@ $lockedCount = $lockedCustomers;
         const rows = document.querySelectorAll('.customer-row');
         let visibleCount = 0;
 
-        rows.forEach(function (row) {
+        rows.forEach(function(row) {
             const name = row.getAttribute('data-name') || '';
             const email = row.getAttribute('data-email') || '';
             const status = row.getAttribute('data-status') || '';
@@ -508,7 +489,7 @@ $lockedCount = $lockedCustomers;
         }
     }
 
-    document.addEventListener('keydown', function (e) {
+    document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             closeCreateModal();
             closeModal();

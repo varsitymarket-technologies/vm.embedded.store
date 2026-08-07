@@ -24,7 +24,7 @@ $store_url = __WEBSITE_URL__ ?? '#';
 
 <div class="grid-layout">
     <main class="dash-main overflow-x-hidden bg-[#1b1b1c] md:p-6 lg:p-8">
-        <section class="relative overflow-hidden rounded-3xl border border-white/10 bg-[linear-gradient(135deg,#f5f7fa_0%,#edf2f7_48%,#ffffff_100%)] text-slate-900 shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+        <section class="relative overflow-hidden rounded-3xl border border-white/10 bg-white text-slate-900 shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
             <div class="absolute inset-0 opacity-70">
                 <div class="absolute -right-20 top-[-5rem] h-64 w-64 rounded-full bg-emerald-200/70 blur-3xl"></div>
                 <div class="absolute left-1/3 top-10 h-40 w-40 rounded-full bg-sky-200/70 blur-3xl"></div>
@@ -32,7 +32,6 @@ $store_url = __WEBSITE_URL__ ?? '#';
             <div class="relative grid gap-6 p-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.8fr)] lg:p-8">
                 <div>
                     <div class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                        <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
                         Store dashboard
                     </div>
                     <h1 class="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
@@ -46,10 +45,6 @@ $store_url = __WEBSITE_URL__ ?? '#';
                         <a href="<?php echo $admin_base; ?>" class="inline-flex items-center gap-2 rounded-full bg-[#008060] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-[#006e52]">
                             <i class="bi bi-grid-1x2-fill"></i>
                             <span>Open Admin Panel</span>
-                        </a>
-                        <a href="<?php echo $admin_base; ?>products" class="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50">
-                            <i class="bi bi-box-seam"></i>
-                            <span>Manage Products</span>
                         </a>
                     </div>
                 </div>
@@ -70,41 +65,6 @@ $store_url = __WEBSITE_URL__ ?? '#';
                         </a>
                     </div>
                 </div>
-            </div>
-        </section>
-
-        <section class="grid gap-4 grid-cols-2 lg:grid-cols-4 mt-6">
-            <div class="rounded-2xl border border-white/10 bg-[#202123] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Products</span>
-                    <i class="bi bi-box-seam text-violet-300"></i>
-                </div>
-                <p class="mt-3 text-2xl font-semibold text-white"><?php echo class_exists('PDO') ? '—' : '—'; ?></p>
-                <p class="mt-1 text-sm text-zinc-500">Catalog overview from admin</p>
-            </div>
-            <div class="rounded-2xl border border-white/10 bg-[#202123] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Orders</span>
-                    <i class="bi bi-bag text-emerald-300"></i>
-                </div>
-                <p class="mt-3 text-2xl font-semibold text-white">—</p>
-                <p class="mt-1 text-sm text-zinc-500">Latest sales summary</p>
-            </div>
-            <div class="rounded-2xl border border-white/10 bg-[#202123] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Analytics</span>
-                    <i class="bi bi-graph-up text-sky-300"></i>
-                </div>
-                <p class="mt-3 text-2xl font-semibold text-white">Real-time</p>
-                <p class="mt-1 text-sm text-zinc-500">Traffic and conversion tracking</p>
-            </div>
-            <div class="rounded-2xl border border-white/10 bg-[#202123] p-4 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
-                <div class="flex items-center justify-between">
-                    <span class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Status</span>
-                    <i class="bi bi-check-circle text-amber-300"></i>
-                </div>
-                <p class="mt-3 text-2xl font-semibold text-white">Ready</p>
-                <p class="mt-1 text-sm text-zinc-500">Your store is online</p>
             </div>
         </section>
 
@@ -157,7 +117,7 @@ $store_url = __WEBSITE_URL__ ?? '#';
 
         <section class="mt-6 relative overflow-hidden rounded-3xl border border-white/10 shadow-[0_18px_45px_rgba(0,0,0,0.24)]" id="carousel-wrapper">
             <div class="flex transition-transform duration-500 ease-in-out" id="carousel-track">
-                <div class="w-full shrink-0 p-6 md:p-8" style="background: linear-gradient(135deg, #0f172a 0%, #1b1038 100%);">
+                <div class="w-full shrink-0 p-6 md:p-8" style="">
                     <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
                         <div class="p-4 rounded-2xl bg-violet-500/10 border border-violet-500/20">
                             <i class="bi bi-rocket-takeoff text-4xl text-violet-300"></i>
@@ -173,7 +133,7 @@ $store_url = __WEBSITE_URL__ ?? '#';
                     </div>
                 </div>
 
-                <div class="w-full shrink-0 p-6 md:p-8" style="background: linear-gradient(135deg, #0f172a 0%, #0d2818 100%);">
+                <div class="w-full shrink-0 p-6 md:p-8">
                     <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
                         <div class="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
                             <i class="bi bi-graph-up-arrow text-4xl text-emerald-300"></i>
@@ -189,7 +149,7 @@ $store_url = __WEBSITE_URL__ ?? '#';
                     </div>
                 </div>
 
-                <div class="w-full shrink-0 p-6 md:p-8" style="background: linear-gradient(135deg, #0f172a 0%, #0d1528 100%);">
+                <div class="w-full shrink-0 p-6 md:p-8">
                     <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
                         <div class="p-4 rounded-2xl bg-sky-500/10 border border-sky-500/20">
                             <i class="bi bi-code-slash text-4xl text-sky-300"></i>
@@ -205,7 +165,7 @@ $store_url = __WEBSITE_URL__ ?? '#';
                     </div>
                 </div>
 
-                <div class="w-full shrink-0 p-6 md:p-8" style="background: linear-gradient(135deg, #0f172a 0%, #28210d 100%);">
+                <div class="w-full shrink-0 p-6 md:p-8">
                     <div class="flex flex-col md:flex-row items-start md:items-center gap-6">
                         <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
                             <i class="bi bi-trophy text-4xl text-amber-300"></i>
@@ -260,7 +220,7 @@ $store_url = __WEBSITE_URL__ ?? '#';
             <div class="px-5 py-3 border-b border-white/10 flex items-center justify-between bg-white/5">
                 <div>
                     <h2 class="text-sm font-semibold text-white">Live preview</h2>
-                    <p class="text-xs text-zinc-500">Your storefront as customers see it.</p>
+                    <p class="text-xs text-zinc-500"></p>
                 </div>
                 <span class="text-zinc-500 text-xs font-mono select-all"><?php echo htmlspecialchars($store_domain, ENT_QUOTES, 'UTF-8'); ?></span>
             </div>
