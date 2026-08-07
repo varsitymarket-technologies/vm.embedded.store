@@ -2,12 +2,12 @@
     :root {
         --primary-accent: #4ade80;
         --primary-accent-hover: #22c55e;
-        --primary-soft: rgba(74, 222, 128, 0.12);
-        --sidebar-bg: #111318;
+        --primary-soft: #202123;
+        --sidebar-bg: #202123;
         --border-color: #2a2f3a;
         --text-main: #f3f4f6;
         --text-muted: #9ca3af;
-        --card-bg: #151922;
+        --card-bg: #888d9a;
     }
 
     .modal-overlay {
@@ -48,7 +48,7 @@
     /* Sidebar */
     .setup-sidebar {
         width: 300px;
-        background: linear-gradient(180deg, #181c24 0%, var(--sidebar-bg) 100%);
+        background: linear-gradient(180deg, #202123 0%, var(--sidebar-bg) 100%);
         border-right: 1px solid var(--border-color);
         padding: 2rem 1.5rem;
         display: flex;
@@ -124,13 +124,13 @@
         flex: 1;
         display: flex;
         flex-direction: column;
-        background: linear-gradient(180deg, #151922 0%, #11151c 100%);
+        background: linear-gradient(180deg, #202123 0%, #202123 100%);
     }
 
     .form-header {
         padding: 2rem 2.5rem 1.25rem 2.5rem;
         border-bottom: 1px solid var(--border-color);
-        background: linear-gradient(180deg, #171b23 0%, #141820 100%);
+        background: linear-gradient(180deg, #202123 0%, #202123 100%);
     }
 
     .form-header h3 {
@@ -254,7 +254,7 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
-        background: #12161d;
+        background: #202123;
     }
 
     button {
@@ -270,7 +270,6 @@
     .btn-next {
         background: var(--primary-accent);
         color: #08110b;
-        box-shadow: 0 10px 22px rgba(74, 222, 128, 0.18);
     }
 
     .btn-next:hover {
@@ -281,7 +280,6 @@
     .btn-prev {
         background: #10141b;
         color: var(--text-main);
-        border: 1px solid var(--border-color);
     }
 
     .btn-prev:hover {
@@ -364,6 +362,11 @@
         animation: fadeIn 0.3s ease;
     }
     .setup-error-banner.visible { display: block; }
+
+    .field-error {
+        border-color: #ef4444 !important;
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.12) !important;
+    }
 
     .form-step-content.active p,
     .form-step-content.active small,
@@ -571,6 +574,7 @@
     let currentStep = 0;
     const totalSteps = 4;
     const stepTitles = ["Store Identity", "Domain Setup", "Business Profile", "Launch Your Store"];
+    const parentDomain = <?php echo json_encode($_SERVER['PARENT_DOMAIN'] ?? ''); ?>;
 
     function navigateStep(dir) {
         if (dir === 1 && !validateCurrentStep()) return;
@@ -614,13 +618,85 @@
         let valid = true;
         inputs.forEach(input => {
             if (!input.value) {
-                input.style.borderColor = '#ef4444';
+                input.classList.add('field-error');
                 valid = false;
             } else {
-                input.style.borderColor = '#e5e7eb';
+                input.classList.remove('field-error');
             }
         });
+
+        if (currentStep === 1) {
+            valid = validateDomainStep() && valid;
+        }
         return valid;
+    }
+
+    function normalizeDomain(value) {
+        return String(value || '')
+            .trim()
+            .toLowerCase()
+            .replace(/^https?:\/\//, '')
+            .replace(/\/.*$/, '')
+            .replace(/\.$/, '');
+    }
+
+    function isValidDomain(domain) {
+        domain = normalizeDomain(domain);
+        if (!domain || !domain.includes('.')) return false;
+        if (domain.length > 253) return false;
+        const labels = domain.split('.');
+        return labels.every(label =>
+            label.length > 0 &&
+            label.length <= 63 &&
+            /^(?!-)[a-z0-9-]+(?<!-)$/i.test(label)
+        );
+    }
+
+    function isValidSubdomainPrefix(prefix) {
+        return /^(?!-)[a-z0-9]+(?:[a-z0-9-]*[a-z0-9])?$/i.test(String(prefix || '').trim());
+    }
+
+    function showSetupError(message) {
+        const banner = document.getElementById('setupErrorBanner');
+        banner.textContent = message;
+        banner.classList.add('visible');
+        setTimeout(() => banner.classList.remove('visible'), 8000);
+    }
+
+    function validateDomainStep() {
+        const domainType = document.getElementById('domainType').value;
+        const subdomainInput = document.querySelector('input[name="subdomain_prefix"]');
+        const customInput = document.querySelector('input[name="wb_domain"]');
+
+        subdomainInput?.classList.remove('field-error');
+        customInput?.classList.remove('field-error');
+
+        if (domainType === 'subdomain' && parentDomain) {
+            const prefix = String(subdomainInput?.value || '').trim().toLowerCase();
+            if (!isValidSubdomainPrefix(prefix)) {
+                subdomainInput?.classList.add('field-error');
+                showSetupError('Please enter a valid subdomain prefix using letters, numbers, and hyphens only.');
+                return false;
+            }
+
+            const fullDomain = `${prefix}.${parentDomain}`.toLowerCase();
+            if (!isValidDomain(fullDomain)) {
+                subdomainInput?.classList.add('field-error');
+                showSetupError('Please choose a valid subdomain.');
+                return false;
+            }
+        }
+
+        if (domainType === 'custom') {
+            const domain = normalizeDomain(customInput?.value || '');
+            if (!isValidDomain(domain)) {
+                customInput?.classList.add('field-error');
+                showSetupError('Please enter a valid domain like example.com.');
+                return false;
+            }
+        }
+
+        return true;
     }
 
     function setDomainType(type) {
@@ -633,6 +709,10 @@
     }
 
     function handleFinalSubmit(e) {
+        if (currentStep === totalSteps - 1 && !validateDomainStep()) {
+            e.preventDefault();
+            return false;
+        }
         // If we are on the last step, allow submission
         if (currentStep === totalSteps - 1) {
             return true;
@@ -662,4 +742,11 @@
             }, 8000);
         }
     })();
+
+    const setupForm = document.getElementById('setupForm');
+    setupForm?.addEventListener('submit', function (e) {
+        if (currentStep === totalSteps - 1 && !validateDomainStep()) {
+            e.preventDefault();
+        }
+    });
 </script>
