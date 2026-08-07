@@ -207,7 +207,7 @@ ob_start();
                                 <i class="bi bi-robot mr-3"></i>
                                 <span>AI Agent</span>
                             </a>
-                        <?php endif;
+                    <?php endif;
                     endif; ?>
                     <?php if ($ai_enabled): ?>
                         <a href="<?php echo $admin_base; ?>ai-builder"
@@ -342,7 +342,7 @@ ob_start();
                             <a href="<?php echo $admin_base; ?>users"
                                 class="<?php echo nav_cls('users', $current_page); ?>">
                                 <i class="bi bi-people-fill mr-3"></i>
-                                <span>Customers</span>
+                                <span>Users</span>
                             </a>
                             <a href="<?php echo $admin_base; ?>forms"
                                 class="<?php echo nav_cls('forms', $current_page); ?>">
@@ -488,9 +488,9 @@ ob_start();
             }
 
             // Restore collapsed state on load
-            document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('DOMContentLoaded', function() {
                 var collapsed = JSON.parse(localStorage.getItem('sidebar_collapsed') || '{}');
-                Object.keys(collapsed).forEach(function (name) {
+                Object.keys(collapsed).forEach(function(name) {
                     var section = document.getElementById('section-' + name);
                     var chevron = document.getElementById('chevron-' + name);
                     if (section) section.style.display = 'none';
@@ -543,7 +543,7 @@ ob_start();
                             <i class="bi bi-robot mr-3"></i>
                             <span>AI Agent</span>
                         </a>
-                    <?php endif;
+                <?php endif;
                 endif; ?>
 
                 <a href="<?php echo $admin_base; ?>analytics" class="sesedesedwsedwdd">
@@ -579,7 +579,7 @@ ob_start();
                 <a href="<?php echo $admin_base; ?>orders" class="sesedesedwsedwdd">
                     <i class="bi bi-receipt mr-3"></i>
                     <span>Orders<?php if ($pending_orders > 0)
-                        echo ' <span style="background:#7a1aab;padding:1px 6px;border-radius:99px;font-size:0.6rem;margin-left:4px;">' . $pending_orders . '</span>'; ?></span>
+                                    echo ' <span style="background:#7a1aab;padding:1px 6px;border-radius:99px;font-size:0.6rem;margin-left:4px;">' . $pending_orders . '</span>'; ?></span>
                 </a>
                 <a href="<?php echo $admin_base; ?>payments" class="sesedesedwsedwdd">
                     <i class="bi bi-wallet2 mr-3"></i>
@@ -619,7 +619,7 @@ ob_start();
                 </a>
                 <a href="<?php echo $admin_base; ?>users" class="sesedesedwsedwdd">
                     <i class="bi bi-people-fill mr-3"></i>
-                    <span>Customers</span>
+                    <span>Users </span>
                 </a>
                 <a href="<?php echo $admin_base; ?>forms" class="sesedesedwsedwdd">
                     <i class="bi bi-ui-checks-grid mr-3"></i>
