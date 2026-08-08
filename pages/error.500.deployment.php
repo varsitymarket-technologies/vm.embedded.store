@@ -681,7 +681,7 @@
           <div class="nav-row__right">
             <a id="ext-dennis" href="https://varsitymarket.tech/" target="_blank" class="website-link is--alt w-inline-block">
               <div class="website-link__arrow"></div>
-              <p class="inline-link__p">Error Code: <strong>500</strong></p>
+              <p class="inline-link__p"></p>
             </a>
           </div>
         </nav>
