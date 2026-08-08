@@ -5,4 +5,9 @@ function embedd_link_application($website,$domain){
     $website_hash = hash("sha256",$website); 
     return $domain."/app/".$website_hash."/"; 
 }
+
+function embedd_link_forms($website,$domain){
+    $website_hash = hash("sha256",$website); 
+    return $domain."/forms/".$website_hash."/"; 
+}
 ?>
