@@ -57,7 +57,8 @@ function analytics(){
     }
 }
 function page($i,$d=false){
-    echo change_page($i); 
+    // $d will be used as data in the generated query URL
+    echo change_page($i, $d); 
 }
 
 function change_page($page,$id=false){
@@ -87,10 +88,13 @@ function change_page($page,$id=false){
         // Join the pieces with '/' and append the final anchor at the end
         return '/' . implode('/', $routeParts) . '/' . $anchor . '/';
     }else{
-        return '/?page='.$page; 
+        $query = '/?page='.urlencode($page);
+        if ($id !== false && $id !== null && $id !== ''){
+            // pass data as 'data' param
+            $query .= '&data='.urlencode($id);
+        }
+        return $query; 
     }
-    
-    
 }
 
 function routes($section)
