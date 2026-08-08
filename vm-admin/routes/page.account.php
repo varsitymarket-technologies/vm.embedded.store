@@ -44,53 +44,13 @@ $initial = strtoupper(substr($account_name ?: $account_email ?: 'U', 0, 1));
 
     <main class="flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8">
         <div class="mx-auto flex w-full max-w-6xl flex-col gap-4">
-            <section class="rounded-[1rem] border border-white/10 bg-[#0b0b0f] px-5 py-4 shadow-2xl shadow-black/20">
+            <section class="rounded-[1rem] border border-white/10 bg-[#212122] px-5 py-4 shadow-2xl shadow-black/20">
                 <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div class="space-y-5">
-                        <div
-                            class="inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">
-                            <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-                            Operator profile
-                        </div>
                         <div class="space-y-2">
                             <h2 class="text-xl font-semibold tracking-tight text-white sm:text-2xl">Account</h2>
                             <p class="max-w-2xl text-sm text-zinc-500">Update your operator identity and review the
                                 store you are connected to.</p>
-                        </div>
-                        <div class="flex flex-wrap gap-3">
-                            <a href="/vm-admin/<?php echo __DOMAIN__; ?>/"
-                                class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-zinc-200 transition-colors hover:border-white/20 hover:bg-white/10">
-                                <i class="bi bi-grid"></i>
-                                Back to admin
-                            </a>
-                            <a href="/api/docs.html#customers"
-                                class="inline-flex items-center gap-2 rounded-full border border-violet-500/20 bg-violet-500/10 px-4 py-2 text-sm font-medium text-violet-200 transition-colors hover:border-violet-400/30 hover:bg-violet-500/15">
-                                <i class="bi bi-journal-text"></i>
-                                API docs
-                            </a>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                        <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                            <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500">Display name</p>
-                            <p class="mt-2 text-sm font-semibold text-white">
-                                <?= htmlspecialchars($account_name, ENT_QUOTES, 'UTF-8') ?></p>
-                            <p class="mt-1 text-xs text-zinc-500">
-                                <?= htmlspecialchars($account_email ?: 'No email set', ENT_QUOTES, 'UTF-8') ?></p>
-                        </div>
-                        <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                            <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500">Store</p>
-                            <p class="mt-2 text-sm font-semibold text-white">
-                                <?= htmlspecialchars($account_store_name, ENT_QUOTES, 'UTF-8') ?></p>
-                            <p class="mt-1 text-xs text-zinc-500">
-                                <?= htmlspecialchars($account_store_domain, ENT_QUOTES, 'UTF-8') ?></p>
-                        </div>
-                        <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                            <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500">Theme</p>
-                            <p class="mt-2 text-sm font-semibold text-white">
-                                <?= htmlspecialchars($account_store_theme, ENT_QUOTES, 'UTF-8') ?></p>
-                            <p class="mt-1 text-xs text-zinc-500">Current storefront theme</p>
                         </div>
                     </div>
                 </div>
@@ -115,8 +75,10 @@ $initial = strtoupper(substr($account_name ?: $account_email ?: 'U', 0, 1));
             <?php endif; ?>
 
             <div class="grid grid-cols-1 xl:grid-cols-[1.15fr_0.85fr] gap-4">
+                <div>
+                    
                 <section
-                    class="rounded-[1rem] border border-white/10 bg-[#0b0b0f] shadow-2xl shadow-black/20 overflow-hidden">
+                    class="rounded-[1rem] border border-white/10 bg-[#212122] shadow-2xl shadow-black/20 overflow-hidden">
                     <div class="border-b border-white/5 px-5 py-4">
                         <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500">Profile</p>
                         <h3 class="mt-1 text-base font-semibold text-white">Edit your details</h3>
@@ -143,22 +105,7 @@ $initial = strtoupper(substr($account_name ?: $account_email ?: 'U', 0, 1));
                                     <p class="truncate text-xs text-zinc-500">
                                         <?= htmlspecialchars($account_email ?: 'No email set', ENT_QUOTES, 'UTF-8') ?>
                                     </p>
-                                    <p class="mt-2 text-xs text-zinc-600">Operator ID: <span
-                                            class="font-mono text-zinc-400"><?= htmlspecialchars($account_auth, ENT_QUOTES, 'UTF-8') ?></span>
-                                    </p>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div class="grid gap-4 md:grid-cols-2">
-                            <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                                <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500">Joined</p>
-                                <p class="mt-2 text-sm font-medium text-zinc-200">
-                                    <?= htmlspecialchars($joined_label, ENT_QUOTES, 'UTF-8') ?></p>
-                            </div>
-                            <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                                <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500">Connection</p>
-                                <p class="mt-2 text-sm font-medium text-zinc-200">Active admin session</p>
                             </div>
                         </div>
 
@@ -180,10 +127,13 @@ $initial = strtoupper(substr($account_name ?: $account_email ?: 'U', 0, 1));
                         </div>
                     </form>
                 </section>
+                
+
+                </div>
 
                 <aside class="space-y-4">
                     <section
-                        class="rounded-[1rem] border border-white/10 bg-[#0b0b0f] shadow-2xl shadow-black/20 overflow-hidden">
+                        class="rounded-[1rem] border border-white/10 bg-[#212122] shadow-2xl shadow-black/20 overflow-hidden">
                         <div class="border-b border-white/5 px-5 py-4">
                             <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500">Workspace</p>
                             <h3 class="mt-1 text-base font-semibold text-white">Store context</h3>
@@ -208,7 +158,7 @@ $initial = strtoupper(substr($account_name ?: $account_email ?: 'U', 0, 1));
                     </section>
 
                     <section
-                        class="rounded-[1rem] border border-white/10 bg-[#0b0b0f] shadow-2xl shadow-black/20 overflow-hidden">
+                        class="rounded-[1rem] border border-white/10 bg-[#212122] shadow-2xl shadow-black/20 overflow-hidden">
                         <div class="border-b border-white/5 px-5 py-4">
                             <p class="text-[10px] uppercase tracking-[0.18em] text-zinc-500">Actions</p>
                             <h3 class="mt-1 text-base font-semibold text-white">Account operations</h3>
