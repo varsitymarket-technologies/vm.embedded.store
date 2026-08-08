@@ -54,6 +54,12 @@ if ($page == "sync-github"){
     die(0);  
 }
 
+if ($page == "forms"){
+    $e = dirname(__FILE__)."/forms/index.php";
+    include_once $e;
+    die(0);
+}
+
 if ($page == "app"){
     $e = dirname(__FILE__)."/app/index.php";
     include_once $e; 
