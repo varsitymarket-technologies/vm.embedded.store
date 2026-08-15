@@ -477,7 +477,7 @@
                                 <input name="subdomain_prefix" type="text" placeholder="mystore"
                                     style="text-align: right;">
                                 <span
-                                    style="font-weight: 600; color: var(--text-muted)">.<?php echo $_SERVER['PARENT_DOMAIN'] ?? ''; ?></span>
+                                    style="font-weight: 600; color: var(--text-muted)"><?php echo $_SERVER['PARENT_DOMAIN'] ?? ''; ?></span>
                             </div>
                         </div>
 

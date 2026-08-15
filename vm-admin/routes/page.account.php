@@ -42,7 +42,7 @@ $initial = strtoupper(substr($account_name ?: $account_email ?: 'U', 0, 1));
 <div class="flex flex-1 flex-col h-screen overflow-hidden bg-[#252526]  text-zinc-100">
     <?php @include_once "header.php"; ?>
 
-    <main class="flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8">
+    <main class=" bg-[#1b1b1c] flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8">
         <div class="mx-auto flex w-full max-w-6xl flex-col gap-4">
             <section class="rounded-[1rem] border border-white/10 bg-[#212122] px-5 py-4 shadow-2xl shadow-black/20">
                 <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

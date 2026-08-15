@@ -6,6 +6,8 @@
 #   AUTHOR  : HARDY HASTINGS
 #   RELEASE : 2026/05/15
 
+@include_once dirname(__FILE__) . "/../scripts.php";
+
 // CORS headers set after origin check below
 header("Access-Control-Allow-Headers: Authorization, Content-Type, X-API-Key, X-Customer-Token");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
@@ -243,6 +245,81 @@ function get_cart_response($cart_id, $private_db, $public_db)
     ];
 }
 
+function get_store_payment_methods($domain)
+{
+    $config_key = function_exists('create_enc_key') ? create_enc_key() : null;
+    $payment_path = dirname(__FILE__) . "/../sites/$domain/payment.config.enc";
+    $payment_config = [];
+
+    if ($config_key && function_exists('__decryption__') && file_exists($payment_path)) {
+        $encrypted = file_get_contents($payment_path);
+        if (!empty($encrypted)) {
+            $json = __decryption__($encrypted, $config_key);
+            $payment_config = json_decode($json, true) ?: [];
+        }
+    }
+
+    $methods = [];
+
+    if (($payment_config['cod_enabled'] ?? '0') === '1') {
+        $methods[] = [
+            "id" => "cod",
+            "code" => "cod",
+            "name" => "Cash on Delivery",
+            "enabled" => true,
+            "description" => "Pay at doorstep",
+            "mode" => null,
+            "environment" => null
+        ];
+    }
+
+    if (($payment_config['yoco_enabled'] ?? '0') === '1') {
+        $methods[] = [
+            "id" => "yoco",
+            "code" => "yoco",
+            "name" => "YOCO",
+            "enabled" => true,
+            "description" => "Card payments",
+            "mode" => $payment_config['yoco_mode'] ?? 'test',
+            "environment" => null
+        ];
+    }
+
+    if (($payment_config['paypal_enabled'] ?? '0') === '1') {
+        $methods[] = [
+            "id" => "paypal",
+            "code" => "paypal",
+            "name" => "PayPal",
+            "enabled" => true,
+            "description" => "Online payments",
+            "mode" => null,
+            "environment" => $payment_config['paypal_env'] ?? 'sandbox'
+        ];
+    }
+
+    return $methods;
+}
+
+function get_store_delivery_zones($public_db)
+{
+    $public_db->createTable("delivery", [
+        "id" => "INTEGER PRIMARY KEY AUTOINCREMENT",
+        "province" => "VARCHAR(255)",
+        "type" => "VARCHAR(50)",
+        "price" => "DECIMAL(10,2)",
+        "status" => "VARCHAR(20) DEFAULT 'active'"
+    ]);
+
+    $rows = $public_db->query("SELECT id, province, type, price, status FROM delivery ORDER BY CASE WHEN status = 'active' THEN 0 ELSE 1 END, province ASC, id ASC") ?: [];
+
+    foreach ($rows as $key => $row) {
+        $rows[$key]['id'] = (int) ($row['id'] ?? 0);
+        $rows[$key]['price'] = (float) ($row['price'] ?? 0);
+    }
+
+    return $rows;
+}
+
 // Route to the requested endpoint
 $request = $_GET['state'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'];
@@ -408,6 +485,10 @@ if ($method === 'GET') {
                 "currency" => "R"
             ]
         ]);
+    } elseif ($request == "payment_methods") {
+        echo json_encode(["success" => true, "data" => get_store_payment_methods($domain)]);
+    } elseif ($request == "delivery_zones") {
+        echo json_encode(["success" => true, "data" => get_store_delivery_zones($db)]);
     } elseif ($request == "orders") {
         $email = $_GET['email'] ?? '';
         if (!empty($email)) {
@@ -489,6 +570,8 @@ if ($method === 'GET') {
                     "search?q={query}",
                     "discounts",
                     "site",
+                    "payment_methods",
+                    "delivery_zones",
                     "orders?email={email}",
                     "cart?cart_id={id}",
                     "checkout&session_id={id}"

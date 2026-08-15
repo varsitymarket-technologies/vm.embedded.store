@@ -38,22 +38,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fields = $_POST['fields_json'] ?? '[]';
 
         $db->query("INSERT INTO forms (form_key, name, fields) VALUES (?, ?, ?)", [$form_key, $name, $fields]);
-        header("Location: " . $_SERVER['PHP_SELF'] . "?tab=builder&success=1");
+        header("Location: " . $_SERVER['PHP_SELF'] . "?tab=submissions&success=1");
         exit;
     } elseif ($action === 'mark_read') {
         $id = $_POST['id'] ?? 0;
         $db->query("UPDATE form_submissions SET unread = 0 WHERE id = ?", [$id]);
-        header("Location: " . $_SERVER['PHP_SELF']);
+        header("Location: " . $_SERVER['PHP_SELF'] . "?tab=submissions");
         exit;
     } elseif ($action === 'delete_submission') {
         $id = $_POST['id'] ?? 0;
         $db->query("DELETE FROM form_submissions WHERE id = ?", [$id]);
-        header("Location: " . $_SERVER['PHP_SELF']);
+        header("Location: " . $_SERVER['PHP_SELF'] . "?tab=submissions");
         exit;
     } elseif ($action === 'delete_subscriber') {
         $id = $_POST['id'] ?? 0;
         $db->query("DELETE FROM subscribers WHERE id = ?", [$id]);
-        header("Location: " . $_SERVER['PHP_SELF']);
+        header("Location: " . $_SERVER['PHP_SELF'] . "?tab=submissions");
         exit;
     }
 }
@@ -138,13 +138,13 @@ $latest_form = $all_forms[0] ?? null;
                 <i class="bi bi-chat-left-text"></i>
                 <span>Form responses</span>
             </button>
-            <button onclick="switchView('builder')" id="btn-tab-builder"
-                class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors <?= $active_tab === 'builder' ? 'border-[#008060] bg-[#008060] text-white' : 'border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10' ?>">
+            <button onclick="openFeatureModal('builder')" id="btn-tab-builder"
+                class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10">
                 <i class="bi bi-hammer"></i>
                 <span>Visual builder</span>
             </button>
-            <button onclick="switchView('newsletter')" id="btn-tab-newsletter"
-                class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors <?= $active_tab === 'newsletter' ? 'border-[#008060] bg-[#008060] text-white' : 'border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10' ?>">
+            <button onclick="openFeatureModal('newsletter')" id="btn-tab-newsletter"
+                class="inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition-colors border-white/10 bg-white/5 text-zinc-300 hover:bg-white/10">
                 <i class="bi bi-envelope-check"></i>
                 <span>Newsletter hub</span>
             </button>
@@ -222,8 +222,7 @@ $latest_form = $all_forms[0] ?? null;
                                                     title="View Submission Payload">
                                                     <i class="bi bi-window-sidebar"></i>
                                                 </button>
-                                                <form method="POST" class="inline"
-                                                    onsubmit="return confirm('Permanently remove this submission?');">
+                                                <form method="POST" class="inline" onsubmit="return confirmDelete(event, 'submission');">
                                                     <input type="hidden" name="action" value="delete_submission">
                                                     <input type="hidden" name="id" value="<?= $sub['id']; ?>">
                                                     <button type="submit"
@@ -244,7 +243,7 @@ $latest_form = $all_forms[0] ?? null;
         </div>
 
         <!-- VIEW 2: Form Builder Panel -->
-        <div id="section-builder" class="<?= $active_tab !== 'builder' ? 'hidden' : '' ?> grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div id="section-builder" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-8">
             <!-- Left Configurator Workspace -->
             <div class="lg:col-span-5 rounded-3xl border border-white/10 bg-[#202123] p-5 flex flex-col gap-6 shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
                 <div>
@@ -392,7 +391,7 @@ $latest_form = $all_forms[0] ?? null;
                                             <?= date('M j, Y • g:i A', strtotime($sub['created_at'])); ?>
                                         </td>
                                         <td class="px-6 py-4 text-right">
-                                            <form method="POST" class="inline" onsubmit="return confirm('Remove Subscriber?');">
+                                            <form method="POST" class="inline" onsubmit="return confirmDelete(event, 'subscriber');">
                                                 <input type="hidden" name="action" value="delete_subscriber">
                                                 <input type="hidden" name="id" value="<?= $sub['id']; ?>">
                                                 <button type="submit"
@@ -482,12 +481,102 @@ $latest_form = $all_forms[0] ?? null;
     </div>
 </div>
 
+<!-- Modal: Optional Feature Launcher -->
+<div id="featureModal" class="fixed inset-0 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" onclick="closeFeatureModal()"></div>
+        <div class="relative bg-[#202123] border border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden z-10">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-white/5">
+                <h3 class="text-white font-semibold text-sm flex items-center gap-2">
+                    <i id="featureModalIcon" class="bi bi-window-sidebar text-emerald-300"></i>
+                    <span id="featureModalTitle">Optional feature</span>
+                </h3>
+                <button onclick="closeFeatureModal()" class="text-zinc-500 hover:text-white transition-colors"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="p-6 space-y-5">
+                <p id="featureModalLead" class="text-zinc-300 text-sm leading-6"></p>
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">What it does</p>
+                        <p id="featureModalBody" class="mt-2 text-sm text-zinc-200 leading-6"></p>
+                    </div>
+                    <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Status</p>
+                        <p id="featureModalStatus" class="mt-2 text-sm text-zinc-200 leading-6"></p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-3">
+                    <button id="featureModalPrimary" type="button" class="inline-flex items-center gap-2 rounded-full bg-[#008060] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-[#006e52]">
+                        <i class="bi bi-lightning-charge"></i>
+                        <span>Continue</span>
+                    </button>
+                    <button type="button" onclick="closeFeatureModal()" class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-zinc-200 hover:bg-white/10">
+                        <i class="bi bi-x-circle"></i>
+                        <span>Not now</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Custom Notification -->
+<div id="notificationModal" class="fixed inset-0 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" onclick="closeNotification()"></div>
+        <div class="relative bg-[#202123] border border-white/10 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden z-10">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-white/5">
+                <h3 class="text-white font-semibold text-sm flex items-center gap-2">
+                    <i id="notificationIcon" class="bi bi-info-circle text-emerald-300"></i>
+                    <span id="notificationTitle">Notice</span>
+                </h3>
+                <button onclick="closeNotification()" class="text-zinc-500 hover:text-white transition-colors"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="p-6">
+                <p id="notificationMessage" class="text-sm text-zinc-300 leading-6"></p>
+                <div id="notificationActions" class="mt-6 flex justify-end gap-3">
+                    <button type="button" onclick="closeNotification()" class="rounded-full bg-[#008060] px-4 py-2 text-sm font-semibold text-white hover:bg-[#006e52]">
+                        OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Confirm Delete -->
+<div id="confirmModal" class="fixed inset-0 z-50 hidden">
+    <div class="flex items-center justify-center min-h-screen px-4">
+        <div class="fixed inset-0 bg-black/70 backdrop-blur-sm" onclick="closeConfirmModal()"></div>
+        <div class="relative bg-[#202123] border border-white/10 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden z-10">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-white/5">
+                <h3 class="text-white font-semibold text-sm flex items-center gap-2">
+                    <i class="bi bi-trash3 text-red-300"></i>
+                    <span>Confirm delete</span>
+                </h3>
+                <button onclick="closeConfirmModal()" class="text-zinc-500 hover:text-white transition-colors"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <div class="p-6">
+                <p id="confirmMessage" class="text-sm text-zinc-300 leading-6"></p>
+                <div class="mt-6 flex justify-end gap-3">
+                    <button type="button" onclick="closeConfirmModal()" class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-zinc-200 hover:bg-white/10">
+                        Cancel
+                    </button>
+                    <button id="confirmDeleteButton" type="button" class="rounded-full bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     // Tab View Switching
     function switchView(tab) {
         document.getElementById('section-submissions').classList.toggle('hidden', tab !== 'submissions');
-        document.getElementById('section-builder').classList.toggle('hidden', tab !== 'builder');
-        document.getElementById('section-newsletter').classList.toggle('hidden', tab !== 'newsletter');
+        document.getElementById('section-builder').classList.add('hidden');
+        document.getElementById('section-newsletter').classList.add('hidden');
 
         const btnSub = document.getElementById('btn-tab-submissions');
         const btnBld = document.getElementById('btn-tab-builder');
@@ -501,6 +590,108 @@ $latest_form = $all_forms[0] ?? null;
         if (activeBtn) {
             activeBtn.className = activeBtn.className.replace('border-transparent text-zinc-400 hover:text-zinc-200', 'border-violet-500 text-violet-400');
         }
+    }
+
+    function showNotification(type, title, message) {
+        const modal = document.getElementById('notificationModal');
+        const icon = document.getElementById('notificationIcon');
+        const heading = document.getElementById('notificationTitle');
+        const body = document.getElementById('notificationMessage');
+
+        const iconMap = {
+            success: 'bi-check-circle text-emerald-300',
+            warning: 'bi-exclamation-triangle text-amber-300',
+            error: 'bi-x-circle text-red-300',
+            info: 'bi-info-circle text-sky-300'
+        };
+
+        icon.className = 'bi ' + (iconMap[type] || iconMap.info);
+        heading.textContent = title || 'Notice';
+        body.textContent = message || '';
+
+        const actions = document.getElementById('notificationActions');
+        actions.innerHTML = '<button type="button" onclick="closeNotification()" class="rounded-full bg-[#008060] px-4 py-2 text-sm font-semibold text-white hover:bg-[#006e52]">OK</button>';
+        modal.classList.remove('hidden');
+    }
+
+    function closeNotification() {
+        document.getElementById('notificationModal').classList.add('hidden');
+    }
+
+    function openFeatureModal(feature) {
+        const modal = document.getElementById('featureModal');
+        const title = document.getElementById('featureModalTitle');
+        const lead = document.getElementById('featureModalLead');
+        const body = document.getElementById('featureModalBody');
+        const status = document.getElementById('featureModalStatus');
+        const icon = document.getElementById('featureModalIcon');
+        const primary = document.getElementById('featureModalPrimary');
+
+        const config = feature === 'builder' ? {
+            title: 'Visual builder',
+            icon: 'bi-hammer',
+            lead: 'The visual builder is now optional, so the page can stay focused on submissions while keeping creation tools nearby.',
+            body: 'Use it when you need to create or refine forms, then come back here to manage incoming responses.',
+            status: 'Optional workspace, available on demand.',
+            primaryText: 'Open builder workflow',
+            onPrimary: function () {
+                closeFeatureModal();
+                showNotification('info', 'Builder workflow', 'The builder is available as an optional workflow. Submissions remain the main focus of this page.');
+            }
+        } : {
+            title: 'Newsletter hub',
+            icon: 'bi-envelope-check',
+            lead: 'Newsletter tools are still available, but they now live behind a modal so they do not compete with submissions.',
+            body: 'Use this hub when you want to review subscribers or manage newsletter-related actions in a dedicated moment.',
+            status: 'Optional hub, surfaced only when needed.',
+            primaryText: 'Open newsletter tools',
+            onPrimary: function () {
+                closeFeatureModal();
+                showNotification('info', 'Newsletter hub', 'Newsletter tools stay available as an optional feature. Submissions remain front and center.');
+            }
+        };
+
+        title.textContent = config.title;
+        lead.textContent = config.lead;
+        body.textContent = config.body;
+        status.textContent = config.status;
+        icon.className = 'bi ' + config.icon + ' text-emerald-300';
+        primary.textContent = config.primaryText;
+        primary.onclick = config.onPrimary;
+        modal.classList.remove('hidden');
+    }
+
+    function closeFeatureModal() {
+        document.getElementById('featureModal').classList.add('hidden');
+    }
+
+    let pendingDeleteForm = null;
+
+    function confirmDelete(event, target) {
+        event.preventDefault();
+        pendingDeleteForm = event.target;
+
+        const modal = document.getElementById('confirmModal');
+        const message = document.getElementById('confirmMessage');
+        const button = document.getElementById('confirmDeleteButton');
+
+        message.textContent = target === 'subscriber'
+            ? 'Remove this subscriber from the newsletter hub? This action cannot be undone.'
+            : 'Permanently remove this form submission? This action cannot be undone.';
+
+        button.onclick = function () {
+            if (pendingDeleteForm) pendingDeleteForm.submit();
+            pendingDeleteForm = null;
+            closeConfirmModal();
+        };
+
+        modal.classList.remove('hidden');
+        return false;
+    }
+
+    function closeConfirmModal() {
+        document.getElementById('confirmModal').classList.add('hidden');
+        pendingDeleteForm = null;
     }
 
     // Form Builder Application State Matrix
@@ -611,11 +802,11 @@ $latest_form = $all_forms[0] ?? null;
     function commitFormSchema() {
         const nameInput = document.getElementById('new-form-name').value.trim();
         if (!nameInput) {
-            alert('Please specify a Form Label/Title.');
+            showNotification('warning', 'Missing form title', 'Please specify a form label or title before saving the builder.');
             return;
         }
         if (formFields.length === 0) {
-            alert('Form must contain at least one element.');
+            showNotification('warning', 'No fields added', 'Add at least one field to your form before generating the schema.');
             return;
         }
 
@@ -692,7 +883,7 @@ document.addEventListener("DOMContentLoaded", function() {
         });
 
     // AJAX Form Handling Logic
-    document.getElementById("dynamic-form-" + key).addEventListener("submit", function(e) {
+        document.getElementById("dynamic-form-" + key).addEventListener("submit", function(e) {
         e.preventDefault();
         const msgDiv = document.getElementById("response-msg-" + key);
         msgDiv.textContent = "Submitting details...";
@@ -704,10 +895,10 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(res => res.json())
         .then(data => {
             if(data.success) {
-                msgDiv.innerHTML = '<span class="success-alert">Success: Your entry has been logged.</span>';
+                showNotification('success', 'Submission saved', 'Your entry has been logged successfully.');
                 this.reset();
             } else {
-                msgDiv.innerHTML = '<span class="error-alert">Error: ' + data.error + '</span>';
+                showNotification('error', 'Submission failed', data.error || 'We could not process the submission.');
             }
         });
     });
