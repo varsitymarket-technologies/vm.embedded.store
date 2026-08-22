@@ -52,13 +52,17 @@ $store_record = $db_engine->query("SELECT * FROM sys_websites WHERE account_inde
 $owned_domain = $store_record[0]['domain'] ?? null;
 
 if (empty($owned_domain)) {
-    // User has no store — redirect to setup
-    echo '<div class="flex items-center justify-center min-h-[60vh]"  style="display:block; margin: auto;">
-        <div class="text-center">
-            <i class="bi bi-shop text-6xl text-gray-600"></i>
-            <h2 class="text-2xl font-bold text-white mt-4">No Store Found</h2>
-            <p class="text-gray-400 mt-2">You need to create a store before accessing the control panel.</p>
-            <a href="/home/" class="inline-block mt-6 bg-purple-600 text-white px-6 py-2.5 rounded-full text-sm font-bold hover:bg-purple-500 transition-all">Go to Dashboard</a>
+    echo '<div class="flex min-h-[60vh] items-center justify-center px-6" style="width:100%;height:100%;">
+        <div class="w-full max-w-md rounded-3xl border border-white/10 bg-[#202123] p-8 text-center shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
+            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#c8c8c81a]">
+                <i class="bi bi-person-lock text-2xl text-white-400"></i>
+            </div>
+            <h2 class="mt-5 text-xl font-semibold text-white">Sign in to continue</h2>
+            <p class="mt-2 text-sm leading-6 text-zinc-400">Please sign in again to continue using the system.</p>
+            <a href="/auth/" class="mt-6 inline-flex items-center gap-2 rounded-full bg-purple-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#006e52]">
+                <i class="bi bi-box-arrow-in-right"></i>
+                Sign in again
+            </a>
         </div>
     </div>';
     return;
@@ -66,12 +70,17 @@ if (empty($owned_domain)) {
 
 // Prevent accessing another user's store via URL manipulation
 if (!empty($url_domain) && $url_domain !== $owned_domain) {
-    echo '<div class="flex items-center justify-center min-h-[60vh]" style="display:block; margin: auto;">
-        <div class="text-center">
-            <i class="bi bi-shield-x text-6xl text-red-500"></i>
-            <h2 class="text-2xl font-bold text-white mt-4">Access Denied</h2>
-            <p class="text-gray-400 mt-2">You do not have permission to manage this store.</p>
-            <a href="/vm-admin/' . htmlspecialchars($owned_domain, ENT_QUOTES, 'UTF-8') . '/settings" class="inline-block mt-6 bg-purple-600 text-white px-6 py-2.5 rounded-full text-sm font-bold hover:bg-purple-500 transition-all">Go to Your Settings</a>
+    echo '<div class="flex min-h-[60vh] items-center justify-center px-6" style="width:100%;height:100%;">
+        <div class="w-full max-w-md rounded-3xl border border-white/10 bg-[#202123] p-8 text-center shadow-[0_18px_45px_rgba(0,0,0,0.24)]">
+            <div class="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#c8c8c81a]">
+                <i class="bi bi-person-lock text-2xl text-white-400"></i>
+            </div>
+            <h2 class="mt-5 text-xl font-semibold text-white">Sign in to continue</h2>
+            <p class="mt-2 text-sm leading-6 text-zinc-400">Please sign in again to continue using the system.</p>
+            <a href="/auth/" class="mt-6 inline-flex items-center gap-2 rounded-full bg-purple-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#006e52]">
+                <i class="bi bi-box-arrow-in-right"></i>
+                Sign in again
+            </a>
         </div>
     </div>';
     return;
