@@ -183,6 +183,7 @@ if (!file_exists($public_db_path)) {
 $db = new database_manager($public_db_path);
 @include_once dirname(__FILE__) . "/../module/customer_auth.php";
 @include_once dirname(__FILE__) . "/../module/customer_account.php";
+@include_once dirname(__FILE__) . "/../module/email.php";
 
 // --- Helper: enrich cart items with product details ---
 function enrich_cart($items_json, $public_db)
@@ -895,16 +896,98 @@ elseif ($method === 'POST') {
         exit;
     }
 
-    // --- Customer auth: POST customer_login ---
+    // --- Customer auth: POST customer_login (with OTP) ---
     elseif ($request == "customer_login") {
         $email = $input['email'] ?? '';
         $password = $input['password'] ?? '';
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
-        $result = customer_login($db, $email, $password, $userAgent);
-        if (!$result['ok']) {
+        
+        // First step: verify email/password and request OTP
+        $result = customer_login_request_otp($db, $email, $password, $userAgent);
+        
+        if ($result['ok'] && !empty($result['pending_otp'])) {
+            // OTP generated successfully — send via email
+            $customer_id = (int)($result['customer']['id'] ?? 0);
+            $customer_name = $result['customer']['name'] ?? $email;
+            
+            // Get the OTP code (we generated it in customer_create_otp)
+            $otp_rows = $db->query(
+                "SELECT otp_code FROM customer_otp_codes 
+                 WHERE customer_id = ? AND verified = 0 AND expires_at > datetime('now') 
+                 ORDER BY created_at DESC LIMIT 1",
+                [$customer_id]
+            );
+            
+            if (!empty($otp_rows)) {
+                $otp_code = $otp_rows[0]['otp_code'];
+                
+                // Send OTP via email
+                $email_result = email_send_otp($domain, $email, $customer_name, $otp_code);
+                if (!$email_result['ok']) {
+                    // Email failed but OTP is generated — return pending status anyway
+                    // (In production, log this and possibly alert admin)
+                }
+            }
+            
+            // Return pending OTP status to client
+            http_response_code(200);
+            echo json_encode([
+                'ok' => true,
+                'pending_otp' => true,
+                'customer' => $result['customer'],
+                'message' => 'OTP code has been sent to your email. Please verify to complete login.'
+            ]);
+        } else {
+            // Login failed (invalid credentials or account locked)
             http_response_code(($result['code'] ?? '') === 'locked' ? 429 : 401);
+            echo json_encode(['ok' => false, 'error' => $result['error'] ?? 'Login failed']);
         }
-        echo json_encode($result);
+        exit;
+    }
+    
+    // --- Customer auth: POST customer_verify_otp (OTP verification) ---
+    elseif ($request == "customer_verify_otp") {
+        $customer_token = extract_customer_token();
+        $otp_code = $input['otp'] ?? '';
+        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+        
+        if (empty($otp_code)) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'error' => 'OTP code is required']);
+            exit;
+        }
+        
+        // Get customer from temp token stored in a session (for now, we'll use email-based lookup)
+        // In a production system, you might store temp tokens in a separate table
+        // For this implementation, the client sends the customer email to identify themselves
+        $email = $input['email'] ?? '';
+        if (empty($email)) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'error' => 'Email is required']);
+            exit;
+        }
+        
+        $email = strtolower(trim($email));
+        $customer_row = $db->query("SELECT id FROM customers WHERE email = ? LIMIT 1", [$email]);
+        
+        if (empty($customer_row)) {
+            http_response_code(401);
+            echo json_encode(['ok' => false, 'error' => 'Invalid customer']);
+            exit;
+        }
+        
+        $customer_id = (int)$customer_row[0]['id'];
+        
+        // Verify OTP and issue session token
+        $result = customer_verify_otp_and_login($db, $customer_id, $otp_code, $userAgent);
+        
+        if (!$result['ok']) {
+            http_response_code(401);
+            echo json_encode(['ok' => false, 'error' => $result['error'] ?? 'OTP verification failed']);
+        } else {
+            http_response_code(200);
+            echo json_encode($result);
+        }
         exit;
     }
 

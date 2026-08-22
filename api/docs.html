@@ -344,6 +344,8 @@
       <a href="#products">Products</a>
       <a href="#orders">Orders</a>
       <a href="#checkout">Checkout</a>
+      <a href="#payment-methods">Payment methods</a>
+      <a href="#delivery-zones">Delivery zones</a>
     </div>
     <div class="nav-group">
       <h4>Reference</h4>
@@ -430,6 +432,70 @@
         <tbody><tr><th>Param</th><th>Type</th><th></th><th>Description</th></tr>
         <tr><td class="name">status</td><td class="type">string</td><td class="req">required</td><td>One of the valid order states. See order states below.</td></tr>
       </tbody></table>
+    </section>
+
+    <section id="payment-methods">
+      <div class="endpoint-row"><span class="pill get">GET</span> /store-access/{store_id}/?state=payment_methods</div>
+      <h2>List available payment methods</h2>
+      <p>Returns the payment methods enabled for the current store based on the configured payment settings.</p>
+      <h3>Response</h3>
+      <table class="params">
+        <tbody><tr><th>Field</th><th>Type</th><th>Description</th></tr>
+        <tr><td class="name">id</td><td class="type">string</td><td>Stable method key such as <code>cod</code>, <code>yoco</code>, or <code>paypal</code>.</td></tr>
+        <tr><td class="name">code</td><td class="type">string</td><td>Same value as <code>id</code> for client-side routing.</td></tr>
+        <tr><td class="name">name</td><td class="type">string</td><td>Human-readable label shown in checkout.</td></tr>
+        <tr><td class="name">enabled</td><td class="type">boolean</td><td>Whether the method is currently active.</td></tr>
+        <tr><td class="name">description</td><td class="type">string</td><td>Short helper text for the checkout UI.</td></tr>
+        <tr><td class="name">mode</td><td class="type">string|null</td><td>Provider mode, e.g. <code>test</code> or <code>live</code>.</td></tr>
+        <tr><td class="name">environment</td><td class="type">string|null</td><td>PayPal environment such as <code>sandbox</code> or <code>production</code>.</td></tr>
+      </tbody></table>
+      <div class="resp-block">
+        <div class="status">200 OK</div>
+        <pre>{
+  "success": true,
+  "data": [
+    {
+      "id": "cod",
+      "code": "cod",
+      "name": "Cash on Delivery",
+      "enabled": true,
+      "description": "Pay at doorstep",
+      "mode": null,
+      "environment": null
+    }
+  ]
+}</pre>
+      </div>
+    </section>
+
+    <section id="delivery-zones">
+      <div class="endpoint-row"><span class="pill get">GET</span> /store-access/{store_id}/?state=delivery_zones</div>
+      <h2>List delivery zones</h2>
+      <p>Returns the configured delivery zones and shipping rates that can be used during checkout.</p>
+      <h3>Response</h3>
+      <table class="params">
+        <tbody><tr><th>Field</th><th>Type</th><th>Description</th></tr>
+        <tr><td class="name">id</td><td class="type">integer</td><td>Delivery zone identifier.</td></tr>
+        <tr><td class="name">province</td><td class="type">string</td><td>Zone name such as <code>Gauteng</code> or <code>Western Cape</code>.</td></tr>
+        <tr><td class="name">type</td><td class="type">string</td><td>Rate type: <code>flat</code> or <code>regional</code>.</td></tr>
+        <tr><td class="name">price</td><td class="type">number</td><td>Delivery fee for that zone.</td></tr>
+        <tr><td class="name">status</td><td class="type">string</td><td>Current status, usually <code>active</code> or <code>inactive</code>.</td></tr>
+      </tbody></table>
+      <div class="resp-block">
+        <div class="status">200 OK</div>
+        <pre>{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "province": "Gauteng",
+      "type": "flat",
+      "price": 75,
+      "status": "active"
+    }
+  ]
+}</pre>
+      </div>
     </section>
 
     <section id="errors">
