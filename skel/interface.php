@@ -15,6 +15,12 @@ $module_dir = dirname(dirname(dirname(__FILE__))) . "/module/";
 
 # System Database 
 $database = dirname(__FILE__) . "/storage.data";
+
+if (!file_exists($database)) {
+    @include_once __DIR__."/trace.php";
+    die(); 
+}
+
 @include_once dirname(dirname(dirname(__FILE__))) . "/scripts.php";
 
 #Restart Database 

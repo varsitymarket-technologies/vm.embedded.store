@@ -24,21 +24,19 @@ $store_url = __WEBSITE_URL__ ?? '#';
 
 <div class="grid-layout">
     <main class="dash-main overflow-x-hidden bg-[#1b1b1c] md:p-6 lg:p-8">
-        <section class="relative overflow-hidden rounded-3xl border border-white/10 bg-white text-slate-900 shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+        <section class="relative overflow-hidden rounded-3xl border border-white/10 text-slate-900 shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
             <div class="absolute inset-0 opacity-70">
-                <div class="absolute -right-20 top-[-5rem] h-64 w-64 rounded-full bg-emerald-200/70 blur-3xl"></div>
-                <div class="absolute left-1/3 top-10 h-40 w-40 rounded-full bg-sky-200/70 blur-3xl"></div>
             </div>
             <div class="relative grid gap-6 p-6 lg:grid-cols-[minmax(0,1.5fr)_minmax(280px,0.8fr)] lg:p-8">
                 <div>
                     <div class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
                         Store dashboard
                     </div>
-                    <h1 class="mt-4 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">
+                    <h1 class="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">
                         Welcome back, <?php echo htmlspecialchars(__USERNAME__, ENT_QUOTES, 'UTF-8'); ?>
                     </h1>
                     <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-                        Here’s what’s happening with <span class="font-semibold text-slate-900"><?php echo htmlspecialchars($store_name, ENT_QUOTES, 'UTF-8'); ?></span>.
+                        Here’s what’s happening with <span class="font-semibold text-white"><?php echo htmlspecialchars($store_name, ENT_QUOTES, 'UTF-8'); ?></span>.
                     </p>
 
                     <div class="mt-6 flex flex-wrap items-center gap-3">
@@ -50,20 +48,14 @@ $store_url = __WEBSITE_URL__ ?? '#';
                 </div>
 
                 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                    <div class="rounded-2xl border border-slate-200 bg-white/85 p-4 backdrop-blur">
+                    <a target="_blank" href="<?php echo htmlspecialchars($store_url, ENT_QUOTES, 'UTF-8'); ?>" class="rounded-2xl border border-slate-200 bg-white/85 p-4 backdrop-blur">
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Store</p>
                         <p class="mt-2 truncate text-base font-semibold text-slate-950"><?php echo htmlspecialchars($store_domain, ENT_QUOTES, 'UTF-8'); ?></p>
-                        <a href="<?php echo htmlspecialchars($store_url, ENT_QUOTES, 'UTF-8'); ?>" target="_blank" class="mt-1 inline-flex items-center gap-1 text-sm font-medium text-[#008060] hover:text-[#006e52]">
-                            Visit live store <i class="bi bi-box-arrow-up-right text-[10px]"></i>
-                        </a>
-                    </div>
-                    <div class="rounded-2xl border border-slate-200 bg-white/85 p-4 backdrop-blur">
+                    </a>
+                    <a href="<?php echo $admin_base; ?>theme" class="rounded-2xl border border-slate-200 bg-white/85 p-4 backdrop-blur">
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Theme</p>
                         <p class="mt-2 text-base font-semibold text-slate-950 capitalize"><?php echo htmlspecialchars($store_theme, ENT_QUOTES, 'UTF-8'); ?></p>
-                        <a href="<?php echo $admin_base; ?>theme" class="mt-1 inline-flex items-center gap-1 text-sm font-medium text-[#008060] hover:text-[#006e52]">
-                            Change theme <i class="bi bi-arrow-right text-[10px]"></i>
-                        </a>
-                    </div>
+                    </a>
                 </div>
             </div>
         </section>

@@ -31,6 +31,7 @@ foreach ([dirname(__FILE__), dirname(dirname(__FILE__)), dirname(dirname(dirname
 if ($_vm_module_dir !== null) {
     @include_once $_vm_module_dir . '/customer_auth.php';
     @include_once $_vm_module_dir . '/customer_account.php';
+    @include_once $_vm_module_dir . '/email.php';
 }
 
 // --- Customer token extraction (mirrors api/index.php helper) ---
@@ -234,7 +235,7 @@ if ($method === 'GET') {
     }
 
     else {
-        echo json_encode(["status" => "ok", "endpoints" => ["products", "product", "categories", "products_by_category", "search", "discounts", "site", "orders", "order", "customer_me", "customer_my_orders", "customer_register", "customer_login", "customer_logout", "customer_update_profile", "customer_change_password"]]);
+        echo json_encode(["status" => "ok", "endpoints" => ["products", "product", "categories", "products_by_category", "search", "discounts", "site", "orders", "order", "customer_me", "customer_my_orders", "customer_register", "customer_login", "customer_verify_otp", "customer_logout", "customer_update_profile", "customer_change_password"]]);
     }
 }
 
@@ -286,9 +287,9 @@ elseif ($method === 'POST') {
         exit;
     }
 
-    // --- Customer account: POST customer_login (sub-project D.1) ---
+    // --- Customer account: POST customer_login (sub-project D.1, with OTP) ---
     elseif ($request == "customer_login") {
-        if (!function_exists('customer_login')) {
+        if (!function_exists('customer_login_request_otp')) {
             http_response_code(500);
             echo json_encode(["ok" => false, "error" => "Customer auth module not loaded"]);
             exit;
@@ -298,11 +299,98 @@ elseif ($method === 'POST') {
         $email = $input['email'] ?? '';
         $password = $input['password'] ?? '';
         $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
-        $result = customer_login($db, $email, $password, $userAgent);
-        if (!$result['ok']) {
+        
+        // First step: verify email/password and request OTP
+        $result = customer_login_request_otp($db, $email, $password, $userAgent);
+        
+        if ($result['ok'] && !empty($result['pending_otp'])) {
+            // OTP generated successfully — send via email
+            $customer_id = (int)($result['customer']['id'] ?? 0);
+            $customer_name = $result['customer']['name'] ?? $email;
+            $domain = __ANCHOR_SITE__ ?? '';
+            
+            // Get the OTP code
+            $otp_rows = $db->query(
+                "SELECT otp_code FROM customer_otp_codes 
+                 WHERE customer_id = ? AND verified = 0 AND expires_at > datetime('now') 
+                 ORDER BY created_at DESC LIMIT 1",
+                [$customer_id]
+            );
+            
+            if (!empty($otp_rows) && !empty($domain)) {
+                $otp_code = $otp_rows[0]['otp_code'];
+                
+                // Send OTP via email if email module is loaded
+                if (function_exists('email_send_otp')) {
+                    $email_result = email_send_otp($domain, $email, $customer_name, $otp_code);
+                    if (!$email_result['ok']) {
+                        // Email failed but OTP is generated — still return pending status
+                    }
+                }
+            }
+            
+            // Return pending OTP status to client
+            http_response_code(200);
+            echo json_encode([
+                'ok' => true,
+                'pending_otp' => true,
+                'customer' => $result['customer'],
+                'message' => 'OTP code has been sent to your email. Please verify to complete login.'
+            ]);
+        } else {
+            // Login failed (invalid credentials or account locked)
             http_response_code(($result['code'] ?? '') === 'locked' ? 429 : 401);
+            echo json_encode(['ok' => false, 'error' => $result['error'] ?? 'Login failed']);
         }
-        echo json_encode($result);
+        exit;
+    }
+    
+    // --- Customer account: POST customer_verify_otp (OTP verification) ---
+    elseif ($request == "customer_verify_otp") {
+        if (!function_exists('customer_verify_otp_and_login')) {
+            http_response_code(500);
+            echo json_encode(["ok" => false, "error" => "Customer auth module not loaded"]);
+            exit;
+        }
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!is_array($input)) { $input = []; }
+        $email = $input['email'] ?? '';
+        $otp_code = $input['otp'] ?? '';
+        $userAgent = $_SERVER['HTTP_USER_AGENT'] ?? null;
+        
+        if (empty($otp_code)) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'error' => 'OTP code is required']);
+            exit;
+        }
+        
+        if (empty($email)) {
+            http_response_code(400);
+            echo json_encode(['ok' => false, 'error' => 'Email is required']);
+            exit;
+        }
+        
+        $email = strtolower(trim($email));
+        $customer_row = $db->query("SELECT id FROM customers WHERE email = ? LIMIT 1", [$email]);
+        
+        if (empty($customer_row)) {
+            http_response_code(401);
+            echo json_encode(['ok' => false, 'error' => 'Invalid customer']);
+            exit;
+        }
+        
+        $customer_id = (int)$customer_row[0]['id'];
+        
+        // Verify OTP and issue session token
+        $result = customer_verify_otp_and_login($db, $customer_id, $otp_code, $userAgent);
+        
+        if (!$result['ok']) {
+            http_response_code(401);
+            echo json_encode(['ok' => false, 'error' => $result['error'] ?? 'OTP verification failed']);
+        } else {
+            http_response_code(200);
+            echo json_encode($result);
+        }
         exit;
     }
 

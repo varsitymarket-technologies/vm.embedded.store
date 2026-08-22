@@ -675,7 +675,7 @@ Find the closing `</div>` of the existing product modal (near line 374, the line
                         </div>
                         <p class="text-white font-medium" id="importResultHeading">Import complete</p>
                         <p class="text-gray-500 text-sm mt-1" id="importResultDetail"></p>
-                        <div id="importResultErrors" class="hidden mt-4 text-left bg-gray-900/50 border border-white/5 rounded-lg p-3 max-h-40 overflow-y-auto">
+                        <div id="importResultErrors" class="hidden mt-4 text-left bg-[#1b1b1c]/50 border border-white/5 rounded-lg p-3 max-h-40 overflow-y-auto">
                             <p class="text-xs font-semibold text-gray-400 mb-2">Skipped rows</p>
                             <ul id="importResultErrorList" class="text-xs text-gray-500 space-y-1"></ul>
                         </div>

@@ -18,6 +18,12 @@ if (!defined('CUSTOMER_AUTH_SESSION_DAYS')) {
 if (!defined('CUSTOMER_AUTH_MIN_PASSWORD_LEN')) {
     define('CUSTOMER_AUTH_MIN_PASSWORD_LEN', 8);
 }
+if (!defined('CUSTOMER_AUTH_OTP_LENGTH')) {
+    define('CUSTOMER_AUTH_OTP_LENGTH', 6);
+}
+if (!defined('CUSTOMER_AUTH_OTP_EXPIRY_MINUTES')) {
+    define('CUSTOMER_AUTH_OTP_EXPIRY_MINUTES', 10);
+}
 
 /**
  * Register a new customer.
@@ -217,3 +223,178 @@ function customer_public_view(array $row): array
         'created_at' => $row['created_at'] ?? null,
     ];
 }
+
+// --- OTP Functions for Email-based 2FA ---
+
+/**
+ * Generate a random OTP code.
+ * 
+ * @return string A random 6-digit OTP code
+ */
+function customer_generate_otp_code(): string
+{
+    $otp = '';
+    for ($i = 0; $i < CUSTOMER_AUTH_OTP_LENGTH; $i++) {
+        $otp .= random_int(0, 9);
+    }
+    return $otp;
+}
+
+/**
+ * Create and store an OTP code for a customer.
+ * 
+ * @return array{ok:bool, error?:string, otp?:string}
+ */
+function customer_create_otp(database_manager $db, int $customerId): array
+{
+    $otp_code = customer_generate_otp_code();
+    
+    // Delete any existing unexpired OTP codes for this customer
+    $db->query(
+        "DELETE FROM customer_otp_codes 
+         WHERE customer_id = ? AND expires_at > datetime('now')",
+        [$customerId]
+    );
+    
+    // Create new OTP
+    $db->query(
+        "INSERT INTO customer_otp_codes (customer_id, otp_code, expires_at) 
+         VALUES (?, ?, datetime('now', '+' || ? || ' minutes'))",
+        [$customerId, $otp_code, CUSTOMER_AUTH_OTP_EXPIRY_MINUTES]
+    );
+    
+    return ['ok' => true, 'otp' => $otp_code];
+}
+
+/**
+ * Verify an OTP code for a customer.
+ * 
+ * @return array{ok:bool, error?:string}
+ */
+function customer_verify_otp(database_manager $db, int $customerId, string $otp_code): array
+{
+    $otp_code = trim($otp_code);
+    
+    if (empty($otp_code)) {
+        return ['ok' => false, 'error' => 'OTP code is required'];
+    }
+    
+    // Find valid, unexpired OTP for this customer
+    $rows = $db->query(
+        "SELECT id FROM customer_otp_codes 
+         WHERE customer_id = ? 
+         AND otp_code = ? 
+         AND verified = 0 
+         AND expires_at > datetime('now') 
+         LIMIT 1",
+        [$customerId, $otp_code]
+    );
+    
+    if (empty($rows)) {
+        return ['ok' => false, 'error' => 'Invalid or expired OTP code'];
+    }
+    
+    $otp_id = (int)$rows[0]['id'];
+    
+    // Mark OTP as verified
+    $db->query(
+        "UPDATE customer_otp_codes SET verified = 1 WHERE id = ?",
+        [$otp_id]
+    );
+    
+    return ['ok' => true];
+}
+
+/**
+ * Modified login that returns pending_otp status instead of session token.
+ * The client must then call customer_verify_otp_and_login to complete auth.
+ *
+ * @return array{ok:bool, error?:string, pending_otp?:bool, customer?:array, temp_token?:string, code?:string}
+ */
+function customer_login_request_otp(database_manager $db, string $email, string $password, ?string $userAgent = null): array
+{
+    $email = strtolower(trim($email));
+    $row = $db->query("SELECT * FROM customers WHERE email = ? LIMIT 1", [$email]);
+    if (empty($row)) {
+        // Constant-time guard
+        password_verify($password, '$2y$10$abcdefghijklmnopqrstuuMUCnyN4ALxqMR3jE3X6h5MXxn5gqNHi');
+        return ['ok' => false, 'error' => 'Invalid email or password'];
+    }
+    $customer = $row[0];
+    $customerId = (int)$customer['id'];
+
+    if (!empty($customer['locked_until'])) {
+        $lockedUntil = strtotime($customer['locked_until']);
+        if ($lockedUntil !== false && $lockedUntil > time()) {
+            return [
+                'ok' => false,
+                'error' => 'Account temporarily locked. Try again later.',
+                'code' => 'locked',
+            ];
+        }
+    }
+
+    if (!password_verify($password, $customer['password_hash'])) {
+        $newCount = (int)$customer['failed_login_attempts'] + 1;
+        $db->query("UPDATE customers SET failed_login_attempts = ? WHERE id = ?",
+            [$newCount, $customerId]);
+        if ($newCount >= CUSTOMER_AUTH_LOCKOUT_THRESHOLD) {
+            $db->query("UPDATE customers SET locked_until = datetime('now', '+" . CUSTOMER_AUTH_LOCKOUT_MINUTES . " minutes') WHERE id = ?",
+                [$customerId]);
+        }
+        return ['ok' => false, 'error' => 'Invalid email or password'];
+    }
+
+    // Password verified — now generate OTP
+    $otp_result = customer_create_otp($db, $customerId);
+    if (!$otp_result['ok']) {
+        return ['ok' => false, 'error' => 'Failed to generate OTP'];
+    }
+
+    // Create a temporary token to link this OTP request
+    $temp_token = customer_generate_token();
+
+    // Return OTP pending status (for development/testing, we echo the OTP; remove in production)
+    return [
+        'ok' => true,
+        'pending_otp' => true,
+        'customer' => customer_public_view($customer),
+        'temp_token' => $temp_token,
+        // In production, NEVER return the OTP in the response. It should only be sent via email.
+        // This is included for testing/development purposes only.
+    ];
+}
+
+/**
+ * Verify OTP and issue a full session token.
+ * 
+ * @return array{ok:bool, error?:string, token?:string, expires_at?:string, customer?:array}
+ */
+function customer_verify_otp_and_login(database_manager $db, int $customerId, string $otp_code, ?string $userAgent = null): array
+{
+    $otp_result = customer_verify_otp($db, $customerId, $otp_code);
+    if (!$otp_result['ok']) {
+        return ['ok' => false, 'error' => $otp_result['error'] ?? 'OTP verification failed'];
+    }
+
+    // OTP verified — mark email as verified and reset failed login attempts
+    $db->query(
+        "UPDATE customers SET email_verified = 1, failed_login_attempts = 0, locked_until = NULL WHERE id = ?",
+        [$customerId]
+    );
+
+    // Create session token
+    $session = customer_create_session($db, $customerId, $userAgent);
+
+    // Fetch fresh customer data
+    $fresh = $db->query("SELECT * FROM customers WHERE id = ? LIMIT 1", [$customerId]);
+    $customer = !empty($fresh) ? $fresh[0] : null;
+
+    return [
+        'ok' => true,
+        'customer' => customer_public_view($customer),
+        'token' => $session['token'],
+        'expires_at' => $session['expires_at'],
+    ];
+}
+

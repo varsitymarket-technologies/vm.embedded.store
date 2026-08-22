@@ -131,7 +131,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($domain_type === 'subdomain' && isset($_SERVER['PARENT_DOMAIN'])) {
         $prefix = trim(strtolower((string)($_POST['subdomain_prefix'] ?? '')));
         $prefix = preg_replace('/[^a-z0-9-]/', '', $prefix);
-        $website_domain = $prefix . "." . $_SERVER['PARENT_DOMAIN'];
+        $website_domain = $prefix . "-" . $_SERVER['PARENT_DOMAIN'];
     } else {
         $website_domain = trim((string)($_POST['wb_domain'] ?? ''));
     }

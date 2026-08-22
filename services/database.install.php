@@ -171,6 +171,20 @@ $sql_customer_addresses = "CREATE TABLE IF NOT EXISTS customer_addresses (
 $db->query($sql_customer_addresses);
 $db->query("CREATE INDEX IF NOT EXISTS idx_addresses_customer ON customer_addresses(customer_id)");
 
+// 10. Customer OTP Codes Table (for login verification)
+$sql_customer_otp = "CREATE TABLE IF NOT EXISTS customer_otp_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_id INTEGER NOT NULL,
+    otp_code TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    expires_at DATETIME NOT NULL,
+    verified INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE
+)";
+$db->query($sql_customer_otp);
+$db->query("CREATE INDEX IF NOT EXISTS idx_otp_customer ON customer_otp_codes(customer_id)");
+$db->query("CREATE INDEX IF NOT EXISTS idx_otp_expires ON customer_otp_codes(expires_at)");
+
 #$sql = "INSERT INTO `products` (`name`,`description`,`price`,`image`) VALUES ('Shoes','Voluptas facere animi explicabo non quis magni recusandae. Numquam debitis pariatur omnis facere unde. Laboriosam minus amet nesciunt est. Et saepe eos maxime tempore quasi deserunt ab. ','300','/img/demo-shoes.jpg'); ";
 #$db->query($sql); 
 
