@@ -7,6 +7,7 @@
 #   RELEASE : 2026/05/15
 
 @include_once dirname(__FILE__) . "/../scripts.php";
+@include_once dirname(__FILE__) . "/../module/delivery_zones_sync.php";
 
 // CORS headers set after origin check below
 header("Access-Control-Allow-Headers: Authorization, Content-Type, X-API-Key, X-Customer-Token");
@@ -321,6 +322,21 @@ function get_store_delivery_zones($public_db)
     return $rows;
 }
 
+function get_store_delivery_geography(): array
+{
+    $sync = new DeliveryZonesSync();
+    $cached = $sync->readCache();
+    if (is_array($cached)) {
+        return $cached;
+    }
+
+    return [
+        'synced_at' => null,
+        'source' => 'cache-missing',
+        'countries' => [],
+    ];
+}
+
 // Route to the requested endpoint
 $request = $_GET['state'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'];
@@ -490,6 +506,8 @@ if ($method === 'GET') {
         echo json_encode(["success" => true, "data" => get_store_payment_methods($domain)]);
     } elseif ($request == "delivery_zones") {
         echo json_encode(["success" => true, "data" => get_store_delivery_zones($db)]);
+    } elseif ($request == "delivery_geography") {
+        echo json_encode(["success" => true, "data" => get_store_delivery_geography()]);
     } elseif ($request == "orders") {
         $email = $_GET['email'] ?? '';
         if (!empty($email)) {
