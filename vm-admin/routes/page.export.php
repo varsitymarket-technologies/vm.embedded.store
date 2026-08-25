@@ -1,4 +1,13 @@
 <?php
+#   TITLE   : Page Export
+#   DESC    : The Admin Page for Exporting the Storefront as Code
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 1.0.1.1
+#   AUTHOR  : HARDY HASTINGS
+#   RELEASE : 2026/01/30
+?>
+
+<?php
 // 1. Setup Paths
 $active_theme_file = dirname(dirname(dirname(__FILE__))) . "/sites/" . __DOMAIN__ . "/theme";
 $active_theme_name = file_exists($active_theme_file) ? trim(file_get_contents($active_theme_file)) : '';
@@ -129,7 +138,7 @@ if (empty($current_code)) {
                             <i class="bi bi-download"></i>
                             <span>Download HTML</span>
                         </button>
-                        <button onclick="copyEmbedCode()" class="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50">
+                        <button onclick="copyEmbedCode('editor', this)" class="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-800 transition hover:bg-slate-50">
                             <i class="bi bi-clipboard"></i>
                             <span>Copy embed code</span>
                         </button>
@@ -165,12 +174,12 @@ if (empty($current_code)) {
                             <h3 class="text-sm font-semibold text-white">Embed link code</h3>
                             <p class="text-xs text-zinc-500">Paste this to link back to the hosted store.</p>
                         </div>
-                        <button onclick="copyEmbedCode()" class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
+                        <button onclick="copyEmbedCode('embed-link-code', this)" class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
                             <i class="bi bi-clipboard"></i>
                             Copy
                         </button>
                     </div>
-                    <pre class="max-h-32 overflow-y-auto rounded-2xl border border-white/10 bg-[#1b1b1c] p-4 text-xs text-zinc-200" id="embedCodeBlock"><?php @include_once dirname(dirname(__DIR__)) . "/services/export.store.link.php";
+                    <pre class="max-h-32 overflow-y-auto rounded-2xl border border-white/10 bg-[#1b1b1c] p-4 text-xs text-zinc-200" id="embed-link-code"><?php @include_once dirname(dirname(__DIR__)) . "/services/export.store.link.php";
                                                                                                                                                         echo (embedd_link_application(__DOMAIN__, "https://" . get_domain())); ?></pre>
                 </div>
 
@@ -180,12 +189,12 @@ if (empty($current_code)) {
                             <h3 class="text-sm font-semibold text-white">Embed code</h3>
                             <p class="text-xs text-zinc-500">Use this when embedding the full storefront experience.</p>
                         </div>
-                        <button onclick="copyEmbedCode()" class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
+                        <button onclick="copyEmbedCode('embed-full-code', this)" class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10">
                             <i class="bi bi-clipboard"></i>
                             Copy
                         </button>
                     </div>
-                    <pre class="max-h-[40vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#1b1b1c] p-4 text-xs text-zinc-200" id="embedCodeBlock">&lt;!-- Embedded Webstore --&gt; <?php @include_once dirname(dirname(__DIR__)) . "/services/export.store.frame.php";
+                    <pre class="max-h-[40vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#1b1b1c] p-4 text-xs text-zinc-200" id="embed-full-code">&lt;!-- Embedded Webstore --&gt; <?php @include_once dirname(dirname(__DIR__)) . "/services/export.store.frame.php";
                                                                                                                                                                                                 echo (embedd_application(__DOMAIN__, "https://" . get_domain())); ?></pre>
                 </div>
             </div>
@@ -228,11 +237,27 @@ if (empty($current_code)) {
     function updatePreview() {
         const content = editor.value;
         const doc = preview.contentDocument || preview.contentWindow.document;
-        doc.open();
-        doc.write(content);
-        doc.close();
+        //doc.open();
+        //doc.src = document.getElementById('embed-link-code').innerHTML; 
+        //doc.write(content);
+        //doc.close();
         status.innerText = "Export Ready";
         status.className = "text-green-400 text-xs";
+
+
+        // 1. Get the <iframe> element directly (not its document)
+        const previewFrame = document.getElementById('preview'); 
+        
+        // 2. Extract the URL from your container element
+        const newSourceUrl = document.getElementById('embed-link-code').textContent.trim(); 
+        
+        // 3. Update the iframe's src attribute directly
+        previewFrame.src = newSourceUrl;
+        
+        // 4. Update UI status
+        status.innerText = "Export Ready";
+        status.className = "text-green-400 text-xs";
+
     }
 
     function syncCode() {
@@ -248,6 +273,47 @@ if (empty($current_code)) {
         a.download = 'store.html';
         a.href = window.URL.createObjectURL(blob);
         a.click();
+    }
+
+    async function copyEmbedCode(targetId, button) {
+        const target = document.getElementById(targetId);
+        if (!target) return;
+
+        const text = target.innerText || target.textContent || '';
+        const original = button ? button.innerHTML : '';
+        const done = () => {
+            if (!button) return;
+            button.innerHTML = '<i class="bi bi-check2"></i> Copied';
+            setTimeout(() => {
+                button.innerHTML = original;
+            }, 1600);
+        };
+
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(text);
+            } else {
+                const temp = document.createElement('textarea');
+                temp.value = text;
+                temp.setAttribute('readonly', '');
+                temp.style.position = 'fixed';
+                temp.style.left = '-9999px';
+                temp.style.opacity = '0';
+                document.body.appendChild(temp);
+                temp.select();
+                document.execCommand('copy');
+                document.body.removeChild(temp);
+            }
+            done();
+        } catch (err) {
+            console.error('Copy to clipboard failed:', err);
+            if (button) {
+                button.innerHTML = '<i class="bi bi-x-circle"></i> Copy failed';
+                setTimeout(() => {
+                    button.innerHTML = original;
+                }, 1800);
+            }
+        }
     }
 
     function toggleView(view) {
