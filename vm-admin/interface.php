@@ -317,7 +317,7 @@ ob_start();
                                 <span>Website Pages</span>
                             </a>
                             <a href="<?php echo $admin_base; ?>publish"
-                                class="<?php echo nav_cls('deploy', $current_page); ?>">
+                                class="<?php echo nav_cls('publish', $current_page); ?>">
                                 <i class="bi bi-rocket-takeoff-fill mr-3"></i>
                                 <span>Publish</span>
                             </a>
@@ -436,12 +436,12 @@ ob_start();
                 flex-direction: row-reverse !important;
             }
 
-            .sesedesedwsedwdd {
+            .nav_item_btn {
                 text-align: start;
                 margin: 0.6rem 0 0 3rem;
             }
 
-            .sesedesedwsedwdd i {
+            .nav_item_btn i {
                 font-size: 1.1rem !important;
             }
 
@@ -528,25 +528,25 @@ ob_start();
 
                 <a></a>
 
-                <a href="/home/" class="sesedesedwsedwdd">
+                <a href="/home/" class="nav_item_btn">
                     <i class="bi bi-house-fill mr-3"></i>
                     <span>Dashboard</span>
                 </a>
 
-                <a href="<?php echo $admin_base; ?>home" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>home" class="nav_item_btn">
                     <i class="bi bi-grid-1x2-fill mr-3"></i>
                     <span>Overview</span>
                 </a>
                 <?php if (isset($_SERVER['__AI_EXTENSION__'])): ?>
                     <?php if ($_SERVER['__AI_EXTENSION__']): ?>
-                        <a href="<?php echo $admin_base; ?>agent" class="sesedesedwsedwdd">
+                        <a href="<?php echo $admin_base; ?>agent" class="nav_item_btn">
                             <i class="bi bi-robot mr-3"></i>
                             <span>AI Agent</span>
                         </a>
                 <?php endif;
                 endif; ?>
 
-                <a href="<?php echo $admin_base; ?>analytics" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>analytics" class="nav_item_btn">
                     <i class="bi bi-graph-up mr-3"></i>
                     <span>Analytics</span>
                 </a>
@@ -555,19 +555,19 @@ ob_start();
                     <span>Catalog</span>
                 </a>
 
-                <a href="<?php echo $admin_base; ?>products" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>products" class="nav_item_btn">
                     <i class="bi bi-box-seam-fill mr-3"></i>
                     <span>Products</span>
                 </a>
-                <a href="<?php echo $admin_base; ?>categories" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>categories" class="nav_item_btn">
                     <i class="bi bi-tags-fill mr-3"></i>
                     <span>Categories</span>
                 </a>
-                <a href="<?php echo $admin_base; ?>discounts" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>discounts" class="nav_item_btn">
                     <i class="bi bi-percent mr-3"></i>
                     <span>Discounts</span>
                 </a>
-                <a href="<?php echo $admin_base; ?>sales" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>sales" class="nav_item_btn">
                     <i class="bi bi-lightning-fill mr-3"></i>
                     <span>Flash Sales</span>
                 </a>
@@ -576,20 +576,20 @@ ob_start();
                     <span>Orders & Fulfillment</span>
                 </a>
 
-                <a href="<?php echo $admin_base; ?>orders" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>orders" class="nav_item_btn">
                     <i class="bi bi-receipt mr-3"></i>
                     <span>Orders<?php if ($pending_orders > 0)
                                     echo ' <span style="background:#7a1aab;padding:1px 6px;border-radius:99px;font-size:0.6rem;margin-left:4px;">' . $pending_orders . '</span>'; ?></span>
                 </a>
-                <a href="<?php echo $admin_base; ?>payments" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>payments" class="nav_item_btn">
                     <i class="bi bi-wallet2 mr-3"></i>
                     <span>Payments</span>
                 </a>
-                <a href="<?php echo $admin_base; ?>delivery" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>delivery" class="nav_item_btn">
                     <i class="bi bi-truck mr-3"></i>
                     <span>Delivery</span>
                 </a>
-                <a href="<?php echo $admin_base; ?>logistics" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>logistics" class="nav_item_btn">
                     <i class="bi bi-globe-americas mr-3"></i>
                     <span>Logistics</span>
                 </a>
@@ -597,19 +597,19 @@ ob_start();
                 <a class="anch_item">
                     <span>Website</span>
                 </a>
-                <a href="<?php echo $admin_base; ?>theme" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>theme" class="nav_item_btn">
                     <i class="bi bi-palette-fill mr-3"></i>
                     <span>Themes</span>
                 </a>
-                <a href="<?php echo $admin_base; ?>page" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>page" class="nav_item_btn">
                     <i class="bi bi-file-earmark-code mr-3"></i>
                     <span>Website Pages</span>
                 </a>
-                <a href="<?php echo $admin_base; ?>publish" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>publish" class="nav_item_btn">
                     <i class="bi bi-rocket-takeoff-fill mr-3"></i>
                     <span>Publish</span>
                 </a>
-                <a href="<?php echo $admin_base; ?>export" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>export" class="nav_item_btn">
                     <i class="bi bi-code-slash mr-3"></i>
                     <span>Export</span>
                 </a>
@@ -617,15 +617,15 @@ ob_start();
                 <a class="anch_item">
                     <span>System</span>
                 </a>
-                <a href="<?php echo $admin_base; ?>users" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>users" class="nav_item_btn">
                     <i class="bi bi-people-fill mr-3"></i>
                     <span>Users </span>
                 </a>
-                <a href="<?php echo $admin_base; ?>forms" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>forms" class="nav_item_btn">
                     <i class="bi bi-ui-checks-grid mr-3"></i>
                     <span>Forms</span>
                 </a>
-                <a href="<?php echo $admin_base; ?>settings" class="sesedesedwsedwdd">
+                <a href="<?php echo $admin_base; ?>settings" class="nav_item_btn">
                     <i class="bi bi-gear-fill mr-3"></i>
                     <span>Settings</span>
                 </a>
@@ -642,7 +642,7 @@ ob_start();
                                 style="font-size:0.65rem;font-weight:700;color:#fff;"><?php echo htmlspecialchars($account_initial, ENT_QUOTES, 'UTF-8'); ?></span>
                         <?php endif; ?>
                     </div>
-                    <span
+                    <span onclick="window.location.href='<?php echo $admin_base; ?>account'"
                         style="font-size:0.75rem;color:#999;"><?php echo htmlspecialchars($account_name, ENT_QUOTES, 'UTF-8'); ?></span>
                     <a href="/logout.php" style="margin-left:auto;font-size:0.75rem;color:#666;">
                         <i class="bi bi-box-arrow-right"></i>

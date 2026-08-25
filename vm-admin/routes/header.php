@@ -1,4 +1,11 @@
 <?php
+#   TITLE   : Admin Header Card
+#   DESC    : The Admin Header Card
+#   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
+#   VERSION : 2.0.0
+#   AUTHOR  : HARDY HASTINGS
+#   RELEASE : 2026/07/27
+
 $header_account_name = __USERNAME__ ?? 'User';
 $header_account_initial = strtoupper(substr($header_account_name ?: 'U', 0, 1));
 $header_account_image = '';
@@ -20,7 +27,7 @@ try {
     </button>
     <div class="flex items-center gap-4 ml-auto">
         <div class="relative group">
-            <button class="admin-btn flex items-center gap-2 text-sm font-medium text-white focus:outline-none">
+            <button onclick="window.location.href='<?php echo $admin_base; ?>account'" class="admin-btn flex items-center gap-2 text-sm font-medium text-white focus:outline-none">
                 <div class="admin-badge h-8 w-8 overflow-hidden rounded-full flex items-center justify-center ring-1 ring-white/10">
                     <?php if (!empty($header_account_image)): ?>
                         <img src="<?php echo htmlspecialchars($header_account_image, ENT_QUOTES, 'UTF-8'); ?>" alt="Account avatar" class="h-full w-full object-cover">
