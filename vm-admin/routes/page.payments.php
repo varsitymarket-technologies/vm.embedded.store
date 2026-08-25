@@ -139,24 +139,25 @@ $status_colors = [
     <?php @include_once "header.php"; ?>
 
     <main class="flex-1 overflow-y-auto overflow-x-hidden">
-        <section class="relative mx-8 mt-8 overflow-hidden rounded-[28px] border border-white/10 bg-[linear-gradient(135deg,rgba(37,37,38,0.98),rgba(23,23,24,0.96))] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
-            <div class="absolute inset-y-0 right-0 w-1/3 bg-[radial-gradient(circle_at_top_right,_rgba(122,26,171,0.16),_transparent_55%)]"></div>
+        <section
+            class="relative mx-8 mt-8 overflow-hidden rounded-[28px] border border-white/10 bg-[#252526] shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+
             <div class="relative grid gap-6 p-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.8fr)] lg:p-8">
                 <div>
-                    <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-400">
-                        <span class="h-2 w-2 rounded-full bg-[#008060]"></span>
-                        Payments
-                    </div>
-                    <h2 class="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Revenue, gateways, and checkout control in one place.</h2>
+                    <h2 class="mt-4 text-3xl font-semibold tracking-tight text-white sm:text-4xl">Revenue, gateways, and
+                        checkout control in one place.</h2>
                     <p class="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
-                        Monitor store revenue, confirm which payment methods are active, and launch a test checkout when you need to verify the flow.
+                        Monitor store revenue, confirm which payment methods are active, and launch a test checkout when
+                        you need to verify the flow.
                     </p>
                     <div class="mt-6 flex flex-wrap gap-3">
-                        <a href="settings?tab=payment" class="inline-flex items-center gap-2 rounded-full bg-[#008060] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-[#006e52]">
+                        <a href="settings?tab=payment"
+                            class="inline-flex items-center gap-2 rounded-full bg-[#008060] px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:bg-[#006e52]">
                             <i class="bi bi-gear"></i>
                             <span>Payment settings</span>
                         </a>
-                        <a href="orders" class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                        <a href="orders"
+                            class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
                             <i class="bi bi-bag"></i>
                             <span>View orders</span>
                         </a>
@@ -166,18 +167,31 @@ $status_colors = [
                 <div class="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
                     <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Gross revenue</p>
-                        <p class="mt-2 text-3xl font-semibold text-white"><?= $currency ?><?= number_format($grossRevenue, 2) ?></p>
+                        <p class="mt-2 text-3xl font-semibold text-white">
+                            <?= $currency ?>
+                            <?= number_format($grossRevenue, 2) ?>
+                        </p>
                         <p class="mt-1 text-sm text-zinc-400">All non-cancelled orders</p>
                     </div>
                     <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Completed</p>
-                        <p class="mt-2 text-3xl font-semibold text-white"><?= $currency ?><?= number_format($completedRevenue, 2) ?></p>
-                        <p class="mt-1 text-sm text-zinc-400"><?= $completedOrders ?> successful payments</p>
+                        <p class="mt-2 text-3xl font-semibold text-white">
+                            <?= $currency ?>
+                            <?= number_format($completedRevenue, 2) ?>
+                        </p>
+                        <p class="mt-1 text-sm text-zinc-400">
+                            <?= $completedOrders ?> successful payments
+                        </p>
                     </div>
                     <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-zinc-500">Average order</p>
-                        <p class="mt-2 text-3xl font-semibold text-white"><?= $currency ?><?= number_format($avgOrder, 2) ?></p>
-                        <p class="mt-1 text-sm text-zinc-400"><?= $totalOrders ?> orders tracked</p>
+                        <p class="mt-2 text-3xl font-semibold text-white">
+                            <?= $currency ?>
+                            <?= number_format($avgOrder, 2) ?>
+                        </p>
+                        <p class="mt-1 text-sm text-zinc-400">
+                            <?= $totalOrders ?> orders tracked
+                        </p>
                     </div>
                 </div>
             </div>
@@ -185,7 +199,8 @@ $status_colors = [
 
         <div class="px-8 pb-6 pt-6">
             <div class="grid grid-cols-2 gap-4 md:grid-cols-4">
-                <div class="rounded-2xl border border-white/10 bg-[#252526] p-4 transition-colors hover:bg-white/[0.04]">
+                <div
+                    class="rounded-2xl border border-white/10 bg-[#252526] p-4 transition-colors hover:bg-white/[0.04]">
                     <div class="mb-2 flex items-center justify-between">
                         <span class="text-xs font-medium text-zinc-500">Gross Revenue</span>
                         <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500/10">
@@ -194,16 +209,19 @@ $status_colors = [
                     </div>
                     <p class="text-2xl font-bold text-white"><?= $currency ?><?= number_format($grossRevenue, 2) ?></p>
                 </div>
-                <div class="rounded-2xl border border-white/10 bg-[#252526] p-4 transition-colors hover:bg-white/[0.04]">
+                <div
+                    class="rounded-2xl border border-white/10 bg-[#252526] p-4 transition-colors hover:bg-white/[0.04]">
                     <div class="mb-2 flex items-center justify-between">
                         <span class="text-xs font-medium text-zinc-500">Completed Revenue</span>
                         <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/10">
                             <i class="bi bi-check2-circle text-sm text-violet-400"></i>
                         </div>
                     </div>
-                    <p class="text-2xl font-bold text-white"><?= $currency ?><?= number_format($completedRevenue, 2) ?></p>
+                    <p class="text-2xl font-bold text-white"><?= $currency ?><?= number_format($completedRevenue, 2) ?>
+                    </p>
                 </div>
-                <div class="rounded-2xl border border-white/10 bg-[#252526] p-4 transition-colors hover:bg-white/[0.04]">
+                <div
+                    class="rounded-2xl border border-white/10 bg-[#252526] p-4 transition-colors hover:bg-white/[0.04]">
                     <div class="mb-2 flex items-center justify-between">
                         <span class="text-xs font-medium text-zinc-500">Avg Order Value</span>
                         <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10">
@@ -212,7 +230,8 @@ $status_colors = [
                     </div>
                     <p class="text-2xl font-bold text-white"><?= $currency ?><?= number_format($avgOrder, 2) ?></p>
                 </div>
-                <div class="rounded-2xl border border-white/10 bg-[#252526] p-4 transition-colors hover:bg-white/[0.04]">
+                <div
+                    class="rounded-2xl border border-white/10 bg-[#252526] p-4 transition-colors hover:bg-white/[0.04]">
                     <div class="mb-2 flex items-center justify-between">
                         <span class="text-xs font-medium text-zinc-500">Total Orders</span>
                         <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
@@ -229,53 +248,7 @@ $status_colors = [
         </div>
 
         <div class="px-8 pb-6">
-            <div class="rounded-2xl border border-white/10 bg-[#202123] p-6 shadow-[0_18px_45px_rgba(0,0,0,0.22)]">
-                <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Payment launcher</p>
-                        <h3 class="mt-1 text-xl font-semibold text-white">Launch a test checkout</h3>
-                        <p class="mt-1 max-w-2xl text-sm text-zinc-400">Creates a checkout session through the enabled payment methods and returns here when payment completes.</p>
-                    </div>
-                    <div class="flex flex-wrap items-center gap-2 text-xs text-zinc-500">
-                        <span class="rounded-full border border-white/10 px-3 py-1">Store #<?php echo htmlspecialchars((string) $site_store_id, ENT_QUOTES, 'UTF-8'); ?></span>
-                        <span class="rounded-full border border-white/10 px-3 py-1"><?php echo htmlspecialchars($sample_product_name, ENT_QUOTES, 'UTF-8'); ?></span>
-                    </div>
-                </div>
-
-                <div class="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-                    <?php foreach ($payment_methods as $method): ?>
-                        <button
-                            type="button"
-                            class="payment-launch-btn rounded-2xl border <?= $method['card_class'] ?> bg-[#1b1b1c] px-4 py-4 text-left transition-colors hover:border-zinc-500 hover:bg-white/[0.02]"
-                            data-method="<?php echo htmlspecialchars($method['title'], ENT_QUOTES, 'UTF-8'); ?>">
-                            <div class="flex items-center justify-between gap-4">
-                                <div class="flex min-w-0 items-center gap-3">
-                                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg <?= $method['icon_bg'] ?>">
-                                        <i class="bi <?= $method['icon'] ?> <?= $method['icon_class'] ?> text-lg"></i>
-                                    </div>
-                                    <div class="min-w-0">
-                                        <p class="truncate text-sm font-semibold text-white"><?php echo htmlspecialchars($method['title'], ENT_QUOTES, 'UTF-8'); ?></p>
-                                        <p class="truncate text-[10px] text-zinc-500"><?php echo htmlspecialchars($method['subtitle'], ENT_QUOTES, 'UTF-8'); ?></p>
-                                    </div>
-                                </div>
-                                <span class="whitespace-nowrap text-[10px] uppercase tracking-wider <?= $method['status_class'] ?>"><?php echo htmlspecialchars($method['badge'], ENT_QUOTES, 'UTF-8'); ?></span>
-                            </div>
-                        </button>
-                    <?php endforeach; ?>
-                </div>
-
-                <?php if (empty($payment_methods)): ?>
-                    <div class="mt-5 rounded-xl border border-white/10 bg-[#1b1b1c] p-4 text-sm text-zinc-500">
-                        Enable at least one payment method in Payment Settings to launch a checkout request here.
-                    </div>
-                <?php endif; ?>
-
-                <div id="paymentLaunchState" class="mt-4 hidden rounded-xl border border-violet-500/20 bg-violet-500/10 px-4 py-3 text-sm text-violet-300"></div>
-            </div>
-        </div>
-
-        <div class="px-8 pb-6">
-            <div class="rounded-2xl border border-white/10 bg-[#202123] p-6 shadow-[0_18px_45px_rgba(0,0,0,0.22)]">
+            <div class="rounded-2xl border border-white/10 bg-[#252526] p-6 shadow-[0_18px_45px_rgba(0,0,0,0.22)]">
                 <div class="flex items-center justify-between gap-4">
                     <div>
                         <p class="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Revenue trend</p>
@@ -298,7 +271,8 @@ $status_colors = [
         </div>
 
         <div class="px-8 pb-6">
-            <div class="overflow-hidden rounded-2xl border border-white/10 bg-[#202123] shadow-[0_18px_45px_rgba(0,0,0,0.22)]">
+            <div
+                class="overflow-hidden rounded-2xl border border-white/10 bg-[#252526] shadow-[0_18px_45px_rgba(0,0,0,0.22)]">
                 <div class="flex items-center justify-between border-b border-white/10 px-6 py-4">
                     <div class="flex items-center gap-3">
                         <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-violet-500/10">
@@ -309,11 +283,13 @@ $status_colors = [
                             <p class="text-xs text-zinc-500"><?= $active_methods ?> of 3 active</p>
                         </div>
                     </div>
-                    <a href="settings?tab=payment" class="text-xs text-violet-400 transition-colors hover:text-violet-300">Configure</a>
+                    <a href="settings?tab=payment"
+                        class="text-xs text-violet-400 transition-colors hover:text-violet-300">Configure</a>
                 </div>
                 <div class="p-6">
                     <?php if (empty($payment_methods)): ?>
-                        <div class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 py-12 text-zinc-600">
+                        <div
+                            class="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/10 py-12 text-zinc-600">
                             <i class="bi bi-credit-card-2-back text-4xl mb-3"></i>
                             <h4 class="text-sm font-semibold text-zinc-300">No active payment methods</h4>
                             <p class="mt-1 text-xs text-zinc-500">Enable a gateway in Payment Settings to show it here.</p>
@@ -321,19 +297,22 @@ $status_colors = [
                     <?php else: ?>
                         <div class="grid grid-cols-1 gap-3 md:grid-cols-<?= min(3, max(1, count($payment_methods))); ?>">
                             <?php foreach ($payment_methods as $method): ?>
-                                <div class="rounded-2xl border <?= $method['card_class'] ?> bg-[#1b1b1c] p-4 transition-all">
+                                <div class="rounded-2xl border <?= $method['card_class'] ?> bg-[#252526] p-4 transition-all">
                                     <div class="mb-3 flex items-center gap-3">
-                                        <div class="flex h-10 w-10 items-center justify-center rounded-lg <?= $method['icon_bg'] ?>">
+                                        <div
+                                            class="flex h-10 w-10 items-center justify-center rounded-lg <?= $method['icon_bg'] ?>">
                                             <i class="bi <?= $method['icon'] ?> <?= $method['icon_class'] ?> text-lg"></i>
                                         </div>
                                         <div>
-                                            <p class="text-sm font-semibold text-white"><?= htmlspecialchars($method['title']); ?></p>
-                                            <p class="text-[10px] text-zinc-500"><?= htmlspecialchars($method['subtitle']); ?></p>
+                                            <p class="text-sm font-semibold text-white">
+                                                <?= htmlspecialchars($method['title']); ?>
+                                            </p>
+                                            <p class="text-[10px] text-zinc-500"><?= htmlspecialchars($method['subtitle']); ?>
+                                            </p>
                                         </div>
                                     </div>
                                     <div class="flex items-center gap-1.5">
-                                        <span class="h-1.5 w-1.5 rounded-full <?= $method['dot_class'] ?>"></span>
-                                        <span class="text-xs font-medium <?= $method['status_class'] ?>"><?= htmlspecialchars($method['badge']); ?></span>
+
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -344,7 +323,8 @@ $status_colors = [
         </div>
 
         <div class="px-8 pb-8">
-            <div class="overflow-hidden rounded-2xl border border-white/10 bg-[#202123] shadow-[0_18px_45px_rgba(0,0,0,0.22)]">
+            <div
+                class="overflow-hidden rounded-2xl border border-white/10 bg-[#202123] shadow-[0_18px_45px_rgba(0,0,0,0.22)]">
                 <div class="flex items-center justify-between border-b border-white/10 px-6 py-4">
                     <div class="flex items-center gap-3">
                         <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10">
@@ -355,7 +335,8 @@ $status_colors = [
                             <p class="text-xs text-zinc-500">Last 10 transactions</p>
                         </div>
                     </div>
-                    <a href="orders" class="text-xs text-violet-400 transition-colors hover:text-violet-300">View all</a>
+                    <a href="orders" class="text-xs text-violet-400 transition-colors hover:text-violet-300">View
+                        all</a>
                 </div>
                 <?php if (empty($recent_orders)): ?>
                     <div class="flex flex-col items-center justify-center py-16 text-zinc-600">
@@ -370,11 +351,17 @@ $status_colors = [
                         <table class="w-full text-left">
                             <thead>
                                 <tr class="border-b border-white/10">
-                                    <th class="px-6 py-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Customer</th>
-                                    <th class="px-6 py-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Email</th>
-                                    <th class="px-6 py-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Amount</th>
-                                    <th class="px-6 py-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">Status</th>
-                                    <th class="px-6 py-3 text-[10px] font-semibold uppercase tracking-wider text-right text-zinc-500">Date</th>
+                                    <th class="px-6 py-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                                        Customer</th>
+                                    <th class="px-6 py-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                                        Email</th>
+                                    <th class="px-6 py-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                                        Amount</th>
+                                    <th class="px-6 py-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+                                        Status</th>
+                                    <th
+                                        class="px-6 py-3 text-[10px] font-semibold uppercase tracking-wider text-right text-zinc-500">
+                                        Date</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-white/10">
@@ -385,16 +372,24 @@ $status_colors = [
                                     <tr class="hover:bg-white/[0.02] transition-colors">
                                         <td class="px-6 py-3">
                                             <div class="flex items-center gap-3">
-                                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-xs font-bold text-zinc-300">
+                                                <div
+                                                    class="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-xs font-bold text-zinc-300">
                                                     <?= $initials ?>
                                                 </div>
-                                                <span class="text-sm font-medium text-white"><?= htmlspecialchars($order['customer_name']) ?></span>
+                                                <span
+                                                    class="text-sm font-medium text-white"><?= htmlspecialchars($order['customer_name']) ?></span>
                                             </div>
                                         </td>
-                                        <td class="px-6 py-3 text-sm text-zinc-400"><?= htmlspecialchars($order['customer_email'] ?? '-') ?></td>
-                                        <td class="px-6 py-3 text-sm font-semibold text-white"><?= $currency ?> <?= number_format((float) $order['total_amount'], 2) ?></td>
+                                        <td class="px-6 py-3 text-sm text-zinc-400">
+                                            <?= htmlspecialchars($order['customer_email'] ?? '-') ?>
+                                        </td>
+                                        <td class="px-6 py-3 text-sm font-semibold text-white"><?= $currency ?>
+                                            <?= number_format((float) $order['total_amount'], 2) ?>
+                                        </td>
                                         <td class="px-6 py-3">
-                                            <span class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium" style="background: <?= $oc ?>15; color: <?= $oc ?>">
+                                            <span
+                                                class="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium"
+                                                style="background: <?= $oc ?>15; color: <?= $oc ?>">
                                                 <span class="h-1.5 w-1.5 rounded-full" style="background: <?= $oc ?>"></span>
                                                 <?= ucfirst($order['status']) ?>
                                             </span>
@@ -505,9 +500,7 @@ $status_colors = [
         <?php if (!empty($chart_data)): ?>
             const ctx = document.getElementById('revenueChart')?.getContext('2d');
             if (ctx) {
-                const gradient = ctx.createLinearGradient(0, 0, 0, 280);
-                gradient.addColorStop(0, 'rgba(139, 92, 246, 0.18)');
-                gradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
+
 
                 new Chart(ctx, {
                     type: 'line',
@@ -517,7 +510,7 @@ $status_colors = [
                             label: 'Revenue',
                             data: <?= json_encode($chart_data) ?>,
                             borderColor: '#8b5cf6',
-                            backgroundColor: gradient,
+                            backgroundColor: 'rgba(0,0,0,0)',
                             fill: true,
                             tension: 0.35,
                             pointRadius: 0,
