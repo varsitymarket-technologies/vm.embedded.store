@@ -3,6 +3,8 @@
 #   DESC    : Store analytics with views tracking (day/week/month)
 #   PROPRIETOR: VARSITYMARKET_TECHNOLOGIES
 #   VERSION : 2.0.0
+#   AUTHOR  : HARDY HASTINGS
+#   RELEASE : 2026/07/27
 
 $db = initiate_web_database();
 $domain = __DOMAIN__;
@@ -194,7 +196,7 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
     .analytics-card {
         transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
         background: rgba(37, 37, 38, 0.92);
-        border-color: rgba(255, 255, 255, 0.08);
+        border-color: rgba(63, 63, 70, 0.8);
         box-shadow: 0 12px 34px rgba(0, 0, 0, 0.22);
         overflow: hidden;
     }
@@ -213,7 +215,7 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
 
     .period-switcher {
         background: rgba(37, 37, 38, 0.95);
-        border-color: rgba(255, 255, 255, 0.08);
+        border-color: rgba(63, 63, 70, 0.8);
         box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
     }
 
@@ -241,7 +243,15 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
     }
 
     .section-head {
-        background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.015) 100%);
+        background: rgba(37, 37, 38, 0.98);
+    }
+
+    .chart-panel {
+        background: #202023;
+    }
+
+    .chart-legend {
+        color: #a1a1aa;
     }
 </style>
 
@@ -251,10 +261,7 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
     <main class="analytics-shell flex-1 overflow-y-auto overflow-x-hidden bg-[#1b1b1c] p-4 md:p-6">
         <div class="mb-8 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div class="max-w-3xl">
-                <div class="mb-3 inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] analytics-chip">
-                    <span class="h-2 w-2 rounded-full bg-emerald-400"></span>
-                    Analytics
-                </div>
+                
                 <h1 class="text-3xl font-black tracking-tight text-white sm:text-4xl">Store performance</h1>
                 <p class="mt-2 max-w-2xl text-sm leading-6 text-zinc-400">
                     A cleaner snapshot of traffic, conversions, and order flow for
@@ -335,37 +342,37 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
         </div>
 
         <div class="mt-8 grid grid-cols-1 gap-4 xl:grid-cols-12">
-            <section class="analytics-card xl:col-span-8 overflow-hidden rounded-2xl border">
-                <div class="section-head flex items-center justify-between border-b border-white/10 px-5 py-4">
+            <section class="analytics-card xl:col-span-8 overflow-hidden rounded-2xl border border-zinc-800/80">
+                <div class="section-head flex items-center justify-between border-b border-zinc-800/80 px-5 py-4">
                     <div>
                         <h2 class="text-sm font-bold uppercase tracking-wide text-white">Visitor traffic</h2>
                         <p class="mt-1 text-xs text-zinc-400">Views and unique visitors over the selected period.</p>
                     </div>
-                    <div class="flex items-center gap-4 text-xs text-zinc-400">
-                        <span class="flex items-center gap-1.5"><span class="inline-block h-2 w-2 rounded-full bg-sky-500"></span> Views</span>
-                        <span class="flex items-center gap-1.5"><span class="inline-block h-2 w-2 rounded-full bg-emerald-500"></span> Unique</span>
+                    <div class="flex items-center gap-4 text-xs chart-legend">
+                        <span class="flex items-center gap-1.5">Views</span>
+                        <span class="flex items-center gap-1.5">Unique</span>
                     </div>
                 </div>
                 <div class="p-5">
-                    <div style="height: 320px;">
+                    <div class="chart-panel rounded-2xl p-3" style="height: 320px;">
                         <canvas id="trafficChart"></canvas>
                     </div>
                 </div>
             </section>
 
-            <aside class="analytics-card xl:col-span-4 overflow-hidden rounded-2xl border">
-                <div class="section-head border-b border-white/10 px-5 py-4">
+            <aside class="analytics-card xl:col-span-4 overflow-hidden rounded-2xl border border-zinc-800/80">
+                <div class="section-head border-b border-zinc-800/80 px-5 py-4">
                     <h2 class="text-sm font-bold uppercase tracking-wide text-white">Devices</h2>
                     <p class="mt-1 text-xs text-zinc-400">Traffic split by device type.</p>
                 </div>
                 <div class="p-5">
                     <?php if (empty($device_data)): ?>
-                        <div class="flex h-80 flex-col items-center justify-center rounded-xl border border-dashed border-white/10 text-zinc-500">
+                        <div class="flex h-80 flex-col items-center justify-center rounded-xl border border-dashed border-zinc-800 text-zinc-500">
                             <i class="bi bi-phone text-4xl mb-2"></i>
                             <p class="text-sm">No device data yet</p>
                         </div>
                     <?php else: ?>
-                        <div style="height: 220px;">
+                        <div class="chart-panel rounded-2xl p-3" style="height: 220px;">
                             <canvas id="deviceChart"></canvas>
                         </div>
                         <div class="mt-4 space-y-2">
@@ -389,38 +396,38 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
         </div>
 
         <div class="mt-8 grid grid-cols-1 gap-4 xl:grid-cols-12">
-            <section class="analytics-card xl:col-span-8 overflow-hidden rounded-2xl border">
-                <div class="section-head border-b border-white/10 px-5 py-4">
+            <section class="analytics-card xl:col-span-8 overflow-hidden rounded-2xl border border-zinc-800/80">
+                <div class="section-head border-b border-zinc-800/80 px-5 py-4">
                     <h2 class="text-sm font-bold uppercase tracking-wide text-white">Sales revenue</h2>
                     <p class="mt-1 text-xs text-zinc-400">Completed order revenue by day.</p>
                 </div>
                 <div class="p-5">
                     <?php if (empty($sales_data)): ?>
-                        <div class="flex h-72 flex-col items-center justify-center rounded-xl border border-dashed border-white/10 text-zinc-500">
+                        <div class="flex h-72 flex-col items-center justify-center rounded-xl border border-dashed border-zinc-800 text-zinc-500">
                             <i class="bi bi-graph-up text-4xl mb-2"></i>
                             <p class="text-sm">No sales data yet</p>
                         </div>
                     <?php else: ?>
-                        <div style="height: 300px;">
+                        <div class="chart-panel rounded-2xl p-3" style="height: 300px;">
                             <canvas id="salesChart"></canvas>
                         </div>
                     <?php endif; ?>
                 </div>
             </section>
 
-            <aside class="analytics-card xl:col-span-4 overflow-hidden rounded-2xl border">
-                <div class="section-head border-b border-white/10 px-5 py-4">
+            <aside class="analytics-card xl:col-span-4 overflow-hidden rounded-2xl border border-zinc-800/80">
+                <div class="section-head border-b border-zinc-800/80 px-5 py-4">
                     <h2 class="text-sm font-bold uppercase tracking-wide text-white">Order status</h2>
                     <p class="mt-1 text-xs text-zinc-400">How orders are moving through the funnel.</p>
                 </div>
                 <div class="p-5">
                     <?php if (empty($status_counts)): ?>
-                        <div class="flex h-72 flex-col items-center justify-center rounded-xl border border-dashed border-white/10 text-zinc-500">
+                        <div class="flex h-72 flex-col items-center justify-center rounded-xl border border-dashed border-zinc-800 text-zinc-500">
                             <i class="bi bi-pie-chart text-4xl mb-2"></i>
                             <p class="text-sm">No orders yet</p>
                         </div>
                     <?php else: ?>
-                        <div style="height: 210px;">
+                        <div class="chart-panel rounded-2xl p-3" style="height: 210px;">
                             <canvas id="orderStatusChart"></canvas>
                         </div>
                         <div class="mt-4 space-y-2">
@@ -428,9 +435,9 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
                                 <div class="flex items-center justify-between text-sm">
                                     <div class="flex items-center gap-2">
                                         <span class="h-2.5 w-2.5 rounded-full" style="background: <?= $status_colors_arr[$i] ?? '#6b7280' ?>"></span>
-                                        <span class="text-gray-700"><?= ucfirst($row['status']) ?></span>
+                                        <span class="text-zinc-300"><?= ucfirst($row['status']) ?></span>
                                     </div>
-                                    <span class="font-mono text-gray-500"><?= (int) $row['count'] ?></span>
+                                    <span class="font-mono text-zinc-500"><?= (int) $row['count'] ?></span>
                                 </div>
                             <?php endforeach; ?>
                         </div>
@@ -598,17 +605,8 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         Chart.defaults.color = '#a1a1aa';
-        Chart.defaults.borderColor = 'rgba(255,255,255,0.08)';
+        Chart.defaults.borderColor = 'rgba(63,63,70,0.65)';
         Chart.defaults.font.family = 'system-ui, -apple-system, sans-serif';
-
-        const makeGradient = (ctx, topColor, bottomColor) => {
-            const { chartArea, ctx: canvasCtx } = ctx;
-            if (!chartArea) return bottomColor;
-            const gradient = canvasCtx.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-            gradient.addColorStop(0, topColor);
-            gradient.addColorStop(1, bottomColor);
-            return gradient;
-        };
 
         const trafficCtx = document.getElementById('trafficChart')?.getContext('2d');
         if (trafficCtx) {
@@ -621,11 +619,11 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
                             label: 'Page Views',
                             data: <?= json_encode($chart_views) ?>,
                             borderColor: '#38bdf8',
-                            backgroundColor: (ctx) => makeGradient(ctx.chart, 'rgba(56,189,248,0.35)', 'rgba(56,189,248,0.02)'),
-                            fill: true,
+                            backgroundColor: 'rgba(56,189,248,0.08)',
+                            fill: false,
                             tension: 0.46,
                             pointRadius: 0,
-                            pointHoverRadius: 5,
+                            pointHoverRadius: 4,
                             borderWidth: 2.5,
                             borderCapStyle: 'round',
                             borderJoinStyle: 'round'
@@ -634,11 +632,11 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
                             label: 'Unique Visitors',
                             data: <?= json_encode($chart_uniques) ?>,
                             borderColor: '#4ade80',
-                            backgroundColor: (ctx) => makeGradient(ctx.chart, 'rgba(74,222,128,0.24)', 'rgba(74,222,128,0.01)'),
-                            fill: true,
+                            backgroundColor: 'rgba(74,222,128,0.08)',
+                            fill: false,
                             tension: 0.46,
                             pointRadius: 0,
-                            pointHoverRadius: 5,
+                            pointHoverRadius: 4,
                             borderWidth: 2.5,
                             borderCapStyle: 'round',
                             borderJoinStyle: 'round'
@@ -651,23 +649,13 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
                     interaction: { mode: 'index', intersect: false },
                     plugins: {
                         legend: {
-                            display: true,
-                            position: 'bottom',
-                            align: 'end',
-                            labels: {
-                                usePointStyle: true,
-                                pointStyle: 'line',
-                                boxWidth: 18,
-                                boxHeight: 3,
-                                padding: 16,
-                                color: '#9ca3af'
-                            }
+                            display: false
                         },
                         tooltip: {
-                            backgroundColor: 'rgba(255,255,255,0.96)',
-                            titleColor: '#111827',
-                            bodyColor: '#374151',
-                            borderColor: 'rgba(15,23,42,0.08)',
+                            backgroundColor: 'rgba(24,24,27,0.98)',
+                            titleColor: '#f4f4f5',
+                            bodyColor: '#d4d4d8',
+                            borderColor: 'rgba(63,63,70,0.95)',
                             borderWidth: 1,
                             displayColors: true,
                             padding: 12,
@@ -675,19 +663,19 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
                         }
                     },
                     scales: {
-                        x: {
-                            grid: {
-                                display: true,
-                                drawBorder: false,
-                                color: 'rgba(229,231,235,0.9)'
+                            x: {
+                                grid: {
+                                    display: true,
+                                    drawBorder: false,
+                                    color: 'rgba(63,63,70,0.55)'
+                                },
+                                ticks: { color: '#6b7280' }
                             },
-                            ticks: { color: '#6b7280' }
-                        },
                         y: {
                             beginAtZero: true,
                             ticks: { precision: 0, color: '#6b7280' },
                             grid: {
-                                color: 'rgba(229,231,235,0.9)',
+                                color: 'rgba(63,63,70,0.55)',
                                 drawBorder: false
                             }
                         }
@@ -702,15 +690,15 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
                 type: 'doughnut',
                 data: {
                     labels: <?= json_encode($device_labels) ?>,
-                    datasets: [{
-                        data: <?= json_encode($device_counts) ?>,
-                        backgroundColor: <?= json_encode($device_bg) ?>,
-                        borderColor: '#ffffff',
-                        borderWidth: 2,
-                        hoverOffset: 8,
-                        spacing: 2
-                    }]
-                },
+                        datasets: [{
+                            data: <?= json_encode($device_counts) ?>,
+                            backgroundColor: <?= json_encode($device_bg) ?>,
+                            borderColor: 'rgba(24,24,27,0.98)',
+                            borderWidth: 1,
+                            hoverOffset: 6,
+                            spacing: 1
+                        }]
+                    },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
@@ -729,10 +717,10 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
                             }
                         },
                         tooltip: {
-                            backgroundColor: 'rgba(255,255,255,0.96)',
-                            titleColor: '#111827',
-                            bodyColor: '#374151',
-                            borderColor: 'rgba(15,23,42,0.08)',
+                            backgroundColor: 'rgba(24,24,27,0.98)',
+                            titleColor: '#f4f4f5',
+                            bodyColor: '#d4d4d8',
+                            borderColor: 'rgba(63,63,70,0.95)',
                             borderWidth: 1,
                             padding: 12,
                             cornerRadius: 10
@@ -752,7 +740,7 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
                         datasets: [{
                             label: 'Sales',
                             data: <?= json_encode($sales_data) ?>,
-                            backgroundColor: (ctx) => makeGradient(ctx.chart, 'rgba(34,197,94,0.55)', 'rgba(34,197,94,0.12)'),
+                            backgroundColor: 'rgba(34,197,94,0.82)',
                             borderColor: '#22c55e',
                             borderWidth: 1,
                             borderRadius: 10,
@@ -766,10 +754,10 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
                         plugins: {
                             legend: { display: false },
                             tooltip: {
-                            backgroundColor: 'rgba(255,255,255,0.96)',
-                            titleColor: '#111827',
-                            bodyColor: '#374151',
-                            borderColor: 'rgba(15,23,42,0.08)',
+                                backgroundColor: 'rgba(24,24,27,0.98)',
+                                titleColor: '#f4f4f5',
+                                bodyColor: '#d4d4d8',
+                                borderColor: 'rgba(63,63,70,0.95)',
                                 borderWidth: 1,
                                 padding: 12,
                                 cornerRadius: 10
@@ -787,7 +775,7 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
                                     callback: (v) => '<?= htmlspecialchars($currency_symbol) ?>' + v
                                 },
                                 grid: {
-                                color: 'rgba(229,231,235,0.9)',
+                                    color: 'rgba(63,63,70,0.55)',
                                     drawBorder: false
                                 }
                             }
@@ -804,15 +792,15 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
                     type: 'doughnut',
                     data: {
                         labels: <?= json_encode($status_labels) ?>,
-                        datasets: [{
-                            data: <?= json_encode($status_counts) ?>,
-                            backgroundColor: <?= json_encode($status_colors_arr) ?>,
-                        borderColor: '#ffffff',
-                            borderWidth: 2,
-                            hoverOffset: 8,
-                            spacing: 2
-                        }]
-                    },
+                            datasets: [{
+                                data: <?= json_encode($status_counts) ?>,
+                                backgroundColor: <?= json_encode($status_colors_arr) ?>,
+                                borderColor: 'rgba(24,24,27,0.98)',
+                                borderWidth: 1,
+                                hoverOffset: 6,
+                                spacing: 1
+                            }]
+                        },
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
@@ -831,10 +819,10 @@ $tag_url = $tracking_protocol . '://' . $tracking_host . '/track/vm.analytics.js
                                 }
                             },
                             tooltip: {
-                            backgroundColor: 'rgba(255,255,255,0.96)',
-                            titleColor: '#111827',
-                            bodyColor: '#374151',
-                            borderColor: 'rgba(15,23,42,0.08)',
+                                backgroundColor: 'rgba(24,24,27,0.98)',
+                                titleColor: '#f4f4f5',
+                                bodyColor: '#d4d4d8',
+                                borderColor: 'rgba(63,63,70,0.95)',
                                 borderWidth: 1,
                                 padding: 12,
                                 cornerRadius: 10
