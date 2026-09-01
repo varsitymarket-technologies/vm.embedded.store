@@ -337,6 +337,26 @@ function get_store_delivery_geography(): array
     ];
 }
 
+function ensure_product_reviews_table($db): void
+{
+    $db->createTable("product_reviews", [
+        "id" => "INTEGER PRIMARY KEY AUTOINCREMENT",
+        "product_id" => "INTEGER NOT NULL",
+        "customer_name" => "TEXT",
+        "customer_email" => "TEXT",
+        "rating" => "INTEGER NOT NULL DEFAULT 5",
+        "title" => "TEXT",
+        "body" => "TEXT",
+        "status" => "TEXT NOT NULL DEFAULT 'pending'",
+        "created_at" => "DATETIME DEFAULT CURRENT_TIMESTAMP",
+        "updated_at" => "DATETIME DEFAULT CURRENT_TIMESTAMP"
+    ]);
+    $db->executeSql("CREATE INDEX IF NOT EXISTS idx_product_reviews_product_id ON product_reviews(product_id)");
+    $db->executeSql("CREATE INDEX IF NOT EXISTS idx_product_reviews_status ON product_reviews(status)");
+}
+
+ensure_product_reviews_table($db);
+
 // Route to the requested endpoint
 $request = $_GET['state'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'];
@@ -392,6 +412,9 @@ if ($method === 'GET') {
             $data[$key]['id'] = (int) $value['id'];
             $data[$key]['stock'] = (int) ($value['stock'] ?? 0);
             $data[$key]['category_id'] = (int) ($value['category_id'] ?? 0);
+            $reviewStats = $db->query("SELECT COUNT(*) AS total, AVG(rating) AS avg_rating FROM product_reviews WHERE product_id = ? AND status = 'approved'", [$data[$key]['id']]);
+            $data[$key]['review_count'] = (int) ($reviewStats[0]['total'] ?? 0);
+            $data[$key]['rating_average'] = round((float) ($reviewStats[0]['avg_rating'] ?? 0), 2);
         }
         echo json_encode([
             "success" => true,
@@ -420,6 +443,9 @@ if ($method === 'GET') {
             $data[0]['id'] = (int) $data[0]['id'];
             $data[0]['stock'] = (int) ($data[0]['stock'] ?? 0);
             $data[0]['category_id'] = (int) ($data[0]['category_id'] ?? 0);
+            $reviewStats = $db->query("SELECT COUNT(*) AS total, AVG(rating) AS avg_rating FROM product_reviews WHERE product_id = ? AND status = 'approved'", [$data[0]['id']]);
+            $data[0]['review_count'] = (int) ($reviewStats[0]['total'] ?? 0);
+            $data[0]['rating_average'] = round((float) ($reviewStats[0]['avg_rating'] ?? 0), 2);
             echo json_encode(["success" => true, "data" => $data[0]]);
         } else {
             http_response_code(404);
@@ -508,6 +534,40 @@ if ($method === 'GET') {
         echo json_encode(["success" => true, "data" => get_store_delivery_zones($db)]);
     } elseif ($request == "delivery_geography") {
         echo json_encode(["success" => true, "data" => get_store_delivery_geography()]);
+    } elseif ($request == "reviews") {
+        $productId = (int) ($_GET['product_id'] ?? 0);
+        $status = $_GET['status'] ?? 'approved';
+        $page = max(1, (int) ($_GET['page'] ?? 1));
+        $limit = max(1, min(100, (int) ($_GET['limit'] ?? 20)));
+        $offset = ($page - 1) * $limit;
+
+        $where = [];
+        $params = [];
+        if ($productId > 0) {
+            $where[] = "product_id = ?";
+            $params[] = $productId;
+        }
+        if ($status !== 'all') {
+            $where[] = "status = ?";
+            $params[] = $status;
+        }
+        $whereSql = !empty($where) ? ('WHERE ' . implode(' AND ', $where)) : '';
+        $count = $db->query("SELECT COUNT(*) AS total FROM product_reviews $whereSql", $params);
+        $data = $db->query("SELECT * FROM product_reviews $whereSql ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?", array_merge($params, [$limit, $offset]));
+        foreach ($data as $key => $row) {
+            $data[$key]['id'] = (int) $row['id'];
+            $data[$key]['product_id'] = (int) $row['product_id'];
+            $data[$key]['rating'] = (int) $row['rating'];
+        }
+        echo json_encode([
+            "success" => true,
+            "data" => $data,
+            "pagination" => [
+                "page" => $page,
+                "limit" => $limit,
+                "total" => (int) ($count[0]['total'] ?? 0)
+            ]
+        ]);
     } elseif ($request == "orders") {
         $email = $_GET['email'] ?? '';
         if (!empty($email)) {
@@ -584,6 +644,7 @@ if ($method === 'GET') {
                     "products",
                     "products?page=1&limit=20",
                     "product?id={id}",
+                    "reviews?product_id={id}",
                     "categories",
                     "products_by_category?category_id={id}",
                     "search?q={query}",
@@ -597,6 +658,7 @@ if ($method === 'GET') {
                 ],
                 "POST" => [
                     "order",
+                    "review",
                     "cart_create",
                     "cart_add",
                     "cart_update",
@@ -898,6 +960,40 @@ elseif ($method === 'POST') {
                 "redirect_url" => $redirect_url
             ]
         ]);
+    } elseif ($request == "review") {
+        $product_id = (int) ($input['product_id'] ?? 0);
+        $customer_name = trim((string) ($input['customer_name'] ?? ''));
+        $customer_email = trim((string) ($input['customer_email'] ?? ''));
+        $rating = max(1, min(5, (int) ($input['rating'] ?? 5)));
+        $title = trim((string) ($input['title'] ?? ''));
+        $body = trim((string) ($input['body'] ?? ''));
+
+        if ($product_id <= 0 || $body === '') {
+            http_response_code(400);
+            echo json_encode(["error" => "product_id and body are required"]);
+            exit;
+        }
+
+        $product = $db->query("SELECT id FROM products WHERE id = ? LIMIT 1", [$product_id]);
+        if (empty($product)) {
+            http_response_code(404);
+            echo json_encode(["error" => "Product not found"]);
+            exit;
+        }
+
+        $db->query(
+            "INSERT INTO product_reviews (product_id, customer_name, customer_email, rating, title, body, status) VALUES (?, ?, ?, ?, ?, ?, 'pending')",
+            [
+                $product_id,
+                $customer_name !== '' ? $customer_name : null,
+                $customer_email !== '' ? $customer_email : null,
+                $rating,
+                $title !== '' ? $title : null,
+                $body
+            ]
+        );
+
+        echo json_encode(["success" => true, "message" => "Review submitted", "status" => "pending"]);
     }
 
     // --- Customer auth: POST customer_register ---
