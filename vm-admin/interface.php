@@ -238,6 +238,11 @@ ob_start();
                                 <i class="bi bi-box-seam-fill mr-3"></i>
                                 <span>Products</span>
                             </a>
+                            <a href="<?php echo $admin_base; ?>reviews"
+                                class="<?php echo nav_cls('reviews', $current_page); ?>">
+                                <i class="bi bi-chat-square-text-fill mr-3"></i>
+                                <span>Reviews</span>
+                            </a>
                             <a href="<?php echo $admin_base; ?>categories"
                                 class="<?php echo nav_cls('categories', $current_page); ?>">
                                 <i class="bi bi-tags-fill mr-3"></i>

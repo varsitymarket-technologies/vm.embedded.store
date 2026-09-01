@@ -10,6 +10,7 @@ $data = [
     "auth" => "page.auth.php",
     "home" => "page.home.php",
     "products" => "page.products.php",
+    "reviews" => "page.reviews.php",
     "categories" => "page.categories.php",
     "users" => "page.users.php",
     "discounts" => "page.discounts.php",
