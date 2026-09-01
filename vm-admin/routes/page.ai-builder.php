@@ -569,9 +569,9 @@ if (!$ai_enabled) {
     <!-- Top Bar -->
     <div id="ai-builder-topbar">
         <div class="logo-area">
-            <div class="badge">
-                <span class="dot"></span>
-                AI Builder
+
+            <div>
+                <img src="/assets/favicon.png" style="max-width:2rem; ">
             </div>
             <h1><?php echo htmlspecialchars($store_name, ENT_QUOTES, 'UTF-8'); ?></h1>
         </div>
@@ -611,8 +611,9 @@ if (!$ai_enabled) {
                         id="preview-url-label"><?php echo htmlspecialchars($store_domain ?: '(no domain set)', ENT_QUOTES, 'UTF-8'); ?></span>
                 </div>
             </div>
+            <?php $store_url = __WEBSITE_URL__ ?? '#'; ?>
             <div id="ai-preview-wrap">
-                <iframe id="ai-preview-frame" src="/" title="Website live preview"></iframe>
+                <iframe id="ai-preview-frame" src="<?php echo htmlspecialchars($store_url, ENT_QUOTES, 'UTF-8'); ?>" title="Website live preview"></iframe>
             </div>
         </div>
 
