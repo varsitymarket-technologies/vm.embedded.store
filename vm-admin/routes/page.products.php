@@ -310,6 +310,26 @@ if (!function_exists('vm_products_ensure_schema')) {
     }
 }
 
+if (!function_exists('vm_products_review_count')) {
+    function vm_products_review_count($db, int $productId): int
+    {
+        $db->query("CREATE TABLE IF NOT EXISTS product_reviews (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            product_id INTEGER NOT NULL,
+            customer_name TEXT,
+            customer_email TEXT,
+            rating INTEGER NOT NULL DEFAULT 5,
+            title TEXT,
+            body TEXT,
+            status TEXT NOT NULL DEFAULT 'pending',
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        )");
+        $rows = $db->query("SELECT COUNT(*) AS total FROM product_reviews WHERE product_id = ?", [$productId]);
+        return (int) ($rows[0]['total'] ?? 0);
+    }
+}
+
 vm_products_ensure_schema($db);
 
 // Handle Form Submissions
@@ -805,6 +825,7 @@ foreach ($products as $p) {
                                 $product_variants = vm_products_json_array($product['variants_json'] ?? []);
                                 $gallery_count = count($product_gallery);
                                 $variant_count = count($product_variants);
+                                $review_count = vm_products_review_count($db, (int) $product['id']);
                                 if ($stock <= 0) {
                                     $badgeClass = 'bg-red-500/10 text-red-400 ring-1 ring-red-500/20';
                                     $badgeText = 'Out of Stock';
@@ -841,22 +862,24 @@ foreach ($products as $p) {
                                                 <div class="text-xs text-gray-500 truncate max-w-[220px]">
                                                     <?php echo htmlspecialchars(substr($product['description'] ?? '', 0, 50)) . (strlen($product['description'] ?? '') > 50 ? '...' : ''); ?>
                                                 </div>
-                                                <?php if ($variant_count > 1 || $gallery_count > 0): ?>
-                                                    <div class="mt-1 flex flex-wrap gap-1.5">
-                                                        <?php if ($variant_count > 0): ?>
-                                                            <span
-                                                                class="inline-flex items-center rounded-full bg-cyan-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-cyan-300 ring-1 ring-cyan-500/20">
-                                                                <?= $variant_count ?> variant<?= $variant_count !== 1 ? 's' : '' ?>
-                                                            </span>
-                                                        <?php endif; ?>
-                                                        <?php if ($gallery_count > 0): ?>
-                                                            <span
-                                                                class="inline-flex items-center rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-violet-300 ring-1 ring-violet-500/20">
-                                                                <?= $gallery_count ?> image<?= $gallery_count !== 1 ? 's' : '' ?>
-                                                            </span>
-                                                        <?php endif; ?>
-                                                    </div>
-                                                <?php endif; ?>
+                                                <div class="mt-1 flex flex-wrap gap-1.5">
+                                                    <?php if ($variant_count > 0): ?>
+                                                        <span
+                                                            class="inline-flex items-center rounded-full bg-cyan-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-cyan-300 ring-1 ring-cyan-500/20">
+                                                            <?= $variant_count ?> variant<?= $variant_count !== 1 ? 's' : '' ?>
+                                                        </span>
+                                                    <?php endif; ?>
+                                                    <?php if ($gallery_count > 0): ?>
+                                                        <span
+                                                            class="inline-flex items-center rounded-full bg-violet-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-violet-300 ring-1 ring-violet-500/20">
+                                                            <?= $gallery_count ?> image<?= $gallery_count !== 1 ? 's' : '' ?>
+                                                        </span>
+                                                    <?php endif; ?>
+                                                    <span
+                                                        class="inline-flex items-center rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-emerald-300 ring-1 ring-emerald-500/20">
+                                                        <?= $review_count ?> review<?= $review_count !== 1 ? 's' : '' ?>
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </td>
@@ -883,6 +906,11 @@ foreach ($products as $p) {
                                     </td>
                                     <td class="px-6 py-4">
                                         <div class="flex gap-1 justify-end">
+                                            <a href="/vm-admin/<?php echo __DOMAIN__; ?>/reviews?product_id=<?php echo (int) $product['id']; ?>"
+                                                class="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-emerald-300 hover:bg-white/5 transition-all duration-150"
+                                                title="Manage reviews">
+                                                <i class="bi bi-chat-square-text"></i>
+                                            </a>
                                             <button onclick='openModal("edit", <?php echo json_encode($product); ?>)'
                                                 class="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-150"
                                                 title="Edit">
