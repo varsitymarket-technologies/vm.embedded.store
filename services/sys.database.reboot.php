@@ -72,5 +72,4 @@ $db->query($sql_banking);
 $db->query($sql_auth); 
 #Restore The Websites Table
 $db->query($sql_websites);
-exit(); 
 ?>
