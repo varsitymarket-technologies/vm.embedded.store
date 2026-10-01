@@ -204,7 +204,7 @@ if (!function_exists('vm_settings_reboot_site_tree')) {
             return false;
         }
 
-        $preserve = ['storage.data', 'theme', 'builder.cache.html', 'pages'];
+        $preserve = ['storage.data', 'theme', 'builder.cache.html', 'builder.history.enc', 'ai_agent.config.enc', 'pages'];
 
         foreach ($entries as $entry) {
             if ($entry === '.' || $entry === '..' || in_array($entry, $preserve, true)) {
@@ -480,18 +480,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     if ($_POST['action'] === 'save_ai_agent') {
         $existing_agent = load_encrypted_config($agent_path, $config_key);
-        $agent_config = $_POST['agent'] ?? [];
-        $agent_config['enabled'] = (($agent_config['enabled'] ?? '0') === '1') ? '1' : '0';
-        $agent_config['admin_only'] = (($agent_config['admin_only'] ?? '0') === '1') ? '1' : '0';
-        $agent_config['mcp_enabled'] = (($agent_config['mcp_enabled'] ?? '0') === '1') ? '1' : '0';
-        $agent_config['allowed_scopes'] = array_values(array_filter($agent_config['allowed_scopes'] ?? [], fn($value) => $value !== ''));
-        $new_api_key = trim($agent_config['openai_api_key'] ?? '');
-        if ($new_api_key === '') {
-            $agent_config['openai_api_key'] = $existing_agent['openai_api_key'] ?? '';
-        } else {
-            $agent_config['openai_api_key'] = $new_api_key;
+        $agent_config = array_merge($existing_agent, $_POST['agent'] ?? []);
+        $agent_config['enabled'] = (($agent_config['enabled'] ?? $existing_agent['enabled'] ?? '1') === '1') ? '1' : '0';
+        $agent_config['admin_only'] = (($agent_config['admin_only'] ?? $existing_agent['admin_only'] ?? '1') === '1') ? '1' : '0';
+        $agent_config['provider'] = in_array(($agent_config['provider'] ?? 'google'), ['google', 'openai'], true)
+            ? $agent_config['provider']
+            : 'google';
+        if (!array_key_exists('system_prompt', $agent_config)) {
+            $agent_config['system_prompt'] = $existing_agent['system_prompt'] ?? '';
         }
-        $agent_config['openai_org_id'] = trim($agent_config['openai_org_id'] ?? '');
+        $new_gemini_key = trim($agent_config['gemini_api_key'] ?? '');
+        if ($new_gemini_key === '') {
+            $agent_config['gemini_api_key'] = $existing_agent['gemini_api_key'] ?? '';
+        } else {
+            $agent_config['gemini_api_key'] = $new_gemini_key;
+        }
+        $new_openai_key = trim((string) ($agent_config['openai_api_key'] ?? ''));
+        $agent_config['openai_api_key'] = $new_openai_key !== ''
+            ? $new_openai_key
+            : ($existing_agent['openai_api_key'] ?? '');
         save_encrypted_config($agent_path, $agent_config, $config_key);
         header("Location: ?tab=agent&saved=1");
         exit;
@@ -525,10 +532,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'reboot_site') {
         $site_dir = vm_settings_store_dir($domain);
         $skel_dir = dirname(dirname(dirname(__FILE__))) . '/skel';
+        $reset_ai_data = ($_POST['reset_ai_data'] ?? '') === '1';
 
         if (!vm_settings_reboot_site_tree($skel_dir, $site_dir)) {
             header("Location: ?tab=reboot&error=reboot_failed");
             exit;
+        }
+
+        if ($reset_ai_data) {
+            foreach (['builder.cache.html', 'builder.previous.html', 'builder.cache.html.generated', 'builder.history.enc'] as $ai_path) {
+                if (!vm_settings_recursive_delete($site_dir . '/' . $ai_path)) {
+                    header("Location: ?tab=reboot&error=ai_reset_failed");
+                    exit;
+                }
+            }
+
+            $legacy_history_path = rtrim(sys_get_temp_dir(), DIRECTORY_SEPARATOR)
+                . DIRECTORY_SEPARATOR . 'vm-ai-builder-history-'
+                . hash('sha256', (string) $domain . '|' . (string) __ACCOUNT_INDEX__) . '.enc';
+            if (file_exists($legacy_history_path) && !@unlink($legacy_history_path)) {
+                header("Location: ?tab=reboot&error=ai_reset_failed");
+                exit;
+            }
         }
 
         header("Location: ?tab=reboot&saved=1");
@@ -560,22 +585,16 @@ $agent_current = load_encrypted_config($agent_path, $config_key);
 $agent_current = array_merge([
     'enabled' => '1',
     'admin_only' => '1',
-    'assistant_name' => 'Store Copilot',
-    'assistant_role' => 'Admin-only operations assistant',
-    'provider' => 'openai',
-    'model' => 'gpt-4o-mini',
+    'assistant_name' => 'Gemini Assistant',
+    'assistant_role' => 'Google AI Studio assistant',
+    'provider' => 'google',
+    'model' => 'gemini-3.8-flash',
+    'gemini_api_key' => '',
     'openai_api_key' => '',
-    'openai_org_id' => '',
     'temperature' => '0.2',
     'max_output_tokens' => '1200',
     'response_style' => 'concise',
-    'system_prompt' => "You are the store's internal admin assistant. Help with operations, reporting, inventory, orders, customers, settings, and publishing. Never act on public storefront requests. Ask before destructive actions and summarize the impact before making changes.",
-    'mcp_enabled' => '1',
-    'mcp_server_name' => 'vm-admin-mcp',
-    'mcp_server_url' => '',
-    'mcp_transport' => 'http',
-    'mcp_auth_header' => 'X-MCP-Key',
-    'allowed_scopes' => ['orders', 'products', 'customers', 'settings'],
+    'system_prompt' => "You are the store's admin assistant. Give clear, practical guidance. Do not claim to have accessed store data or performed actions unless that information was provided in the conversation.",
 ], $agent_current ?: []);
 
 // Discord settings

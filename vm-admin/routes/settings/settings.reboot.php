@@ -16,7 +16,7 @@ $reboot_error = $_GET['error'] ?? '';
             <div class="flex-1">
                 <h1 class="text-2xl font-bold text-white">Reboot Site</h1>
                 <p class="text-sm text-zinc-400 mt-2 max-w-2xl">
-                    Rebooting the site files will overwrite the current runtime files with the default files from the skel/ directory. This action will not affect the database or any user-generated content. Use this option if you suspect that your site files have been corrupted or modified in a way that is causing issues.
+                    Rebooting copies the default runtime files from the skel/ directory. Your database, storefront content, AI provider settings, and AI builder data are kept unless you choose to restart the AI data below.
                 </p>
             </div>
         </div>
@@ -28,8 +28,22 @@ $reboot_error = $_GET['error'] ?? '';
             </div>
         <?php endif; ?>
 
-        <form method="POST" class="mt-8" onsubmit="return confirm('Reboot this site files from skel/? This will overwrite site runtime files but not the database. Continue?')">
+        <?php if ($reboot_error === 'ai_reset_failed'): ?>
+            <div class="mt-6 flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-200 px-4 py-2.5 rounded-lg text-sm font-medium">
+                <i class="bi bi-exclamation-triangle"></i>
+                The site reboot completed, but some AI builder data could not be removed. Please check filesystem permissions and try again.
+            </div>
+        <?php endif; ?>
+
+        <form method="POST" class="mt-8" onsubmit="return confirm(this.elements.reset_ai_data.checked ? 'Reboot site files and restart AI builder data? This clears generated storefront files, the undo snapshot, and saved AI builder chat history. Provider settings and API keys are kept.' : 'Reboot this site files from skel/? The database, storefront content, AI builder data, and provider settings are kept. Continue?')">
             <input type="hidden" name="action" value="reboot_site">
+            <label class="mb-6 flex items-start gap-3 rounded-xl border border-zinc-700 bg-zinc-900/50 p-4 cursor-pointer">
+                <input type="checkbox" name="reset_ai_data" value="1" class="mt-1 rounded border-zinc-600 bg-zinc-800 text-amber-500 focus:ring-amber-500">
+                <span>
+                    <span class="block text-sm font-semibold text-white">Also restart AI builder data</span>
+                    <span class="mt-1 block text-sm text-zinc-400">Clear generated storefront files, the previous version snapshot, and saved builder chat history. AI provider settings and API keys stay saved.</span>
+                </span>
+            </label>
             <button type="submit" class="inline-flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold px-5 py-3 rounded-xl transition">
                 <i class="bi bi-arrow-repeat"></i>
                 Reboot Site

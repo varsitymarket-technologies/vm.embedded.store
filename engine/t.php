@@ -1,5 +1,24 @@
 <?php
 
+@include_once (dirname(__FILE__)) . "/initiate-engine.php";
+
+# Executing The Engine Deployment Script
+$website = 'localhost.com';
+
+#Create a working Project On The Engine 
+$engine_dir = dirname(__DIR__) . '/engine';
+$engine_path = $engine_dir . DIRECTORY_SEPARATOR . 'agents'.DIRECTORY_SEPARATOR.$website;
+
+
+#Copy The Active Website To The Engine Working Directory
+$e = copy_folder(dirname(__DIR__) . '/sites/'.$website, ($engine_path)."/website");
+$e = copy_folder(dirname(__FILE__) . '/ai.engine/', ($engine_path)."/services");
+
+# Agent File Structure Deployed
+
+die(); 
+
+
 // Source - https://stackoverflow.com/q/1053424
 // Posted by Abs, modified by community. See post 'Timeline' for change history
 // Retrieved 2026-07-25, License - CC BY-SA 4.0

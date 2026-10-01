@@ -1,0 +1,19 @@
+services:
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      - AI_PROVIDER=${AI_PROVIDER:-google}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4.1-mini}
+      - GEMINI_TEMPERATURE=${GEMINI_TEMPERATURE:-0.7}
+      - OUTPUT_DIRECTORY=${OUTPUT_DIRECTORY:-website}
+    tty: true
+    stdin_open: true
+    command: php -v

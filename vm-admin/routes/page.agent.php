@@ -11,14 +11,6 @@ if (isset($_SERVER['__AI_EXTENSION__'])):
         ?>
 
         <?php
-        $site_dir = dirname(dirname(dirname(__FILE__))) . "/sites/" . __DOMAIN__;
-        $agent_path = $site_dir . "/ai_agent.config.enc";
-
-        function vm_ai_agent_encrypt_key()
-        {
-            return create_enc_key();
-        }
-
         function vm_ai_agent_config_path()
         {
             return dirname(dirname(dirname(__FILE__))) . "/sites/" . __DOMAIN__ . "/ai_agent.config.enc";
@@ -31,19 +23,8 @@ if (isset($_SERVER['__AI_EXTENSION__'])):
                 return [];
             }
             $encrypted = file_get_contents($path);
-            $json = __decryption__($encrypted, vm_ai_agent_encrypt_key());
+            $json = __decryption__($encrypted, create_enc_key());
             return json_decode($json, true) ?: [];
-        }
-
-        function vm_ai_agent_save_config(array $config)
-        {
-            $path = vm_ai_agent_config_path();
-            if (!file_exists(dirname($path))) {
-                @mkdir(dirname($path), 0777, true);
-            }
-            $json = json_encode($config);
-            $encrypted = __encryption__($json, vm_ai_agent_encrypt_key());
-            file_put_contents($path, $encrypted);
         }
 
         function vm_ai_agent_get_thread_key()
@@ -69,75 +50,77 @@ if (isset($_SERVER['__AI_EXTENSION__'])):
         $agent_config = array_merge([
             'enabled' => '1',
             'admin_only' => '1',
-            'assistant_name' => 'Store Copilot',
-            'assistant_role' => 'Admin-only operations assistant',
-            'provider' => 'openai',
-            'model' => 'gpt-4o-mini',
-            'openai_api_key' => '',
-            'openai_org_id' => '',
+            'assistant_name' => 'Gemini Assistant',
+            'assistant_role' => 'Google AI Studio assistant',
+            'provider' => 'google',
+            'model' => 'gemini-3.8-flash',
+            'gemini_api_key' => '',
             'temperature' => '0.2',
             'max_output_tokens' => '1200',
             'response_style' => 'concise',
-            'system_prompt' => "You are the store's internal admin assistant. Help with operations, reporting, inventory, orders, customers, settings, and publishing. Never act on public storefront requests. Ask before destructive actions and summarize the impact before making changes.",
-            'mcp_enabled' => '1',
-            'mcp_server_name' => 'vm-admin-mcp',
-            'mcp_server_url' => '',
-            'mcp_transport' => 'http',
-            'mcp_auth_header' => 'X-MCP-Key',
-            'allowed_scopes' => ['orders', 'products', 'customers', 'settings'],
+            'system_prompt' => "You are the store's admin assistant. Give clear, practical guidance. Do not claim to have accessed store data or performed actions unless that information was provided in the conversation.",
         ], vm_ai_agent_load_config() ?: []);
 
-        function vm_ai_agent_call_openai(array $agent_config, array $history, string $user_message): array
+        $agent_config['provider'] = in_array(($agent_config['provider'] ?? 'google'), ['google', 'openai'], true)
+            ? $agent_config['provider']
+            : 'google';
+
+        function vm_ai_agent_call_gemini(array $agent_config, array $history): array
         {
-            $api_key = trim($agent_config['openai_api_key'] ?? '');
+            $api_key = trim((string) ($agent_config['gemini_api_key'] ?? ''));
             if ($api_key === '') {
-                return ['ok' => false, 'reply' => 'Connect OpenAI in Settings to chat here.'];
+                return ['ok' => false, 'reply' => 'Connect a Google AI Studio API key in Settings to chat here.'];
             }
 
-            $provider = strtolower($agent_config['provider'] ?? 'openai');
-            if ($provider !== 'openai' && $provider !== 'mcp') {
-                return ['ok' => false, 'reply' => 'This assistant is not connected to OpenAI yet.'];
-            }
-
-            $messages = [
-                [
-                    'role' => 'system',
-                    'content' => trim((string) ($agent_config['system_prompt'] ?? ''))
-                ]
-            ];
-
+            $contents = [];
             foreach (array_slice($history, -12) as $entry) {
                 if (empty($entry['role']) || empty($entry['content'])) {
                     continue;
                 }
-                $messages[] = [
-                    'role' => $entry['role'],
-                    'content' => $entry['content']
+                $role = $entry['role'] === 'assistant' ? 'model' : 'user';
+                $contents[] = [
+                    'role' => $role,
+                    'parts' => [['text' => (string) $entry['content']]],
                 ];
             }
 
+            if ($contents === []) {
+                return ['ok' => false, 'reply' => 'Enter a message to start the conversation.'];
+            }
+
+            $model = trim((string) ($agent_config['model'] ?? ''));
+            $supportedModels = ['gemini-3.8-flash', 'gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-2.5-flash'];
+            if (!in_array($model, $supportedModels, true)) {
+                $model = 'gemini-3.8-flash';
+            }
+            $responseStyle = strtolower(trim((string) ($agent_config['response_style'] ?? 'concise')));
+            if (!in_array($responseStyle, ['concise', 'balanced', 'detailed'], true)) {
+                $responseStyle = 'concise';
+            }
+            $systemPrompt = trim((string) ($agent_config['system_prompt'] ?? "You are the store's admin assistant. Give clear, practical guidance. Do not claim to have accessed store data or performed actions unless that information was provided in the conversation."));
+            $systemPrompt .= "\n\nResponse style: {$responseStyle}. Use only information supplied in this conversation; you do not have direct access to store records or admin actions.";
             $payload = [
-                'model' => $agent_config['model'] ?: 'gpt-4o-mini',
-                'messages' => $messages,
-                'temperature' => (float) ($agent_config['temperature'] ?? 0.2),
-                'max_tokens' => (int) ($agent_config['max_output_tokens'] ?? 1200),
+                'systemInstruction' => [
+                    'parts' => [[
+                        'text' => $systemPrompt,
+                    ]],
+                ],
+                'contents' => $contents,
+                'generationConfig' => [
+                    'temperature' => (float) ($agent_config['temperature'] ?? 0.2),
+                    'maxOutputTokens' => max(1, (int) ($agent_config['max_output_tokens'] ?? 1200)),
+                ],
             ];
 
-            $ch = curl_init('https://api.openai.com/v1/chat/completions');
-            $headers = [
-                'Content-Type: application/json',
-                'Authorization: Bearer ' . $api_key,
-            ];
-            $org = trim($agent_config['openai_org_id'] ?? '');
-            if ($org !== '') {
-                $headers[] = 'OpenAI-Organization: ' . $org;
-            }
+            $url = 'https://generativelanguage.googleapis.com/v1beta/models/'
+                . rawurlencode($model) . ':generateContent?key=' . rawurlencode($api_key);
+            $ch = curl_init($url);
 
             curl_setopt_array($ch, [
                 CURLOPT_POST => true,
                 CURLOPT_RETURNTRANSFER => true,
-                CURLOPT_HTTPHEADER => $headers,
-                CURLOPT_POSTFIELDS => json_encode($payload),
+                CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+                CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_SLASHES),
                 CURLOPT_CONNECTTIMEOUT => 10,
                 CURLOPT_TIMEOUT => 60,
             ]);
@@ -148,21 +131,89 @@ if (isset($_SERVER['__AI_EXTENSION__'])):
             curl_close($ch);
 
             if ($response === false) {
-                return ['ok' => false, 'reply' => 'OpenAI request failed: ' . $curl_error];
+                return ['ok' => false, 'reply' => 'Google AI Studio request failed: ' . $curl_error];
             }
 
             $decoded = json_decode($response, true);
             if ($http_code < 200 || $http_code >= 300) {
-                $error_message = $decoded['error']['message'] ?? ('OpenAI returned HTTP ' . $http_code);
+                $error_message = $decoded['error']['message'] ?? ('Google AI Studio returned HTTP ' . $http_code);
                 return ['ok' => false, 'reply' => $error_message];
             }
 
-            $reply = $decoded['choices'][0]['message']['content'] ?? '';
+            $reply = $decoded['candidates'][0]['content']['parts'][0]['text'] ?? '';
             if ($reply === '') {
-                $reply = 'OpenAI returned an empty response.';
+                $reply = 'Google AI Studio returned an empty response.';
             }
 
             return ['ok' => true, 'reply' => $reply];
+        }
+
+        function vm_ai_agent_call_openai(array $agent_config, array $history): array
+        {
+            $api_key = trim((string) ($agent_config['openai_api_key'] ?? ''));
+            if ($api_key === '') {
+                return ['ok' => false, 'reply' => 'Connect an OpenAI API key in Settings to chat here.'];
+            }
+
+            $messages = [[
+                'role' => 'system',
+                'content' => trim((string) ($agent_config['system_prompt'] ?? "You are the store's admin assistant. Give clear, practical guidance. Do not claim to have accessed store data or performed actions unless that information was provided in the conversation."))
+                    . "\n\nResponse style: " . (string) ($agent_config['response_style'] ?? 'concise')
+                    . '. Use only information supplied in this conversation; you do not have direct access to store records or admin actions.',
+            ]];
+            foreach (array_slice($history, -12) as $entry) {
+                if (!in_array($entry['role'] ?? '', ['user', 'assistant'], true) || empty($entry['content'])) {
+                    continue;
+                }
+                $messages[] = ['role' => $entry['role'], 'content' => (string) $entry['content']];
+            }
+            if (count($messages) < 2) {
+                return ['ok' => false, 'reply' => 'Enter a message to start the conversation.'];
+            }
+
+            $model = trim((string) ($agent_config['model'] ?? 'gpt-4.1-mini'));
+            if ($model === '' || !preg_match('/^[A-Za-z0-9._:-]+$/', $model)) {
+                $model = 'gpt-4.1-mini';
+            }
+            $payload = [
+                'model' => $model,
+                'messages' => $messages,
+                'temperature' => max(0, min(1, (float) ($agent_config['temperature'] ?? 0.2))),
+                'max_completion_tokens' => max(1, min(8192, (int) ($agent_config['max_output_tokens'] ?? 1200))),
+            ];
+            $ch = curl_init('https://api.openai.com/v1/chat/completions');
+            curl_setopt_array($ch, [
+                CURLOPT_POST => true,
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_HTTPHEADER => [
+                    'Content-Type: application/json',
+                    'Authorization: Bearer ' . $api_key,
+                ],
+                CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_SLASHES),
+                CURLOPT_CONNECTTIMEOUT => 10,
+                CURLOPT_TIMEOUT => 60,
+            ]);
+            $response = curl_exec($ch);
+            $curl_error = curl_error($ch);
+            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($response === false) {
+                return ['ok' => false, 'reply' => 'OpenAI request failed: ' . $curl_error];
+            }
+            $decoded = json_decode($response, true);
+            if ($http_code < 200 || $http_code >= 300) {
+                return ['ok' => false, 'reply' => $decoded['error']['message'] ?? ('OpenAI returned HTTP ' . $http_code)];
+            }
+            $reply = $decoded['choices'][0]['message']['content'] ?? '';
+            return ['ok' => true, 'reply' => is_string($reply) && $reply !== '' ? $reply : 'OpenAI returned an empty response.'];
+        }
+
+        function vm_ai_agent_call_provider(array $agent_config, array $history): array
+        {
+            return ($agent_config['provider'] ?? 'google') === 'openai'
+                ? vm_ai_agent_call_openai($agent_config, $history)
+                : vm_ai_agent_call_gemini($agent_config, $history);
         }
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -184,7 +235,7 @@ if (isset($_SERVER['__AI_EXTENSION__'])):
                         'time' => time(),
                     ];
 
-                    $reply_result = vm_ai_agent_call_openai($agent_config, $history, $message);
+                    $reply_result = vm_ai_agent_call_provider($agent_config, $history);
                     $history[] = [
                         'role' => 'assistant',
                         'content' => $reply_result['reply'],
@@ -201,24 +252,26 @@ if (isset($_SERVER['__AI_EXTENSION__'])):
         }
 
         $history = vm_ai_agent_history();
-        $assistant_name = $agent_config['assistant_name'] ?? 'Store Copilot';
-        $assistant_role = $agent_config['assistant_role'] ?? 'Admin-only operations assistant';
-        $agent_enabled = ($agent_config['enabled'] ?? '1') === '1';
-        $agent_openai_connected = !empty($agent_config['openai_api_key'] ?? '');
-        $agent_model = $agent_config['model'] ?? 'gpt-4o-mini';
-        $agent_scopes = $agent_config['allowed_scopes'] ?? [];
+        $assistant_name = ($agent_config['assistant_name'] ?? '') === 'Store Copilot'
+            ? 'Gemini Assistant'
+            : ($agent_config['assistant_name'] ?? 'Gemini Assistant');
+        $assistant_role = $agent_config['assistant_role'] ?? 'Google AI Studio assistant';
+        $agent_provider = $agent_config['provider'] ?? 'google';
+        $agent_provider_name = $agent_provider === 'openai' ? 'OpenAI' : 'Google AI Studio';
+        $agent_key_connected = !empty($agent_config[$agent_provider === 'openai' ? 'openai_api_key' : 'gemini_api_key'] ?? '');
+        $agent_model = $agent_config['model'] ?? 'gemini-3.8-flash';
         $agent_quick_prompts = [
             [
-                'label' => 'Summarize today',
-                'prompt' => 'Summarize today\'s most important store activity in a short admin briefing.',
+                'label' => 'Draft a briefing',
+                'prompt' => 'Help me turn the store activity I provide into a concise admin briefing.',
             ],
             [
-                'label' => 'Check inventory',
-                'prompt' => 'Review the inventory state and call out any products that need attention.',
+                'label' => 'Inventory guidance',
+                'prompt' => 'Based on inventory details I provide, identify items that may need attention.',
             ],
             [
-                'label' => 'Customer lookup',
-                'prompt' => 'Help me find the right customer record and explain what data to check first.',
+                'label' => 'Customer support',
+                'prompt' => 'Help me reason through a customer support case using the details I provide.',
             ],
             [
                 'label' => 'Publishing help',
@@ -246,6 +299,10 @@ if (isset($_SERVER['__AI_EXTENSION__'])):
                                     <h2 class="text-xl font-semibold tracking-tight text-white sm:text-2xl">
                                         <?= htmlspecialchars($assistant_name, ENT_QUOTES, 'UTF-8') ?>
                                     </h2>
+                                    <span class="inline-flex items-center gap-2 rounded-full border border-blue-300/15 bg-blue-300/5 px-3 py-1 text-[11px] font-medium text-blue-200">
+                                        <span class="h-1.5 w-1.5 rounded-full <?= $agent_key_connected ? 'bg-emerald-400' : 'bg-amber-300' ?>"></span>
+                                        <?= htmlspecialchars($agent_provider_name, ENT_QUOTES, 'UTF-8') ?> · <?= htmlspecialchars($agent_model, ENT_QUOTES, 'UTF-8') ?>
+                                    </span>
 
                                 </div>
                                 <p class="max-w-2xl text-sm text-zinc-500">
@@ -270,10 +327,16 @@ if (isset($_SERVER['__AI_EXTENSION__'])):
                         <?php if ($agent_notice !== ''): ?>
                             <p class="mt-3 text-xs text-zinc-400"><?= htmlspecialchars($agent_notice, ENT_QUOTES, 'UTF-8') ?></p>
                         <?php endif; ?>
+                        <?php if (!$agent_key_connected): ?>
+                            <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300/15 bg-amber-300/5 px-4 py-3">
+                                <p class="text-sm text-amber-100">Add an API key for <?= htmlspecialchars($agent_provider_name, ENT_QUOTES, 'UTF-8') ?> to start chatting.</p>
+                                <a href="/vm-admin/<?= rawurlencode((string) __DOMAIN__) ?>/settings?tab=agent" class="rounded-lg bg-amber-200 px-3 py-2 text-xs font-semibold text-zinc-900 transition hover:bg-amber-100">Set up provider</a>
+                            </div>
+                        <?php endif; ?>
                     </section>
 
                     <section
-                        class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1rem] border border-white/10 bg-[#0b0b0f] shadow-2xl shadow-black/30">
+                        class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1rem] border border-white/10 bg-[#202123] shadow-2xl shadow-black/30">
                         <div id="agentChatScroll" class="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-6">
                             <div class="mx-auto flex max-w-3xl flex-col gap-4">
                                 <?php if (empty($history)): ?>
@@ -285,9 +348,7 @@ if (isset($_SERVER['__AI_EXTENSION__'])):
                                             </div>
                                             <div class="space-y-2">
                                                 <p class="text-sm font-medium text-white">Start a conversation</p>
-                                                <p class="text-sm leading-relaxed text-zinc-400">Ask for order summaries, product
-                                                    checks, customer lookup, publishing guidance, or a safe next step for admin
-                                                    work.</p>
+                                                <p class="text-sm leading-relaxed text-zinc-400">Ask <?= htmlspecialchars($agent_provider === 'openai' ? 'ChatGPT' : 'Gemini', ENT_QUOTES, 'UTF-8') ?> for admin guidance, writing help, or analysis of information you provide. It does not read store records or perform actions.</p>
                                             </div>
                                         </div>
                                         <div class="mt-4 flex flex-wrap gap-2">
@@ -312,7 +373,7 @@ if (isset($_SERVER['__AI_EXTENSION__'])):
                                     <div class="flex <?= $role === 'user' ? 'justify-end' : 'justify-start' ?>">
                                         <div
                                             class="max-w-[88%] rounded-[1.5rem] border px-4 py-3 sm:max-w-[78%] <?= $role === 'user' ? 'rounded-br-md border-cyan-400/30 bg-[#ffffffc2] text-black' : ($is_error ? 'rounded-bl-md border-rose-500/20 bg-[#272624a8] text-rose-100' : 'rounded-bl-md border-zinc-800 bg-[#252526] text-zinc-200') ?>">
-                                            <div class="whitespace-pre-wrap text-sm leading-relaxed">
+                                            <div class="text-sm leading-relaxed">
                                                 <?= htmlspecialchars($content, ENT_QUOTES, 'UTF-8') ?>
                                             </div>
                                             <div
@@ -332,7 +393,7 @@ if (isset($_SERVER['__AI_EXTENSION__'])):
                             <form method="POST" class="mx-auto max-w-3xl space-y-3">
                                 <input type="hidden" name="action" value="send_ai_agent_message">
                                 <textarea id="agentMessage" name="message" rows="3"
-                                    class="w-full resize-none rounded-[1.25rem] border border-white/10 bg-[#07070a] px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-cyan-500/50 focus:outline-none"
+                                    class="w-full resize-none rounded-[1.25rem] border border-white/10 bg-zinc-700/50 px-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-cyan-500/50 focus:outline-none"
                                     placeholder="Ask the assistant to review orders, look up a customer, summarize sales, or explain a setting..."></textarea>
                                 <div class="flex flex-wrap items-center justify-between gap-3">
                                     <p class="text-xs text-zinc-500">Use the modal options for quick actions and status.</p>
@@ -377,7 +438,7 @@ if (isset($_SERVER['__AI_EXTENSION__'])):
                             class="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-left transition-colors hover:border-cyan-500/20 hover:bg-[#ffffffc2]/5">
                             <span>
                                 <span class="block text-sm font-medium text-white">View status</span>
-                                <span class="mt-1 block text-xs text-zinc-500">See provider, model, and scope details.</span>
+                                <span class="mt-1 block text-xs text-zinc-500">See <?= htmlspecialchars($agent_provider_name, ENT_QUOTES, 'UTF-8') ?> connection details.</span>
                             </span>
                             <i class="bi bi-chevron-right text-zinc-500"></i>
                         </button>
@@ -395,7 +456,7 @@ if (isset($_SERVER['__AI_EXTENSION__'])):
                             class="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] px-4 py-4 text-left transition-colors hover:border-white/20 hover:bg-white/10">
                             <span>
                                 <span class="block text-sm font-medium text-white">Open settings</span>
-                                <span class="mt-1 block text-xs text-zinc-500">Adjust keys, prompts, and MCP options.</span>
+                                <span class="mt-1 block text-xs text-zinc-500">Manage the provider key and model.</span>
                             </span>
                             <i class="bi bi-gear text-zinc-500"></i>
                         </a>
@@ -435,9 +496,9 @@ if (isset($_SERVER['__AI_EXTENSION__'])):
 
                     <div class="mt-5 grid gap-3 sm:grid-cols-2">
                         <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                            <p class="text-[10px] uppercase tracking-[0.3em] text-zinc-600">Provider</p>
+                            <p class="text-[10px] uppercase tracking-[0.3em] text-zinc-600">Service</p>
                             <p class="mt-2 text-sm font-medium text-white">
-                                <?= htmlspecialchars($agent_config['provider'] ?? 'openai', ENT_QUOTES, 'UTF-8') ?>
+                                <?= htmlspecialchars($agent_provider_name, ENT_QUOTES, 'UTF-8') ?>
                             </p>
                         </div>
                         <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
@@ -446,25 +507,15 @@ if (isset($_SERVER['__AI_EXTENSION__'])):
                                 <?= htmlspecialchars($agent_model, ENT_QUOTES, 'UTF-8') ?>
                             </p>
                         </div>
-                        <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                            <p class="text-[10px] uppercase tracking-[0.3em] text-zinc-600">MCP</p>
-                            <p class="mt-2 text-sm font-medium text-white">
-                                <?= ($agent_config['mcp_enabled'] ?? '1') === '1' ? 'Enabled' : 'Disabled' ?>
-                            </p>
-                        </div>
-                        <div class="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                            <p class="text-[10px] uppercase tracking-[0.3em] text-zinc-600">Scopes</p>
-                            <p class="mt-2 text-sm font-medium text-white"><?= count($agent_scopes) ?></p>
-                        </div>
                     </div>
 
                     <div
-                        class="mt-4 rounded-2xl border <?= $agent_openai_connected ? 'border-cyan-500/20 bg-[#ffffffc2]/5' : 'border-amber-500/20 bg-amber-500/5' ?> p-4">
-                        <p class="<?= $agent_openai_connected ? 'text-cyan-300' : 'text-amber-300' ?> text-sm font-medium">
-                            <?= $agent_openai_connected ? 'OpenAI connected' : 'No API key connected' ?>
+                        class="mt-4 rounded-2xl border <?= $agent_key_connected ? 'border-cyan-500/20 bg-[#ffffffc2]/5' : 'border-amber-500/20 bg-amber-500/5' ?> p-4">
+                        <p class="<?= $agent_key_connected ? 'text-cyan-300' : 'text-amber-300' ?> text-sm font-medium">
+                            <?= $agent_key_connected ? htmlspecialchars($agent_provider_name, ENT_QUOTES, 'UTF-8') . ' API key saved' : 'No ' . htmlspecialchars($agent_provider_name, ENT_QUOTES, 'UTF-8') . ' API key saved' ?>
                         </p>
                         <p class="mt-1 text-sm text-zinc-400">
-                            <?= $agent_openai_connected ? 'Messages are sent live and the response is rendered in the chat panel.' : 'Connect an API key in Settings to enable live responses.' ?>
+                            <?= $agent_key_connected ? 'The key is sent to ' . htmlspecialchars($agent_provider_name, ENT_QUOTES, 'UTF-8') . ' when you send a message.' : 'Add an API key for the selected provider in Agent Settings to enable replies.' ?>
                         </p>
                     </div>
                 </div>

@@ -112,7 +112,13 @@ ob_start();
     </style>
 </head>
 
-<body class="bg-[#1b1b1c] text-white font-sans antialiased">
+<?php $is_fullscreen_ai_builder = ex(3) === 'ai-builder'; ?>
+<body class="<?= $is_fullscreen_ai_builder ? 'm-0 h-screen w-screen overflow-hidden bg-[#111113] text-white antialiased' : 'bg-[#1b1b1c] text-white font-sans antialiased' ?>">
+    <?php if ($is_fullscreen_ai_builder): ?>
+        <main id="ai-builder-standalone" class="h-screen w-screen overflow-hidden">
+            <?php @include_once "routes.php"; ?>
+        </main>
+    <?php else: ?>
     <div class="admin-shell flex h-screen overflow-hidden">
         <!-- Sidebar -->
         <?php
@@ -666,6 +672,7 @@ ob_start();
 
     <script src="admin.js"></script>
     <script src="/assets/pwa.js"></script>
+    <?php endif; ?>
 </body>
 
 </html>

@@ -66,6 +66,27 @@ $sql_websites = "CREATE TABLE IF NOT EXISTS sys_websites (
 // Execute creation queries
 
 $db->query($sql_account); 
+$account_columns = $db->query("PRAGMA table_info(sys_account)");
+$account_column_names = [];
+foreach ($account_columns as $account_column) {
+    $account_column_names[] = $account_column['name'] ?? '';
+}
+if (!in_array('password_hash', $account_column_names, true)) {
+    $db->query("ALTER TABLE sys_account ADD COLUMN password_hash TEXT");
+}
+if (!in_array('email_verified', $account_column_names, true)) {
+    $db->query("ALTER TABLE sys_account ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0");
+}
+$db->query("CREATE TABLE IF NOT EXISTS sys_account_otp (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_auth TEXT NOT NULL,
+    otp_code TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    expires_at DATETIME NOT NULL,
+    verified INTEGER NOT NULL DEFAULT 0,
+    FOREIGN KEY (account_auth) REFERENCES sys_account(auth) ON DELETE CASCADE
+)");
+$db->query("CREATE INDEX IF NOT EXISTS idx_sys_account_otp_auth ON sys_account_otp(account_auth)");
 
 #Restore The Banking Table
 $db->query($sql_banking); 

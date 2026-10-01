@@ -82,6 +82,14 @@ From that point on, you manage everything — orders, customers, discounts, cont
 
 ## The admin panel
 
+### Admin account confirmation
+
+The admin login supports password-based accounts. New accounts require a
+six-digit confirmation code sent to Discord before the first sign-in. Configure
+the webhook on the server with `DISCORD_AUTH_WEBHOOK_URL` (or
+`DISCORD_WEBHOOK_URL`) before registering an account; webhook URLs are never
+stored in the repository or exposed to the browser.
+
 Every store has its own admin panel, accessible at `/vm-admin/{your-store}/`. From there, store owners can manage:
 
 | Section | What it does |
@@ -118,6 +126,12 @@ Storefronts can also be embedded inside another website using an `<iframe>`, hos
 ---
 
 *For technical setup, API documentation, and developer guides, see the [docs/](docs/) folder.*
+
+### Automatic GitHub sync
+
+`engine/sync.tool.php` is a GitHub push webhook for deployments that keep a Git checkout on the server. Configure `VM_GITHUB_WEBHOOK_SECRET` in the PHP/FPM environment, then add a GitHub webhook pointing to `https://your-domain/engine/sync.tool.php` with **application/json** content type and the same secret. Subscribe to **Push events**. The default repository and branch are `varsitymarket-technologies/vm.embedded.store` and `master`; set `VM_GITHUB_REPOSITORY` or `VM_GITHUB_BRANCH` in the PHP environment to override them.
+
+The endpoint verifies GitHub's SHA-256 signature, ignores pushes to other branches, and fetches/resets the existing checkout from its `origin` remote. The web server's PHP user needs permission to run `git` and write to the checkout. A deployment reset replaces tracked files with the pushed revision; keep server-specific configuration and uploads untracked or ignored. Requests and failures are recorded in the server's PHP error log.
 
 ---
 

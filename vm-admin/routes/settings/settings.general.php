@@ -182,8 +182,8 @@
 
                     <a href="?tab=agent" class="flex items-center justify-between p-5 hover:bg-zinc-800/50 transition">
                         <div class="flex items-center gap-4">
-                            <div class="w-11 h-11 rounded-xl bg-cyan-500/10 flex items-center justify-center">
-                                <i class="bi bi-stars text-cyan-400 text-lg"></i>
+                            <div class="w-11 h-11 rounded-xl bg-zinc-700/50 flex items-center justify-center">
+                                <i class="bi bi-stars text-zinc-300 text-lg"></i>
                             </div>
 
                             <div>

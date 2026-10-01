@@ -1,0 +1,13 @@
+{
+  "name": "ai-engine/static-site-builder",
+  "description": "A PHP backend that orchestrates Gemini or OpenAI agents to generate static Tailwind websites.",
+  "type": "project",
+  "require": {
+    "php": ">=8.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "AiEngine\\": "src/"
+    }
+  }
+}
