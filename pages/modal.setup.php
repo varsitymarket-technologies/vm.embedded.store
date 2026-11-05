@@ -191,7 +191,7 @@
         font-size: 1rem;
         transition: border-color 0.2s;
         box-sizing: border-box;
-        background: #10141b;
+        background: #303337;
         color: var(--text-main);
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
     }
@@ -217,7 +217,7 @@
         cursor: pointer;
         transition: all 0.2s;
         text-align: center;
-        background: #10141b;
+        background: #303337;
     }
 
     .choice-card:hover {
@@ -278,7 +278,7 @@
     }
 
     .btn-prev {
-        background: #10141b;
+        background: #303337;
         color: var(--text-main);
     }
 
@@ -525,7 +525,7 @@
 
                         <!-- Demo Data Toggle -->
                         <div
-                            style="margin-top: 1rem; border: 1px solid var(--border-color); border-radius: 16px; padding: 1.25rem; background: #10141b;">
+                            style="margin-top: 1rem; border: 1px solid var(--border-color); border-radius: 16px; padding: 1.25rem; background: #303337;">
                             <label
                                 style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; margin: 0;">
                                 <input type="checkbox" name="load_demo_data" value="1"
@@ -543,7 +543,7 @@
                         </div>
 
                         <div
-                            style="margin-top: 1rem; border: 1px solid var(--border-color); border-radius: 16px; padding: 0 1.25rem; background: #10141b;">
+                            style="margin-top: 1rem; border: 1px solid var(--border-color); border-radius: 16px; padding: 0 1.25rem; background: #303337;">
                             <label
                                 style="display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; margin: 0;">
                                 <input type="checkbox" name="promotion_data" value="1"

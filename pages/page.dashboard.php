@@ -48,13 +48,13 @@ $store_url = __WEBSITE_URL__ ?? '#';
                 </div>
 
                 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                    <a target="_blank" href="<?php echo htmlspecialchars($store_url, ENT_QUOTES, 'UTF-8'); ?>" class="rounded-2xl border border-slate-200 bg-white/85 p-4 backdrop-blur">
+                    <a target="_blank" href="<?php echo htmlspecialchars($store_url, ENT_QUOTES, 'UTF-8'); ?>"  class="rounded-2xl p-4 backdrop-blur rounded-2xl border border-white/10 bg-white/5">
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Store</p>
-                        <p class="mt-2 truncate text-base font-semibold text-slate-950"><?php echo htmlspecialchars($store_domain, ENT_QUOTES, 'UTF-8'); ?></p>
+                        <p class="mt-2 truncate text-base font-semibold text-white"><?php echo htmlspecialchars($store_domain, ENT_QUOTES, 'UTF-8'); ?></p>
                     </a>
-                    <a href="<?php echo $admin_base; ?>theme" class="rounded-2xl border border-slate-200 bg-white/85 p-4 backdrop-blur">
+                    <a href="<?php echo $admin_base; ?>theme" class="rounded-2xl p-4 backdrop-blur rounded-2xl border border-white/10 bg-white/5">
                         <p class="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Theme</p>
-                        <p class="mt-2 text-base font-semibold text-slate-950 capitalize"><?php echo htmlspecialchars($store_theme, ENT_QUOTES, 'UTF-8'); ?></p>
+                        <p class="mt-2 text-base font-semibold text-white capitalize"><?php echo htmlspecialchars($store_theme, ENT_QUOTES, 'UTF-8'); ?></p>
                     </a>
                 </div>
             </div>
