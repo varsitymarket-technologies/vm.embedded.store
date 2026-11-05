@@ -9,7 +9,7 @@
         <header>
             <div class="logo" style="display: flex; align-items: center;">
                 <img src="/assets/favicon.png" style="max-width: 4rem; margin: auto; width: 100%;">
-                <p style="display: flex;align-items: flex-start;flex-direction: column;font-size: 8px;"> Embedded <span class="text-purple" style="">Stores</span></p>
+                <p style="display: flex;align-items: flex-start;flex-direction: column;font-size: 10px;"> Embedded <span class="text-purple" style="color: #8b5cf6;">Engine v.1.0.0</span></p>
             </div>
 
             <div class="user-profile">
