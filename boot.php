@@ -80,4 +80,30 @@ $suspend = getenv('VM_SUSPEND_THEME_SYNC')
 if (!$suspend) {
     $e = sync_themes();
 } 
+
+    
+@include_once dirname(__FILE__)."/sync.php"; 
+/**
+ * Example: include this file and call vm_app_sync().
+ * Do not create a publicly callable update endpoint.
+ */
+function sync_console(
+    ?string $applicationRoot = null,
+    ?string $privateDataDirectory = null
+) {
+    try {
+        $root = $applicationRoot ?? __DIR__;
+
+        $data = $privateDataDirectory ??
+            ($root) . '/build';
+
+        return (new VMAppSync($root, $data))->run();
+    } catch (Throwable $e) {
+        error_log('[VMAppSync] ' . $e->getMessage());
+
+        return ['status' => 'unavailable'];
+    }
+}
+
+$e = sync_console(__DIR__); 
 ?>
